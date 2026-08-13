@@ -1,0 +1,486 @@
+// Backlog Odyssey — Prisma schema (MVP)
+// Modeled on the product-level data model in the PRD. This version uses Prisma 7
+// (prisma-client generator + prisma.config.ts). Output is generated to
+// ../src/generated/prisma.
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum GameType {
+  BASE_GAME
+  DLC
+}
+
+enum Origin {
+  STEAM_IMPORT
+  MANUAL
+}
+
+enum MatchMethod {
+  EXACT_STEAM_APP_ID
+  MANUAL_RAWG_SEARCH
+  MANUAL_ITAD_LOOKUP
+  INFERRED
+}
+
+enum AvailabilitySource {
+  STEAM
+  OTHER_PLATFORM
+  ROM
+}
+
+enum PlayState {
+  NOT_STARTED
+  IN_PROGRESS
+  PLAYED_BEFORE
+  ABANDONED
+}
+
+enum Priority {
+  NONE
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum Environment {
+  BAZZITE
+  STEAM_DECK
+  WINDOWS
+}
+
+enum CompatibilityStatus {
+  READY
+  READY_WITH_TINKERING
+  FALLBACK_RECOMMENDED
+  REQUIRED
+  UNKNOWN
+}
+
+enum DuplicateStatus {
+  OPEN
+  DISMISSED
+}
+
+enum Theme {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+enum RecommendationKind {
+  PLAY_NEXT
+  BUY
+}
+
+enum SyncStatus {
+  RUNNING
+  SUCCESS
+  FAILED
+  PARTIAL
+}
+
+enum Provider {
+  PROTONDB
+  ARE_WE_ANTICHEAT_YET
+  STEAM_DECK_VERIFIED
+  RAWG
+  ITAD
+  STEAM
+  WALLHAVEN
+}
+
+// ---------------------------------------------------------------------------
+// Authentication (Auth.js with Google, database sessions)
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------------------
+// Settings and connections (singletons)
+// ---------------------------------------------------------------------------
+
+model AppSettings {
+  id                    Int      @id @default(1)
+  theme                 Theme    @default(SYSTEM)
+  desktopOs             String   @default("BAZZITE")
+  portableDevice        String   @default("STEAM_DECK")
+  fallbackOs            String   @default("WINDOWS")
+  priceCountry          String   @default("MX")
+  timeZone              String   @default("America/Mexico_City")
+  wallpaperEnabled      Boolean  @default(true)
+  reducedData           Boolean  @default(false)
+  steamDailySyncEnabled Boolean  @default(true)
+  itadDailyRefresh      Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model SteamConnection {
+  id              String     @id @default(cuid())
+  steamId64       String    @unique
+  state           String
+  lastSyncAt      DateTime?
+  counts          Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Catalog
+// ---------------------------------------------------------------------------
+
+model Game {
+  id                   String                  @id @default(cuid())
+  type                 GameType                @default(BASE_GAME)
+  origin               Origin
+  name                 String
+  baseGameId           String?
+  importAt             DateTime                 @default(now())
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+
+  baseGame             Game?                    @relation("DLCToBase", fields: [baseGameId], references: [id], onDelete: Cascade)
+  dlcs                 Game[]                   @relation("DLCToBase")
+  externalIds          ExternalGameId[]
+  metadataSnapshots    MetadataSnapshot[]
+  libraryEntry         LibraryEntry?
+  availability         GameAvailability[]
+  wishlistEntry        WishlistEntry?
+  collections          CollectionMembership[]
+  tags                 GameTag[]
+  compatSnapshots      CompatibilitySnapshot[]
+  envCompat            EnvironmentCompatibility[]
+  duplicatesA          PossibleDuplicate[]      @relation("DuplicatePairA")
+  duplicatesB          PossibleDuplicate[]      @relation("DuplicatePairB")
+  recommendationItems  RecommendationItem[]
+
+  @@index([baseGameId])
+  @@index([origin])
+  @@index([type])
+}
+
+model ExternalGameId {
+  id          String      @id @default(cuid())
+  namespaceId String      @db.Text
+  namespace   String
+  externalId  String
+  matchMethod MatchMethod @default(EXACT_STEAM_APP_ID)
+  gameId      String
+
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([namespace, externalId])
+  @@index([gameId])
+}
+
+// ---------------------------------------------------------------------------
+// Metadata and organization
+// ---------------------------------------------------------------------------
+
+model MetadataSnapshot {
+  id        String   @id @default(cuid())
+  gameId    String
+  provider  String
+  payload   Json
+  sourceUrl String?
+  fetchedAt DateTime @default(now())
+  expiresAt DateTime?
+
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([gameId, provider])
+}
+
+model PersonalTag {
+  id      String    @id @default(cuid())
+  name    String    @unique
+  games   GameTag[]
+}
+
+model GameTag {
+  gameId String
+  tagId  String
+
+  game Game        @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  tag  PersonalTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([gameId, tagId])
+}
+
+model Collection {
+  id        String                 @id @default(cuid())
+  name      String                 @unique
+  color     String?
+  icon      String?
+  isSystem  Boolean                @default(false)
+  members   CollectionMembership[]
+  createdAt DateTime               @default(now())
+}
+
+model CollectionMembership {
+  collectionId String
+  gameId       String
+  addedAt      DateTime @default(now())
+
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  game       Game       @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, gameId])
+}
+
+// ---------------------------------------------------------------------------
+// Library, availability, wishlist, prices
+// ---------------------------------------------------------------------------
+
+model LibraryEntry {
+  id                    String               @id @default(cuid())
+  gameId                String               @unique
+  playState             PlayState            @default(NOT_STARTED)
+  isMainGame            Boolean              @default(false)
+  priority              Priority?            @default(NONE)
+  interest              Int?
+  rating                Int?
+  preferredEnvironment  Environment?
+  compatOverrideStatus  CompatibilityStatus?
+  compatOverrideReason  String?
+  playSoon              Boolean              @default(false)
+  replayCandidate       Boolean              @default(false)
+  hidden                Boolean              @default(false)
+  notes                 String?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([playState])
+  @@index([isMainGame])
+}
+
+model GameAvailability {
+  id                 String            @id @default(cuid())
+  gameId             String
+  source             AvailabilitySource
+  displayName        String?
+  steamAppId         String?
+  steamPlaytimeTotal BigInt?
+  steamLastPlayed    DateTime?
+  addedAt            DateTime          @default(now())
+
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([gameId])
+}
+
+model WishlistEntry {
+  id          String   @id @default(cuid())
+  gameId      String   @unique
+  interest    Int?
+  targetPrice Decimal? @db.Decimal(10, 2)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  game     Game        @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  offers   DealOffer[]
+  refreshes PriceRefresh[]
+
+  @@index([gameId])
+}
+
+model DealOffer {
+  id             String   @id @default(cuid())
+  wishlistEntryId String
+  shop           String
+  country        String?
+  currency       String?
+  price          Decimal? @db.Decimal(10, 2)
+  regularPrice   Decimal? @db.Decimal(10, 2)
+  discount       Int?
+  historicalLow  Decimal? @db.Decimal(10, 2)
+  voucher        String?
+  drm            String?
+  platforms      Json?
+  url            String?
+  expiresAt      DateTime?
+  fetchedAt      DateTime @default(now())
+
+  wishlistEntry WishlistEntry @relation(fields: [wishlistEntryId], references: [id], onDelete: Cascade)
+
+  @@index([wishlistEntryId])
+}
+
+model PriceRefresh {
+  id             String   @id @default(cuid())
+  wishlistEntryId String?
+  status         SyncStatus
+  country        String?
+  requestedAt    DateTime @default(now())
+  finishedAt     DateTime?
+  counts         Json?
+
+  wishlistEntry WishlistEntry? @relation(fields: [wishlistEntryId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------------------
+// Compatibility
+// ---------------------------------------------------------------------------
+
+model CompatibilitySnapshot {
+  id         String   @id @default(cuid())
+  gameId     String
+  provider   Provider
+  result     Json?
+  sourceUrl  String?
+  fetchedAt  DateTime @default(now())
+  expiresAt  DateTime?
+
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, provider])
+}
+
+model EnvironmentCompatibility {
+  id        String              @id @default(cuid())
+  gameId    String
+  environment Environment
+  status    CompatibilityStatus
+  source    String?
+  updatedAt DateTime            @updatedAt
+
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, environment])
+}
+
+// ---------------------------------------------------------------------------
+// Duplicates
+// ---------------------------------------------------------------------------
+
+model PossibleDuplicate {
+  id          String          @id @default(cuid())
+  gameAId     String
+  gameBId     String
+  evidence    Json?
+  confidence  Float?
+  status      DuplicateStatus @default(OPEN)
+  reviewedAt  DateTime?
+
+  gameA Game @relation("DuplicatePairA", fields: [gameAId], references: [id], onDelete: Cascade)
+  gameB Game @relation("DuplicatePairB", fields: [gameBId], references: [id], onDelete: Cascade)
+
+  @@unique([gameAId, gameBId])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Recommendations
+// ---------------------------------------------------------------------------
+
+model RecommendationRun {
+  id        String               @id @default(cuid())
+  kind      RecommendationKind
+  context   Json?
+  createdAt DateTime             @default(now())
+  items     RecommendationItem[]
+
+  @@index([kind, createdAt])
+}
+
+model RecommendationItem {
+  id        String   @id @default(cuid())
+  runId     String
+  gameId    String
+  rank      Int
+  score     Float
+  positive  Json?
+  negative  Json?
+  caveats   Json?
+  createdAt DateTime @default(now())
+
+  run  RecommendationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  game Game              @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+}
+
+model RecommendationFeedback {
+  id        String    @id @default(cuid())
+  gameId    String
+  kind      String
+  reason    String?
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([gameId, kind])
+}
+
+// ---------------------------------------------------------------------------
+// Theme and operations
+// ---------------------------------------------------------------------------
+
+model WallpaperState {
+  id          Int      @id @default(1)
+  candidates  Json?
+  selectedIdx Int      @default(0)
+  renderTarget Json?
+  cachedAt    DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SyncRun {
+  id         String    @id @default(cuid())
+  provider   Provider
+  status     SyncStatus
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  counts     Json?
+  diagnostics Json?
+}
