@@ -27,43 +27,44 @@ changes the product direction, users, data, stack, monetization, UI/UX, or
 deployment, update the relevant part of `project-plan.md` too. Then re-run
 `/overview` before spec'ing the feature.
 
-You can edit this file directly or ask the AI to start a new feature by name. If
-`/feature "team workspaces"` does not match an existing item, it will propose the
-new build-plan line and any necessary project-plan changes, wait for approval,
-refresh the overview, and then write the feature spec.
-
-Scaffolding the app (create-next-app, etc.) and prototyping the look are
-pre-build steps, not features (see the README), so don't list them here. Start
-with your first real slice of functionality.
-
-A common order that works well: build the core UI with placeholder data first,
-then wire up data, auth, and integrations. Add deployment readiness only when
-the app is worth shipping or a provider config change is part of the work. Adapt
-it to your project.
-
 ## Format
 
 Use checkboxes. Each item should be a feature-sized outcome, not a loose task or
 a whole product area.
 
-Good:
-
-- [ ] 1. **Skill submission** - upload a skill package and save its metadata
-- [ ] 2. **Validation result** - run checks and show pass/fail status for a skill
-- [ ] 3. **Directory listing** - browse and filter published skills
-- [ ] 4. **Deployment readiness** - configure Render or Vercel and verify the
-  production build
-
-Avoid:
-
-- Upload stuff
-- Database
-- Make it look nice
-- Auth, billing, dashboard, validation, and deploy
-
-If your first pass is just rough bullets, that is okay. Run `/overview` after
-filling both planning docs; it will flag plan-shape problems and can propose a
-cleaned-up checkbox version before generating the project overview.
-
-- [ ] 1. **Feature one** - description
-- [ ] 2. **Feature two** - description
+- [ ] 1. **App shell and auth gate** - Next.js shell with desktop nav / mobile
+  bottom nav and single-user Google sign-in restricted to ALLOWED_GOOGLE_EMAIL
+- [ ] 2. **Manual catalog and library base** - create manual games (base /
+  other-platform / ROM) and a filtered library list
+- [ ] 3. **Game detail** - metadata, availability, record origin, personal fields
+  (priority, interest, rating, notes, tags, preferred environment)
+- [ ] 4. **Play states and main game** - play-state rules, main-game constraint,
+  candidate flags (play soon / replay / hidden), abandoned signal
+- [ ] 5. **Collections** - persistent manual Collections and calculated system
+  Collections
+- [ ] 6. **Steam connection and sync** - Steam OpenID connect, SteamID64, owned /
+  recent import, exact App ID idempotency, playtime and last-played
+- [ ] 7. **Possible duplicates** - similarity evidence, review, dismiss, delete,
+  or manual merge
+- [ ] 8. **Wishlist** - local wishlist for base games and DLC, target price,
+  notes, already-available warning
+- [ ] 9. **DLC model** - DLC as children of base games; DLC deals but never
+  play-next
+- [ ] 10. **ITAD price enrichment** - Steam App ID to ITAD ID, MX price queries,
+  offer cards, freshness and stale labeling, buy recommendations
+- [ ] 11. **Compatibility synthesis** - ProtonDB, anti-cheat dataset, Steam Deck
+  verified, per-environment practical status, personal override
+- [ ] 12. **Recommendation engine** - deterministic rule-based play-next and buy
+  scoring with explanations and feedback (not now / hide)
+- [ ] 13. **Today dashboard** - main game, in-progress, play-next recs, recent
+  Steam activity, wishlist deals, provider freshness
+- [ ] 14. **Dynamic visual theme** - theme from featured game, light/dark/system,
+  simple fallback, WCAG AA
+- [ ] 15. **Wallhaven desktop wallpaper** - SFW search, cached candidates, desktop
+  only, never on mobile
+- [ ] 16. **Settings** - connected services, sessions, theme, wallpaper /
+  reduced-data, refresh controls, JSON export
+- [ ] 17. **Backup and export** - on-demand JSON export and daily encrypted
+  off-site backup rotation
+- [ ] 18. **Deployment and CI** - Vercel config, env review, smoke test, Verify
+  command and CI

@@ -154,7 +154,7 @@ model AppSettings {
   portableDevice        String   @default("STEAM_DECK")
   fallbackOs            String   @default("WINDOWS")
   priceCountry          String   @default("MX")
-  timeZone              String   @default("America/Mexico_City")
+  timeZone              String   @default("America/Mexico_City") // IANA; Mexico eliminated DST in 2023, permanently UTC-6
   wallpaperEnabled      Boolean  @default(true)
   reducedData           Boolean  @default(false)
   steamDailySyncEnabled Boolean  @default(true)
@@ -164,8 +164,8 @@ model AppSettings {
 }
 
 model SteamConnection {
-  id              String     @id @default(cuid())
-  steamId64       String    @unique
+  id              Int      @id @default(1)
+  steamId64       String   @unique
   state           String
   lastSyncAt      DateTime?
   counts          Json?
@@ -228,7 +228,7 @@ model ExternalGameId {
 model MetadataSnapshot {
   id        String   @id @default(cuid())
   gameId    String
-  provider  String
+  provider  Provider
   payload   Json
   sourceUrl String?
   fetchedAt DateTime @default(now())

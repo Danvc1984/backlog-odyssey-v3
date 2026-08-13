@@ -1,9 +1,5 @@
 # AI Interaction Guidelines
 
-> **This blueprint is an overlay layer**, added on top of an already-scaffolded
-> app. Never run a framework scaffolder (create-next-app, etc.) inside this
-> directory. For a new project, scaffold the app first, then overlay these files.
-
 ## Communication
 
 - Be concise and direct

@@ -42,9 +42,11 @@
 
 - Components: `src/components/[feature]/ComponentName.tsx`
 - Pages: `src/app/[route]/page.tsx`
-- Server Actions: `src/actions/[feature].ts`
+- Prisma schema: `prisma/schema.prisma` (generated client in `src/generated/prisma`)
+- Server Actions: `src/actions/[feature].ts` (or `"use server"` inline in route files)
 - Types: `src/types/[feature].ts`
 - Lib/Utils: `src/lib/[utility].ts`
+- Auth: `src/lib/auth.ts`
 
 ## Naming
 
@@ -74,7 +76,11 @@
 - Server components fetch directly with Prisma
 - Client components use Server Actions
 - Validate all inputs with Zod
-- Scope every user-owned query by the authenticated Clerk user id (`clerkUserId`); never trust a client-supplied user id
+- Single-user app: no per-user query scoping. Corner of `src/lib/auth.ts`
+  enforces the one `ALLOWED_GOOGLE_EMAIL` at every protected server entry point
+  (pages, route handlers, Server Actions, scheduled jobs). Never trust a
+  client-supplied identity; check the authenticated session against the allowed
+  email, never against a client-supplied value.
 
 ## Error Handling
 
@@ -84,20 +90,15 @@
 
 ## Testing
 
-The blueprint installs no test runner; testing is opt-in at the project level,
-because the overlay can't know your stack. Adding unit testing is an explicit
-setup task the AI can do through the normal workflow, either as a build-plan item
-or with `/tests`. The setup should choose the stack-native runner, wire the
-scripts or commands, add a small example test, and update the Commands section
-of `AGENTS.md`.
+Vitest is configured as the unit test runner and the test gate is on (a `test`
+command is declared in `AGENTS.md`). Running `/tests` is not required for setup;
+use it only to normalize or extend coverage.
 
 When `AGENTS.md` declares a `Verify` command, treat it as the umbrella automated
 gate. It combines only the checks this project actually has, in this order when
 available: typecheck, tests, then build. The command does not enable an absent
 test runner or replace focused evidence. It gives local work and optional CI one
-exact command to run. `/ci` owns Verify and CI setup. `/tests` adds the real test
-command to Verify when it already exists, but never creates CI only because
-testing was configured.
+exact command to run. `/ci` owns Verify and CI setup.
 
 **The opt-in switch is one signal: a `test` command in the Commands section of
 `AGENTS.md`.** Declare one and **tests become a gate for logic-bearing steps**,
@@ -126,7 +127,7 @@ of the switch; the skills and `ai-interaction.md` only point back here.
   hardcoded tool name.
 
 Stack binding (swap for yours): a TypeScript app uses Vitest, `vi.mock()` for
-external dependencies (Prisma, Clerk, etc.), and `vi.useFakeTimers()` for
+external dependencies (Prisma, Auth.js, etc.), and `vi.useFakeTimers()` for
 time-dependent logic; a Python app would use pytest; a Go app `go test`.
 
 ## Browser Verification

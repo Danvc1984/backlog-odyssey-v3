@@ -7,7 +7,10 @@ there is a single source of truth.
 
 ## What this is
 
-A description of your project and the problem it solves.
+Backlog Odyssey is a private, single-user gaming library and decision assistant
+for a fixed Bazzite / Steam Deck / Windows setup focused on Mexico. It
+consolidates Steam ownership, manual entries, wishlist prices, compatibility
+evidence, and explainable recommendations into one place.
 
 This project is built with the **AI Blueprint**, a workflow layer, not an
 app skeleton. To start a new project, scaffold the app first in an empty folder
@@ -16,7 +19,7 @@ framework scaffolder inside a directory that already holds the blueprint files
 (`AGENTS.md`, `CLAUDE.md`, `.agents/`, `.claude/`, `blueprint/`); it fails
 because the directory isn't empty.
 
-New here? `README.md` explains the whole workflow.
+New here? `blueprint/README.md` explains the whole workflow.
 
 ## Read these for full context
 
@@ -104,11 +107,23 @@ checks do not make the Blueprint unusable.
 
 For a standard Next.js project. Change or remove if you're using something else.
 
-- Dev server: `npm run dev` (http://localhost:3000)
-- Build: `npm run build`
-- Production server: `npm run start`
-- Lint: `npm run lint`
+- Dev server: `pnpm dev` (http://localhost:3000)
+- Build: `pnpm build`
+- Production server: `pnpm start`
+- Lint: `pnpm lint`
+- Typecheck: `pnpm typecheck`
+- Unit tests (Vitest): `pnpm test`
+- E2E tests (Playwright): `pnpm test:e2e`
+- Prisma migrate (dev): `pnpm prisma:migrate`
+- Prisma migrate deploy (prod): `pnpm prisma:deploy`
+- Prisma DB seed: `pnpm db:seed`
+- Prisma Studio: `pnpm prisma:studio`
 
-Testing is opt-in. If this project does not already have a unit test runner, run
-`/tests` or `$tests` to add one and update this section with the real test
-commands.
+Unit testing uses Vitest and is enabled (a `test` command exists, so logic-bearing
+steps must ship passing tests). E2E uses Playwright and is not a gate.
+
+The optional `.github/workflows/verify.yml` must run that same command for pull
+requests and pushes to the default branch. Preserve existing workflows, use the
+project's real runtime and install command, and grant only `contents: read` by
+default. This setup does not add local git hooks, coverage, browser tests,
+security scans, or version matrices. Those remain later project choices.
