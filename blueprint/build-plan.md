@@ -34,7 +34,7 @@ a whole product area.
 
 - [x] 1. **App shell and auth gate** - Next.js shell with desktop nav / mobile
   bottom nav and single-user Google sign-in restricted to ALLOWED_GOOGLE_EMAIL
-- [ ] 2. **Manual catalog and library base** - create manual games (base /
+- [x] 2. **Manual catalog and library base** - create manual games (base /
   other-platform / ROM) and a filtered library list
 - [ ] 3. **Game detail** - metadata, availability, record origin, personal fields
   (priority, interest, rating, notes, tags, preferred environment)
