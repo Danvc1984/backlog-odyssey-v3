@@ -36,7 +36,7 @@ a whole product area.
   bottom nav and single-user Google sign-in restricted to ALLOWED_GOOGLE_EMAIL
 - [x] 2. **Manual catalog and library base** - create manual games (base /
   other-platform / ROM) and a filtered library list
-- [ ] 3. **Game detail** - metadata, availability, record origin, personal fields
+- [x] 3. **Game detail** - metadata, availability, record origin, personal fields
   (priority, interest, rating, notes, tags, preferred environment)
 - [ ] 4. **Play states and main game** - play-state rules, main-game constraint,
   candidate flags (play soon / replay / hidden), abandoned signal
