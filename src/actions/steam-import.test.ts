@@ -13,6 +13,7 @@ describe("importSteamGames", () => {
   const findUniqueConnection = vi.fn();
   const findUniqueExternalId = vi.fn();
   const updateManyAvailability = vi.fn();
+  const upsertLibraryEntry = vi.fn();
   const createGame = vi.fn();
   const updateConnection = vi.fn();
   const transaction = vi.fn();
@@ -20,6 +21,7 @@ describe("importSteamGames", () => {
     externalGameId: { findUnique: findUniqueExternalId },
     game: { create: createGame },
     gameAvailability: { updateMany: updateManyAvailability },
+    libraryEntry: { upsert: upsertLibraryEntry },
     steamConnection: { update: updateConnection },
   };
 
@@ -41,6 +43,7 @@ describe("importSteamGames", () => {
     });
     findUniqueExternalId.mockResolvedValue(null);
     updateManyAvailability.mockResolvedValue({ count: 1 });
+    upsertLibraryEntry.mockResolvedValue({});
     createGame.mockResolvedValue({});
     updateConnection.mockResolvedValue({});
   });
@@ -71,6 +74,7 @@ describe("importSteamGames", () => {
         type: "BASE_GAME",
         origin: "STEAM_IMPORT",
         name: "Portal",
+        libraryEntry: { create: {} },
         externalIds: {
           create: {
             namespaceId: "10",
@@ -121,6 +125,11 @@ describe("importSteamGames", () => {
       },
     });
     expect(createGame).not.toHaveBeenCalled();
+    expect(upsertLibraryEntry).toHaveBeenCalledWith({
+      where: { gameId: "game-1" },
+      create: { gameId: "game-1" },
+      update: {},
+    });
   });
 
   it("returns an error when Steam is disconnected", async () => {

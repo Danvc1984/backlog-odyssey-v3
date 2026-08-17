@@ -3,10 +3,7 @@
 import { fetchOwnedGames, type OwnedGame } from "@/lib/steam-api";
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
-
-function lastPlayedDate(timestamp: number): Date | null {
-  return timestamp > 0 ? new Date(timestamp * 1000) : null;
-}
+import { lastPlayedDate } from "@/lib/steam-utils";
 
 async function importGame(
   tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
@@ -34,6 +31,11 @@ async function importGame(
       where: { gameId: existing.gameId, source: "STEAM" },
       data: availability,
     });
+    await tx.libraryEntry.upsert({
+      where: { gameId: existing.gameId },
+      create: { gameId: existing.gameId },
+      update: {},
+    });
     return "updated";
   }
 
@@ -42,6 +44,7 @@ async function importGame(
       type: "BASE_GAME",
       origin: "STEAM_IMPORT",
       name: game.name,
+      libraryEntry: { create: {} },
       externalIds: {
         create: {
           namespaceId: externalId,

@@ -6,8 +6,9 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { importSteamGames } from "@/actions/steam-import";
+import { syncSteamPlaytime } from "@/actions/steam-sync";
 import { disconnectSteam } from "@/actions/steam";
-import { Import, Unplug } from "lucide-react";
+import { Import, RefreshCw, Unplug } from "lucide-react";
 
 export function SteamConnectionCard({
   connected,
@@ -20,6 +21,7 @@ export function SteamConnectionCard({
   const searchParams = useSearchParams();
   const [submitting, setSubmitting] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     const status = searchParams.get("steam");
@@ -61,6 +63,19 @@ export function SteamConnectionCard({
     }
   };
 
+  const handleSync = async () => {
+    setSyncing(true);
+    const result = await syncSteamPlaytime();
+    setSyncing(false);
+
+    if (result.success) {
+      toast.success(`Synced ${result.data.synced} games`);
+      router.refresh();
+    } else {
+      toast.error(result.error ?? "Failed to sync Steam playtime");
+    }
+  };
+
   return (
     <div className="rounded-lg border border-border p-4">
       <div className="flex items-center justify-between gap-3">
@@ -73,12 +88,21 @@ export function SteamConnectionCard({
           </p>
         </div>
         {connected ? (
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSync}
+              disabled={syncing || importing || submitting}
+            >
+              <RefreshCw />
+              {syncing ? "Syncing..." : "Sync now"}
+            </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={handleImport}
-              disabled={importing || submitting}
+              disabled={importing || syncing || submitting}
             >
               <Import />
               {importing ? "Importing..." : "Import from Steam"}

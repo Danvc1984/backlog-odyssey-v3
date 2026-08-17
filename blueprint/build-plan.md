@@ -42,13 +42,13 @@ a whole product area.
   candidate flags (play soon / replay / hidden), abandoned signal
 - [x] 5. **Collections** - persistent manual Collections and calculated system
   Collections
-- [ ] 6. **Steam connection and sync** - Steam OpenID connect, SteamID64, owned /
+- [x] 6. **Steam connection and sync** - Steam OpenID connect, SteamID64, owned /
   recent import, exact App ID idempotency, playtime and last-played
   - [x] 6a. Steam account linking - OpenID connect flow, SteamID64 storage,
     connection status, disconnect
   - [x] 6b. Owned game import - fetch owned games, create Game + ExternalGameId
     (STEAM_APP) + GameAvailability, exact App ID idempotency
-  - [ ] 6c. Playtime and recent sync - sync playtime and last-played,
+  - [x] 6c. Playtime and recent sync - sync playtime and last-played,
     SyncRun logging, daily refresh
 - [ ] 7. **Possible duplicates** - similarity evidence, review, dismiss, delete,
   or manual merge
