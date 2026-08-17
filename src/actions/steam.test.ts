@@ -14,7 +14,12 @@ describe("disconnectSteam", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
-    (prisma as any).steamConnection = {
+    (prisma as unknown as {
+      steamConnection: {
+        findUnique: typeof mockFindUnique;
+        delete: typeof mockDelete;
+      };
+    }).steamConnection = {
       findUnique: mockFindUnique,
       delete: mockDelete,
     };

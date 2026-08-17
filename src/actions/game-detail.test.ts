@@ -13,7 +13,9 @@ describe("updatePersonalFields", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
-    (prisma as any).libraryEntry = { update: mockUpdate };
+    (prisma as unknown as {
+      libraryEntry: { update: typeof mockUpdate };
+    }).libraryEntry = { update: mockUpdate };
     mockUpdate.mockResolvedValue({});
   });
 
@@ -104,14 +106,28 @@ describe("updatePlayState", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
-    (prisma as any).libraryEntry = {
+    (prisma as unknown as {
+      libraryEntry: {
+        update: typeof mockUpdate;
+        updateMany: typeof mockUpdateMany;
+      };
+      $transaction: typeof mockTransaction;
+    }).libraryEntry = {
       update: mockUpdate,
       updateMany: mockUpdateMany,
     };
-    (prisma as any).$transaction = mockTransaction;
+    (prisma as unknown as { $transaction: typeof mockTransaction }).$transaction =
+      mockTransaction;
     mockUpdate.mockResolvedValue({});
-    mockTransaction.mockImplementation(async (fn: any) =>
-      fn({
+    mockTransaction.mockImplementation(
+      async (
+        fn: (client: {
+          libraryEntry: {
+            updateMany: typeof mockUpdateMany;
+            update: typeof mockTxUpdate;
+          };
+        }) => unknown,
+      ) => fn({
         libraryEntry: {
           updateMany: mockUpdateMany,
           update: mockTxUpdate,
@@ -198,8 +214,12 @@ describe("addTagToGame", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
-    (prisma as any).personalTag = { upsert: mockUpsert };
-    (prisma as any).gameTag = { create: mockCreate };
+    (prisma as unknown as { personalTag: { upsert: typeof mockUpsert } }).personalTag = {
+      upsert: mockUpsert,
+    };
+    (prisma as unknown as { gameTag: { create: typeof mockCreate } }).gameTag = {
+      create: mockCreate,
+    };
     mockUpsert.mockResolvedValue({ id: "tag-1", name: "RPG" });
     mockCreate.mockResolvedValue({});
   });

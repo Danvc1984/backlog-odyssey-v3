@@ -41,7 +41,9 @@ describe("getSystemCollections", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (prisma as any).libraryEntry = { count: mockCount };
+    (prisma as unknown as { libraryEntry: { count: typeof mockCount } }).libraryEntry = {
+      count: mockCount,
+    };
     mockCount.mockResolvedValue(3);
   });
 
@@ -71,7 +73,9 @@ describe("getSystemCollectionGames", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (prisma as any).libraryEntry = { findMany: mockFindMany };
+    (prisma as unknown as {
+      libraryEntry: { findMany: typeof mockFindMany };
+    }).libraryEntry = { findMany: mockFindMany };
     mockFindMany.mockResolvedValue([]);
   });
 

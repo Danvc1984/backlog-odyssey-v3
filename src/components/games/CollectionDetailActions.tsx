@@ -143,7 +143,7 @@ export function CollectionDetailActions({
           <DialogHeader>
             <DialogTitle>Delete collection?</DialogTitle>
             <DialogDescription>
-              "{initialName}" and its memberships will be removed. The games
+              &quot;{initialName}&quot; and its memberships will be removed. The games
               themselves stay in your library.
             </DialogDescription>
           </DialogHeader>

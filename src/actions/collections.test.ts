@@ -20,7 +20,10 @@ describe("createCollection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
-    (prisma as any).collection = {
+    (prisma as unknown as { collection: {
+      findFirst: typeof mockFindFirst;
+      create: typeof mockCreate;
+    } }).collection = {
       findFirst: mockFindFirst,
       create: mockCreate,
     };
@@ -97,7 +100,10 @@ describe("updateCollection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
-    (prisma as any).collection = {
+    (prisma as unknown as { collection: {
+      findFirst: typeof mockFindFirst;
+      update: typeof mockUpdate;
+    } }).collection = {
       findFirst: mockFindFirst,
       update: mockUpdate,
     };
@@ -166,7 +172,9 @@ describe("deleteCollection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
-    (prisma as any).collection = { delete: mockDelete };
+    (prisma as unknown as { collection: { delete: typeof mockDelete } }).collection = {
+      delete: mockDelete,
+    };
     mockDelete.mockResolvedValue({ id: "coll-1" });
   });
 
@@ -192,7 +200,9 @@ describe("addGameToCollection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
-    (prisma as any).collectionMembership = { create: mockCreate };
+    (prisma as unknown as {
+      collectionMembership: { create: typeof mockCreate };
+    }).collectionMembership = { create: mockCreate };
     mockCreate.mockResolvedValue({ collectionId: "coll-1", gameId: "game-1" });
   });
 
@@ -229,7 +239,9 @@ describe("removeGameFromCollection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
-    (prisma as any).collectionMembership = { deleteMany: mockDeleteMany };
+    (prisma as unknown as {
+      collectionMembership: { deleteMany: typeof mockDeleteMany };
+    }).collectionMembership = { deleteMany: mockDeleteMany };
     mockDeleteMany.mockResolvedValue({ count: 1 });
   });
 

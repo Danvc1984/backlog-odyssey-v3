@@ -7,13 +7,13 @@
 > finding is `open` or `fixed`, then archives resolved findings with the work
 > and resets this file.
 
-### F-04 [P2] open - Lint gate fails on test fixtures and JSX text
+### F-04 [P2] fixed - Lint gate fails on test fixtures and JSX text
 
 **File:** `src/actions/collections.test.ts:23`, `src/actions/game-detail.test.ts:16`, `src/actions/steam.test.ts:17`, `src/lib/system-collections.test.ts:44`, `src/components/games/CollectionDetailActions.tsx:146`, `src/components/games/CreateCollectionDialog.tsx:76`
 **Found:** 2026-08-17 by /audit (scope: full)
 **Why it matters:** `pnpm lint` exits with 20 errors. The test fixtures use explicit `any` despite the TypeScript standard forbidding it, and two UI components contain unescaped quote characters rejected by the configured React lint rules.
 **Suggested fix:** Replace fixture casts with typed Prisma test doubles and escape the rendered quote characters with JSX entities or equivalent text.
-**Resolution:**
+**Resolution:** Replaced explicit `any` casts with typed partial Prisma mocks and escaped the JSX quote characters. `pnpm lint` now exits successfully with one unrelated warning in `TagsSection.tsx`. `/audit` must re-review before closure.
 
 ### F-05 [P2] open - Placeholder test adds no product coverage
 

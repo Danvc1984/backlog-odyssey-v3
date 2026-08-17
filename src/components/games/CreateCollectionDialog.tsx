@@ -73,7 +73,7 @@ export function CreateCollectionDialog() {
         <DialogHeader>
           <DialogTitle>New collection</DialogTitle>
           <DialogDescription>
-            Group games together, e.g. "Cozy games" or "Local co-op".
+            Group games together, e.g. &quot;Cozy games&quot; or &quot;Local co-op&quot;.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4">
