@@ -46,7 +46,7 @@ a whole product area.
   recent import, exact App ID idempotency, playtime and last-played
   - [x] 6a. Steam account linking - OpenID connect flow, SteamID64 storage,
     connection status, disconnect
-  - [ ] 6b. Owned game import - fetch owned games, create Game + ExternalGameId
+  - [x] 6b. Owned game import - fetch owned games, create Game + ExternalGameId
     (STEAM_APP) + GameAvailability, exact App ID idempotency
   - [ ] 6c. Playtime and recent sync - sync playtime and last-played,
     SyncRun logging, daily refresh

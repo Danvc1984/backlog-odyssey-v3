@@ -5,8 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { importSteamGames } from "@/actions/steam-import";
 import { disconnectSteam } from "@/actions/steam";
-import { Unplug } from "lucide-react";
+import { Import, Unplug } from "lucide-react";
 
 export function SteamConnectionCard({
   connected,
@@ -18,6 +19,7 @@ export function SteamConnectionCard({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [submitting, setSubmitting] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     const status = searchParams.get("steam");
@@ -44,6 +46,21 @@ export function SteamConnectionCard({
     }
   };
 
+  const handleImport = async () => {
+    setImporting(true);
+    const result = await importSteamGames();
+    setImporting(false);
+
+    if (result.success) {
+      toast.success(
+        `Imported ${result.data.imported} new games, updated ${result.data.updated} existing`,
+      );
+      router.refresh();
+    } else {
+      toast.error(result.error ?? "Failed to import Steam games");
+    }
+  };
+
   return (
     <div className="rounded-lg border border-border p-4">
       <div className="flex items-center justify-between gap-3">
@@ -56,15 +73,26 @@ export function SteamConnectionCard({
           </p>
         </div>
         {connected ? (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDisconnect}
-            disabled={submitting}
-          >
-            <Unplug />
-            {submitting ? "Disconnecting..." : "Disconnect"}
-          </Button>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleImport}
+              disabled={importing || submitting}
+            >
+              <Import />
+              {importing ? "Importing..." : "Import from Steam"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDisconnect}
+              disabled={submitting || importing}
+            >
+              <Unplug />
+              {submitting ? "Disconnecting..." : "Disconnect"}
+            </Button>
+          </div>
         ) : (
           <Link href="/api/steam/connect">
             <Button size="sm">Connect Steam</Button>
