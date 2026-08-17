@@ -50,7 +50,7 @@ SyncRun. Provider data is rebuildable; personal intent is authoritative.
 
 Next.js App Router, React, TypeScript, Turbopack, pnpm, Tailwind CSS v4 with
 shadcn/ui on Radix UI, Prisma ORM on Supabase PostgreSQL, Auth.js with Google
-(single allowed email), Zod, Vitest, Playwright, Vercel, separate encrypted
+(single allowed email), Zod, Vitest, Vercel, separate encrypted
 off-site backups.
 
 ## 6. Monetize - How will this make money?

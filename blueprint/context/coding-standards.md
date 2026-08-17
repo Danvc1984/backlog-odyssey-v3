@@ -133,19 +133,17 @@ time-dependent logic; a Python app would use pytest; a Go app `go test`.
 ## Browser Verification
 
 For UI and integration behavior, prefer real browser evidence over reading the
-code and assuming it works.
+code and assuming it works. This project keeps no automated E2E runner; browser
+verification is done live by the owner against the dev server.
 
-- If Playwright is already installed, or the Commands section of `AGENTS.md`
-  declares a Playwright script, use Playwright for browser checks, screenshots,
-  console-error checks, and user-flow verification.
-- If Playwright is not installed, do not add it silently in the middle of an
-  unrelated feature. Use the available dev server, browser screenshots, build
-  output, API output, or manual verification evidence instead.
-- Add Playwright only when the user asks for it, or when the current spec is
-  explicitly about setting up browser automation.
-- Browser evidence is especially important for flows that click, type, submit,
-  navigate, download files, render complex layouts, or depend on client-side
-  state.
+- Start the dev server with `pnpm dev` and drive the relevant flow by hand.
+- Confirm observable results in the running app: the value persists after reload,
+  the expected toast or state appears, the library or detail page shows the
+  change.
+- Use server action contract tests (Vitest) for the logic underneath UI flows;
+  visual and integration claims ride on a live run plus the build.
+- Browser evidence matters most for flows that click, type, submit, navigate,
+  download files, render complex layouts, or depend on client-side state.
 
 ## Code Quality
 

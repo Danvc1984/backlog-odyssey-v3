@@ -110,7 +110,6 @@ is the current ground truth and should track these responsibilities.
 - **Auth.js (Google)** - single allowed-email authentication, database sessions.
 - **Zod** - input validation on server boundaries.
 - **Vitest** - unit tests (gate).
-- **Playwright** - E2E (not a gate).
 - **Vercel** - deployment host.
 - **Off-site encrypted backups** - daily logical backup of irreplaceable tables.
 

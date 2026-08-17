@@ -668,7 +668,6 @@ RecommendationRun ──1:N── RecommendationItem ──N:1── Game
 - Auth.js with Google
 - Zod
 - Vitest
-- Playwright
 - Vercel
 - Separate off-site backup storage
 
@@ -711,7 +710,6 @@ All API keys and provider calls containing credentials remain server-side. The s
 - `pnpm build`
 - `pnpm lint`
 - `pnpm test`
-- `pnpm test:e2e`
 - `pnpm prisma:migrate`
 - `pnpm prisma:studio`
 

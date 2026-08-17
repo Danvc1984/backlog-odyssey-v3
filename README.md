@@ -12,7 +12,7 @@ play-next / buy recommendations.
 - [shadcn/ui](https://ui.shadcn.com) on Radix UI
 - [Prisma](https://www.prisma.io) + PostgreSQL on Supabase
 - [Auth.js](https://authjs.dev) with Google (single allowed email)
-- Vitest and Playwright for tests
+- Vitest for tests
 
 See `blueprint/README.md` for the development workflow.
 
@@ -23,7 +23,6 @@ See `blueprint/README.md` for the development workflow.
 - Lint: `pnpm lint`
 - Typecheck: `pnpm typecheck`
 - Unit tests: `pnpm test`
-- E2E tests: `pnpm test:e2e`
 - Prisma migrate (dev): `pnpm prisma:migrate`
 - Prisma DB seed: `pnpm db:seed`
 - Prisma Studio: `pnpm prisma:studio`

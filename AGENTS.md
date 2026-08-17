@@ -113,14 +113,13 @@ For a standard Next.js project. Change or remove if you're using something else.
 - Lint: `pnpm lint`
 - Typecheck: `pnpm typecheck`
 - Unit tests (Vitest): `pnpm test`
-- E2E tests (Playwright): `pnpm test:e2e`
 - Prisma migrate (dev): `pnpm prisma:migrate`
 - Prisma migrate deploy (prod): `pnpm prisma:deploy`
 - Prisma DB seed: `pnpm db:seed`
 - Prisma Studio: `pnpm prisma:studio`
 
 Unit testing uses Vitest and is enabled (a `test` command exists, so logic-bearing
-steps must ship passing tests). E2E uses Playwright and is not a gate.
+steps must ship passing tests).
 
 The optional `.github/workflows/verify.yml` must run that same command for pull
 requests and pushes to the default branch. Preserve existing workflows, use the

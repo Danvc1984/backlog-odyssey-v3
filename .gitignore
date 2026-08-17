@@ -13,11 +13,6 @@
 # testing
 /coverage
 
-# playwright
-/test-results/
-/playwright-report/
-/blob-report/
-
 # prisma generated client (regenerable via `pnpm prisma generate`)
 src/generated/prisma
 
