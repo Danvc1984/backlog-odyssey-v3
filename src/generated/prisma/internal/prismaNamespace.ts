@@ -2835,6 +2835,20 @@ export type ListEnumMatchMethodFieldRefInput<$PrismaModel> = FieldRefInputType<$
 
 
 /**
+ * Reference to a field of type 'Provider'
+ */
+export type EnumProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Provider'>
+    
+
+
+/**
+ * Reference to a field of type 'Provider[]'
+ */
+export type ListEnumProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Provider[]'>
+    
+
+
+/**
  * Reference to a field of type 'PlayState'
  */
 export type EnumPlayStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PlayState'>
@@ -2943,20 +2957,6 @@ export type EnumSyncStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Prism
  * Reference to a field of type 'SyncStatus[]'
  */
 export type ListEnumSyncStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SyncStatus[]'>
-    
-
-
-/**
- * Reference to a field of type 'Provider'
- */
-export type EnumProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Provider'>
-    
-
-
-/**
- * Reference to a field of type 'Provider[]'
- */
-export type ListEnumProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Provider[]'>
     
 
 

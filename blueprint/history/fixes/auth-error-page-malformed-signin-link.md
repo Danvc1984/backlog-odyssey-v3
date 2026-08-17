@@ -41,7 +41,7 @@ auth guard in the `(app)` layout.
 ## Verify
 
 1. Run `pnpm dev`
-2. Navigate to `http://localhost:3000/api/auth/error?error=AccessDenied`
+2. Navigate to `http://localhost:3500/api/auth/error?error=AccessDenied`
 3. Confirm the custom error page renders with a "Sign in" link pointing to `/`
 4. Click the link, confirm it goes directly to `/` (no malformed URL, no double redirect)
 5. Run `pnpm test && pnpm typecheck && pnpm lint && pnpm build`

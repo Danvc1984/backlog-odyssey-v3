@@ -321,6 +321,13 @@ export type EnumMatchMethodWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumMatchMethodFilter<$PrismaModel>
 }
 
+export type EnumProviderFilter<$PrismaModel = never> = {
+  equals?: $Enums.Provider | Prisma.EnumProviderFieldRefInput<$PrismaModel>
+  in?: $Enums.Provider[] | Prisma.ListEnumProviderFieldRefInput<$PrismaModel>
+  notIn?: $Enums.Provider[] | Prisma.ListEnumProviderFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumProviderFilter<$PrismaModel> | $Enums.Provider
+}
+
 export type JsonFilter<$PrismaModel = never> =
 | Prisma.PatchUndefined<
     Prisma.Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
@@ -343,6 +350,16 @@ export type JsonFilterBase<$PrismaModel = never> = {
   gt?: runtime.InputJsonValue | Prisma.JsonFieldRefInput<$PrismaModel>
   gte?: runtime.InputJsonValue | Prisma.JsonFieldRefInput<$PrismaModel>
   not?: runtime.InputJsonValue | Prisma.JsonFieldRefInput<$PrismaModel> | Prisma.JsonNullValueFilter
+}
+
+export type EnumProviderWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.Provider | Prisma.EnumProviderFieldRefInput<$PrismaModel>
+  in?: $Enums.Provider[] | Prisma.ListEnumProviderFieldRefInput<$PrismaModel>
+  notIn?: $Enums.Provider[] | Prisma.ListEnumProviderFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumProviderWithAggregatesFilter<$PrismaModel> | $Enums.Provider
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumProviderFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumProviderFilter<$PrismaModel>
 }
 
 export type JsonWithAggregatesFilter<$PrismaModel = never> =
@@ -526,23 +543,6 @@ export type EnumSyncStatusWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumSyncStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumSyncStatusFilter<$PrismaModel>
-}
-
-export type EnumProviderFilter<$PrismaModel = never> = {
-  equals?: $Enums.Provider | Prisma.EnumProviderFieldRefInput<$PrismaModel>
-  in?: $Enums.Provider[] | Prisma.ListEnumProviderFieldRefInput<$PrismaModel>
-  notIn?: $Enums.Provider[] | Prisma.ListEnumProviderFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumProviderFilter<$PrismaModel> | $Enums.Provider
-}
-
-export type EnumProviderWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.Provider | Prisma.EnumProviderFieldRefInput<$PrismaModel>
-  in?: $Enums.Provider[] | Prisma.ListEnumProviderFieldRefInput<$PrismaModel>
-  notIn?: $Enums.Provider[] | Prisma.ListEnumProviderFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumProviderWithAggregatesFilter<$PrismaModel> | $Enums.Provider
-  _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumProviderFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumProviderFilter<$PrismaModel>
 }
 
 export type EnumEnvironmentFilter<$PrismaModel = never> = {
@@ -960,6 +960,23 @@ export type NestedEnumMatchMethodWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumMatchMethodFilter<$PrismaModel>
 }
 
+export type NestedEnumProviderFilter<$PrismaModel = never> = {
+  equals?: $Enums.Provider | Prisma.EnumProviderFieldRefInput<$PrismaModel>
+  in?: $Enums.Provider[] | Prisma.ListEnumProviderFieldRefInput<$PrismaModel>
+  notIn?: $Enums.Provider[] | Prisma.ListEnumProviderFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumProviderFilter<$PrismaModel> | $Enums.Provider
+}
+
+export type NestedEnumProviderWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.Provider | Prisma.EnumProviderFieldRefInput<$PrismaModel>
+  in?: $Enums.Provider[] | Prisma.ListEnumProviderFieldRefInput<$PrismaModel>
+  notIn?: $Enums.Provider[] | Prisma.ListEnumProviderFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumProviderWithAggregatesFilter<$PrismaModel> | $Enums.Provider
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumProviderFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumProviderFilter<$PrismaModel>
+}
+
 export type NestedJsonFilter<$PrismaModel = never> =
 | Prisma.PatchUndefined<
     Prisma.Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
@@ -1138,23 +1155,6 @@ export type NestedEnumSyncStatusWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumSyncStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumSyncStatusFilter<$PrismaModel>
-}
-
-export type NestedEnumProviderFilter<$PrismaModel = never> = {
-  equals?: $Enums.Provider | Prisma.EnumProviderFieldRefInput<$PrismaModel>
-  in?: $Enums.Provider[] | Prisma.ListEnumProviderFieldRefInput<$PrismaModel>
-  notIn?: $Enums.Provider[] | Prisma.ListEnumProviderFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumProviderFilter<$PrismaModel> | $Enums.Provider
-}
-
-export type NestedEnumProviderWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.Provider | Prisma.EnumProviderFieldRefInput<$PrismaModel>
-  in?: $Enums.Provider[] | Prisma.ListEnumProviderFieldRefInput<$PrismaModel>
-  notIn?: $Enums.Provider[] | Prisma.ListEnumProviderFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumProviderWithAggregatesFilter<$PrismaModel> | $Enums.Provider
-  _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumProviderFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumProviderFilter<$PrismaModel>
 }
 
 export type NestedEnumEnvironmentFilter<$PrismaModel = never> = {

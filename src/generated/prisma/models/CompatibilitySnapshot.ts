@@ -403,10 +403,6 @@ export type CompatibilitySnapshotUncheckedUpdateManyWithoutGameNestedInput = {
   deleteMany?: Prisma.CompatibilitySnapshotScalarWhereInput | Prisma.CompatibilitySnapshotScalarWhereInput[]
 }
 
-export type EnumProviderFieldUpdateOperationsInput = {
-  set?: $Enums.Provider
-}
-
 export type CompatibilitySnapshotCreateWithoutGameInput = {
   id?: string
   provider: $Enums.Provider

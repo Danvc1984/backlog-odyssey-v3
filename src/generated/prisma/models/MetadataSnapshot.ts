@@ -27,7 +27,7 @@ export type AggregateMetadataSnapshot = {
 export type MetadataSnapshotMinAggregateOutputType = {
   id: string | null
   gameId: string | null
-  provider: string | null
+  provider: $Enums.Provider | null
   sourceUrl: string | null
   fetchedAt: Date | null
   expiresAt: Date | null
@@ -36,7 +36,7 @@ export type MetadataSnapshotMinAggregateOutputType = {
 export type MetadataSnapshotMaxAggregateOutputType = {
   id: string | null
   gameId: string | null
-  provider: string | null
+  provider: $Enums.Provider | null
   sourceUrl: string | null
   fetchedAt: Date | null
   expiresAt: Date | null
@@ -158,7 +158,7 @@ export type MetadataSnapshotGroupByArgs<ExtArgs extends runtime.Types.Extensions
 export type MetadataSnapshotGroupByOutputType = {
   id: string
   gameId: string
-  provider: string
+  provider: $Enums.Provider
   payload: runtime.JsonValue
   sourceUrl: string | null
   fetchedAt: Date
@@ -189,7 +189,7 @@ export type MetadataSnapshotWhereInput = {
   NOT?: Prisma.MetadataSnapshotWhereInput | Prisma.MetadataSnapshotWhereInput[]
   id?: Prisma.StringFilter<"MetadataSnapshot"> | string
   gameId?: Prisma.StringFilter<"MetadataSnapshot"> | string
-  provider?: Prisma.StringFilter<"MetadataSnapshot"> | string
+  provider?: Prisma.EnumProviderFilter<"MetadataSnapshot"> | $Enums.Provider
   payload?: Prisma.JsonFilter<"MetadataSnapshot">
   sourceUrl?: Prisma.StringNullableFilter<"MetadataSnapshot"> | string | null
   fetchedAt?: Prisma.DateTimeFilter<"MetadataSnapshot"> | Date | string
@@ -214,7 +214,7 @@ export type MetadataSnapshotWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.MetadataSnapshotWhereInput[]
   NOT?: Prisma.MetadataSnapshotWhereInput | Prisma.MetadataSnapshotWhereInput[]
   gameId?: Prisma.StringFilter<"MetadataSnapshot"> | string
-  provider?: Prisma.StringFilter<"MetadataSnapshot"> | string
+  provider?: Prisma.EnumProviderFilter<"MetadataSnapshot"> | $Enums.Provider
   payload?: Prisma.JsonFilter<"MetadataSnapshot">
   sourceUrl?: Prisma.StringNullableFilter<"MetadataSnapshot"> | string | null
   fetchedAt?: Prisma.DateTimeFilter<"MetadataSnapshot"> | Date | string
@@ -241,7 +241,7 @@ export type MetadataSnapshotScalarWhereWithAggregatesInput = {
   NOT?: Prisma.MetadataSnapshotScalarWhereWithAggregatesInput | Prisma.MetadataSnapshotScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"MetadataSnapshot"> | string
   gameId?: Prisma.StringWithAggregatesFilter<"MetadataSnapshot"> | string
-  provider?: Prisma.StringWithAggregatesFilter<"MetadataSnapshot"> | string
+  provider?: Prisma.EnumProviderWithAggregatesFilter<"MetadataSnapshot"> | $Enums.Provider
   payload?: Prisma.JsonWithAggregatesFilter<"MetadataSnapshot">
   sourceUrl?: Prisma.StringNullableWithAggregatesFilter<"MetadataSnapshot"> | string | null
   fetchedAt?: Prisma.DateTimeWithAggregatesFilter<"MetadataSnapshot"> | Date | string
@@ -250,7 +250,7 @@ export type MetadataSnapshotScalarWhereWithAggregatesInput = {
 
 export type MetadataSnapshotCreateInput = {
   id?: string
-  provider: string
+  provider: $Enums.Provider
   payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: string | null
   fetchedAt?: Date | string
@@ -261,7 +261,7 @@ export type MetadataSnapshotCreateInput = {
 export type MetadataSnapshotUncheckedCreateInput = {
   id?: string
   gameId: string
-  provider: string
+  provider: $Enums.Provider
   payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: string | null
   fetchedAt?: Date | string
@@ -270,7 +270,7 @@ export type MetadataSnapshotUncheckedCreateInput = {
 
 export type MetadataSnapshotUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  provider?: Prisma.StringFieldUpdateOperationsInput | string
+  provider?: Prisma.EnumProviderFieldUpdateOperationsInput | $Enums.Provider
   payload?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fetchedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -281,7 +281,7 @@ export type MetadataSnapshotUpdateInput = {
 export type MetadataSnapshotUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   gameId?: Prisma.StringFieldUpdateOperationsInput | string
-  provider?: Prisma.StringFieldUpdateOperationsInput | string
+  provider?: Prisma.EnumProviderFieldUpdateOperationsInput | $Enums.Provider
   payload?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fetchedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -291,7 +291,7 @@ export type MetadataSnapshotUncheckedUpdateInput = {
 export type MetadataSnapshotCreateManyInput = {
   id?: string
   gameId: string
-  provider: string
+  provider: $Enums.Provider
   payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: string | null
   fetchedAt?: Date | string
@@ -300,7 +300,7 @@ export type MetadataSnapshotCreateManyInput = {
 
 export type MetadataSnapshotUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  provider?: Prisma.StringFieldUpdateOperationsInput | string
+  provider?: Prisma.EnumProviderFieldUpdateOperationsInput | $Enums.Provider
   payload?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fetchedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -310,7 +310,7 @@ export type MetadataSnapshotUpdateManyMutationInput = {
 export type MetadataSnapshotUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   gameId?: Prisma.StringFieldUpdateOperationsInput | string
-  provider?: Prisma.StringFieldUpdateOperationsInput | string
+  provider?: Prisma.EnumProviderFieldUpdateOperationsInput | $Enums.Provider
   payload?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fetchedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -397,9 +397,13 @@ export type MetadataSnapshotUncheckedUpdateManyWithoutGameNestedInput = {
   deleteMany?: Prisma.MetadataSnapshotScalarWhereInput | Prisma.MetadataSnapshotScalarWhereInput[]
 }
 
+export type EnumProviderFieldUpdateOperationsInput = {
+  set?: $Enums.Provider
+}
+
 export type MetadataSnapshotCreateWithoutGameInput = {
   id?: string
-  provider: string
+  provider: $Enums.Provider
   payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: string | null
   fetchedAt?: Date | string
@@ -408,7 +412,7 @@ export type MetadataSnapshotCreateWithoutGameInput = {
 
 export type MetadataSnapshotUncheckedCreateWithoutGameInput = {
   id?: string
-  provider: string
+  provider: $Enums.Provider
   payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: string | null
   fetchedAt?: Date | string
@@ -447,7 +451,7 @@ export type MetadataSnapshotScalarWhereInput = {
   NOT?: Prisma.MetadataSnapshotScalarWhereInput | Prisma.MetadataSnapshotScalarWhereInput[]
   id?: Prisma.StringFilter<"MetadataSnapshot"> | string
   gameId?: Prisma.StringFilter<"MetadataSnapshot"> | string
-  provider?: Prisma.StringFilter<"MetadataSnapshot"> | string
+  provider?: Prisma.EnumProviderFilter<"MetadataSnapshot"> | $Enums.Provider
   payload?: Prisma.JsonFilter<"MetadataSnapshot">
   sourceUrl?: Prisma.StringNullableFilter<"MetadataSnapshot"> | string | null
   fetchedAt?: Prisma.DateTimeFilter<"MetadataSnapshot"> | Date | string
@@ -456,7 +460,7 @@ export type MetadataSnapshotScalarWhereInput = {
 
 export type MetadataSnapshotCreateManyGameInput = {
   id?: string
-  provider: string
+  provider: $Enums.Provider
   payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: string | null
   fetchedAt?: Date | string
@@ -465,7 +469,7 @@ export type MetadataSnapshotCreateManyGameInput = {
 
 export type MetadataSnapshotUpdateWithoutGameInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  provider?: Prisma.StringFieldUpdateOperationsInput | string
+  provider?: Prisma.EnumProviderFieldUpdateOperationsInput | $Enums.Provider
   payload?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fetchedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -474,7 +478,7 @@ export type MetadataSnapshotUpdateWithoutGameInput = {
 
 export type MetadataSnapshotUncheckedUpdateWithoutGameInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  provider?: Prisma.StringFieldUpdateOperationsInput | string
+  provider?: Prisma.EnumProviderFieldUpdateOperationsInput | $Enums.Provider
   payload?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fetchedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -483,7 +487,7 @@ export type MetadataSnapshotUncheckedUpdateWithoutGameInput = {
 
 export type MetadataSnapshotUncheckedUpdateManyWithoutGameInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  provider?: Prisma.StringFieldUpdateOperationsInput | string
+  provider?: Prisma.EnumProviderFieldUpdateOperationsInput | $Enums.Provider
   payload?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fetchedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -554,7 +558,7 @@ export type $MetadataSnapshotPayload<ExtArgs extends runtime.Types.Extensions.In
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     gameId: string
-    provider: string
+    provider: $Enums.Provider
     payload: runtime.JsonValue
     sourceUrl: string | null
     fetchedAt: Date
@@ -985,7 +989,7 @@ export interface Prisma__MetadataSnapshotClient<T, Null = never, ExtArgs extends
 export interface MetadataSnapshotFieldRefs {
   readonly id: Prisma.FieldRef<"MetadataSnapshot", 'String'>
   readonly gameId: Prisma.FieldRef<"MetadataSnapshot", 'String'>
-  readonly provider: Prisma.FieldRef<"MetadataSnapshot", 'String'>
+  readonly provider: Prisma.FieldRef<"MetadataSnapshot", 'Provider'>
   readonly payload: Prisma.FieldRef<"MetadataSnapshot", 'Json'>
   readonly sourceUrl: Prisma.FieldRef<"MetadataSnapshot", 'String'>
   readonly fetchedAt: Prisma.FieldRef<"MetadataSnapshot", 'DateTime'>

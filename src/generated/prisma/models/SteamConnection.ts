@@ -20,12 +20,22 @@ export type SteamConnectionModel = runtime.Types.Result.DefaultSelection<Prisma.
 
 export type AggregateSteamConnection = {
   _count: SteamConnectionCountAggregateOutputType | null
+  _avg: SteamConnectionAvgAggregateOutputType | null
+  _sum: SteamConnectionSumAggregateOutputType | null
   _min: SteamConnectionMinAggregateOutputType | null
   _max: SteamConnectionMaxAggregateOutputType | null
 }
 
+export type SteamConnectionAvgAggregateOutputType = {
+  id: number | null
+}
+
+export type SteamConnectionSumAggregateOutputType = {
+  id: number | null
+}
+
 export type SteamConnectionMinAggregateOutputType = {
-  id: string | null
+  id: number | null
   steamId64: string | null
   state: string | null
   lastSyncAt: Date | null
@@ -34,7 +44,7 @@ export type SteamConnectionMinAggregateOutputType = {
 }
 
 export type SteamConnectionMaxAggregateOutputType = {
-  id: string | null
+  id: number | null
   steamId64: string | null
   state: string | null
   lastSyncAt: Date | null
@@ -53,6 +63,14 @@ export type SteamConnectionCountAggregateOutputType = {
   _all: number
 }
 
+
+export type SteamConnectionAvgAggregateInputType = {
+  id?: true
+}
+
+export type SteamConnectionSumAggregateInputType = {
+  id?: true
+}
 
 export type SteamConnectionMinAggregateInputType = {
   id?: true
@@ -121,6 +139,18 @@ export type SteamConnectionAggregateArgs<ExtArgs extends runtime.Types.Extension
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: SteamConnectionAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: SteamConnectionSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: SteamConnectionMinAggregateInputType
@@ -151,12 +181,14 @@ export type SteamConnectionGroupByArgs<ExtArgs extends runtime.Types.Extensions.
   take?: number
   skip?: number
   _count?: SteamConnectionCountAggregateInputType | true
+  _avg?: SteamConnectionAvgAggregateInputType
+  _sum?: SteamConnectionSumAggregateInputType
   _min?: SteamConnectionMinAggregateInputType
   _max?: SteamConnectionMaxAggregateInputType
 }
 
 export type SteamConnectionGroupByOutputType = {
-  id: string
+  id: number
   steamId64: string
   state: string
   lastSyncAt: Date | null
@@ -164,6 +196,8 @@ export type SteamConnectionGroupByOutputType = {
   createdAt: Date
   updatedAt: Date
   _count: SteamConnectionCountAggregateOutputType | null
+  _avg: SteamConnectionAvgAggregateOutputType | null
+  _sum: SteamConnectionSumAggregateOutputType | null
   _min: SteamConnectionMinAggregateOutputType | null
   _max: SteamConnectionMaxAggregateOutputType | null
 }
@@ -187,7 +221,7 @@ export type SteamConnectionWhereInput = {
   AND?: Prisma.SteamConnectionWhereInput | Prisma.SteamConnectionWhereInput[]
   OR?: Prisma.SteamConnectionWhereInput[]
   NOT?: Prisma.SteamConnectionWhereInput | Prisma.SteamConnectionWhereInput[]
-  id?: Prisma.StringFilter<"SteamConnection"> | string
+  id?: Prisma.IntFilter<"SteamConnection"> | number
   steamId64?: Prisma.StringFilter<"SteamConnection"> | string
   state?: Prisma.StringFilter<"SteamConnection"> | string
   lastSyncAt?: Prisma.DateTimeNullableFilter<"SteamConnection"> | Date | string | null
@@ -207,7 +241,7 @@ export type SteamConnectionOrderByWithRelationInput = {
 }
 
 export type SteamConnectionWhereUniqueInput = Prisma.AtLeast<{
-  id?: string
+  id?: number
   steamId64?: string
   AND?: Prisma.SteamConnectionWhereInput | Prisma.SteamConnectionWhereInput[]
   OR?: Prisma.SteamConnectionWhereInput[]
@@ -228,15 +262,17 @@ export type SteamConnectionOrderByWithAggregationInput = {
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.SteamConnectionCountOrderByAggregateInput
+  _avg?: Prisma.SteamConnectionAvgOrderByAggregateInput
   _max?: Prisma.SteamConnectionMaxOrderByAggregateInput
   _min?: Prisma.SteamConnectionMinOrderByAggregateInput
+  _sum?: Prisma.SteamConnectionSumOrderByAggregateInput
 }
 
 export type SteamConnectionScalarWhereWithAggregatesInput = {
   AND?: Prisma.SteamConnectionScalarWhereWithAggregatesInput | Prisma.SteamConnectionScalarWhereWithAggregatesInput[]
   OR?: Prisma.SteamConnectionScalarWhereWithAggregatesInput[]
   NOT?: Prisma.SteamConnectionScalarWhereWithAggregatesInput | Prisma.SteamConnectionScalarWhereWithAggregatesInput[]
-  id?: Prisma.StringWithAggregatesFilter<"SteamConnection"> | string
+  id?: Prisma.IntWithAggregatesFilter<"SteamConnection"> | number
   steamId64?: Prisma.StringWithAggregatesFilter<"SteamConnection"> | string
   state?: Prisma.StringWithAggregatesFilter<"SteamConnection"> | string
   lastSyncAt?: Prisma.DateTimeNullableWithAggregatesFilter<"SteamConnection"> | Date | string | null
@@ -246,7 +282,7 @@ export type SteamConnectionScalarWhereWithAggregatesInput = {
 }
 
 export type SteamConnectionCreateInput = {
-  id?: string
+  id?: number
   steamId64: string
   state: string
   lastSyncAt?: Date | string | null
@@ -256,7 +292,7 @@ export type SteamConnectionCreateInput = {
 }
 
 export type SteamConnectionUncheckedCreateInput = {
-  id?: string
+  id?: number
   steamId64: string
   state: string
   lastSyncAt?: Date | string | null
@@ -266,7 +302,7 @@ export type SteamConnectionUncheckedCreateInput = {
 }
 
 export type SteamConnectionUpdateInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
+  id?: Prisma.IntFieldUpdateOperationsInput | number
   steamId64?: Prisma.StringFieldUpdateOperationsInput | string
   state?: Prisma.StringFieldUpdateOperationsInput | string
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -276,7 +312,7 @@ export type SteamConnectionUpdateInput = {
 }
 
 export type SteamConnectionUncheckedUpdateInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
+  id?: Prisma.IntFieldUpdateOperationsInput | number
   steamId64?: Prisma.StringFieldUpdateOperationsInput | string
   state?: Prisma.StringFieldUpdateOperationsInput | string
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -286,7 +322,7 @@ export type SteamConnectionUncheckedUpdateInput = {
 }
 
 export type SteamConnectionCreateManyInput = {
-  id?: string
+  id?: number
   steamId64: string
   state: string
   lastSyncAt?: Date | string | null
@@ -296,7 +332,7 @@ export type SteamConnectionCreateManyInput = {
 }
 
 export type SteamConnectionUpdateManyMutationInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
+  id?: Prisma.IntFieldUpdateOperationsInput | number
   steamId64?: Prisma.StringFieldUpdateOperationsInput | string
   state?: Prisma.StringFieldUpdateOperationsInput | string
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -306,7 +342,7 @@ export type SteamConnectionUpdateManyMutationInput = {
 }
 
 export type SteamConnectionUncheckedUpdateManyInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
+  id?: Prisma.IntFieldUpdateOperationsInput | number
   steamId64?: Prisma.StringFieldUpdateOperationsInput | string
   state?: Prisma.StringFieldUpdateOperationsInput | string
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -325,6 +361,10 @@ export type SteamConnectionCountOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
+export type SteamConnectionAvgOrderByAggregateInput = {
+  id?: Prisma.SortOrder
+}
+
 export type SteamConnectionMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   steamId64?: Prisma.SortOrder
@@ -341,6 +381,10 @@ export type SteamConnectionMinOrderByAggregateInput = {
   lastSyncAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type SteamConnectionSumOrderByAggregateInput = {
+  id?: Prisma.SortOrder
 }
 
 
@@ -391,7 +435,7 @@ export type $SteamConnectionPayload<ExtArgs extends runtime.Types.Extensions.Int
   name: "SteamConnection"
   objects: {}
   scalars: runtime.Types.Extensions.GetPayloadResult<{
-    id: string
+    id: number
     steamId64: string
     state: string
     lastSyncAt: Date | null
@@ -821,7 +865,7 @@ export interface Prisma__SteamConnectionClient<T, Null = never, ExtArgs extends 
  * Fields of the SteamConnection model
  */
 export interface SteamConnectionFieldRefs {
-  readonly id: Prisma.FieldRef<"SteamConnection", 'String'>
+  readonly id: Prisma.FieldRef<"SteamConnection", 'Int'>
   readonly steamId64: Prisma.FieldRef<"SteamConnection", 'String'>
   readonly state: Prisma.FieldRef<"SteamConnection", 'String'>
   readonly lastSyncAt: Prisma.FieldRef<"SteamConnection", 'DateTime'>

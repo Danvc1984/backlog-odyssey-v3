@@ -18,7 +18,7 @@ See `blueprint/README.md` for the development workflow.
 
 ## Commands
 
-- Dev server: `pnpm dev` (http://localhost:3000)
+- Dev server: `pnpm dev` (http://localhost:3500)
 - Build: `pnpm build`
 - Lint: `pnpm lint`
 - Typecheck: `pnpm typecheck`
