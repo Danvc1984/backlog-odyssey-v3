@@ -5,7 +5,7 @@ vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
-import { updatePersonalFields, addTagToGame } from "./game-detail";
+import { updatePersonalFields, addTagToGame, updatePlayState } from "./game-detail";
 
 describe("updatePersonalFields", () => {
   const mockUpdate = vi.fn();
@@ -91,6 +91,102 @@ describe("updatePersonalFields", () => {
     });
 
     expect(result.success).toBe(false);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe("updatePlayState", () => {
+  const mockUpdate = vi.fn();
+  const mockUpdateMany = vi.fn();
+  const mockTxUpdate = vi.fn();
+  const mockTransaction = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    (prisma as any).libraryEntry = {
+      update: mockUpdate,
+      updateMany: mockUpdateMany,
+    };
+    (prisma as any).$transaction = mockTransaction;
+    mockUpdate.mockResolvedValue({});
+    mockTransaction.mockImplementation(async (fn: any) =>
+      fn({
+        libraryEntry: {
+          updateMany: mockUpdateMany,
+          update: mockTxUpdate,
+        },
+      }),
+    );
+    mockTxUpdate.mockResolvedValue({ gameId: "game-1", isMainGame: true });
+  });
+
+  it("updates play state", async () => {
+    const result = await updatePlayState("game-1", {
+      playState: "IN_PROGRESS",
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockUpdate).toHaveBeenCalledWith({
+      where: { gameId: "game-1" },
+      data: { playState: "IN_PROGRESS" },
+    });
+    expect(mockTransaction).not.toHaveBeenCalled();
+  });
+
+  it("clears previous main game and sets the new one in a transaction", async () => {
+    const result = await updatePlayState("game-1", { isMainGame: true });
+
+    expect(result.success).toBe(true);
+    expect(mockUpdateMany).toHaveBeenCalledWith({
+      where: { isMainGame: true, gameId: { not: "game-1" } },
+      data: { isMainGame: false },
+    });
+    expect(mockTxUpdate).toHaveBeenCalledWith({
+      where: { gameId: "game-1" },
+      data: { isMainGame: true },
+    });
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("sets isMainGame false without a transaction", async () => {
+    await updatePlayState("game-1", { isMainGame: false });
+
+    expect(mockUpdate).toHaveBeenCalledWith({
+      where: { gameId: "game-1" },
+      data: { isMainGame: false },
+    });
+    expect(mockTransaction).not.toHaveBeenCalled();
+  });
+
+  it("toggles candidate flags", async () => {
+    await updatePlayState("game-1", {
+      playSoon: true,
+      replayCandidate: true,
+      hidden: true,
+    });
+
+    expect(mockUpdate).toHaveBeenCalledWith({
+      where: { gameId: "game-1" },
+      data: { playSoon: true, replayCandidate: true, hidden: true },
+    });
+  });
+
+  it("rejects an invalid play state", async () => {
+    const result = await updatePlayState("game-1", {
+      playState: "PAUSED" as never,
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Invalid input");
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejects an empty gameId", async () => {
+    const result = await updatePlayState("", { playState: "IN_PROGRESS" });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Invalid input");
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 });

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { PersonalFieldsForm } from "@/components/games/PersonalFieldsForm";
+import { PlayStateSection } from "@/components/games/PlayStateSection";
 import { TagsSection } from "@/components/games/TagsSection";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -17,13 +18,6 @@ const SOURCE_LABELS: Record<string, string> = {
   STEAM: "Steam",
   OTHER_PLATFORM: "Other platform",
   ROM: "ROM",
-};
-
-const PLAY_STATE_LABELS: Record<string, string> = {
-  NOT_STARTED: "Not started",
-  IN_PROGRESS: "In progress",
-  PLAYED_BEFORE: "Played before",
-  ABANDONED: "Abandoned",
 };
 
 export default async function GameDetailPage({
@@ -150,15 +144,20 @@ export default async function GameDetailPage({
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
           Play state
         </h2>
-        <p className="text-sm">
-          {game.libraryEntry
-            ? PLAY_STATE_LABELS[game.libraryEntry.playState] ??
-              game.libraryEntry.playState
-            : "Not in library"}
-        </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Play state (managed by play states feature)
-        </p>
+        <PlayStateSection
+          gameId={game.id}
+          libraryEntry={
+            game.libraryEntry
+              ? {
+                  playState: game.libraryEntry.playState,
+                  isMainGame: game.libraryEntry.isMainGame,
+                  playSoon: game.libraryEntry.playSoon,
+                  replayCandidate: game.libraryEntry.replayCandidate,
+                  hidden: game.libraryEntry.hidden,
+                }
+              : null
+          }
+        />
       </section>
     </div>
   );

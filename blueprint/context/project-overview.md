@@ -67,7 +67,7 @@ is the current ground truth and should track these responsibilities.
 
 - `Game` (BASE_GAME or DLC) - name, origin (STEAM_IMPORT / MANUAL), optional `baseGameId` for DLC; a base game can have zero or more DLC.
 - `ExternalGameId` - `(namespace, externalId)` identity, unique; namespaces STEAM_APP / RAWG_GAME / ITAD_GAME; match method.
-- `GameMetadataSnapshot` - rebuildable provider payload, provenance, fetched/expiry, attribution.
+- `MetadataSnapshot` - rebuildable provider payload, provenance, fetched/expiry, attribution.
 - `PossibleDuplicate` - ordered symmetric game pair, evidence, confidence, status (OPEN / DISMISSED), reviewed time.
 
 ### Library and availability

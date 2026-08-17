@@ -38,7 +38,7 @@ a whole product area.
   other-platform / ROM) and a filtered library list
 - [x] 3. **Game detail** - metadata, availability, record origin, personal fields
   (priority, interest, rating, notes, tags, preferred environment)
-- [ ] 4. **Play states and main game** - play-state rules, main-game constraint,
+- [x] 4. **Play states and main game** - play-state rules, main-game constraint,
   candidate flags (play soon / replay / hidden), abandoned signal
 - [ ] 5. **Collections** - persistent manual Collections and calculated system
   Collections

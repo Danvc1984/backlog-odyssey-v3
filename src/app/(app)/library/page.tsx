@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { Star, Clock, RotateCcw, EyeOff } from "lucide-react";
 import { CreateGameDialog } from "@/components/games/CreateGameDialog";
 import { LibraryFilters } from "@/components/games/LibraryFilters";
 
@@ -15,6 +16,12 @@ const PLAY_STATE_LABELS: Record<string, string> = {
   PLAYED_BEFORE: "Played before",
   ABANDONED: "Abandoned",
 };
+
+const FLAG_INDICATORS = [
+  { key: "playSoon" as const, Icon: Clock, label: "Play soon" },
+  { key: "replayCandidate" as const, Icon: RotateCcw, label: "Replay candidate" },
+  { key: "hidden" as const, Icon: EyeOff, label: "Hidden" },
+];
 
 interface LibrarySearchParams {
   q?: string;
@@ -107,6 +114,7 @@ export default async function LibraryPage({
                 <th className="px-4 py-3 font-medium">Type</th>
                 <th className="px-4 py-3 font-medium">Availability</th>
                 <th className="px-4 py-3 font-medium">Play state</th>
+                <th className="px-4 py-3 font-medium">Flags</th>
               </tr>
             </thead>
             <tbody>
@@ -122,6 +130,12 @@ export default async function LibraryPage({
                     >
                       {entry.game.name}
                     </Link>
+                    {entry.isMainGame && (
+                      <span className="ml-2 inline-flex items-center gap-1 rounded-md bg-primary/15 px-1.5 py-0.5 text-xs font-medium text-primary">
+                        <Star className="size-3" />
+                        Main
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3">{entry.game.type}</td>
                   <td className="px-4 py-3">
@@ -131,6 +145,21 @@ export default async function LibraryPage({
                   </td>
                   <td className="px-4 py-3">
                     {PLAY_STATE_LABELS[entry.playState] ?? entry.playState}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      {FLAG_INDICATORS.filter((f) => entry[f.key]).map((f) => (
+                        <span key={f.key} title={f.label}>
+                          <f.Icon
+                            aria-label={f.label}
+                            className="size-4 text-muted-foreground"
+                          />
+                        </span>
+                      ))}
+                      {!FLAG_INDICATORS.some((f) => entry[f.key]) && (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
