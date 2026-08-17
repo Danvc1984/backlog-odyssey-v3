@@ -107,7 +107,7 @@ checks do not make the Blueprint unusable.
 
 For a standard Next.js project. Change or remove if you're using something else.
 
-- Dev server: `pnpm dev` (http://localhost:3000)
+- Dev server: `pnpm dev` (http://localhost:3500)
 - Build: `pnpm build`
 - Production server: `pnpm start`
 - Lint: `pnpm lint`
