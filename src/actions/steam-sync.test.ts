@@ -18,6 +18,7 @@ describe("syncSteamPlaytime", () => {
   const updateManyAvailability = vi.fn();
   const transaction = vi.fn();
   const tx = {
+    syncRun: { create: createSyncRun, update: updateSyncRun },
     externalGameId: { findUnique: findUniqueExternalId },
     gameAvailability: { updateMany: updateManyAvailability },
   };
@@ -97,6 +98,7 @@ describe("syncSteamPlaytime", () => {
     expect(updateSyncRun).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ status: "FAILED" }),
     }));
+    expect(transaction).toHaveBeenCalled();
   });
 
   it("returns an error without creating a run when Steam is disconnected", async () => {

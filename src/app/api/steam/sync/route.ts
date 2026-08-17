@@ -4,6 +4,8 @@ import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 
 export async function POST() {
+  await requireUser();
+
   const settings = await prisma.appSettings.findUnique({
     where: { id: 1 },
     select: { steamDailySyncEnabled: true },
@@ -17,7 +19,6 @@ export async function POST() {
     });
   }
 
-  await requireUser();
   const result = await syncSteamPlaytime();
   return NextResponse.json(result);
 }

@@ -45,31 +45,28 @@ export async function syncSteamPlaytime() {
       };
     }
 
-    const syncRun = await prisma.syncRun.create({
-      data: { provider: "STEAM", status: "RUNNING", counts: jsonCounts(emptyCounts()) },
-    });
-    syncRunId = syncRun.id;
     const games = await fetchOwnedGames(connection.steamId64, apiKey);
 
-    if (games.length === 0) {
-      const counts = { ...emptyCounts(), failed: 1 };
-      await prisma.syncRun.update({
-        where: { id: syncRun.id },
-        data: {
-          status: "FAILED",
-          finishedAt: new Date(),
-          counts: jsonCounts(counts),
-          diagnostics: { error: "Steam API returned no owned games" },
-        },
+    const outcome = await prisma.$transaction(async (tx) => {
+      const syncRun = await tx.syncRun.create({
+        data: { provider: "STEAM", status: "RUNNING", counts: jsonCounts(emptyCounts()) },
       });
-      return {
-        success: false as const,
-        data: counts,
-        error: "Steam API returned no owned games",
-      };
-    }
+      syncRunId = syncRun.id;
 
-    const counts = await prisma.$transaction(async (tx) => {
+      if (games.length === 0) {
+        const counts = { ...emptyCounts(), failed: 1 };
+        await tx.syncRun.update({
+          where: { id: syncRun.id },
+          data: {
+            status: "FAILED",
+            finishedAt: new Date(),
+            counts: jsonCounts(counts),
+            diagnostics: { error: "Steam API returned no owned games" },
+          },
+        });
+        return { success: false as const, counts };
+      }
+
       const result = emptyCounts();
 
       for (const game of games) {
@@ -102,16 +99,24 @@ export async function syncSteamPlaytime() {
         }
       }
 
-      return result;
+      const status = result.failed > 0 ? "PARTIAL" : "SUCCESS";
+      await tx.syncRun.update({
+        where: { id: syncRun.id },
+        data: { status, finishedAt: new Date(), counts: jsonCounts(result) },
+      });
+
+      return { success: true as const, counts: result };
     });
 
-    const status = counts.failed > 0 ? "PARTIAL" : "SUCCESS";
-    await prisma.syncRun.update({
-      where: { id: syncRun.id },
-      data: { status, finishedAt: new Date(), counts: jsonCounts(counts) },
-    });
+    if (!outcome.success) {
+      return {
+        success: false as const,
+        data: outcome.counts,
+        error: "Steam API returned no owned games",
+      };
+    }
 
-    return { success: true as const, data: counts, error: null };
+    return { success: true as const, data: outcome.counts, error: null };
   } catch (err) {
     if (syncRunId) {
       await prisma.syncRun.update({

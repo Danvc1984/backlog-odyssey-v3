@@ -111,7 +111,7 @@ export function SteamConnectionCard({
               variant="outline"
               size="sm"
               onClick={handleDisconnect}
-              disabled={submitting || importing}
+              disabled={submitting || importing || syncing}
             >
               <Unplug />
               {submitting ? "Disconnecting..." : "Disconnect"}
