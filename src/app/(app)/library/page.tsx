@@ -3,6 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { Star, Clock, RotateCcw, EyeOff } from "lucide-react";
 import { CreateGameDialog } from "@/components/games/CreateGameDialog";
 import { LibraryFilters } from "@/components/games/LibraryFilters";
+import {
+  getSystemCollectionDefinition,
+  getSystemCollections,
+} from "@/lib/system-collections";
 
 const SOURCE_LABELS: Record<string, string> = {
   STEAM: "Steam",
@@ -28,6 +32,7 @@ interface LibrarySearchParams {
   source?: string;
   state?: string;
   sort?: string;
+  collection?: string;
 }
 
 export default async function LibraryPage({
@@ -35,7 +40,8 @@ export default async function LibraryPage({
 }: {
   searchParams: Promise<LibrarySearchParams>;
 }) {
-  const { q = "", source, state, sort = "newest" } = await searchParams;
+  const { q = "", source, state, sort = "newest", collection } =
+    await searchParams;
 
   const sourceFilter =
     source && source !== "ALL"
@@ -52,6 +58,36 @@ export default async function LibraryPage({
         : undefined
       : undefined;
 
+  const [manualCollections, systemCollections] = await Promise.all([
+    prisma.collection.findMany({
+      where: { isSystem: false },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+    getSystemCollections(),
+  ]);
+
+  const systemDef =
+    collection && collection !== "ALL"
+      ? getSystemCollectionDefinition(collection)
+      : undefined;
+  const isManualCollection =
+    collection && collection !== "ALL"
+      ? manualCollections.some((c) => c.id === collection)
+      : false;
+
+  const collectionWhere = systemDef
+    ? systemDef.where
+    : isManualCollection
+      ? {
+          game: {
+            collections: {
+              some: { collectionId: collection as string },
+            },
+          },
+        }
+      : undefined;
+
   const entries = await prisma.libraryEntry.findMany({
     where: {
       game: {
@@ -63,6 +99,7 @@ export default async function LibraryPage({
           : undefined,
       },
       playState: stateFilter ?? undefined,
+      ...collectionWhere,
     },
     include: {
       game: {
@@ -93,7 +130,20 @@ export default async function LibraryPage({
       </div>
 
       <div className="mt-4">
-        <LibraryFilters />
+        <LibraryFilters
+          collections={[
+            ...systemCollections.map((c) => ({
+              id: c.id,
+              name: c.name,
+              isSystem: true,
+            })),
+            ...manualCollections.map((c) => ({
+              id: c.id,
+              name: c.name,
+              isSystem: false,
+            })),
+          ]}
+        />
       </div>
 
       {entries.length === 0 ? (

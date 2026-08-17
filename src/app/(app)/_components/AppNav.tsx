@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Library, Heart, Settings, LogOut } from "lucide-react";
+import { Home, Library, FolderOpen, Heart, Settings, LogOut } from "lucide-react";
 
 const navItems = [
   { href: "/today", label: "Today", icon: Home },
   { href: "/library", label: "Library", icon: Library },
+  { href: "/collections", label: "Collections", icon: FolderOpen },
   { href: "/wishlist", label: "Wishlist", icon: Heart },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
@@ -19,6 +20,9 @@ interface AppNavProps {
 export function AppNav({ email, signOutAction }: AppNavProps) {
   const pathname = usePathname();
 
+  const isActive = (href: string) =>
+    pathname === href || pathname.startsWith(`${href}/`);
+
   return (
     <>
       <nav className="hidden w-56 shrink-0 border-r border-border p-4 md:flex md:flex-col md:gap-1">
@@ -28,7 +32,7 @@ export function AppNav({ email, signOutAction }: AppNavProps) {
             key={href}
             href={href}
             className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-              pathname === href
+              isActive(href)
                 ? "bg-accent text-accent-foreground font-medium"
                 : "hover:bg-accent"
             }`}
@@ -53,7 +57,7 @@ export function AppNav({ email, signOutAction }: AppNavProps) {
             key={href}
             href={href}
             className={`flex flex-1 flex-col items-center gap-1 pt-2 pb-2 text-xs transition-colors min-h-[44px] justify-center ${
-              pathname === href
+              isActive(href)
                 ? "text-primary font-medium"
                 : "text-muted-foreground"
             }`}

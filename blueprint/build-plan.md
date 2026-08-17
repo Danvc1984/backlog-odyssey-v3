@@ -40,7 +40,7 @@ a whole product area.
   (priority, interest, rating, notes, tags, preferred environment)
 - [x] 4. **Play states and main game** - play-state rules, main-game constraint,
   candidate flags (play soon / replay / hidden), abandoned signal
-- [ ] 5. **Collections** - persistent manual Collections and calculated system
+- [x] 5. **Collections** - persistent manual Collections and calculated system
   Collections
 - [ ] 6. **Steam connection and sync** - Steam OpenID connect, SteamID64, owned /
   recent import, exact App ID idempotency, playtime and last-played

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { PersonalFieldsForm } from "@/components/games/PersonalFieldsForm";
 import { PlayStateSection } from "@/components/games/PlayStateSection";
 import { TagsSection } from "@/components/games/TagsSection";
+import { CollectionsSection } from "@/components/games/CollectionsSection";
 
 const TYPE_LABELS: Record<string, string> = {
   BASE_GAME: "Base game",
@@ -26,16 +27,26 @@ export default async function GameDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const game = await prisma.game.findUnique({
-    where: { id },
-    include: {
-      libraryEntry: true,
-      availability: true,
-      tags: {
-        include: { tag: true },
+  const [game, manualCollections] = await Promise.all([
+    prisma.game.findUnique({
+      where: { id },
+      include: {
+        libraryEntry: true,
+        availability: true,
+        tags: {
+          include: { tag: true },
+        },
+        collections: {
+          include: { collection: true },
+        },
       },
-    },
-  });
+    }),
+    prisma.collection.findMany({
+      where: { isSystem: false },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, color: true },
+    }),
+  ]);
 
   if (!game) {
     redirect("/library");
@@ -137,6 +148,21 @@ export default async function GameDetailPage({
             id: gt.tag.id,
             name: gt.tag.name,
           }))}
+        />
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+          Collections
+        </h2>
+        <CollectionsSection
+          gameId={game.id}
+          initialCollections={game.collections.map((cm) => ({
+            id: cm.collection.id,
+            name: cm.collection.name,
+            color: cm.collection.color,
+          }))}
+          availableCollections={manualCollections}
         />
       </section>
 
