@@ -1,6 +1,6 @@
 ---
 name: audit
-description: Code quality audit for a Blueprint project, read-only except the findings ledger it maintains at blueprint/context/findings.md. Reviews the active feature, changed files, a selected path, or the full project for maintainability issues such as duplication, dead code, DRY violations, inconsistent patterns, overgrown files or functions, unused exports, missing or disabled tests, standards drift, and obvious security or performance risks. Use when the user runs /audit, invokes $audit, asks to audit the code, review code quality, check for dead code, check for duplicates, clean up a vibe-coded project, or make sure the code still meets project standards.
+description: Read-only code audit for a Blueprint project, except for the findings ledger it maintains at blueprint/context/findings.md. Reviews the active feature, changed files, a selected path, or the full project through all concerns or a focused quality, security, performance, or tests lens. Use when the user runs /audit, invokes $audit, asks for a code or quality audit, security review, performance review, test quality review, dead-code or duplication check, vibe-coded project cleanup, or standards review.
 ---
 
 # audit - review code quality against the project standards
@@ -12,8 +12,8 @@ Where this sits in the workflow:
                                    ledger)      or close the feature)
 
 `/check` proves behavior against the spec. `/doctor` checks Blueprint setup and
-workflow health. This skill checks the code itself: maintainability, duplication,
-dead code, consistency, test coverage for logic, and standards drift.
+workflow health. This skill checks the code itself through either a broad review
+or one focused lens: quality, security, performance, or tests.
 
 It reviews code without changing it: it never edits source files, installs
 dependencies, commits, merges, pushes, or starts product work. Its one write is
@@ -22,9 +22,12 @@ record of findings and their status.
 
 ## Input
 
+Treat scope and lens as separate controls. Arguments may appear in either order,
+such as `/audit security current` or `/audit src/auth tests`.
+
 Optional scope:
 
-- no argument: use `current` when an active feature exists, otherwise use
+- no scope argument: use `current` when an active feature exists, otherwise use
   `changed` when local changes exist, otherwise use `full`
 - `current`: audit the active `current-feature.md`, every committed feature-branch
   change from its merge base through `HEAD`, staged and unstaged changes,
@@ -35,7 +38,25 @@ Optional scope:
   code, and minified assets unless the user explicitly includes them
 - path or directory: audit that area and the tests or callers needed to understand it
 
+Optional lens:
+
+- no lens: review all four lenses
+- `quality`: maintainability, duplication, dead code, consistency, complexity,
+  and standards drift
+- `security`: authorization, input trust, injection, data exposure, secret
+  handling, and unsafe configuration
+- `performance`: query, network, rendering, memory, payload, concurrency, and
+  unbounded-work risks
+- `tests`: missing coverage for important logic, weak assertions, skipped or
+  focused tests, poor isolation, brittle mocks, and likely flakiness
+
+`full` is always the full-project scope, not a lens. `/audit full` therefore runs
+all lenses across the full project. When only a lens is supplied, select scope
+with the normal no-scope rules. A focused pass may name one or more lenses. If
+the request names multiple lenses, review their union and report them separately.
+
 If the requested scope is unclear, pick the smallest useful scope and state it.
+If the lens is unclear, use all lenses and state that choice.
 
 ## Step 1 - gather context
 
@@ -70,43 +91,52 @@ Prefer `rg` and targeted file reads. Do not dump large files into the response.
 
 Use existing commands only. Do not install tools.
 
-Run or inspect as appropriate:
+Run or inspect only the signals relevant to the selected lens and scope:
 
-- lint command, when declared in `AGENTS.md`
-- typecheck command, when declared
-- test command, when declared and relevant
-- build command, when the audit needs to know if the current code compiles
-- existing security or performance commands when declared and locally runnable
-- lightweight searches for unused exports, duplicate names, TODO/FIXME, ignored
-  errors, unsafe suppressions, empty catch blocks, skipped or focused tests,
-  copied logic, and oversized files
+- lint and typecheck commands when declared and relevant
+- test command for the tests lens or when it directly validates a suspected risk
+- build command when the selected lens needs compilation or bundle evidence
+- existing security command for the security lens, when declared and locally runnable
+- existing performance command for the performance lens, when declared and locally runnable
+- targeted lightweight searches for the chosen lens, such as unused exports and
+  copied logic for quality, unsafe trust boundaries for security, repeated or
+  unbounded work for performance, and skipped or weak tests for tests
 
-If a useful command is missing, report that as a gap. Do not invent a pass.
+Do not run broad checks unrelated to a focused lens. If a useful command is
+missing, report that as a gap. Do not invent a pass or claim that a focused
+review covered the other lenses.
 
 ## Step 3 - review the code
 
-Look for issues that affect long-term maintainability:
+For all lenses, ground findings in reachable code and project-specific
+expectations. Apply only the selected lens or lenses:
 
-- duplicated logic, duplicated components, duplicated styles, or repeated data
-  shaping that should share one helper
-- dead code, unused files, unused exports, stale comments, unreachable branches,
-  and abandoned feature paths
-- functions, components, routes, or modules that are too large to review safely
-- clever abstractions that do not pay for themselves
-- missing abstractions where duplication is already causing risk
-- inconsistent project patterns, naming, validation, error handling, or data access
-- logic-bearing code without tests when the project has a declared test command
-- skipped, focused, or placeholder tests; swallowed failures; and weak assertions
-  around important logic
-- UI or integration code without real browser evidence when behavior matters
-- obvious security issues such as missing auth checks, unsanitized input, trusting
-  client-supplied ownership fields, or leaking sensitive data
-- obvious performance issues such as N+1 queries, unnecessary client rendering,
-  unbounded loops, avoidable repeated network calls, or expensive work in render
-- drift from `coding-standards.md`, `project-overview.md`, or the active spec
+- **Quality:** duplicated logic, dead or unused code, unreachable paths,
+  oversized modules, abstractions that do not pay for themselves, risky missing
+  abstractions, inconsistent patterns, and drift from the standards or spec.
+- **Security:** missing authentication or authorization, client-controlled
+  ownership, injection, unsafe parsing or deserialization, sensitive-data
+  exposure, secret handling, insecure defaults, and trust-boundary mistakes.
+  Inspect existing dependency or scanner output when available, but never imply
+  that local manifest inspection is a current vulnerability scan.
+- **Performance:** N+1 queries, repeated network or database work, unnecessary
+  rendering, blocking work on hot paths, unbounded loops or collections, memory
+  growth, oversized payloads, missing pagination, and unsafe concurrency. Mark
+  hypotheses as unverified when runtime or profiling evidence is missing.
+- **Tests:** important logic without coverage when a test command exists, weak
+  assertions, tests that only mirror implementation, excessive mocking, shared
+  state, time or order dependence, skipped or focused tests, placeholder tests,
+  swallowed failures, and missing browser or integration evidence where behavior
+  crosses a real boundary. Never invent a coverage percentage.
 
 Do not nitpick harmless style differences unless they signal drift from the local
 patterns. Prefer a short list of real findings over a broad list of guesses.
+
+Do not broaden a focused pass because another category might be interesting.
+Do not report or call out non-critical concerns from omitted lenses, even as
+suggestions for a later audit. If an obvious P0 is directly encountered outside
+the selected lens, report and record it as an out-of-lens critical risk, but do
+not continue searching that other lens.
 
 If a possible secret is found, never quote its value, paste the matching source
 line, or include raw command output containing it. Report only the redacted secret
@@ -131,7 +161,7 @@ keep this exact shape; the prose below it is for humans and may vary:
     ### F-03 [P0] open - Retained auth volumes carry the run label
 
     **File:** ops/agent-proof/compose.yaml:86
-    **Found:** 2026-07-21 by /audit (scope: current)
+    **Found:** 2026-07-21 by /audit (scope: current; lens: security)
     **Why it matters:** ...
     **Suggested fix:** ...
     **Resolution:**
@@ -199,20 +229,22 @@ boundary, failing command or test, or reproducible behavior confirms the risk. I
 the evidence is incomplete, list it under `Unverified risks` with the missing
 validation instead of presenting it as a confirmed high-severity finding.
 
-If there are no findings, say that clearly and name any remaining risk or missing
-signal, such as "no test command declared" or "browser flow not audited."
+If there are no findings, say that clearly for the selected lens and name any
+remaining risk or missing signal, such as "no test command declared" or
+"browser flow not audited."
 
 Then include:
 
 - ledger changes: findings added, updated, or closed this pass, by ID
 - commands run and results
 - selected scope
+- selected lens or lenses
 - base branch, merge base, and commit range for `current`, when available
 - files or directories reviewed
 - generated, third-party, or otherwise excluded paths
-- standards checked
+- applicable standards checked
 - browser or runtime evidence inspected, when relevant
-- skipped, focused, or placeholder tests found
+- skipped, focused, or placeholder tests found, when the tests lens was selected
 - checks that were unavailable or could not run
 - suggested repair order
 
@@ -223,6 +255,8 @@ review as a full-project audit.
 
 - The findings ledger is the only file this skill writes. Never edit, format,
   install, commit, merge, push, or delete anything else.
+- A focused lens is not a broad audit. State what was not reviewed and never
+  imply that omitted lenses passed.
 - The ledger reports status; it never defines what the review looks at. Do not
   turn open findings into the review checklist.
 - Never fetch, pull, or run network-backed audit tools without explicit approval.

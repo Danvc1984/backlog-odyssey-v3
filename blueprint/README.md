@@ -1,13 +1,39 @@
-# AI Blueprint
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/mark-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/mark-light.svg">
+    <img src="assets/mark-light.svg" alt="AI Blueprint" width="64" height="64">
+  </picture>
+</p>
 
-A starter and repeatable workflow for building real software with an AI assistant,
-**without vibe coding**.
+<h1 align="center">AI Blueprint</h1>
 
-[Official site](https://ai-blueprint.dev) | [Documentation](https://ai-blueprint.dev/docs/)
+<p align="center"><strong>A file-backed, spec-driven workflow for building real software with AI while staying in control.</strong></p>
 
-You provide two short planning docs. The AI turns them into project context,
-feature specs, and build steps. You build one feature at a time, review every
-spec before code exists, and review every diff before it lands.
+<p align="center">
+  <a href="https://www.npmjs.com/package/create-ai-blueprint"><img src="https://img.shields.io/npm/v/create-ai-blueprint?style=flat-square&color=155eef" alt="npm version"></a>
+  <a href="https://github.com/aiblueprinthq/ai-blueprint/actions/workflows/validate.yml"><img src="https://github.com/aiblueprinthq/ai-blueprint/actions/workflows/validate.yml/badge.svg" alt="Validate Blueprint"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/aiblueprinthq/ai-blueprint?style=flat-square&color=155eef" alt="MIT license"></a>
+</p>
+
+<p align="center">
+  <a href="https://ai-blueprint.dev">Official site</a> |
+  <a href="https://ai-blueprint.dev/docs/">Documentation</a> |
+  <a href="https://www.npmjs.com/package/create-ai-blueprint">npm</a> |
+  <a href="https://github.com/aiblueprinthq/ai-blueprint/releases">Releases</a> |
+  <a href="CHANGELOG.md">Changelog</a>
+</p>
+
+You provide two planning docs, with as much product depth as the project needs.
+The AI turns them into project context, feature specs, and build steps. You
+build one feature at a time, review every spec before code exists, and review
+every diff before it lands.
+
+Install it inside an already scaffolded Git repository:
+
+```bash
+npx create-ai-blueprint@latest
+```
 
 ## What this is
 
@@ -42,9 +68,38 @@ helping you write.
 | Tool adapters | Codex uses `.agents/skills`; Claude Code uses `.claude/skills`. |
 | Optional visibility | Commit the workflow files for portability, or keep them local with `.gitignore`. |
 
+## Contents
+
+- [What this is](#what-this-is)
+- [Quick start](#quick-start)
+- [Tool support](#tool-support)
+- [The AI workflow](#the-ai-workflow)
+- [See it in action](#see-it-in-action)
+- [Visual overview](#visual-overview)
+- [The two files you own](#the-two-files-you-own)
+- [What gets generated](#what-gets-generated)
+- [Using the workflow](#using-the-workflow)
+- [Command reference](#command-reference)
+- [Automatic GitHub checks](#automatic-github-checks)
+- [Testing](#testing)
+- [Code quality audits](#code-quality-audits)
+- [Manual try guides](#manual-try-guides)
+- [Deployment readiness](#deployment-readiness)
+- [Picking up where you left off](#picking-up-where-you-left-off)
+- [File map](#file-map)
+- [Support and contributing](#support-and-contributing)
+- [License](#license)
+- [Notes](#notes)
+
 ## Quick start
 
 Scaffold the app first, then install the Blueprint.
+
+Prerequisites:
+
+- Node.js 18 or newer
+- an application scaffolded with the stack of your choice
+- a Git repository for that application
 
 > [!IMPORTANT]
 > Scaffold your app first, then install the Blueprint. Do not run a framework
@@ -101,17 +156,27 @@ In Codex, invoke it as `$onboard`. In Claude Code, invoke it as `/onboard`.
 [blueprint/context/ai-interaction.md](blueprint/context/ai-interaction.md). Adjust
 anything `/onboard` flagged or anything that does not match how you want to work.
 If something feels off, run `/doctor`; it is a read-only health check for the
-Blueprint setup.
+Blueprint setup. If the app has logic worth testing but no unit test runner, run
+`/tests` now. It is a one-time setup step; future implementation work uses the
+configured test command automatically.
 
 **5. Plan the app.** Fill in the two files you own:
 
 - [blueprint/project-plan.md](blueprint/project-plan.md)
 - [blueprint/build-plan.md](blueprint/build-plan.md)
 
-The project plan can be rough notes. The build plan should become a numbered
-checkbox list because the build loop uses checked and unchecked items to know
-what is next. If your first pass is just bullets, `/overview` will flag that and
-can propose a cleaned-up checkbox version before generating context.
+The project plan can be rough notes or a detailed product plan with rationale,
+constraints, examples, edge cases, and exclusions. The build plan should remain
+a numbered, high-level checkbox list because the build loop uses checked and
+unchecked items to know what is next. If your first pass is just bullets,
+`/overview` will flag that and can propose a cleaned-up checkbox version before
+generating context.
+
+You can write these plans directly or develop them through any AI conversation.
+If you want a structured, deep planning conversation, run `/discovery` or
+`$discovery` after onboarding. It asks adaptive questions over as many turns as
+needed, shows complete plan drafts for review, and writes only after explicit
+approval. It is optional and never replaces or weakens the direct planning path.
 
 **6. Generate the overview once.** This checks the two planning docs, helps shape
 the build plan if needed, then turns them into
@@ -130,11 +195,12 @@ at a time:
 /feature
 /implement
 /check
+/audit current
 /complete
 ```
 
-That loop specs the next feature, builds it, proves it works, then archives and
-merges it.
+That loop specs the next feature, builds it, proves the behavior, reviews the
+changed code, then archives and merges it.
 
 In Codex, invoke the same steps as skills (`$overview`, `$feature`, `$implement`,
 `$check`, `$complete`) or ask naturally, such as "run the overview." In Claude
@@ -181,26 +247,44 @@ Backups are stored under `blueprint/.state/backups/` and ignored by git.
 Older installs without a manifest can use the same command. Matching files are
 adopted into the manifest, while differing managed files are treated as conflicts.
 
+## Tool support
+
+| Tool | Support | Invocation |
+| --- | --- | --- |
+| Codex | Native project skills in `.agents/skills/` | `$feature`, `$implement`, or plain language |
+| Claude Code | Native project skills in `.claude/skills/` | `/feature`, `/implement`, and other slash commands |
+| Other AGENTS.md-aware tools | Shared project instructions plus readable skill files | Ask the agent to follow the matching `SKILL.md` |
+
+Install one adapter or both. The workflow state under `blueprint/` stays
+tool-independent, so a project can move between supported agents without moving
+its plan or history back into chat.
+
 ## The AI workflow
 
 AI loops are popular because the assistant can plan, act, check the result, and
 iterate. This blueprint turns that idea into a project workflow with human review
 gates and a written history.
 
-The core build loop is:
+The recommended build loop is:
 
 ```text
-/feature -> review spec -> /implement -> /check -> /complete
+/feature -> review spec -> /implement -> /check -> /audit current -> /complete
 ```
 
-Use `/try` when you want a manual review path, `/audit` when you want a read-only
-code quality pass before closing the work, and `/release` after a completed
+Use `/try` when you want a manual review path. Use a broader `/audit` scope when
+you want to look beyond the current feature. Run `/release` after a completed
 feature or milestone when you want Render or Vercel deployment prep.
 
 For unplanned bugs or small changes, use the fix loop:
 
 ```text
 /fix "what is wrong" -> review spec -> /implement -> /check -> /complete
+```
+
+If the cause is unclear, diagnose first without changing files:
+
+```text
+/debug "what is failing" -> review evidence -> /fix "confirmed bug" -> /implement
 ```
 
 To remove a completed feature without erasing its history, use the rollback loop:
@@ -212,24 +296,50 @@ To remove a completed feature without erasing its history, use the rollback loop
 In this repo, **the build loop** means:
 
 - **`/feature`** selects the next planned feature and writes a buildable spec.
+- **`/debug`** reproduces and isolates a failure, then stops with evidence.
 - **`/fix`** writes a smaller spec for an unplanned bug or change.
 - **`/rollback`** identifies a completed feature's exact commit, checks later
   dependency risk, and writes a guarded reversal spec.
 - **`/implement`** builds the current spec one reviewed step at a time.
 - **`/check`** runs the real app and proves the done-whens.
+- **`/audit current`** reviews the complete feature-branch delta and records
+  actionable findings before the work closes.
 - **`/complete`** archives the spec, commits the finished work, and merges with
   your approval.
 
 The loop is the control system. The AI can keep iterating, but only inside the
 current spec, with observable checks and review gates.
 
+## See it in action
+
+The workflow makes each handoff visible instead of hiding it inside one long AI
+conversation:
+
+```text
+You: Run the next feature.
+AI:  Wrote blueprint/context/current-feature.md and stopped for review.
+
+You: The spec looks good. Implement step 1.
+AI:  Built step 1, ran its checks, and returned the diff for review.
+
+You: Run the check.
+AI:  Verified each done-when and reported the evidence.
+
+You: Audit the current feature.
+AI:  Reviewed the branch delta and recorded any actionable findings.
+
+You: Complete it.
+AI:  Ran the final gate, archived the spec, and asked before merging.
+```
+
 ## Visual overview
 
 The diagram shows the fresh-project workflow. `/overview` happens after planning
-and only re-runs when the plans change. The repeating loop starts at `/feature`
-or `/fix`, then moves through implementation, proof, manual review, audit,
-completion, and history. For an existing codebase, use `/adopt` instead of
-`/onboard`.
+and only re-runs when the plans change. Planning can be done directly, through
+any AI conversation, or with the optional `/discovery` skill. The repeating loop
+starts at `/feature` or `/fix`, then moves through implementation, proof, manual
+review, audit, completion, and history. For an existing codebase, use `/adopt`
+instead of `/onboard`.
 
 ![AI Blueprint fresh-project workflow](assets/ai-blueprint-workflow.png)
 
@@ -237,12 +347,13 @@ completion, and history. For an existing codebase, use `/adopt` instead of
 
 | File | What it is |
 | ---- | ---------- |
-| [blueprint/project-plan.md](blueprint/project-plan.md) | The **what and why**: problem, users, features, data, tech, monetization, and UI/UX. Answer each section in a line or two. |
+| [blueprint/project-plan.md](blueprint/project-plan.md) | The **what and why**: problem, users, features, data, tech, monetization, and UI/UX. Use as much detail as the project needs. |
 | [blueprint/build-plan.md](blueprint/build-plan.md) | The **ordered feature list**: one line per feature, in rough build order. No deep detail here. |
 
-These two files are the inputs you maintain. Draft them yourself or with the AI.
-Your job is to decide and own what goes in them. The AI can help with wording,
-expansion, and tradeoffs.
+These two files are the inputs you maintain. Draft them yourself, develop them
+through any AI conversation, or optionally run `/discovery` for a guided deep
+planning session. Your job is to decide and own what goes in them. The AI can
+help with wording, expansion, and tradeoffs, but `/discovery` is never required.
 
 The build plan is a living roadmap, not a frozen record of the initial MVP. Keep
 completed items checked and add new unchecked features as the project grows.
@@ -261,8 +372,8 @@ any necessary project-plan edits, and its placement. After you approve the plan
 change, it refreshes the overview and continues by writing the feature spec.
 
 > [!TIP]
-> Keep these files short and decisive. The overview step will turn them into more
-> concrete project context.
+> Keep the build plan concise and trackable. The project plan can be as detailed
+> as needed to preserve the decisions that should guide later feature work.
 
 ## What gets generated
 
@@ -285,7 +396,8 @@ the skill tells you to.
 
 ## Using the workflow
 
-After `/onboard` and after filling in the two planning docs, run `/overview`. It
+After `/onboard` and after filling in the two planning docs directly, through any
+AI conversation, or with the optional `/discovery` skill, run `/overview`. It
 checks that the plans are usable, proposes a normalized checkbox build plan if
 needed, distills the docs into `blueprint/context/project-overview.md`, and
 reports contradictions or gaps under **Open questions**. Answer those questions
@@ -309,10 +421,12 @@ Then repeat the build loop for each feature:
 4. Run **`/check`** when you want an outside proof pass against the real app.
 5. Run **`/try`** when you want the manual review path: where to go, what to
    click or run, and what to expect.
-6. Run **`/complete`** when the feature is done. It archives the spec, checks off
+6. Run **`/audit current`** to review the complete feature-branch delta before
+   closing the work. Resolve or explicitly disposition its findings first.
+7. Run **`/complete`** when the feature is done. It archives the spec, checks off
    the build plan, commits the finished work, and squash-merges with your
    go-ahead. After the merge, it must ask separately before pushing main.
-7. Optionally run **`/release render`** or **`/release vercel`** when you want
+8. Optionally run **`/release render`** or **`/release vercel`** when you want
    local deployment config and a provider-specific readiness check.
 
 ### Fixes
@@ -357,18 +471,20 @@ features.
 | Skill | Run it | Does |
 | ----- | ------ | ---- |
 | **/onboard** | once, after installing into a fresh or early project | Detects the stack, updates commands and conventions, reports existing checks, points to optional `/ci` setup, asks whether Blueprint workflow files should be committed or kept local-only, checks `.gitignore`, and tells you what to fill in before `/overview`. |
+| **/discovery** | optionally, before writing or revising the plans | Runs a deep, adaptive planning conversation over as many turns as needed, then shows detailed `project-plan.md` and high-level `build-plan.md` drafts and writes them only after explicit approval. Direct plan writing remains fully supported. |
 | **/doctor** | any time, especially after `/onboard` or when setup feels off | Runs a read-only health check for Blueprint files, adapters, commands, optional verification and CI alignment, root README placement, ignore rules, planning readiness, overview freshness, workflow drift, and git state. |
 | **/adopt** | once, for an existing codebase | Surveys the repo, protects the project README, reports existing checks, points to optional `/ci` setup, and generates the planning docs and coding standards from what already exists. |
 | **/overview** | after writing or editing the plans | Checks plan quality, normalizes rough build-plan bullets when approved, and generates `blueprint/context/project-overview.md`. |
 | **/brief** | before spec'ing, or when deciding what's next | Read-only briefing on an upcoming build-plan feature - scope, dependencies, what it touches, size, likely split - without writing anything. |
 | **/feature** | for each planned or newly requested feature | Specs the next unchecked feature or a selected feature into `current-feature.md`. If a new feature is not in the plan, proposes the plan update and refreshes the overview after approval before spec'ing it. |
+| **/debug** | when a test, build, request, or behavior is failing | Reproduces and isolates the failure without editing code or Blueprint state, then reports the evidence and hands confirmed repair work to `/fix` or `/implement`. |
 | **/fix** | for an unplanned bug or small change | Specs an ad-hoc fix into `current-feature.md`. |
 | **/tests** | when you want unit tests added | Adds or normalizes the stack-native unit test setup, adds one example test, updates an existing Verify command, and runs the resulting checks. It does not create CI by itself. |
 | **/ci** | when you want automatic GitHub checks | Detects the real stack and existing CI, defines one Verify command from configured checks, creates or carefully aligns the GitHub workflow, runs Verify locally, and stops before push or remote ruleset changes. |
 | **/implement** | after reviewing a spec | Builds the current spec one small, reviewed step at a time and uses the documented Verify command when present, then ends with a compact review packet. |
 | **/check** | before wrapping up, or any time you want proof | Runs the real app and reports pass/fail against the spec's done-whens. |
 | **/try** | when you want to review manually | Gives a human walkthrough: what to start, where to go, what to click or run, what to expect, and what would count as wrong. |
-| **/audit** | before closing a feature, or any time quality feels suspect | Runs a branch-aware or full-project audit for code quality, security, performance, tests, and standards drift, recording findings with durable IDs and statuses in `blueprint/context/findings.md`. |
+| **/audit** | before closing a feature, or when quality, security, performance, or tests feel suspect | Runs a branch-aware or full-project audit across all concerns or one focused lens, recording findings with durable IDs and statuses in `blueprint/context/findings.md`. |
 | **/rollback** | when a completed feature must be removed | Finds the archived feature's exact commit, reviews later dependency risk, writes a guarded rollback spec, and stops before product changes. |
 | **/complete** | when work is built and reviewed | Runs a final safety pass, archives the spec, commits the finished work, and merges with your approval. Pushes main only after a separate yes. |
 | **/release** | after a completed feature or milestone | Prepares Render or Vercel deployment readiness, local config, env var review, and smoke-test steps. Never deploys or changes remote services without a separate yes. |
@@ -489,19 +605,21 @@ review packet. It validates findings, repairs confirmed P0/P1 issues within the
 approved feature scope, and reruns the affected checks. It does not turn a
 feature pass into a repository-wide cleanup.
 
-Run `/audit` directly when you want a separate read-only maintainability pass,
-a broader project review, or whenever the code feels like it may be drifting. It
-looks for issues such as duplicated logic, dead code, unused exports, overgrown
+Run `/audit` directly when you want a separate read-only review, a broader
+project audit, or a focused quality, security, performance, or tests pass. A
+broad audit looks for duplicated logic, dead code, unused exports, overgrown
 modules, inconsistent patterns, missing tests for logic-bearing code, security
 risks, performance risks, and drift from `coding-standards.md`.
 
-Choose the scope explicitly when needed:
+Scope and lens are separate controls, and they can appear in either order:
 
 ```text
-/audit current       # Active spec, full feature-branch delta, and local changes
-/audit changed       # Staged, unstaged, and untracked source files
-/audit full          # All project-owned source, tests, and configuration
-/audit src/auth      # One path plus the callers and tests needed to understand it
+/audit current                  # All lenses across the active work
+/audit quality changed          # Maintainability and standards in local changes
+/audit security current         # Trust boundaries across the active work
+/audit performance src/api      # Runtime risks in one subsystem
+/audit tests src/auth           # Test gaps and test quality in one subsystem
+/audit full                     # All lenses across the full project
 ```
 
 With no argument, Audit uses `current` when a feature is active, `changed` when
@@ -510,6 +628,10 @@ checkpoint work from the feature branch's merge base through `HEAD`, so a clean
 working tree does not hide completed Autopilot steps. The `full` scope excludes
 dependencies, generated files, build and coverage output, caches, vendored code,
 and minified assets unless you explicitly include them.
+
+With no lens, Audit reviews quality, security, performance, and tests together.
+A focused lens runs only relevant signals and states which concerns were not
+reviewed, so a security-only pass is never presented as a broad audit.
 
 Confirmed P0 and P1 findings require a concrete code path, violated contract or
 security boundary, failing check, or reproducible behavior. Unconfirmed concerns
@@ -607,6 +729,7 @@ step in `current-feature.md`.
 │       ├── adopt/             ($adopt: bootstrap from an existing codebase)
 │       ├── doctor/            ($doctor: read-only Blueprint health check)
 │       ├── onboard/           ($onboard: finish fresh-project setup)
+│       ├── discovery/         ($discovery: optional deep project planning)
 │       ├── overview/          ($overview: plans to project-overview.md)
 │       ├── brief/             ($brief: preview a build-plan feature)
 │       ├── feature/           ($feature: build-plan item to current-feature.md)
@@ -628,6 +751,7 @@ step in `current-feature.md`.
 │       ├── adopt/             (/adopt: bootstrap from an existing codebase)
 │       ├── doctor/            (/doctor: read-only Blueprint health check)
 │       ├── onboard/           (/onboard: finish fresh-project setup)
+│       ├── discovery/         (/discovery: optional deep project planning)
 │       ├── overview/          (/overview: plans to project-overview.md)
 │       ├── brief/             (/brief: preview a build-plan feature)
 │       ├── feature/           (/feature: build-plan item to current-feature.md)
@@ -692,6 +816,21 @@ When editing shared workflow behavior, keep the matching files in `.agents/skill
 and `.claude/skills` aligned. Tool-specific invocation text is fine, but the
 actual build loop should stay the same across both adapters.
 
+## Support and contributing
+
+- Read the [documentation](https://ai-blueprint.dev/docs/) for setup, command,
+  and troubleshooting guidance.
+- Follow [SUPPORT.md](SUPPORT.md) for usage questions, reproducible bugs, and
+  feature requests.
+- Follow [SECURITY.md](SECURITY.md) to report suspected vulnerabilities
+  privately.
+- Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+- Review [CHANGELOG.md](CHANGELOG.md) for published package history.
+
+## License
+
+AI Blueprint is available under the [MIT License](LICENSE).
+
 ## Notes
 
 ### This is not an app skeleton
@@ -726,12 +865,12 @@ between tools.
 
 Use the native invocation style for your tool:
 
-- Codex: `$onboard`, `$doctor`, `$adopt`, `$overview`, `$brief`, `$feature`,
-  `$fix`, `$tests`, `$ci`, `$implement`, `$check`, `$try`, `$audit`, `$rollback`, `$complete`,
+- Codex: `$onboard`, `$discovery`, `$doctor`, `$adopt`, `$overview`, `$brief`, `$feature`,
+  `$debug`, `$fix`, `$tests`, `$ci`, `$implement`, `$check`, `$try`, `$audit`, `$rollback`, `$complete`,
   `$release`, `$prototype`, `$status`, or plain language like "run the overview."
   Autopilot: `$autopilot`.
-- Claude Code: `/onboard`, `/doctor`, `/adopt`, `/overview`, `/brief`,
-  `/feature`, `/fix`, `/tests`, `/ci`, `/implement`, `/check`, `/try`, `/audit`, `/rollback`,
+- Claude Code: `/onboard`, `/discovery`, `/doctor`, `/adopt`, `/overview`, `/brief`,
+  `/feature`, `/debug`, `/fix`, `/tests`, `/ci`, `/implement`, `/check`, `/try`, `/audit`, `/rollback`,
   `/complete`, `/release`, `/prototype`, `/status`. Autopilot: `/autopilot`.
 - Other tools: ask the agent to follow the matching `SKILL.md`.
 
