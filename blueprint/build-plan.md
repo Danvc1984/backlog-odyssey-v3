@@ -52,6 +52,10 @@ a whole product area.
     SyncRun logging, daily refresh
 - [ ] 7. **Possible duplicates** - similarity evidence, review, dismiss, delete,
   or manual merge
+  - [x] 7a. Duplicate detection and review - scan for name-similar games, create
+    PossibleDuplicate records with evidence and confidence, review UI, dismiss
+  - [ ] 7b. Merge and delete - merge two games into one (consolidate all related
+    records), delete a game with cascade cleanup
 - [ ] 8. **Wishlist** - local wishlist for base games and DLC, target price,
   notes, already-available warning
 - [ ] 9. **DLC model** - DLC as children of base games; DLC deals but never

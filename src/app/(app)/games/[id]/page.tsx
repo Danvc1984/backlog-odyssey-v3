@@ -4,6 +4,7 @@ import { PersonalFieldsForm } from "@/components/games/PersonalFieldsForm";
 import { PlayStateSection } from "@/components/games/PlayStateSection";
 import { TagsSection } from "@/components/games/TagsSection";
 import { CollectionsSection } from "@/components/games/CollectionsSection";
+import { DuplicateWarning } from "@/components/games/DuplicateWarning";
 
 const TYPE_LABELS: Record<string, string> = {
   BASE_GAME: "Base game",
@@ -27,7 +28,7 @@ export default async function GameDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [game, manualCollections] = await Promise.all([
+  const [game, manualCollections, possibleDuplicate] = await Promise.all([
     prisma.game.findUnique({
       where: { id },
       include: {
@@ -46,17 +47,37 @@ export default async function GameDetailPage({
       orderBy: { name: "asc" },
       select: { id: true, name: true, color: true },
     }),
+    prisma.possibleDuplicate.findFirst({
+      where: {
+        status: "OPEN",
+        OR: [{ gameAId: id }, { gameBId: id }],
+      },
+      select: {
+        gameAId: true,
+        gameBId: true,
+        gameA: { select: { name: true } },
+        gameB: { select: { name: true } },
+      },
+    }),
   ]);
 
   if (!game) {
     redirect("/library");
   }
 
+  const otherGameName = possibleDuplicate
+    ? possibleDuplicate.gameAId === id
+      ? possibleDuplicate.gameB.name
+      : possibleDuplicate.gameA.name
+    : null;
+
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold">{game.name}</h1>
       </div>
+
+      {otherGameName && <DuplicateWarning otherGameName={otherGameName} />}
 
       <section>
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">

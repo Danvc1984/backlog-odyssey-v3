@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Star, Clock, RotateCcw, EyeOff } from "lucide-react";
 import { CreateGameDialog } from "@/components/games/CreateGameDialog";
 import { LibraryFilters } from "@/components/games/LibraryFilters";
+import { DuplicatesList } from "@/components/games/DuplicatesList";
 import {
   getSystemCollectionDefinition,
   getSystemCollections,
@@ -33,6 +34,7 @@ interface LibrarySearchParams {
   state?: string;
   sort?: string;
   collection?: string;
+  duplicates?: string;
 }
 
 export default async function LibraryPage({
@@ -40,8 +42,39 @@ export default async function LibraryPage({
 }: {
   searchParams: Promise<LibrarySearchParams>;
 }) {
-  const { q = "", source, state, sort = "newest", collection } =
+  const { q = "", source, state, sort = "newest", collection, duplicates } =
     await searchParams;
+
+  if (duplicates === "true") {
+    const openDuplicates = await prisma.possibleDuplicate.findMany({
+      where: { status: "OPEN" },
+      select: {
+        id: true,
+        gameAId: true,
+        gameBId: true,
+        confidence: true,
+        evidence: true,
+        gameA: { select: { id: true, name: true } },
+        gameB: { select: { id: true, name: true } },
+      },
+      orderBy: { id: "asc" },
+    });
+
+    return (
+      <div>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold">Duplicate review</h1>
+            <Link href="/library" className="text-sm text-muted-foreground hover:underline">
+              Back to library
+            </Link>
+          </div>
+          <CreateGameDialog />
+        </div>
+        <DuplicatesList duplicates={openDuplicates} />
+      </div>
+    );
+  }
 
   const sourceFilter =
     source && source !== "ALL"
