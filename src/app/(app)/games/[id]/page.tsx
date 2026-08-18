@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PersonalFieldsForm } from "@/components/games/PersonalFieldsForm";
 import { PlayStateSection } from "@/components/games/PlayStateSection";
 import { TagsSection } from "@/components/games/TagsSection";
 import { CollectionsSection } from "@/components/games/CollectionsSection";
 import { DuplicateWarning } from "@/components/games/DuplicateWarning";
+import { DeleteGameDialog } from "@/components/games/DeleteGameDialog";
 
 const TYPE_LABELS: Record<string, string> = {
   BASE_GAME: "Base game",
@@ -39,6 +41,10 @@ export default async function GameDetailPage({
         },
         collections: {
           include: { collection: true },
+        },
+        dlcs: {
+          select: { id: true, name: true },
+          orderBy: { name: "asc" },
         },
       },
     }),
@@ -189,6 +195,25 @@ export default async function GameDetailPage({
 
       <section>
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+          DLC
+        </h2>
+        {game.dlcs.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No DLC owned.</p>
+        ) : (
+          <ul className="grid gap-1 text-sm">
+            {game.dlcs.map((dlc) => (
+              <li key={dlc.id}>
+                <Link href={`/games/${dlc.id}`} className="hover:underline">
+                  {dlc.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
           Play state
         </h2>
         <PlayStateSection
@@ -205,6 +230,16 @@ export default async function GameDetailPage({
               : null
           }
         />
+      </section>
+
+      <section className="flex items-center justify-between border-t border-border pt-6">
+        <div>
+          <h2 className="text-sm font-semibold">Delete {game.name}</h2>
+          <p className="text-sm text-muted-foreground">
+            Removes this game and its attached records. You can undo it shortly after.
+          </p>
+        </div>
+        <DeleteGameDialog gameId={game.id} />
       </section>
     </div>
   );

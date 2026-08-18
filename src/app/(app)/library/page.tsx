@@ -159,7 +159,15 @@ export default async function LibraryPage({
     <div>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Library</h1>
-        <CreateGameDialog />
+        <div className="flex items-center gap-3">
+          <Link
+            href="/library?duplicates=true"
+            className="text-sm text-muted-foreground hover:underline"
+          >
+            Review duplicates
+          </Link>
+          <CreateGameDialog />
+        </div>
       </div>
 
       <div className="mt-4">

@@ -1,0 +1,1 @@
+export const CATALOG_OPERATION_TTL_MS = 30_000;

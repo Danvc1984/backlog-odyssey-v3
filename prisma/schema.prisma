@@ -72,6 +72,18 @@ enum DuplicateStatus {
   DISMISSED
 }
 
+enum CatalogOperationType {
+  MERGE
+  DELETE
+}
+
+enum CatalogOperationState {
+  PENDING
+  UNDONE
+  EXPIRED
+  COMPLETED
+}
+
 enum Theme {
   LIGHT
   DARK
@@ -112,6 +124,7 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+  operations    CatalogOperation[]
 }
 
 model Account {
@@ -483,4 +496,21 @@ model SyncRun {
   finishedAt DateTime?
   counts     Json?
   diagnostics Json?
+}
+
+model CatalogOperation {
+  id              String                @id @default(cuid())
+  userId          String
+  type            CatalogOperationType
+  state           CatalogOperationState @default(PENDING)
+  affectedGameIds String[]
+  snapshot        Json?
+  expiresAt       DateTime
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, state])
+  @@index([expiresAt])
 }

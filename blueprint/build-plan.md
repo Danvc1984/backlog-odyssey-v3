@@ -16,7 +16,7 @@
 
 ## Catalog integrity
 
-- [ ] 7b. **Merge and delete** - two-phase editable merge, conservative relation
+- [x] 7b. **Merge and delete** - two-phase editable merge, conservative relation
   union, DLC reassignment, cascade-safe delete, temporary CatalogOperation,
   overlap protection, and 15-second reload-safe Undo
 

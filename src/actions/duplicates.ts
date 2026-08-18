@@ -15,6 +15,11 @@ interface DuplicatePair {
   normalizedName: string;
 }
 
+interface ExistingDuplicate {
+  id: string;
+  status: string;
+}
+
 function orderedPair(id1: string, id2: string): [string, string] {
   return id1 < id2 ? [id1, id2] : [id2, id1];
 }
@@ -46,9 +51,10 @@ function collectDuplicatePairs(games: GameName[]): DuplicatePair[] {
   });
 }
 
-export async function detectDuplicates() {
+export async function detectDuplicates(input?: { includeDismissed?: boolean }) {
   try {
     await requireUser();
+    const includeDismissed = input?.includeDismissed === true;
 
     const games = await prisma.game.findMany({
       where: { type: "BASE_GAME" },
@@ -68,16 +74,23 @@ export async function detectDuplicates() {
       where: {
         OR: candidates.map(({ gameAId, gameBId }) => ({ gameAId, gameBId })),
       },
-      select: { gameAId: true, gameBId: true },
+      select: { id: true, gameAId: true, gameBId: true, status: true },
     });
-    const existingKeys = new Set(
-      existing.map(({ gameAId, gameBId }) => `${gameAId}:${gameBId}`),
-    );
-    const newPairs = candidates.filter(
-      ({ gameAId, gameBId }) => !existingKeys.has(`${gameAId}:${gameBId}`),
+    const existingByKey = new Map<string, ExistingDuplicate>(
+      existing.map((row) => [`${row.gameAId}:${row.gameBId}`, { id: row.id, status: row.status }]),
     );
 
-    const result =
+    const newPairs = candidates.filter(
+      ({ gameAId, gameBId }) => !existingByKey.has(`${gameAId}:${gameBId}`),
+    );
+    const dismissedPairs = includeDismissed
+      ? candidates.filter(
+          ({ gameAId, gameBId }) =>
+            existingByKey.get(`${gameAId}:${gameBId}`)?.status === "DISMISSED",
+        )
+      : [];
+
+    const created =
       newPairs.length === 0
         ? { count: 0 }
         : await prisma.possibleDuplicate.createMany({
@@ -89,9 +102,31 @@ export async function detectDuplicates() {
             })),
           });
 
+    if (dismissedPairs.length > 0) {
+      await Promise.all(
+        dismissedPairs.map(({ gameAId, gameBId, normalizedName }) => {
+          const existingRow = existingByKey.get(
+            `${gameAId}:${gameBId}`,
+          ) as ExistingDuplicate;
+          return prisma.possibleDuplicate.update({
+            where: { id: existingRow.id },
+            data: {
+              status: "OPEN",
+              reviewedAt: null,
+              confidence: 1.0,
+              evidence: { method: "name_match", normalizedName },
+            },
+          });
+        }),
+      );
+    }
+
     return {
       success: true as const,
-      data: { scanned: games.length, duplicatesFound: result.count },
+      data: {
+        scanned: games.length,
+        duplicatesFound: created.count + dismissedPairs.length,
+      },
       error: null,
     };
   } catch (err) {

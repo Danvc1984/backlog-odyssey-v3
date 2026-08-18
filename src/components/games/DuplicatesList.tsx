@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DismissDuplicateButton, ScanDuplicatesButton } from "./DuplicateActions";
+import { MergeGamesDialog } from "./MergeGamesDialog";
 
 interface DuplicateReviewItem {
   id: string;
@@ -74,7 +75,10 @@ export function DuplicatesList({ duplicates }: { duplicates: DuplicateReviewItem
                   </td>
                   <td className="px-4 py-3">{getEvidenceMethod(duplicate.evidence)}</td>
                   <td className="px-4 py-3 text-right">
-                    <DismissDuplicateButton duplicateId={duplicate.id} />
+                    <div className="flex justify-end gap-2">
+                      <MergeGamesDialog duplicateId={duplicate.id} />
+                      <DismissDuplicateButton duplicateId={duplicate.id} />
+                    </div>
                   </td>
                 </tr>
               ))}

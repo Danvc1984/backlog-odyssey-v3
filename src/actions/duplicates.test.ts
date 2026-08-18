@@ -48,6 +48,7 @@ describe("detectDuplicates", () => {
     };
     mockFindManyDuplicates.mockResolvedValue([]);
     mockCreateMany.mockResolvedValue({ count: 1 });
+    mockUpdateDuplicate.mockResolvedValue({ id: "duplicate-1" });
   });
 
   it("dismisses an open duplicate and records the review time", async () => {
@@ -160,5 +161,60 @@ describe("detectDuplicates", () => {
     expect(result.data).toEqual({ scanned: 2, duplicatesFound: 0 });
     expect(mockFindManyDuplicates).not.toHaveBeenCalled();
     expect(mockCreateMany).not.toHaveBeenCalled();
+  });
+
+  it("leaves dismissed pairs alone by default", async () => {
+    mockFindManyGames.mockResolvedValue([
+      { id: "game-a", name: "Hades" },
+      { id: "game-b", name: "Hades" },
+    ]);
+    mockFindManyDuplicates.mockResolvedValue([
+      { id: "duplicate-1", gameAId: "game-a", gameBId: "game-b", status: "DISMISSED" },
+    ]);
+
+    const result = await detectDuplicates();
+
+    expect(result.data).toEqual({ scanned: 2, duplicatesFound: 0 });
+    expect(mockCreateMany).not.toHaveBeenCalled();
+    expect(mockUpdateDuplicate).not.toHaveBeenCalled();
+  });
+
+  it("reopens a dismissed pair when includeDismissed is set", async () => {
+    mockFindManyGames.mockResolvedValue([
+      { id: "game-a", name: "Hades" },
+      { id: "game-b", name: "Hades" },
+    ]);
+    mockFindManyDuplicates.mockResolvedValue([
+      { id: "duplicate-1", gameAId: "game-a", gameBId: "game-b", status: "DISMISSED" },
+    ]);
+
+    const result = await detectDuplicates({ includeDismissed: true });
+
+    expect(result.data).toEqual({ scanned: 2, duplicatesFound: 1 });
+    expect(mockCreateMany).not.toHaveBeenCalled();
+    expect(mockUpdateDuplicate).toHaveBeenCalledWith({
+      where: { id: "duplicate-1" },
+      data: {
+        status: "OPEN",
+        reviewedAt: null,
+        confidence: 1,
+        evidence: { method: "name_match", normalizedName: "hades" },
+      },
+    });
+  });
+
+  it("does not reopen an already open pair when includeDismissed is set", async () => {
+    mockFindManyGames.mockResolvedValue([
+      { id: "game-a", name: "Hades" },
+      { id: "game-b", name: "Hades" },
+    ]);
+    mockFindManyDuplicates.mockResolvedValue([
+      { id: "duplicate-1", gameAId: "game-a", gameBId: "game-b", status: "OPEN" },
+    ]);
+
+    const result = await detectDuplicates({ includeDismissed: true });
+
+    expect(result.data).toEqual({ scanned: 2, duplicatesFound: 0 });
+    expect(mockUpdateDuplicate).not.toHaveBeenCalled();
   });
 });
