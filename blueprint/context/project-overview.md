@@ -1,152 +1,132 @@
 # Backlog Odyssey - Project Overview
 
-> Private, single-user gaming library and decision assistant for a fixed
-> Bazzite / Steam Deck / Windows setup, focused on Mexico.
+> A private, single-user gaming-library assistant for deciding what to play and buy in Mexico across Bazzite, Steam Deck, and Windows.
 
 ## Problem
 
-Gaming information is fragmented across Steam, price-comparison services,
-compatibility communities, metadata catalogs, and personal notes. The owner
-cannot easily answer what to play next from already-owned games, which wishlist
-base game or DLC is worth buying now for Mexico, or whether to use Bazzite, Steam
-Deck, or Windows for a given game. Backlog Odyssey consolidates these signals
-into one private assistant without becoming a launcher, storefront, or analytics
-service.
+Gaming ownership, prices, compatibility evidence, metadata, and personal notes
+are scattered across separate services. The owner needs one private assistant to
+make explainable play-next and purchase decisions without becoming a launcher or
+storefront.
 
 ## Users
 
-A single private owner on one fixed environment (Bazzite desktop, Steam Deck
-portable, Windows fallback, MX prices, UTC-6). No multi-user, roles,
-registration, or teams. Access is a single authorized Google email
-(`ALLOWED_GOOGLE_EMAIL`); every protected server entry point enforces that
-identity.
+- One authorized Google user.
+- Fixed environments: Bazzite desktop, Steam Deck, and Windows fallback.
+- Mexican prices and UTC-6 display.
+
+Public registration, roles, collaboration, and multi-user behavior are outside
+the MVP.
 
 ## Features
 
-In build-plan order. The headline feature is the **Today dashboard**.
+Completed work is retained here for context; the next unchecked feature is 7b.
 
-1. **App shell and auth gate** - Next.js shell with desktop nav / mobile bottom nav and single-user Google sign-in restricted to the allowed email.
-2. **Manual catalog and library base** - create manual games (base / other-platform / ROM) and a searchable, filterable library.
-3. **Game detail** - metadata, availability, record origin, and personal fields (priority, interest, rating, notes, tags, preferred environment).
-4. **Play states and main game** - play-state rules, single main-game constraint, candidate flags (play soon / replay / hidden), abandoned signal.
-5. **Collections** - persistent manual Collections and calculated system Collections.
-6. **Steam connection and sync** - Steam OpenID connect, SteamID64, owned / recent import, exact App ID idempotency, playtime and last-played.
-7. **Possible duplicates** - similarity evidence, review, dismiss, delete, or manual merge.
-8. **Wishlist** - local wishlist for base games and DLC, target price, notes, already-available warning.
-9. **DLC model** - DLC as children of base games; DLC sees deals but never play-next.
-10. **ITAD price enrichment** - Steam App ID to ITAD ID, MX price queries, offer cards, freshness / stale labeling, buy recommendations.
-11. **Compatibility synthesis** - ProtonDB, anti-cheat dataset, Steam Deck verified, per-environment practical status, personal override.
-12. **Recommendation engine** - deterministic rule-based play-next and buy scoring with explanations and feedback.
-13. **Today dashboard** - main game, in-progress games, play-next recs, recent Steam activity, wishlist deals, provider freshness.
-14. **Dynamic visual theme** - theme from the featured game, light/dark/system, simple fallback, WCAG AA.
-15. **Wallhaven desktop wallpaper** - SFW search, cached candidates, desktop only, never on mobile.
-16. **Settings** - connected services, sessions, theme, wallpaper / reduced-data, refresh controls, JSON export.
-17. **Backup and export** - on-demand JSON export and daily encrypted off-site backup rotation.
-18. **Deployment and CI** - Vercel config, env review, smoke test, Verify command and CI.
+1. **App shell and auth gate** - provides the Next.js shell and restricted Google access.
+2. **Manual catalog and library base** - provides manual games and library filters.
+3. **Game detail** - provides metadata, availability, and personal fields.
+4. **Play states and main game** - enforces state rules, flags, and one main game.
+5. **Collections** - provides manual and calculated collections.
+6. **Steam connection and sync** - links Steam, imports owned games, and syncs playtime and recent activity.
+7a. **Duplicate detection and review** - detects normalized-name matches, supports review and dismissal, and warns in the UI.
+7b. **Merge and delete** - adds confirmed catalog consolidation or removal with conservative relation handling and short-lived, reload-safe Undo.
+8. **RAWG metadata enrichment** - enriches catalog and wishlist entries on demand, with matching, attribution, overwrite warnings, and failure isolation.
+9. **DLC model and unresolved Steam queue** - models base-game ownership for DLC and gives unresolved Steam DLC a persistent review flow.
+10a. **Local wishlist and acquisition** - adds independent base-game and DLC wishes, then converts acquired wishes into catalog entries.
+10b. **Price enrichment and purchase opportunities** - compares Mexican Steam and ITAD offers against source preferences and optional MXN targets.
+11. **Compatibility synthesis** - presents sourced, fresh-or-unknown practical status for each target environment and preserves personal overrides.
+12. **Recommendation engine** - generates deterministic, explainable play-next and buy results with bounded calibration from dismissals.
+13. **Today dashboard** - composes the current game, recommendations, Steam activity, offers, and provider freshness without silently refreshing data.
+14. **Global visual foundation** - adds accessible light, dark, and system modes with reduced-data and reduced-motion behavior.
+15. **Wallhaven global background** - adds an optional SFW cached background with attribution and safe fallbacks.
+16. **Game-detail dynamic themes** - derives accessible, deterministic detail-page themes from RAWG imagery.
+17. **Settings and manual export** - manages session, provider, visual, accessibility, refresh, and JSON-export controls.
+18. **Deployment and CI readiness** - verifies Vercel/Supabase production readiness and configures reproducible checks when requested.
 
 ## Data model
 
-Derived from the PRD product model; the Prisma schema in `prisma/schema.prisma`
-is the current ground truth and should track these responsibilities.
+Provider data is rebuildable. Personal intent, catalog state, and user choices
+are authoritative.
 
-> Shapes that later features depend on: game type (BASE_GAME / DLC),
-> availability sources, play state, main-game single flag, external identity by
-> `(namespace, externalId)`, base-game-owned LibraryEntry, one WishlistEntry per
-> game, and immutable recommendation runs.
+### Identity and settings
 
-### Auth (Auth.js, database sessions)
+- `User`, `Account`, `Session` (Auth.js records) - authenticate the sole permitted Google account.
+- `AppSettings` (singleton) - fixed environments, Mexico and UTC-6 display, theme, reduced-data behavior, provider refresh controls, Wallhaven controls, and global price-source preference (`STEAM`, `ITAD`, `NO_PREFERENCE`).
+- `SteamConnection` - `steamId64`, connection status, timestamps, and sync summary for the linked account.
 
-- `User` / `Account` / `Session` - standard Auth.js records for the one Google identity. No password, no roles.
+### Catalog, ownership, and metadata
 
-### Settings and connections
+- `Game` - catalog-only record with `id`, `name`, `type` (`BASE_GAME` or `DLC`), origin, and optional `baseGameId`. A DLC must reference one base game; base-game deletion explicitly cascades to its DLC.
+- `ExternalGameId` - external identity with namespace, identifier, and match provenance. Same-namespace conflicts block a merge. A retained Steam App ID lets later sync update a manually acquired game.
+- `GameAvailability` - source and ownership availability, including Steam or another acquisition source; used when an acquired wish becomes a catalog game.
+- `LibraryEntry` - base-game personal state: play state, main-game flag, priority, interest, rating, notes, tags, preferred environment, play/replay/hidden signals, and personal compatibility override. Only one base game may be main.
+- `MetadataSnapshot` - replaceable RAWG snapshot for a catalog game with images, genres, tags/styles, release date, description, playtimes, alternative names, developer/publisher, website, rating/Metacritic context, RAWG URL, provider update time, local fetch time, and attribution. No history is retained.
+- `PossibleDuplicate` - base-game pair, normalized-name evidence, confidence, and review state (`OPEN` or `DISMISSED`). It gates merge; detection never merges automatically.
+- `CatalogOperation` - merge/delete operation linked to `User`, with type, state (`PENDING`, `UNDONE`, `EXPIRED`, `COMPLETED`), affected game IDs, minimal reversible snapshot, timestamps, and roughly 15-second expiry. Operations may not overlap the same game.
 
-- `AppSettings` (singleton, id=1) - theme, fixed environment (Bazzite / Steam Deck / Windows), price country MX, UTC-6 time zone, wallpaper and reduced-data preference, refresh settings.
-- `SteamConnection` (singleton) - one SteamID64, connection state, last sync time and counts.
+### DLC, wishlist, and pricing
 
-### Catalog
+- `UnresolvedSteamDlc` - persistent review-queue record for an owned Steam DLC whose base game is absent, including source identity and a temporary-discard state. It returns to pending on a later unresolved sync.
+- `WishlistEntry` - independent, non-provisional wish with name, type (`BASE_GAME` or `DLC`), notes, local interest, optional provider and external identifiers, optional `targetPriceMxn`, optional source-preference override, and independent RAWG snapshot. It does not create a `Game` until manual acquisition.
+- `WishlistMetadataSnapshot` - replaceable RAWG data owned by a `WishlistEntry`; copy it into the new catalog game on acquisition when present.
+- `PriceRefresh` - provider refresh status, timestamps, result, and freshness diagnostics. Failed refreshes preserve prior valid data.
+- `DealOffer` - Mexican offer data: source, store, current price, currency, discount, historical low when available, DRM/platform data, external URL, expiry, and freshness. Stale offers stay visible but cannot produce a strong purchase recommendation.
 
-- `Game` (BASE_GAME or DLC) - name, origin (STEAM_IMPORT / MANUAL), optional `baseGameId` for DLC; a base game can have zero or more DLC.
-- `ExternalGameId` - `(namespace, externalId)` identity, unique; namespaces STEAM_APP / RAWG_GAME / ITAD_GAME; match method.
-- `MetadataSnapshot` - rebuildable provider payload, provenance, fetched/expiry, attribution.
-- `PossibleDuplicate` - ordered symmetric game pair, evidence, confidence, status (OPEN / DISMISSED), reviewed time.
+### Compatibility, recommendations, and organization
 
-### Library and availability
-
-- `LibraryEntry` (one per base game) - play state, main flag, priority, interest (1-5), rating (1-10), preferred environment, compatibility override, notes, play soon / replay / hidden flags.
-- `GameAvailability` - source (STEAM / OTHER_PLATFORM / ROM), display name, Steam playtime and last-played for Steam rows.
-
-### Wishlist and prices
-
-- `WishlistEntry` (one per game) - local wishlist authority, interest, optional target price, notes.
-- `PriceRefresh` / `DealOffer` - ITAD refresh outcome and returned offers (shop, country, currency, prices, discount, historical low, DRM, platforms, timestamps, expiry, unmodified URL, freshness). Only for Steam-backed wishlist entries.
-
-### Organization and tags
-
-- `Collection` (manual or system) / `CollectionMembership` - persistent manual membership; system collections are calculated with no rows.
-- `PersonalTag` / `GameTag` - case-insensitively unique names, many-to-many to base games.
-
-### Compatibility
-
-- `CompatibilitySnapshot` - provider evidence (ProtonDB, anti-cheat, Steam Deck verified) with provenance and freshness.
-- `EnvironmentCompatibility` - per-game practical status per environment (Bazzite / Steam Deck / Windows).
-
-### Recommendations
-
-- `RecommendationRun` / `RecommendationItem` / `RecommendationFeedback` - immutable run context, ranked items with score breakdowns and explanations, and feedback (Not now expiry / play soon / hide).
-
-### Theme and operations
-
-- `WallpaperState` - cached candidate metadata and selected index; no image binaries.
-- `SyncRun` - provider, timing, status, counts, safe diagnostics.
+- `CompatibilitySnapshot` - sourced ProtonDB, anti-cheat, Steam Deck, or other documented evidence with provenance and freshness.
+- `EnvironmentCompatibility` - synthesized Bazzite, Steam Deck, and Windows status plus a separate personal override that provider refreshes never replace.
+- `RecommendationRun` - an explicitly requested execution and its timestamp/context.
+- `RecommendationItem` - ranked play-next or buy result with score factors and visible explanation. `play-next` is catalog-only; buy results exclude DLC whose base game is not owned.
+- `RecommendationFeedback` - temporary per-run dismissal plus persistent per-type dismissal counters. Three cumulative dismissals reduce adjusted interest by one, never below zero.
+- `Collection`, `CollectionMembership`, `PersonalTag`, `GameTag` - manual/calculated collections and reusable personal tags.
+- `WallpaperState` - cached SFW Wallhaven candidate metadata, selection, freshness, and attribution; it stores no image binaries.
+- `SyncRun` - provider operation timing, result, counts, and safe diagnostics.
 
 ## Tech stack
 
-- **Next.js App Router** - pages, layout, server components.
-- **React / TypeScript** - UI and type safety.
-- **Turbopack** - dev and build bundler.
-- **pnpm** - package manager.
-- **Tailwind CSS v4 + shadcn/ui (Radix)** - styling and accessible primitives.
-- **Prisma + Supabase PostgreSQL** - ORM and data store.
-- **Auth.js (Google)** - single allowed-email authentication, database sessions.
-- **Zod** - input validation on server boundaries.
-- **Vitest** - unit tests (gate).
-- **Vercel** - deployment host.
-- **Off-site encrypted backups** - daily logical backup of irreplaceable tables.
+- **Next.js App Router, React, TypeScript, pnpm** - application runtime and development tooling.
+- **Tailwind CSS v4 and shadcn/ui** - accessible responsive interface components.
+- **Prisma and PostgreSQL/Supabase** - relational persistence and migrations.
+- **Auth.js with Google** - single-account authentication, enforced server-side by `ALLOWED_GOOGLE_EMAIL`.
+- **Zod** - server-side input validation.
+- **Vitest** - unit-test gate for logic-bearing changes.
+- **Vercel** - intended application host.
+- **Steam, RAWG, ITAD, Wallhaven, compatibility providers** - server-side, optional enrichment boundaries; provider failure cannot corrupt personal data.
 
 ## Monetization
 
-Not in v1. Private single-user app, source-available under the PolyForm
-Noncommercial License 1.0.0. No ads, subscriptions, or analytics.
+Not in the MVP. The application is private and source-available under the
+PolyForm Noncommercial License 1.0.0, with no ads, subscriptions, or analytics.
 
 ## UI/UX
 
-Look and feel: private responsive browser app; dynamic theme driven by the
-featured main game with accessible light/dark/system modes (WCAG AA) and a
-simple fallback; game artwork and optional wallpaper as decoration.
+- `/` - sign-in landing and Google access gate.
+- `/today` - read-only dashboard for main and in-progress games, latest recommendations, Steam activity, offers, and freshness.
+- `/library` - searchable catalog, filters, manual creation, duplicate review, and catalog-wide metadata action.
+- `/wishlist` - independent wishes, metadata action, target-price and offer signals, acquisition, and DLC decisions.
+- `/games/[id]` - personal fields, availability, metadata, compatibility, DLC, duplicate warning, recommendation explanation, and per-game RAWG loading.
+- `/settings` - sessions, provider controls, preferences, visual/accessibility settings, refresh actions, and JSON export.
 
-- `/` (sign-in landing) - Google sign-in gate.
-- `/today` - main game, in-progress, play-next recs, recent activity, wishlist deals, freshness.
-- `/library` - searchable grid / compact table, filters, sorting, bulk actions, manual creation, duplicate review.
-- `/wishlist` - local wishlist and ITAD deal cards.
-- `/games/[id]` - game detail with metadata, availability, play state, personal fields, compatibility, DLC, duplicate warning, recommendation explanation.
-- `/settings` - connected services, sessions, theme, wallpaper, refresh controls, JSON export.
-
-Desktop (up to 2560x1440): constrained width, persistent nav and filters,
-multi-column. Mobile: bottom nav, single-column, slide-up filter sheet, 44px
-touch targets, simple fallback background, no wallpaper.
+The app is responsive: desktop favors a constrained, dense multi-column
+experience and may show a Wallhaven background; mobile uses a bottom navigation,
+single-column cards, a filter sheet, 44px targets, and no wallpaper. Detail-page
+artwork and global backgrounds must never override accessible contrast,
+light/dark/system modes, reduced-data behavior, or reduced-motion safeguards.
 
 ## Deployment
 
-- Host: Vercel (Next.js build / start).
-- Database: Supabase PostgreSQL. Runtime uses the pooled `DATABASE_URL`; migrations use the direct `DIRECT_URL`.
-- Env vars: `DIRECT_URL`, `DATABASE_URL`, `AUTH_SECRET`, `AUTH_URL`, `AUTH_TRUST_HOST`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `ALLOWED_GOOGLE_EMAIL` (per `.env.example`), plus future server-only `STEAM_WEB_API_KEY`, `ITAD_API_KEY`, `WALLHAVEN_API_KEY`.
-- Jobs: scheduled daily Steam sync, ITAD price refresh, provider freshness, and Wallhaven candidate refresh.
-- Backup: daily encrypted off-site logical backup of irreplaceable tables, retaining the 7 most recent.
-- Migration: `prisma migrate deploy` before app start.
-- Health check: app root.
+- **Target:** Vercel with Supabase PostgreSQL.
+- **Build:** `pnpm build`; use `pnpm start` for a production smoke test.
+- **Database:** pooled runtime URL and direct migration URL; production uses `pnpm prisma:deploy` before start.
+- **Environment:** `DIRECT_URL`, `DATABASE_URL`, `AUTH_SECRET`, `AUTH_URL`, `AUTH_TRUST_HOST`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `ALLOWED_GOOGLE_EMAIL`; future provider keys for Steam, RAWG, ITAD, Wallhaven, and compatibility sources remain server-only.
+- **Health:** app root smoke check.
+- **Checks:** `pnpm lint`, `pnpm typecheck`, and `pnpm test`; a single Verify command and automatic checks are configured only in the final readiness feature when requested.
+
+> TODO: Decide the exact scheduled-job mechanism for daily Steam and price refreshes, including its Vercel/Supabase integration.
 
 ## Open questions
 
-- Verify the Supabase pooled vs direct connection setup for Vercel before feature 6 (Steam sync) and feature 18 (deploy).
-- ITAD, RAWG, ProtonDB, and Wallhaven provider keys are not defined yet; adapters must keep the app usable when a provider is unavailable (design constraint throughout, but keyed in features 6-11, 15).
-- No `verify` package command exists yet; only add one when feature 18 (Run `/ci`) defines it.
+- Feature 8 promises wishlist RAWG flows before feature 10a introduces the local wishlist. Define in feature 8 whether it creates only the shared wishlist metadata boundary or whether the local wishlist must be brought forward; otherwise the current build order has a dependency inversion.
+- Features 7b, 8, 9, and 12 each contain several independently testable flows. Preserve their current roadmap entries, but split the implementation spec into small approved steps before building.
+- The plans name documented compatibility providers but do not select their final provider/API contracts or refresh cadence. Keep their statuses explicitly unknown until those choices are made.
