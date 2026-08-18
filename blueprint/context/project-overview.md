@@ -30,13 +30,13 @@ Completed work is retained here for context; the next unchecked feature is 7b.
 6. **Steam connection and sync** - links Steam, imports owned games, and syncs playtime and recent activity.
 7a. **Duplicate detection and review** - detects normalized-name matches, supports review and dismissal, and warns in the UI.
 7b. **Merge and delete** - adds confirmed catalog consolidation or removal with conservative relation handling and short-lived, reload-safe Undo.
-8. **RAWG metadata enrichment** - enriches catalog and wishlist entries on demand, with matching, attribution, overwrite warnings, and failure isolation.
+8. **Catalog RAWG enrichment** - enriches catalog entries on demand and queues every initial Steam import for metadata.
 9. **DLC model and unresolved Steam queue** - models base-game ownership for DLC and gives unresolved Steam DLC a persistent review flow.
-10a. **Local wishlist and acquisition** - adds independent base-game and DLC wishes, then converts acquired wishes into catalog entries.
-10b. **Price enrichment and purchase opportunities** - compares Mexican Steam and ITAD offers against source preferences and optional MXN targets.
-11. **Compatibility synthesis** - presents sourced, fresh-or-unknown practical status for each target environment and preserves personal overrides.
-12. **Recommendation engine** - generates deterministic, explainable play-next and buy results with bounded calibration from dismissals.
-13. **Today dashboard** - composes the current game, recommendations, Steam activity, offers, and provider freshness without silently refreshing data.
+10a. **Local wishlist, RAWG, and acquisition** - adds independent wishes, wishlist metadata, and conversion into catalog entries.
+10b. **Price enrichment and purchase opportunities** - refreshes Mexican Steam and ITAD offers manually and daily without running recommendations.
+11. **Compatibility synthesis** - asynchronously enriches post-RAWG games with ProtonDB, Steam Deck Verified fallback, and anti-cheat evidence.
+12. **Recommendation engine** - explicitly generates three explainable play-next and three buy results, led by manual signals.
+13. **Today dashboard** - composes recommendations, Steam activity, offers, freshness, and background-operation progress without starting work.
 14. **Global visual foundation** - adds accessible light, dark, and system modes with reduced-data and reduced-motion behavior.
 15. **Wallhaven global background** - adds an optional SFW cached background with attribution and safe fallbacks.
 16. **Game-detail dynamic themes** - derives accessible, deterministic detail-page themes from RAWG imagery.
@@ -63,6 +63,7 @@ are authoritative.
 - `MetadataSnapshot` - replaceable RAWG snapshot for a catalog game with images, genres, tags/styles, release date, description, playtimes, alternative names, developer/publisher, website, rating/Metacritic context, RAWG URL, provider update time, local fetch time, and attribution. No history is retained.
 - `PossibleDuplicate` - base-game pair, normalized-name evidence, confidence, and review state (`OPEN` or `DISMISSED`). It gates merge; detection never merges automatically.
 - `CatalogOperation` - merge/delete operation linked to `User`, with type, state (`PENDING`, `UNDONE`, `EXPIRED`, `COMPLETED`), affected game IDs, minimal reversible snapshot, timestamps, and roughly 15-second expiry. Operations may not overlap the same game.
+- `EnrichmentJob` - persistent provider work for a catalog or wishlist entry, with stage, status, attempts, next attempt, batch/progress context, and safe failure detail. RAWG precedes compatibility; transient failures retry at most three times.
 
 ### DLC, wishlist, and pricing
 
@@ -74,10 +75,10 @@ are authoritative.
 
 ### Compatibility, recommendations, and organization
 
-- `CompatibilitySnapshot` - sourced ProtonDB, anti-cheat, Steam Deck, or other documented evidence with provenance and freshness.
-- `EnvironmentCompatibility` - synthesized Bazzite, Steam Deck, and Windows status plus a separate personal override that provider refreshes never replace.
+- `CompatibilitySnapshot` - sourced ProtonDB, Steam Deck Verified, and anti-cheat evidence with provenance and freshness. ProtonDB is primary for Bazzite and Steam Deck; Verified is the Deck fallback.
+- `EnvironmentCompatibility` - synthesized Bazzite and Steam Deck status, implicit Windows fallback, mixed-evidence state, and a separate personal override that provider refreshes never replace.
 - `RecommendationRun` - an explicitly requested execution and its timestamp/context.
-- `RecommendationItem` - ranked play-next or buy result with score factors and visible explanation. `play-next` is catalog-only; buy results exclude DLC whose base game is not owned.
+- `RecommendationItem` - ranked play-next or buy result with score factors and visible explanation. Manual signals lead ranking; unknown/stale compatibility is a warning, not a penalty. `play-next` is catalog-only; buy results exclude DLC whose base game is not owned.
 - `RecommendationFeedback` - temporary per-run dismissal plus persistent per-type dismissal counters. Three cumulative dismissals reduce adjusted interest by one, never below zero.
 - `Collection`, `CollectionMembership`, `PersonalTag`, `GameTag` - manual/calculated collections and reusable personal tags.
 - `WallpaperState` - cached SFW Wallhaven candidate metadata, selection, freshness, and attribution; it stores no image binaries.
@@ -102,9 +103,9 @@ PolyForm Noncommercial License 1.0.0, with no ads, subscriptions, or analytics.
 ## UI/UX
 
 - `/` - sign-in landing and Google access gate.
-- `/today` - read-only dashboard for main and in-progress games, latest recommendations, Steam activity, offers, and freshness.
+- `/today` - read-only dashboard for main and in-progress games, three current results of each recommendation type, Steam activity, offers, and background progress.
 - `/library` - searchable catalog, filters, manual creation, duplicate review, and catalog-wide metadata action.
-- `/wishlist` - independent wishes, metadata action, target-price and offer signals, acquisition, and DLC decisions.
+- `/wishlist` - independent wishes, RAWG metadata action, target-price and offer signals, acquisition, and DLC decisions.
 - `/games/[id]` - personal fields, availability, metadata, compatibility, DLC, duplicate warning, recommendation explanation, and per-game RAWG loading.
 - `/settings` - sessions, provider controls, preferences, visual/accessibility settings, refresh actions, and JSON export.
 
@@ -121,12 +122,12 @@ light/dark/system modes, reduced-data behavior, or reduced-motion safeguards.
 - **Database:** pooled runtime URL and direct migration URL; production uses `pnpm prisma:deploy` before start.
 - **Environment:** `DIRECT_URL`, `DATABASE_URL`, `AUTH_SECRET`, `AUTH_URL`, `AUTH_TRUST_HOST`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `ALLOWED_GOOGLE_EMAIL`; future provider keys for Steam, RAWG, ITAD, Wallhaven, and compatibility sources remain server-only.
 - **Health:** app root smoke check.
+- **Jobs:** PostgreSQL-backed queue processes provider batches; the daily price refresh uses a deployment scheduler. Steam sync remains user-initiated.
 - **Checks:** `pnpm lint`, `pnpm typecheck`, and `pnpm test`; a single Verify command and automatic checks are configured only in the final readiness feature when requested.
 
-> TODO: Decide the exact scheduled-job mechanism for daily Steam and price refreshes, including its Vercel/Supabase integration.
+> TODO: Decide the exact Vercel/Supabase scheduler integration for daily price batches. Steam has no automatic schedule.
 
 ## Open questions
 
-- Feature 8 promises wishlist RAWG flows before feature 10a introduces the local wishlist. Define in feature 8 whether it creates only the shared wishlist metadata boundary or whether the local wishlist must be brought forward; otherwise the current build order has a dependency inversion.
 - Features 7b, 8, 9, and 12 each contain several independently testable flows. Preserve their current roadmap entries, but split the implementation spec into small approved steps before building.
-- The plans name documented compatibility providers but do not select their final provider/API contracts or refresh cadence. Keep their statuses explicitly unknown until those choices are made.
+- Select and validate the final API/contracts for ProtonDB, Steam Deck Verified, and anti-cheat before feature 11; until then, provider evidence remains explicitly unknown.

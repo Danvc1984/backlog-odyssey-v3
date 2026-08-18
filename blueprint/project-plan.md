@@ -50,6 +50,7 @@ registration, and collaboration are outside the MVP.
 
 The following are explicitly outside the MVP:
 
+- Automatic Steam synchronization.
 - Automatic daily encrypted off-site backups.
 - Backup rotation and automated restoration infrastructure.
 - 90-day audit history.
@@ -159,18 +160,16 @@ Merge and delete share a temporary `CatalogOperation` mechanism:
 
 ## 7. Metadata and RAWG
 
-RAWG is a dedicated cross-cutting feature for catalog and wishlist entries.
-Loading is normally on demand:
+RAWG initially enriches catalog entries on demand. Wishlist RAWG enrichment is
+added with the local wishlist feature and reuses this provider boundary.
 
 - Global catalog button opens a modal.
-- Global wishlist button opens a modal.
 - Detail pages have an individual load button.
-- Manual catalog and wishlist forms suggest RAWG matches.
+- Manual catalog forms suggest RAWG matches.
 - Manual refresh warns before overwriting existing metadata.
 - Existing metadata is treated in the UI as present or absent.
 - RAWG snapshots are replaced, not historically retained.
-- Steam's initial import automatically starts a separate enrichment process
-  for games without metadata.
+- Steam's initial import queues enrichment for every imported game.
 - Manual Steam synchronization does not automatically start RAWG enrichment.
 - RAWG failure never fails or rolls back Steam import.
 
@@ -196,7 +195,18 @@ RAWG attribution appears near RAWG data or images and in a
 `Powered by / Data and content providers` section. The key remains server-side
 and provider constraints are respected.
 
-## 8. Wishlist and Prices
+## 8. Asynchronous Enrichment and Provider Operations
+
+Manual entries and Steam imports are saved immediately and provider work runs
+asynchronously. The sequence is: save the record, run RAWG when available, then
+queue compatibility after a successful RAWG result. Metadata refresh repeats it.
+Initial Steam import queues every imported game. The UI shows individual states
+and batch progress for Steam, RAWG, and compatibility. Provider work is persisted
+in PostgreSQL, rate-limited, and processed in batches. Transient failures retry
+up to three times with increasing delay; final failures remain visible and can be
+manually retried. Failure never removes personal or prior valid provider data.
+
+## 9. Wishlist and Prices
 
 Wishlist entries are useful either as reminders or planned purchases.
 
@@ -208,6 +218,7 @@ The first wishlist feature is provider-independent:
 - Provider and external identifier are optional.
 - Entries may exist without catalog `Game` records.
 - Notes and local interest are stored locally.
+- Wishlist forms and a global wishlist action suggest/load RAWG metadata.
 - A base game can be acquired manually into the catalog.
 - Wishlist RAWG metadata transfers to the new catalog game when available.
 - The acquired base wishlist entry is removed.
@@ -225,6 +236,10 @@ Price enrichment is a separate feature:
 - The selected source and store remain visible.
 - Stale prices remain visible but cannot trigger strong purchase recommendations.
 - A fresh valid offer at or below the target creates an opportunity signal.
+- Entries without a target remain eligible for buy recommendations based on
+  interest and offer quality.
+- A daily scheduled refresh updates wishlist prices, discounts, sources, and
+  freshness without starting a recommendation run.
 - The seller page remains authoritative for regional activation.
 - ITAD is optional, server-side, read-only enrichment.
 - The integration uses `country=MX`, caching, rate-limit handling, and
@@ -235,7 +250,7 @@ Price enrichment is a separate feature:
 Provider outages never erase the last valid data. The app retains the result,
 marks it stale, displays its age, and allows manual refresh.
 
-## 9. Compatibility Synthesis
+## 10. Compatibility Synthesis
 
 Compatibility evidence covers:
 
@@ -243,15 +258,17 @@ Compatibility evidence covers:
 - Steam Deck.
 - Windows fallback.
 
-The feature may use ProtonDB, anti-cheat evidence, Steam Deck verification, and
-other documented provider data. It produces a practical per-environment status
-with provenance and freshness.
+ProtonDB is the primary source for both Bazzite and Steam Deck. Steam Deck
+Verified is a Steam Deck-specific fallback when ProtonDB lacks evidence.
+Anti-cheat is independent evidence; conflicts are shown as mixed evidence with
+their sources. Windows is implicitly compatible as the fixed fallback, though
+anti-cheat or personal evidence may add a warning.
 
-Personal compatibility overrides are separate from provider evidence and are
-never overwritten by refreshes. Unknown or stale provider evidence remains
-explicitly unknown or stale rather than being converted into a confident claim.
+Personal compatibility overrides take priority and are never overwritten.
+Unknown or stale evidence remains explicit and produces a visible recommendation
+warning, not a score penalty or exclusion.
 
-## 10. Recommendations
+## 11. Recommendations
 
 The recommendation engine has two distinct outputs:
 
@@ -270,10 +287,12 @@ factors such as:
 - Price and target-price status.
 - Provider freshness.
 - DLC eligibility.
-- Calibration penalty.
+- Calibration adjustment.
 
-Recommendations are generated explicitly by the user. Each execution creates a
-`RecommendationRun`, and the dashboard displays the latest run.
+Recommendations are generated explicitly by the user. One `Update
+recommendations` action creates a `RecommendationRun` with both lists; manual
+signals dominate ranking. The dashboard displays the latest three play-next and
+three buy results. Daily price refreshes do not create or replace a run.
 
 Dismissing an item hides it only during the current run. A persistent dismissal
 counter is maintained separately for play-next and buy recommendations. After
@@ -285,7 +304,7 @@ has changed it, the detail view explains that the value was adjusted because of
 repeated recommendation dismissals. The technical counter remains an internal
 implementation detail.
 
-## 11. Today Dashboard
+## 12. Today Dashboard
 
 The dashboard is primarily a read-only composition view. It does not silently
 run syncs or provider refreshes.
@@ -294,19 +313,20 @@ It displays:
 
 - Main game.
 - Games in progress.
-- Latest play-next recommendation.
-- Latest buy recommendation.
+- Three latest play-next recommendations.
+- Three latest buy recommendations.
 - The last five games recently played according to Steam sync data.
 - Last-played date and accumulated playtime.
 - The three best current offers among wishlist entries.
 - Offer discount percentage, final MXN price, store, source, and freshness.
 - Links to wishlist details and then to the external seller page.
-- Provider freshness and available manual refresh actions.
+- Provider freshness, background-operation progress/failures, and manual refresh
+  or retry actions.
 
 The three wishlist offers are sorted primarily by discount percentage, with price
 or target-price status used as a tie-breaker.
 
-## 12. Visual Personalization
+## 13. Visual Personalization
 
 ### Global visual foundation
 
@@ -341,7 +361,7 @@ Each game detail page may use its RAWG imagery and derived colors:
 - Missing or invalid imagery uses a deterministic fallback.
 - The feature respects global theme and accessibility settings.
 
-## 13. Settings, Export, and Operations
+## 14. Settings, Export, and Operations
 
 Settings includes:
 
@@ -352,26 +372,36 @@ Settings includes:
 - Wallhaven enablement and refresh controls.
 - Reduced-data behavior.
 - Manual provider refresh controls.
-- JSON export.
+- Queue progress and retry controls.
+- JSON export of irreplaceable data only.
 
-Manual export is part of the MVP. Automatic encrypted off-site backups,
-rotation, and advanced restoration are future work.
+Manual export includes catalog and wishlist records, availability, external IDs,
+play states, notes, interest, ratings, tags, collections, settings, manual
+overrides, and recommendation-related personal decisions. Rebuildable RAWG,
+price, and compatibility snapshots are excluded. Automatic encrypted off-site
+backups, rotation, and advanced restoration are future work.
 
-## 14. Tech
+## 15. Tech
 
 Next.js App Router, React, TypeScript, pnpm, Tailwind CSS v4, shadcn/ui,
 Prisma, PostgreSQL/Supabase, Auth.js, Google authentication, Zod, Vitest, and
 Vercel.
 
+The MVP uses a persistent PostgreSQL-backed enrichment queue and scheduled batch
+processor for daily price refreshes. The deployment scheduler is finalized in
+the deployment/readiness feature.
+
 Deployment/CI is the final planned milestone, not a reason to block otherwise
 complete product work if an additional MVP feature is discovered first.
 
-## 15. Possible Improvements After the MVP
+## 16. Possible Improvements After the MVP
 
 - Daily encrypted off-site backups.
 - Backup rotation and automated restoration verification.
 - 90-day summarized audit history.
 - More advanced restore workflows.
+- A managed queue or durable-workflow service, such as Inngest or QStash, if the
+  persistent PostgreSQL queue is no longer sufficient.
 - Additional providers or richer compatibility evidence.
 - Notifications and webhooks.
 - Multi-user support and roles.

@@ -22,10 +22,10 @@
 
 ## Metadata and ownership context
 
-- [ ] 8. **RAWG metadata enrichment** - on-demand catalog and wishlist metadata,
-  RAWG matching suggestions, global and individual load buttons, post-import
-  enrichment for missing metadata, independent wishlist snapshots, overwrite
-  warnings, RAWG attribution, and graceful partial failure
+- [ ] 8. **Catalog RAWG enrichment** - on-demand catalog matching and metadata,
+  global and individual load actions, post-import enrichment for every imported
+  game, overwrite warnings, attribution, async progress, retries, and graceful
+  partial failure
 
 ## DLC and wishlist
 
@@ -34,31 +34,31 @@
   deletion, explicit base-game cascade behavior, persistent unresolved-DLC queue,
   manual link/create/discard actions, and one-confirmation base-plus-DLC creation
 
-- [ ] 10a. **Local wishlist and acquisition** - independent base-game and DLC
-  entries, optional provider and external ID, local notes and interest, manual
-  acquisition into the catalog, RAWG metadata transfer, acquired-base removal,
-  and explicit handling of associated DLC
+- [ ] 10a. **Local wishlist, RAWG, and acquisition** - independent base-game and
+  DLC entries, optional provider and external ID, local notes and interest,
+  wishlist RAWG matching and snapshots, manual acquisition into the catalog,
+  metadata transfer, acquired-base removal, and explicit DLC handling
 
-- [ ] 10b. **Price enrichment and purchase opportunities** - Steam/ITAD source
-  preference, optional MXN target price, Mexican offers, valid-offer selection,
-  stale-data handling, provider failure, and wishlist opportunity signals
+- [ ] 10b. **Price enrichment and purchase opportunities** - manual and daily
+  Steam/ITAD Mexican price refreshes through the persistent queue, source
+  preference, optional MXN target price, valid-offer selection, stale-data
+  handling, provider failure, and opportunity signals without automatic runs
 
 ## Compatibility and recommendations
 
-- [ ] 11. **Compatibility synthesis** - ProtonDB, anti-cheat, Steam Deck evidence,
-  per-environment practical status, provenance, freshness, unknown-state handling,
-  and personal override
+- [ ] 11. **Compatibility synthesis** - asynchronous post-RAWG ProtonDB evidence
+  for Bazzite and Steam Deck, Steam Deck Verified fallback, anti-cheat evidence,
+  implicit Windows fallback, mixed-evidence handling, personal overrides,
+  retry states, and batch progress
 
-- [ ] 12. **Recommendation engine** - separate catalog play-next and wishlist buy
-  recommendations, deterministic explanations, target-price signals, stale-data
-  penalties, DLC eligibility, manual RecommendationRun execution, temporary
-  dismissal, persistent per-type dismissal counters, and gradual interest
-  calibration after repeated rejection
+- [ ] 12. **Recommendation engine** - explicit combined runs with three catalog
+  play-next and three wishlist buy results, deterministic explanations led by
+  manual signals, optional target-price signals, visible unknown/stale warnings
+  without score penalties, DLC eligibility, dismissal, and calibration
 
-- [ ] 13. **Today dashboard** - main game, in-progress games, latest play-next and
-  buy results, five most recently played Steam games, recent playtime data,
-  three best current wishlist offers, provider freshness, and links to details
-  and external offers
+- [ ] 13. **Today dashboard** - main game, in-progress games, the latest three
+  play-next and three buy results, recent Steam games/playtime, three best
+  offers, provider freshness, background-operation progress, and external links
 
 ## Personalization and operations
 
@@ -75,9 +75,9 @@
 
 - [ ] 17. **Settings and manual export** - global Steam/ITAD preference, sessions,
   theme, accessibility, Wallhaven controls, reduced-data settings, provider
-  refresh controls, and JSON export
+  refresh/retry controls, queue progress, and personal-data-only JSON export
 
 - [ ] 18. **Deployment and CI readiness** - Vercel/Supabase environment review,
-  production build, smoke test, one reproducible Verify command, and automatic
-  checks when configured; final planned step but not an inflexible feature gate
-
+  persistent queue and daily price-scheduler configuration, production build,
+  smoke test, one reproducible Verify command, and automatic checks when
+  configured; final planned step but not an inflexible feature gate
