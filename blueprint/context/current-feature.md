@@ -1,6 +1,5 @@
-# Current feature
+# Current feature / fix / rollback
 
-> **Nothing in progress.** Run `/feature` to spec the next build-plan item,
-> `/fix` for an ad-hoc bug or change, or `/rollback` to reverse a completed
-> feature.
-
+**Status:** nothing in progress - run `/feature` (planned feature), `/fix`
+(ad-hoc bug or change), or `/rollback` (completed feature reversal) to start
+something new.

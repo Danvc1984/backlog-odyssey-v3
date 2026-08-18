@@ -2,8 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  dismissCatalogUndoToast,
+  replaceCatalogActionToast,
+  showCatalogUndoToast,
+} from "@/components/ui/sonner";
 import { undoOperation } from "@/actions/catalog-operations";
 
 export interface CatalogOperationSummary {
@@ -18,9 +22,9 @@ export function useUndoOperation() {
       const result = await undoOperation({ operationId });
       dismissCatalogOperationToast(operationId);
       if (result.success) {
-        toast.success("Change undone");
+        replaceCatalogActionToast(operationId, "Change undone");
       } else {
-        toast.error(result.error ?? "Failed to undo");
+        replaceCatalogActionToast(operationId, result.error ?? "Failed to undo", "error");
       }
       router.refresh();
     },
@@ -70,32 +74,21 @@ function PendingOperationToast({
   );
 }
 
-const operationToastIds = new Map<string, string>();
-
 export function dismissCatalogOperationToast(operationId: string) {
-  const toastId = operationToastIds.get(operationId);
-  if (!toastId) return;
-  toast.dismiss(toastId);
-  operationToastIds.delete(operationId);
+  dismissCatalogUndoToast(operationId);
 }
 
 export function showCatalogOperationToast(
   operation: CatalogOperationSummary,
   onUndo?: () => void,
 ) {
-  if (operationToastIds.has(operation.operationId)) return;
-  const toastId = `catalog-operation-${operation.operationId}`;
-  operationToastIds.set(operation.operationId, toastId);
-  toast(
+  showCatalogUndoToast(
+    operation.operationId,
     <PendingOperationToast
       operation={operation}
       onUndo={onUndo}
       onExpired={() => dismissCatalogOperationToast(operation.operationId)}
     />,
-    {
-      id: toastId,
-      duration: 30_000,
-      closeButton: true,
-    },
+    operation.expiresAt,
   );
 }

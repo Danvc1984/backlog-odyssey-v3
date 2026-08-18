@@ -2,9 +2,9 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { GitMerge } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { showCatalogActionToast } from "@/components/ui/sonner";
 import {
   Dialog,
   DialogContent,
@@ -162,10 +162,7 @@ export function MergeGamesDialog({ duplicateId }: { duplicateId: string }) {
       return;
     }
 
-    toast.success(`Merged into "${finalName}"`, {
-      id: `merge-success-${result.data.operationId}`,
-      duration: 5000,
-    });
+    showCatalogActionToast(result.data.operationId, `Merged into "${finalName}"`);
     showCatalogOperationToast(
       {
         operationId: result.data.operationId,

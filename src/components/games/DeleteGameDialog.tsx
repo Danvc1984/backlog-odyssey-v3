@@ -2,9 +2,9 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { showCatalogActionToast } from "@/components/ui/sonner";
 import {
   Dialog,
   DialogContent,
@@ -78,10 +78,7 @@ export function DeleteGameDialog({ gameId }: { gameId: string }) {
       return;
     }
 
-    toast.success(`Deleted "${preview.game.name}"`, {
-      id: `delete-success-${result.data.operationId}`,
-      duration: 5000,
-    });
+    showCatalogActionToast(result.data.operationId, `Deleted "${preview.game.name}"`);
     showCatalogOperationToast(
       {
         operationId: result.data.operationId,
