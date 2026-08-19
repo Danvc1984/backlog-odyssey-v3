@@ -4,11 +4,16 @@ import { fetchOwnedGames, type OwnedGame } from "@/lib/steam-api";
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { lastPlayedDate } from "@/lib/steam-utils";
+import { queueRawgForImportedGames } from "@/lib/rawg-import-queue";
+
+type ImportGameResult =
+  | { kind: "imported"; gameId: string }
+  | { kind: "updated" };
 
 async function importGame(
   tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
   game: OwnedGame,
-): Promise<"imported" | "updated"> {
+): Promise<ImportGameResult> {
   const externalId = String(game.appid);
   const existing = await tx.externalGameId.findUnique({
     where: {
@@ -36,10 +41,10 @@ async function importGame(
       create: { gameId: existing.gameId },
       update: {},
     });
-    return "updated";
+    return { kind: "updated" };
   }
 
-  await tx.game.create({
+  const createdGame = await tx.game.create({
     data: {
       type: "BASE_GAME",
       origin: "STEAM_IMPORT",
@@ -55,8 +60,9 @@ async function importGame(
       },
       availability: { create: availability },
     },
+    select: { id: true },
   });
-  return "imported";
+  return { kind: "imported", gameId: createdGame.id };
 }
 
 export async function importSteamGames() {
@@ -87,11 +93,13 @@ export async function importSteamGames() {
     const result = await prisma.$transaction(async (tx) => {
       let imported = 0;
       let updated = 0;
+      const createdGameIds: string[] = [];
 
       for (const game of games) {
         const outcome = await importGame(tx, game);
-        if (outcome === "imported") {
+        if (outcome.kind === "imported") {
           imported += 1;
+          createdGameIds.push(outcome.gameId);
         } else {
           updated += 1;
         }
@@ -105,10 +113,34 @@ export async function importSteamGames() {
         },
       });
 
-      return { imported, updated };
+      return { imported, updated, createdGameIds };
     });
 
-    return { success: true as const, data: result, error: null };
+    const noRawgQueueWork = { batchId: null, queued: 0, skipped: 0 };
+    try {
+      const rawgQueue = result.createdGameIds.length > 0
+        ? await queueRawgForImportedGames(result.createdGameIds)
+        : noRawgQueueWork;
+      return {
+        success: true as const,
+        data: {
+          imported: result.imported,
+          updated: result.updated,
+          rawgQueue: { status: "QUEUED" as const, ...rawgQueue },
+        },
+        error: null,
+      };
+    } catch {
+      return {
+        success: true as const,
+        data: {
+          imported: result.imported,
+          updated: result.updated,
+          rawgQueue: { status: "DEFERRED" as const, queued: 0, skipped: 0, batchId: null },
+        },
+        error: null,
+      };
+    }
   } catch (err) {
     return {
       success: false as const,

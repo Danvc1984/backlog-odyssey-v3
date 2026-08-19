@@ -57,6 +57,13 @@ export function SteamConnectionCard({
       toast.success(
         `Imported ${result.data.imported} new games, updated ${result.data.updated} existing`,
       );
+      if (result.data.rawgQueue.status === "DEFERRED") {
+        toast.warning("RAWG queue scheduling was deferred. Your Steam import is complete.");
+      } else {
+        toast.success(
+          `RAWG enrichment: queued ${result.data.rawgQueue.queued}, skipped ${result.data.rawgQueue.skipped}`,
+        );
+      }
       router.refresh();
     } else {
       toast.error(result.error ?? "Failed to import Steam games");

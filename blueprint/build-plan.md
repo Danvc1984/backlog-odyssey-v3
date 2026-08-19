@@ -25,7 +25,7 @@
 
 ## Metadata and ownership context
 
-- [ ] 8. **Catalog RAWG enrichment** - on-demand catalog matching and metadata,
+- [x] 8. **Catalog RAWG enrichment** - on-demand catalog matching and metadata,
   global and individual load actions, post-import enrichment for every imported
   game, overwrite warnings, attribution, async progress, retries, and graceful
   partial failure
@@ -36,7 +36,7 @@
     overwrite warning, persistent job state, retries, and per-game progress
   - [x] 8c. **Catalog-wide enrichment with progress and partial failure** -
     library action to enqueue eligible games and report batch outcomes
-  - [ ] 8d. **Post-import enrichment** - enqueue every newly imported Steam game
+  - [x] 8d. **Post-import enrichment** - enqueue every newly imported Steam game
     without rolling back or duplicating the import
 
 ## DLC and wishlist
