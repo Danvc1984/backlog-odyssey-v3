@@ -11,7 +11,7 @@ import type {
 
 const RAWG_API_BASE_URL = "https://api.rawg.io/api";
 const RAWG_WEB_BASE_URL = "https://rawg.io/games";
-const SEARCH_PAGE_SIZE = 5;
+export const RAWG_SEARCH_PAGE_SIZE = 5;
 
 interface RawgHttpResponse {
   status: number;
@@ -254,11 +254,13 @@ async function searchGames(
   title: string,
   apiKey: string,
   fetchFn: typeof fetch,
+  page = 1,
 ): Promise<RawgSearchCandidate[] | RawgProviderError> {
   const params = new URLSearchParams({
     key: apiKey,
     search: title,
-    page_size: String(SEARCH_PAGE_SIZE),
+    page: String(page),
+    page_size: String(RAWG_SEARCH_PAGE_SIZE),
   });
   const result = await requestJson(`${RAWG_API_BASE_URL}/games?${params}`, fetchFn);
   if ("error" in result) {
@@ -284,6 +286,22 @@ async function searchGames(
   }
 
   return candidates;
+}
+
+export async function searchRawgCandidates(
+  title: string,
+  page = 1,
+  options: RawgFetchOptions = {},
+): Promise<RawgSearchCandidate[] | RawgProviderError> {
+  const apiKey = process.env.RAWG_API_KEY;
+  if (!apiKey) {
+    return providerError("CONFIGURATION", "RAWG is not configured");
+  }
+  if (title.trim().length === 0 || !Number.isInteger(page) || page < 1) {
+    return providerError("MALFORMED_RESPONSE", "RAWG search request is invalid");
+  }
+
+  return searchGames(title, apiKey, options.fetchFn ?? fetch, page);
 }
 
 async function resolveCandidate(
@@ -314,6 +332,21 @@ export async function matchRawgGame(
   }
 
   const fetchFn = options.fetchFn ?? fetch;
+  if (request.selectedRawgId !== null && request.selectedRawgId !== undefined) {
+    if (!isPositiveInteger(request.selectedRawgId)) {
+      return unavailable(providerError("MALFORMED_RESPONSE", "RAWG match ID is invalid"));
+    }
+
+    const selected = await fetchGame(request.selectedRawgId, apiKey, fetchFn);
+    if (selected === null) {
+      return { outcome: "NOT_FOUND" };
+    }
+    if ("category" in selected) {
+      return unavailable(selected);
+    }
+    return { outcome: "MATCHED", matchMethod: "MANUAL_RAWG_SEARCH", game: selected };
+  }
+
   const steamAppId = request.steamAppId;
   if (steamAppId !== null && steamAppId !== undefined) {
     if (!isPositiveInteger(steamAppId)) {
@@ -337,13 +370,6 @@ export async function matchRawgGame(
   const search = await searchGames(request.title, apiKey, fetchFn);
   if (!Array.isArray(search)) {
     return unavailable(search);
-  }
-
-  if (request.selectedRawgId !== null && request.selectedRawgId !== undefined) {
-    const selected = search.find((candidate) => candidate.id === request.selectedRawgId);
-    return selected
-      ? resolveCandidate(selected, apiKey, fetchFn)
-      : { outcome: "NOT_FOUND" };
   }
 
   const exactTitleCandidates = search.filter(

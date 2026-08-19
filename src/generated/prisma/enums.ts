@@ -137,6 +137,29 @@ export const SyncStatus = {
 export type SyncStatus = (typeof SyncStatus)[keyof typeof SyncStatus]
 
 
+export const EnrichmentJobStatus = {
+  QUEUED: 'QUEUED',
+  RUNNING: 'RUNNING',
+  RETRY_WAIT: 'RETRY_WAIT',
+  AWAITING_MATCH: 'AWAITING_MATCH',
+  SUCCEEDED: 'SUCCEEDED',
+  FAILED: 'FAILED'
+} as const
+
+export type EnrichmentJobStatus = (typeof EnrichmentJobStatus)[keyof typeof EnrichmentJobStatus]
+
+
+export const EnrichmentJobStage = {
+  MATCHING: 'MATCHING',
+  PERSISTING: 'PERSISTING',
+  RETRYING: 'RETRYING',
+  COMPLETE: 'COMPLETE',
+  FAILED: 'FAILED'
+} as const
+
+export type EnrichmentJobStage = (typeof EnrichmentJobStage)[keyof typeof EnrichmentJobStage]
+
+
 export const Provider = {
   PROTONDB: 'PROTONDB',
   ARE_WE_ANTICHEAT_YET: 'ARE_WE_ANTICHEAT_YET',

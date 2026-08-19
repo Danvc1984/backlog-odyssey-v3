@@ -59,6 +59,7 @@ export const ModelName = {
   Game: 'Game',
   ExternalGameId: 'ExternalGameId',
   MetadataSnapshot: 'MetadataSnapshot',
+  EnrichmentJob: 'EnrichmentJob',
   PersonalTag: 'PersonalTag',
   GameTag: 'GameTag',
   Collection: 'Collection',
@@ -204,6 +205,29 @@ export const MetadataSnapshotScalarFieldEnum = {
 } as const
 
 export type MetadataSnapshotScalarFieldEnum = (typeof MetadataSnapshotScalarFieldEnum)[keyof typeof MetadataSnapshotScalarFieldEnum]
+
+
+export const EnrichmentJobScalarFieldEnum = {
+  id: 'id',
+  gameId: 'gameId',
+  provider: 'provider',
+  status: 'status',
+  stage: 'stage',
+  attempt: 'attempt',
+  maxAttempts: 'maxAttempts',
+  progress: 'progress',
+  nextAttemptAt: 'nextAttemptAt',
+  candidatePayload: 'candidatePayload',
+  selectedRawgId: 'selectedRawgId',
+  lastErrorCode: 'lastErrorCode',
+  lastErrorMessage: 'lastErrorMessage',
+  startedAt: 'startedAt',
+  finishedAt: 'finishedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type EnrichmentJobScalarFieldEnum = (typeof EnrichmentJobScalarFieldEnum)[keyof typeof EnrichmentJobScalarFieldEnum]
 
 
 export const PersonalTagScalarFieldEnum = {

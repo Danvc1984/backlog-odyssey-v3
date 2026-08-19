@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { matchRawgGame } from "./rawg-api";
+import { matchRawgGame, searchRawgCandidates } from "./rawg-api";
 
 vi.mock("server-only", () => ({}));
 
@@ -42,6 +42,37 @@ describe("matchRawgGame", () => {
     const requestUrl = new URL(fetchMock.mock.calls[0][0] as string);
     expect(requestUrl.pathname).toBe("/api/games/123");
     expect(requestUrl.searchParams.get("key")).toBe("test-key");
+  });
+
+  it("fetches a persisted selected RAWG ID directly", async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify(detail), { status: 200 }));
+
+    await expect(
+      matchRawgGame(
+        { title: "An inconsistent manual name", selectedRawgId: 123 },
+        { fetchFn: fetchMock },
+      ),
+    ).resolves.toMatchObject({ outcome: "MATCHED", matchMethod: "MANUAL_RAWG_SEARCH" });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(new URL(fetchMock.mock.calls[0][0] as string).pathname).toBe("/api/games/123");
+  });
+
+  it("requests a later search page with the stable candidate page size", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({ results: [{ id: 456, slug: "portal-2-classic", name: "Portal 2 Classic" }] }),
+        { status: 200 },
+      ),
+    );
+
+    await expect(searchRawgCandidates("Portal 2", 2, { fetchFn: fetchMock })).resolves.toMatchObject([
+      { id: 456, name: "Portal 2 Classic" },
+    ]);
+
+    const requestUrl = new URL(fetchMock.mock.calls[0][0] as string);
+    expect(requestUrl.searchParams.get("page")).toBe("2");
+    expect(requestUrl.searchParams.get("page_size")).toBe("5");
   });
 
   it("returns an ambiguous result instead of guessing among title matches", async () => {
@@ -153,22 +184,11 @@ describe("matchRawgGame", () => {
   });
 
   it("allows a caller to explicitly select one title-search candidate", async () => {
-    fetchMock
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            results: [
-              { id: 123, slug: "portal-2", name: "Portal 2" },
-              { id: 456, slug: "portal-2-classic", name: "Portal 2" },
-            ],
-          }),
-          { status: 200 },
-        ),
-      )
-      .mockResolvedValueOnce(new Response(JSON.stringify(detail), { status: 200 }));
+    fetchMock.mockResolvedValue(new Response(JSON.stringify(detail), { status: 200 }));
 
     await expect(
       matchRawgGame({ title: "Portal 2", selectedRawgId: 123 }, { fetchFn: fetchMock }),
     ).resolves.toMatchObject({ outcome: "MATCHED", matchMethod: "MANUAL_RAWG_SEARCH" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

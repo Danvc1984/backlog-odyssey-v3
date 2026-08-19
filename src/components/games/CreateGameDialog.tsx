@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +34,7 @@ const SOURCE_OPTIONS = [
 type SourceValue = "STEAM" | "OTHER_PLATFORM" | "ROM";
 
 export function CreateGameDialog() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -64,6 +66,7 @@ export function CreateGameDialog() {
       toast.success(`Added "${name}" to the library`);
       reset();
       setOpen(false);
+      router.refresh();
     } else {
       setError(result.error ?? "Failed to add game");
     }

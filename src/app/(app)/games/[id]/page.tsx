@@ -10,6 +10,8 @@ import { DeleteGameDialog } from "@/components/games/DeleteGameDialog";
 import { AvailabilityRowForm } from "@/components/games/AvailabilityRowForm";
 import { GameNameForm } from "@/components/games/GameNameForm";
 import { MetadataSection } from "@/components/games/MetadataSection";
+import { RawgEnrichmentPanel } from "@/components/games/RawgEnrichmentPanel";
+import { rawgJobSelect, toRawgEnrichmentJobView } from "@/lib/rawg-job-view";
 import type { RawgMetadataPayload } from "@/lib/rawg-types";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -50,6 +52,10 @@ export default async function GameDetailPage({
           take: 1,
           select: { payload: true, sourceUrl: true, fetchedAt: true },
         },
+        enrichmentJobs: {
+          where: { provider: "RAWG" },
+          select: rawgJobSelect,
+        },
       },
     }),
     prisma.collection.findMany({
@@ -80,13 +86,17 @@ export default async function GameDetailPage({
       ? possibleDuplicate.gameB.name
       : possibleDuplicate.gameA.name
     : null;
+  const rawgSnapshot = game.metadataSnapshots[0];
+  const rawgPayload = rawgSnapshot
+    ? (rawgSnapshot.payload as unknown as RawgMetadataPayload)
+    : null;
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold">{game.name}</h1>
         <div className="mt-4">
-          <GameNameForm gameId={game.id} initialName={game.name} />
+          <GameNameForm key={game.name} gameId={game.id} initialName={game.name} />
         </div>
       </div>
 
@@ -120,15 +130,22 @@ export default async function GameDetailPage({
         </div>
       </section>
 
-      <MetadataSection
-        payload={
-          game.metadataSnapshots[0]
-            ? (game.metadataSnapshots[0].payload as unknown as RawgMetadataPayload)
-            : null
-        }
-        sourceUrl={game.metadataSnapshots[0]?.sourceUrl ?? null}
-        fetchedAt={game.metadataSnapshots[0]?.fetchedAt ?? null}
-      />
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start">
+        <MetadataSection
+          payload={rawgPayload}
+          sourceUrl={rawgSnapshot?.sourceUrl ?? null}
+          fetchedAt={rawgSnapshot?.fetchedAt ?? null}
+        />
+        <RawgEnrichmentPanel
+          gameId={game.id}
+          catalogName={game.name}
+          initialJob={
+            game.enrichmentJobs[0] ? toRawgEnrichmentJobView(game.enrichmentJobs[0]) : null
+          }
+          hasRawgSnapshot={game.metadataSnapshots.length > 0}
+          rawgTitle={rawgPayload?.title ?? null}
+        />
+      </div>
 
       <section>
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">

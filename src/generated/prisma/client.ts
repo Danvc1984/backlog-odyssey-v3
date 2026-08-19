@@ -82,6 +82,11 @@ export type ExternalGameId = Prisma.ExternalGameIdModel
  */
 export type MetadataSnapshot = Prisma.MetadataSnapshotModel
 /**
+ * Model EnrichmentJob
+ *
+ */
+export type EnrichmentJob = Prisma.EnrichmentJobModel
+/**
  * Model PersonalTag
  *
  */

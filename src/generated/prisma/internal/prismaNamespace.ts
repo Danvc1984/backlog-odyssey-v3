@@ -405,6 +405,7 @@ export const ModelName = {
   Game: 'Game',
   ExternalGameId: 'ExternalGameId',
   MetadataSnapshot: 'MetadataSnapshot',
+  EnrichmentJob: 'EnrichmentJob',
   PersonalTag: 'PersonalTag',
   GameTag: 'GameTag',
   Collection: 'Collection',
@@ -438,7 +439,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "account" | "session" | "appSettings" | "steamConnection" | "game" | "externalGameId" | "metadataSnapshot" | "personalTag" | "gameTag" | "collection" | "collectionMembership" | "libraryEntry" | "gameAvailability" | "wishlistEntry" | "dealOffer" | "priceRefresh" | "compatibilitySnapshot" | "environmentCompatibility" | "possibleDuplicate" | "recommendationRun" | "recommendationItem" | "recommendationFeedback" | "wallpaperState" | "syncRun" | "catalogOperation"
+    modelProps: "user" | "account" | "session" | "appSettings" | "steamConnection" | "game" | "externalGameId" | "metadataSnapshot" | "enrichmentJob" | "personalTag" | "gameTag" | "collection" | "collectionMembership" | "libraryEntry" | "gameAvailability" | "wishlistEntry" | "dealOffer" | "priceRefresh" | "compatibilitySnapshot" | "environmentCompatibility" | "possibleDuplicate" | "recommendationRun" | "recommendationItem" | "recommendationFeedback" | "wallpaperState" | "syncRun" | "catalogOperation"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1031,6 +1032,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.MetadataSnapshotCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.MetadataSnapshotCountAggregateOutputType> | number
+        }
+      }
+    }
+    EnrichmentJob: {
+      payload: Prisma.$EnrichmentJobPayload<ExtArgs>
+      fields: Prisma.EnrichmentJobFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.EnrichmentJobFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EnrichmentJobPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.EnrichmentJobFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EnrichmentJobPayload>
+        }
+        findFirst: {
+          args: Prisma.EnrichmentJobFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EnrichmentJobPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.EnrichmentJobFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EnrichmentJobPayload>
+        }
+        findMany: {
+          args: Prisma.EnrichmentJobFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EnrichmentJobPayload>[]
+        }
+        create: {
+          args: Prisma.EnrichmentJobCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EnrichmentJobPayload>
+        }
+        createMany: {
+          args: Prisma.EnrichmentJobCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.EnrichmentJobCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EnrichmentJobPayload>[]
+        }
+        delete: {
+          args: Prisma.EnrichmentJobDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EnrichmentJobPayload>
+        }
+        update: {
+          args: Prisma.EnrichmentJobUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EnrichmentJobPayload>
+        }
+        deleteMany: {
+          args: Prisma.EnrichmentJobDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.EnrichmentJobUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.EnrichmentJobUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EnrichmentJobPayload>[]
+        }
+        upsert: {
+          args: Prisma.EnrichmentJobUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EnrichmentJobPayload>
+        }
+        aggregate: {
+          args: Prisma.EnrichmentJobAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateEnrichmentJob>
+        }
+        groupBy: {
+          args: Prisma.EnrichmentJobGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.EnrichmentJobGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.EnrichmentJobCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.EnrichmentJobCountAggregateOutputType> | number
         }
       }
     }
@@ -2516,6 +2591,29 @@ export const MetadataSnapshotScalarFieldEnum = {
 export type MetadataSnapshotScalarFieldEnum = (typeof MetadataSnapshotScalarFieldEnum)[keyof typeof MetadataSnapshotScalarFieldEnum]
 
 
+export const EnrichmentJobScalarFieldEnum = {
+  id: 'id',
+  gameId: 'gameId',
+  provider: 'provider',
+  status: 'status',
+  stage: 'stage',
+  attempt: 'attempt',
+  maxAttempts: 'maxAttempts',
+  progress: 'progress',
+  nextAttemptAt: 'nextAttemptAt',
+  candidatePayload: 'candidatePayload',
+  selectedRawgId: 'selectedRawgId',
+  lastErrorCode: 'lastErrorCode',
+  lastErrorMessage: 'lastErrorMessage',
+  startedAt: 'startedAt',
+  finishedAt: 'finishedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type EnrichmentJobScalarFieldEnum = (typeof EnrichmentJobScalarFieldEnum)[keyof typeof EnrichmentJobScalarFieldEnum]
+
+
 export const PersonalTagScalarFieldEnum = {
   id: 'id',
   name: 'name'
@@ -2939,6 +3037,34 @@ export type ListEnumProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
 
 
 /**
+ * Reference to a field of type 'EnrichmentJobStatus'
+ */
+export type EnumEnrichmentJobStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EnrichmentJobStatus'>
+
+
+
+/**
+ * Reference to a field of type 'EnrichmentJobStatus[]'
+ */
+export type ListEnumEnrichmentJobStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EnrichmentJobStatus[]'>
+
+
+
+/**
+ * Reference to a field of type 'EnrichmentJobStage'
+ */
+export type EnumEnrichmentJobStageFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EnrichmentJobStage'>
+
+
+
+/**
+ * Reference to a field of type 'EnrichmentJobStage[]'
+ */
+export type ListEnumEnrichmentJobStageFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EnrichmentJobStage[]'>
+
+
+
+/**
  * Reference to a field of type 'PlayState'
  */
 export type EnumPlayStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PlayState'>
@@ -3278,6 +3404,7 @@ export type GlobalOmitConfig = {
   game?: Prisma.GameOmit
   externalGameId?: Prisma.ExternalGameIdOmit
   metadataSnapshot?: Prisma.MetadataSnapshotOmit
+  enrichmentJob?: Prisma.EnrichmentJobOmit
   personalTag?: Prisma.PersonalTagOmit
   gameTag?: Prisma.GameTagOmit
   collection?: Prisma.CollectionOmit
