@@ -7,6 +7,8 @@ import { TagsSection } from "@/components/games/TagsSection";
 import { CollectionsSection } from "@/components/games/CollectionsSection";
 import { DuplicateWarning } from "@/components/games/DuplicateWarning";
 import { DeleteGameDialog } from "@/components/games/DeleteGameDialog";
+import { AvailabilityRowForm } from "@/components/games/AvailabilityRowForm";
+import { GameNameForm } from "@/components/games/GameNameForm";
 
 const TYPE_LABELS: Record<string, string> = {
   BASE_GAME: "Base game",
@@ -16,12 +18,6 @@ const TYPE_LABELS: Record<string, string> = {
 const ORIGIN_LABELS: Record<string, string> = {
   MANUAL: "Manual entry",
   STEAM_IMPORT: "Steam import",
-};
-
-const SOURCE_LABELS: Record<string, string> = {
-  STEAM: "Steam",
-  OTHER_PLATFORM: "Other platform",
-  ROM: "ROM",
 };
 
 export default async function GameDetailPage({
@@ -81,6 +77,9 @@ export default async function GameDetailPage({
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold">{game.name}</h1>
+        <div className="mt-4">
+          <GameNameForm gameId={game.id} initialName={game.name} />
+        </div>
       </div>
 
       {otherGameName && <DuplicateWarning otherGameName={otherGameName} />}
@@ -120,27 +119,16 @@ export default async function GameDetailPage({
         {game.availability.length === 0 ? (
           <p className="text-sm text-muted-foreground">No availability records.</p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-border">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left text-xs uppercase text-muted-foreground">
-                  <th className="px-4 py-3 font-medium">Source</th>
-                  <th className="px-4 py-3 font-medium">Display name</th>
-                </tr>
-              </thead>
-              <tbody>
-                {game.availability.map((a) => (
-                  <tr key={a.id} className="border-b border-border last:border-0">
-                    <td className="px-4 py-3">
-                      {SOURCE_LABELS[a.source] ?? a.source}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {a.displayName || "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid gap-3">
+            {game.availability.map((a) => (
+              <div key={a.id} className="rounded-lg border border-border">
+                <AvailabilityRowForm
+                  availabilityId={a.id}
+                  source={a.source}
+                  displayName={a.displayName}
+                />
+              </div>
+            ))}
           </div>
         )}
       </section>

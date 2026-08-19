@@ -5,7 +5,129 @@ vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
-import { updatePersonalFields, addTagToGame, updatePlayState } from "./game-detail";
+import {
+  updatePersonalFields,
+  addTagToGame,
+  updatePlayState,
+  updateGameName,
+  updateGameAvailability,
+} from "./game-detail";
+
+describe("updateGameName", () => {
+  const mockUpdate = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    (prisma as unknown as { game: { update: typeof mockUpdate } }).game = {
+      update: mockUpdate,
+    };
+    mockUpdate.mockResolvedValue({ id: "game-1", name: "New name" });
+  });
+
+  it("trims and updates the game name", async () => {
+    const result = await updateGameName("game-1", { name: "  New name  " });
+
+    expect(result.success).toBe(true);
+    expect(mockUpdate).toHaveBeenCalledWith({
+      where: { id: "game-1" },
+      data: { name: "New name" },
+    });
+  });
+
+  it("rejects a blank name and malformed game id", async () => {
+    const blank = await updateGameName("game-1", { name: "   " });
+    const malformedId = await updateGameName("", { name: "New name" });
+
+    expect(blank.success).toBe(false);
+    expect(malformedId.success).toBe(false);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejects unknown fields instead of accepting an unsafe payload", async () => {
+    const result = await updateGameName("game-1", {
+      name: "New name",
+      origin: "MANUAL",
+    } as never);
+
+    expect(result.success).toBe(false);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe("updateGameAvailability", () => {
+  const mockFindUnique = vi.fn();
+  const mockUpdate = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    (prisma as unknown as {
+      gameAvailability: {
+        findUnique: typeof mockFindUnique;
+        update: typeof mockUpdate;
+      };
+    }).gameAvailability = { findUnique: mockFindUnique, update: mockUpdate };
+    mockFindUnique.mockResolvedValue({ source: "OTHER_PLATFORM" });
+    mockUpdate.mockResolvedValue({ id: "availability-1" });
+  });
+
+  it("updates a manual source and display name", async () => {
+    const result = await updateGameAvailability("availability-1", {
+      source: "ROM",
+      displayName: "Local copy",
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockUpdate).toHaveBeenCalledWith({
+      where: { id: "availability-1" },
+      data: { source: "ROM", displayName: "Local copy" },
+    });
+  });
+
+  it("allows Steam source and display-name edits without exposing technical fields", async () => {
+    mockFindUnique.mockResolvedValue({ source: "STEAM" });
+
+    const result = await updateGameAvailability("availability-1", {
+      source: "OTHER_PLATFORM",
+      displayName: "Steam library",
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockUpdate).toHaveBeenCalledWith({
+      where: { id: "availability-1" },
+      data: { source: "OTHER_PLATFORM", displayName: "Steam library" },
+    });
+  });
+
+  it("rejects technical-field payloads", async () => {
+    mockFindUnique.mockResolvedValue({ source: "STEAM" });
+
+    const technicalChange = await updateGameAvailability("availability-1", {
+      displayName: "Steam library",
+      steamAppId: "123",
+      steamPlaytimeTotal: 60,
+    } as never);
+
+    expect(technicalChange.success).toBe(false);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejects an unknown availability row", async () => {
+    mockFindUnique.mockResolvedValue(null);
+
+    const result = await updateGameAvailability("missing", {
+      displayName: "Name",
+    });
+
+    expect(result).toEqual({
+      success: false,
+      data: null,
+      error: "Availability not found",
+    });
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+});
 
 describe("updatePersonalFields", () => {
   const mockUpdate = vi.fn();

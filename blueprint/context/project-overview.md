@@ -20,7 +20,7 @@ the MVP.
 
 ## Features
 
-Completed work is retained here for context; the next unchecked feature is 7b.
+Completed work is retained here for context; the next unchecked feature is 7c.
 
 1. **App shell and auth gate** - provides the Next.js shell and restricted Google access.
 2. **Manual catalog and library base** - provides manual games and library filters.
@@ -30,6 +30,7 @@ Completed work is retained here for context; the next unchecked feature is 7b.
 6. **Steam connection and sync** - links Steam, imports owned games, and syncs playtime and recent activity.
 7a. **Duplicate detection and review** - detects normalized-name matches, supports review and dismissal, and warns in the UI.
 7b. **Merge and delete** - adds confirmed catalog consolidation or removal with conservative relation handling and short-lived, reload-safe Undo.
+7c. **Edit game and availability details** - edits a game's name and visible availability fields from the detail page while preserving immutable game origin, Steam identity, and synchronized provider statistics.
 8. **Catalog RAWG enrichment** - enriches catalog entries on demand and queues every initial Steam import for metadata.
 9. **DLC model and unresolved Steam queue** - models base-game ownership for DLC and gives unresolved Steam DLC a persistent review flow.
 10a. **Local wishlist, RAWG, and acquisition** - adds independent wishes, wishlist metadata, and conversion into catalog entries.
@@ -129,5 +130,5 @@ light/dark/system modes, reduced-data behavior, or reduced-motion safeguards.
 
 ## Open questions
 
-- Features 7b, 8, 9, and 12 each contain several independently testable flows. Preserve their current roadmap entries, but split the implementation spec into small approved steps before building.
+- Features 7b, 7c, 8, 9, and 12 each contain several independently testable flows. Preserve their current roadmap entries, but split the implementation spec into small approved steps before building.
 - Select and validate the final API/contracts for ProtonDB, Steam Deck Verified, and anti-cheat before feature 11; until then, provider evidence remains explicitly unknown.

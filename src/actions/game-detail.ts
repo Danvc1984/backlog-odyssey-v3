@@ -54,6 +54,96 @@ export async function updatePersonalFields(
   }
 }
 
+const updateGameNameSchema = z
+  .object({
+    name: z.string().trim().min(1, "Name is required"),
+  })
+  .strict();
+
+export type UpdateGameNameInput = z.infer<typeof updateGameNameSchema>;
+
+export async function updateGameName(
+  gameId: string,
+  input: UpdateGameNameInput,
+) {
+  try {
+    await requireUser();
+    const parsed = updateGameNameSchema.safeParse(input);
+    if (!parsed.success || typeof gameId !== "string" || gameId.trim() === "") {
+      return { success: false as const, data: null, error: "Invalid input" };
+    }
+
+    const game = await prisma.game.update({
+      where: { id: gameId },
+      data: { name: parsed.data.name },
+    });
+
+    return { success: true as const, data: game, error: null };
+  } catch (err) {
+    return {
+      success: false as const,
+      data: null,
+      error: err instanceof Error ? err.message : "Failed to update game name",
+    };
+  }
+}
+
+const updateGameAvailabilitySchema = z
+  .object({
+    source: z.enum(["STEAM", "OTHER_PLATFORM", "ROM"]).optional(),
+    displayName: z.string().trim().max(200).nullable().optional(),
+  })
+  .strict();
+
+export type UpdateGameAvailabilityInput = z.infer<
+  typeof updateGameAvailabilitySchema
+>;
+
+export async function updateGameAvailability(
+  availabilityId: string,
+  input: UpdateGameAvailabilityInput,
+) {
+  try {
+    await requireUser();
+    const parsed = updateGameAvailabilitySchema.safeParse(input);
+    if (
+      !parsed.success ||
+      typeof availabilityId !== "string" ||
+      availabilityId.trim() === ""
+    ) {
+      return { success: false as const, data: null, error: "Invalid input" };
+    }
+
+    const availability = await prisma.gameAvailability.findUnique({
+      where: { id: availabilityId },
+      select: { source: true },
+    });
+    if (!availability) {
+      return { success: false as const, data: null, error: "Availability not found" };
+    }
+    const updated = await prisma.gameAvailability.update({
+      where: { id: availabilityId },
+      data: {
+        ...(parsed.data.source !== undefined && { source: parsed.data.source }),
+        ...(parsed.data.displayName !== undefined && {
+          displayName: parsed.data.displayName,
+        }),
+      },
+    });
+
+    return { success: true as const, data: updated, error: null };
+  } catch (err) {
+    return {
+      success: false as const,
+      data: null,
+      error:
+        err instanceof Error
+          ? err.message
+          : "Failed to update availability",
+    };
+  }
+}
+
 const updatePlayStateSchema = z.object({
   playState: z
     .enum(["NOT_STARTED", "IN_PROGRESS", "PLAYED_BEFORE", "ABANDONED"])

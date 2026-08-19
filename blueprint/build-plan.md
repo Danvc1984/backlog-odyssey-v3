@@ -19,6 +19,9 @@
 - [x] 7b. **Merge and delete** - two-phase editable merge, conservative relation
   union, DLC reassignment, cascade-safe delete, temporary CatalogOperation,
   overlap protection, and 15-second reload-safe Undo
+- [x] 7c. **Edit game and availability details** - edit a game's name and the
+  visible availability fields from its detail page while preserving immutable
+  game origin, Steam identity, and synchronized provider statistics
 
 ## Metadata and ownership context
 
