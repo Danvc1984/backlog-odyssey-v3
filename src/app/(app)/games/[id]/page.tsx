@@ -9,6 +9,8 @@ import { DuplicateWarning } from "@/components/games/DuplicateWarning";
 import { DeleteGameDialog } from "@/components/games/DeleteGameDialog";
 import { AvailabilityRowForm } from "@/components/games/AvailabilityRowForm";
 import { GameNameForm } from "@/components/games/GameNameForm";
+import { MetadataSection } from "@/components/games/MetadataSection";
+import type { RawgMetadataPayload } from "@/lib/rawg-types";
 
 const TYPE_LABELS: Record<string, string> = {
   BASE_GAME: "Base game",
@@ -41,6 +43,12 @@ export default async function GameDetailPage({
         dlcs: {
           select: { id: true, name: true },
           orderBy: { name: "asc" },
+        },
+        metadataSnapshots: {
+          where: { provider: "RAWG" },
+          orderBy: { fetchedAt: "desc" },
+          take: 1,
+          select: { payload: true, sourceUrl: true, fetchedAt: true },
         },
       },
     }),
@@ -111,6 +119,16 @@ export default async function GameDetailPage({
           </div>
         </div>
       </section>
+
+      <MetadataSection
+        payload={
+          game.metadataSnapshots[0]
+            ? (game.metadataSnapshots[0].payload as unknown as RawgMetadataPayload)
+            : null
+        }
+        sourceUrl={game.metadataSnapshots[0]?.sourceUrl ?? null}
+        fetchedAt={game.metadataSnapshots[0]?.fetchedAt ?? null}
+      />
 
       <section>
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">

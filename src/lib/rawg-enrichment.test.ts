@@ -1,0 +1,202 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
+vi.mock("@/lib/prisma", () => ({ prisma: {} }));
+
+import { prisma } from "@/lib/prisma";
+import {
+  persistRawgMatch,
+  toRawgMetadataPayload,
+} from "./rawg-enrichment";
+import type { RawgGameDetails, RawgMatchResult } from "./rawg-types";
+
+const fetchedAt = new Date("2026-08-19T18:30:00.000Z");
+
+const game: RawgGameDetails = {
+  id: 123,
+  slug: "portal-2",
+  name: "Portal 2",
+  description: "A puzzle game",
+  released: "2011-04-18",
+  backgroundImage: "https://media.rawg.io/portal-2.jpg",
+  backgroundImageAdditional: null,
+  genres: [{ id: 1, name: "Puzzle", slug: "puzzle" }],
+  tags: [{ id: 2, name: "Singleplayer", slug: "singleplayer" }],
+  developers: [{ id: 3, name: "Valve", slug: "valve" }],
+  publishers: [{ id: 4, name: "Valve", slug: "valve" }],
+  website: "https://www.thinkwithportals.com/",
+  rating: 4.4,
+  metacritic: 95,
+  playtime: 9,
+  alternativeNames: ["Portal 2"],
+  rawgUpdatedAt: "2026-08-19T00:00:00Z",
+  rawgUrl: "https://rawg.io/games/portal-2",
+};
+
+const matched: RawgMatchResult = {
+  outcome: "MATCHED",
+  matchMethod: "EXACT_STEAM_APP_ID",
+  game,
+};
+
+describe("RAWG metadata persistence", () => {
+  const findUniqueExternalId = vi.fn();
+  const deleteExternalIds = vi.fn();
+  const createExternalId = vi.fn();
+  const deleteSnapshots = vi.fn();
+  const createSnapshot = vi.fn();
+  const transaction = vi.fn();
+  const tx = {
+    externalGameId: {
+      findUnique: findUniqueExternalId,
+      deleteMany: deleteExternalIds,
+      create: createExternalId,
+    },
+    metadataSnapshot: {
+      deleteMany: deleteSnapshots,
+      create: createSnapshot,
+    },
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (prisma as unknown as { $transaction: typeof transaction }).$transaction =
+      transaction;
+    transaction.mockImplementation(
+      async (callback: (client: typeof tx) => unknown) => callback(tx),
+    );
+    findUniqueExternalId.mockResolvedValue(null);
+    deleteExternalIds.mockResolvedValue({ count: 0 });
+    createExternalId.mockResolvedValue({ id: "external-1" });
+    deleteSnapshots.mockResolvedValue({ count: 1 });
+    createSnapshot.mockResolvedValue({ id: "snapshot-1" });
+  });
+
+  it("maps normalized RAWG fields into the versioned payload", () => {
+    expect(toRawgMetadataPayload(game, fetchedAt)).toEqual({
+      schemaVersion: 1,
+      rawgId: 123,
+      rawgSlug: "portal-2",
+      title: "Portal 2",
+      description: "A puzzle game",
+      releaseDate: "2011-04-18",
+      backgroundImageUrls: ["https://media.rawg.io/portal-2.jpg"],
+      genres: ["Puzzle"],
+      tags: ["Singleplayer"],
+      developers: ["Valve"],
+      publishers: ["Valve"],
+      website: "https://www.thinkwithportals.com/",
+      rating: 4.4,
+      metacriticScore: 95,
+      playtimeHours: 9,
+      alternativeNames: ["Portal 2"],
+      rawgUrl: "https://rawg.io/games/portal-2",
+      attribution: {
+        provider: "RAWG",
+        sourceUrl: "https://rawg.io/games/portal-2",
+        fetchedAt: "2026-08-19T18:30:00.000Z",
+      },
+    });
+  });
+
+  it("writes the identity and replaceable snapshot in one transaction", async () => {
+    await expect(persistRawgMatch("game-1", matched, fetchedAt)).resolves.toEqual({
+      success: true,
+      data: { gameId: "game-1", rawgId: 123, fetchedAt },
+      error: null,
+    });
+
+    expect(transaction).toHaveBeenCalledTimes(1);
+    expect(findUniqueExternalId).toHaveBeenCalledWith({
+      where: {
+        namespace_externalId: {
+          namespace: "RAWG_GAME",
+          externalId: "123",
+        },
+      },
+    });
+    expect(deleteExternalIds).toHaveBeenCalledWith({
+      where: { gameId: "game-1", namespace: "RAWG_GAME" },
+    });
+    expect(createExternalId).toHaveBeenCalledWith({
+      data: {
+        namespaceId: "123",
+        namespace: "RAWG_GAME",
+        externalId: "123",
+        matchMethod: "EXACT_STEAM_APP_ID",
+        gameId: "game-1",
+      },
+    });
+    expect(deleteSnapshots).toHaveBeenCalledWith({
+      where: { gameId: "game-1", provider: "RAWG" },
+    });
+    expect(createSnapshot).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        gameId: "game-1",
+        provider: "RAWG",
+        sourceUrl: "https://rawg.io/games/portal-2",
+        fetchedAt,
+        payload: expect.objectContaining({ schemaVersion: 1, rawgId: 123 }),
+      }),
+    });
+  });
+
+  it("rejects an identity collision before any mutation", async () => {
+    findUniqueExternalId.mockResolvedValue({ gameId: "other-game" });
+
+    await expect(persistRawgMatch("game-1", matched, fetchedAt)).resolves.toEqual({
+      success: false,
+      data: null,
+      error: {
+        code: "RAWG_ID_CONFLICT",
+        message: "RAWG game identity is already attached to another catalog game",
+      },
+    });
+
+    expect(deleteExternalIds).not.toHaveBeenCalled();
+    expect(createExternalId).not.toHaveBeenCalled();
+    expect(deleteSnapshots).not.toHaveBeenCalled();
+    expect(createSnapshot).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { outcome: "NOT_FOUND" as const },
+    { outcome: "AMBIGUOUS" as const, candidates: [] },
+    {
+      outcome: "UNAVAILABLE" as const,
+      error: { category: "NETWORK" as const, message: "offline" },
+    },
+  ])("does not write for a $outcome result", async (result) => {
+    await expect(persistRawgMatch("game-1", result, fetchedAt)).resolves.toMatchObject({
+      success: false,
+      error: { code: "NOT_MATCHED" },
+    });
+
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it("keeps optional provider data empty instead of fabricating values", () => {
+    const incomplete = {
+      ...game,
+      description: null,
+      backgroundImage: null,
+      backgroundImageAdditional: null,
+      genres: [],
+      tags: [],
+      developers: [],
+      publishers: [],
+      website: null,
+      rating: null,
+      metacritic: null,
+      playtime: null,
+      alternativeNames: [],
+    };
+
+    const payload = toRawgMetadataPayload(incomplete, fetchedAt);
+    expect(payload.description).toBeNull();
+    expect(payload.backgroundImageUrls).toEqual([]);
+    expect(payload.genres).toEqual([]);
+    expect(payload.website).toBeNull();
+    expect(payload.rating).toBeNull();
+  });
+});

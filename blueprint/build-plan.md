@@ -29,6 +29,15 @@
   global and individual load actions, post-import enrichment for every imported
   game, overwrite warnings, attribution, async progress, retries, and graceful
   partial failure
+  - [x] 8a. **RAWG matching and metadata snapshot contract** - server-side RAWG
+    matching, normalized metadata persistence, attribution, and safe no-match or
+    provider-failure behavior
+  - [ ] 8b. **Single-game asynchronous enrichment** - detail-page load action,
+    overwrite warning, persistent job state, retries, and per-game progress
+  - [ ] 8c. **Catalog-wide enrichment with progress and partial failure** -
+    library action to enqueue eligible games and report batch outcomes
+  - [ ] 8d. **Post-import enrichment** - enqueue every newly imported Steam game
+    without rolling back or duplicating the import
 
 ## DLC and wishlist
 
