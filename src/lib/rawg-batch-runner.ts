@@ -39,6 +39,7 @@ export interface RawgBatchView {
   isTerminal: boolean;
   finishedAt: string | null;
   awaitingMatchGames: Array<{ id: string; name: string }>;
+  failedGames: Array<{ id: string; name: string }>;
 }
 
 export type RawgBatchRunResult = {
@@ -65,6 +66,9 @@ function batchView(batch: RawgBatchRecord): RawgBatchView {
   const awaitingMatchGames = batch.enrichmentJobs
     .filter((job) => job.status === "AWAITING_MATCH")
     .map((job) => job.game);
+  const failedGames = batch.enrichmentJobs
+    .filter((job) => job.status === "FAILED")
+    .map((job) => job.game);
   const persistedSummary = persistedRawgBatchSummary(batch.status, batch.counts);
   if (persistedSummary) {
     return {
@@ -75,6 +79,7 @@ function batchView(batch: RawgBatchRecord): RawgBatchView {
       isTerminal: true,
       finishedAt: batch.finishedAt?.toISOString() ?? null,
       awaitingMatchGames,
+      failedGames,
     };
   }
 
@@ -87,6 +92,7 @@ function batchView(batch: RawgBatchRecord): RawgBatchView {
     isTerminal: batch.status !== "RUNNING",
     finishedAt: batch.finishedAt?.toISOString() ?? null,
     awaitingMatchGames,
+    failedGames,
   };
 }
 
@@ -138,6 +144,21 @@ export async function getLatestRawgBatchStatus(): Promise<RawgBatchRunResult | n
   });
   if (pendingReviewBatch) {
     return { success: true, data: batchView(pendingReviewBatch), error: null };
+  }
+
+  const failedBatch = await prisma.syncRun.findFirst({
+    where: {
+      provider: "RAWG",
+      status: { in: ["PARTIAL", "FAILED"] },
+      enrichmentJobs: {
+        some: { provider: "RAWG", status: "FAILED" },
+      },
+    },
+    orderBy: { startedAt: "desc" },
+    select: rawgBatchSelect,
+  });
+  if (failedBatch) {
+    return { success: true, data: batchView(failedBatch), error: null };
   }
 
   const latestBatch = await prisma.syncRun.findFirst({

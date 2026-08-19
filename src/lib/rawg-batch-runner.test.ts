@@ -151,6 +151,7 @@ describe("RAWG catalog batch runner", () => {
         progress: 100,
         isTerminal: true,
         awaitingMatchGames: [{ id: "game-review", name: "Hades" }],
+        failedGames: [{ id: "game-failed", name: "Half-Life 2" }],
       },
     });
   });
@@ -190,6 +191,7 @@ describe("RAWG catalog batch runner", () => {
         status: "SUCCESS",
         counts: { total: 2, succeeded: 2, failed: 0 },
         progress: 100,
+        failedGames: [{ id: "game-1", name: "Portal 2" }],
       },
     });
   });
@@ -227,5 +229,57 @@ describe("RAWG catalog batch runner", () => {
       }),
     }));
     expect(findBatch).toHaveBeenCalledTimes(1);
+  });
+
+  it("prefers a terminal failed batch over a newer empty batch", async () => {
+    const failedBatch = batch({
+      id: "batch-failed",
+      status: "FAILED",
+      finishedAt: new Date("2026-08-19T22:00:00.000Z"),
+      counts: {
+        total: 2,
+        queued: 0,
+        running: 0,
+        retryWaiting: 0,
+        awaitingMatch: 0,
+        succeeded: 0,
+        failed: 2,
+      },
+      enrichmentJobs: [
+        {
+          id: "job-failed-1",
+          status: "FAILED",
+          nextAttemptAt: null,
+          game: { id: "game-failed-1", name: "Half-Life 2" },
+        },
+        {
+          id: "job-failed-2",
+          status: "FAILED",
+          nextAttemptAt: null,
+          game: { id: "game-failed-2", name: "Portal" },
+        },
+      ],
+    });
+    findBatch.mockResolvedValueOnce(null).mockResolvedValueOnce(failedBatch);
+
+    await expect(getLatestRawgBatchStatus()).resolves.toMatchObject({
+      success: true,
+      data: {
+        id: "batch-failed",
+        status: "FAILED",
+        isTerminal: true,
+        failedGames: [
+          { id: "game-failed-1", name: "Half-Life 2" },
+          { id: "game-failed-2", name: "Portal" },
+        ],
+      },
+    });
+    expect(findBatch).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        status: { in: ["PARTIAL", "FAILED"] },
+        enrichmentJobs: { some: { provider: "RAWG", status: "FAILED" } },
+      }),
+    }));
+    expect(findBatch).toHaveBeenCalledTimes(2);
   });
 });

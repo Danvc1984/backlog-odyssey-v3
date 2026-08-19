@@ -191,13 +191,7 @@ export default async function LibraryPage({
       </div>
 
       <RawgBatchEnrichmentPanel
-        initialBatch={
-          latestRawgBatch?.data &&
-          (latestRawgBatch.data.status === "RUNNING" ||
-            latestRawgBatch.data.awaitingMatchGames.length > 0)
-            ? latestRawgBatch.data
-            : null
-        }
+        initialBatch={latestRawgBatch?.data ?? null}
       />
 
       {entries.length === 0 ? (

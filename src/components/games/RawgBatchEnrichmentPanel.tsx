@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { startRawgCatalogEnrichment } from "@/actions/rawg-batch-enrichment";
@@ -33,17 +33,37 @@ function batchMessage(batch: RawgBatchView): string {
   }
 }
 
-function isActionableBatch(batch: RawgBatchView): boolean {
-  return batch.status === "RUNNING" || batch.awaitingMatchGames.length > 0;
+function terminalBatchMessage(batch: RawgBatchView): string {
+  switch (batch.status) {
+    case "SUCCESS":
+      return "RAWG enrichment finished successfully.";
+    case "PARTIAL":
+      return "RAWG enrichment finished with games needing follow-up.";
+    case "FAILED":
+      return "RAWG enrichment failed. Review failed games below.";
+    case "RUNNING":
+      return "";
+  }
+}
+
+function shouldShowBatch(batch: RawgBatchView): boolean {
+  return (
+    batch.status === "RUNNING" ||
+    batch.awaitingMatchGames.length > 0 ||
+    batch.failedGames.length > 0
+  );
 }
 
 export function RawgBatchEnrichmentPanel({
   initialBatch,
 }: RawgBatchEnrichmentPanelProps) {
   const router = useRouter();
-  const [batch, setBatch] = useState(initialBatch);
+  const [batch, setBatch] = useState(
+    initialBatch && shouldShowBatch(initialBatch) ? initialBatch : null,
+  );
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const reportedTerminalBatchId = useRef<string | null>(null);
 
   const requestBatch = useCallback(async (batchId: string, method: "GET" | "POST") => {
     const response = await fetch(
@@ -57,20 +77,35 @@ export function RawgBatchEnrichmentPanel({
     return result.data;
   }, []);
 
+  const showBatch = useCallback((latest: RawgBatchView) => {
+    setBatch(shouldShowBatch(latest) ? latest : null);
+    if (latest.isTerminal && reportedTerminalBatchId.current !== latest.id) {
+      reportedTerminalBatchId.current = latest.id;
+      const message = terminalBatchMessage(latest);
+      if (latest.status === "SUCCESS") {
+        toast.success(message);
+      } else if (latest.status === "PARTIAL") {
+        toast.warning(message);
+      } else {
+        toast.error(message);
+      }
+    }
+  }, []);
+
   const refreshBatch = useCallback(async (batchId: string) => {
     const latest = await requestBatch(batchId, "GET");
-    setBatch(isActionableBatch(latest) ? latest : null);
+    showBatch(latest);
     return latest;
-  }, [requestBatch]);
+  }, [requestBatch, showBatch]);
 
   const runBatch = useCallback(async (batchId: string) => {
     const latest = await requestBatch(batchId, "POST");
-    setBatch(isActionableBatch(latest) ? latest : null);
+    showBatch(latest);
     if (latest.isTerminal) {
       router.refresh();
     }
     return latest;
-  }, [requestBatch, router]);
+  }, [requestBatch, router, showBatch]);
 
   useEffect(() => {
     if (!batch || batch.status !== "RUNNING") return;
@@ -188,6 +223,21 @@ export function RawgBatchEnrichmentPanel({
               <p className="font-medium">Choose RAWG matches to finish these games</p>
               <ul className="mt-2 space-y-1">
                 {batch.awaitingMatchGames.map((game) => (
+                  <li key={game.id}>
+                    <Link href={`/games/${game.id}`} className="text-primary hover:underline">
+                      {game.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {batch.failedGames.length > 0 && (
+            <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3">
+              <p className="font-medium">RAWG could not enrich these games</p>
+              <ul className="mt-2 space-y-1">
+                {batch.failedGames.map((game) => (
                   <li key={game.id}>
                     <Link href={`/games/${game.id}`} className="text-primary hover:underline">
                       {game.name}
