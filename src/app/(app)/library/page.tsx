@@ -4,6 +4,8 @@ import { Star, Clock, RotateCcw, EyeOff } from "lucide-react";
 import { CreateGameDialog } from "@/components/games/CreateGameDialog";
 import { LibraryFilters } from "@/components/games/LibraryFilters";
 import { DuplicatesList } from "@/components/games/DuplicatesList";
+import { RawgBatchEnrichmentPanel } from "@/components/games/RawgBatchEnrichmentPanel";
+import { getLatestRawgBatchStatus } from "@/lib/rawg-batch-runner";
 import {
   getSystemCollectionDefinition,
   getSystemCollections,
@@ -91,13 +93,14 @@ export default async function LibraryPage({
         : undefined
       : undefined;
 
-  const [manualCollections, systemCollections] = await Promise.all([
+  const [manualCollections, systemCollections, latestRawgBatch] = await Promise.all([
     prisma.collection.findMany({
       where: { isSystem: false },
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
     getSystemCollections(),
+    getLatestRawgBatchStatus(),
   ]);
 
   const systemDef =
@@ -186,6 +189,16 @@ export default async function LibraryPage({
           ]}
         />
       </div>
+
+      <RawgBatchEnrichmentPanel
+        initialBatch={
+          latestRawgBatch?.data &&
+          (latestRawgBatch.data.status === "RUNNING" ||
+            latestRawgBatch.data.awaitingMatchGames.length > 0)
+            ? latestRawgBatch.data
+            : null
+        }
+      />
 
       {entries.length === 0 ? (
         <div className="mt-16 flex flex-col items-center gap-2 text-center">

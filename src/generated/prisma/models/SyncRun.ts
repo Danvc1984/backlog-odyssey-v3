@@ -190,6 +190,7 @@ export type SyncRunWhereInput = {
   finishedAt?: Prisma.DateTimeNullableFilter<"SyncRun"> | Date | string | null
   counts?: Prisma.JsonNullableFilter<"SyncRun">
   diagnostics?: Prisma.JsonNullableFilter<"SyncRun">
+  enrichmentJobs?: Prisma.EnrichmentJobListRelationFilter
 }
 
 export type SyncRunOrderByWithRelationInput = {
@@ -200,6 +201,7 @@ export type SyncRunOrderByWithRelationInput = {
   finishedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   counts?: Prisma.SortOrderInput | Prisma.SortOrder
   diagnostics?: Prisma.SortOrderInput | Prisma.SortOrder
+  enrichmentJobs?: Prisma.EnrichmentJobOrderByRelationAggregateInput
 }
 
 export type SyncRunWhereUniqueInput = Prisma.AtLeast<{
@@ -213,6 +215,7 @@ export type SyncRunWhereUniqueInput = Prisma.AtLeast<{
   finishedAt?: Prisma.DateTimeNullableFilter<"SyncRun"> | Date | string | null
   counts?: Prisma.JsonNullableFilter<"SyncRun">
   diagnostics?: Prisma.JsonNullableFilter<"SyncRun">
+  enrichmentJobs?: Prisma.EnrichmentJobListRelationFilter
 }, "id">
 
 export type SyncRunOrderByWithAggregationInput = {
@@ -249,6 +252,7 @@ export type SyncRunCreateInput = {
   finishedAt?: Date | string | null
   counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   diagnostics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  enrichmentJobs?: Prisma.EnrichmentJobCreateNestedManyWithoutSyncRunInput
 }
 
 export type SyncRunUncheckedCreateInput = {
@@ -259,6 +263,7 @@ export type SyncRunUncheckedCreateInput = {
   finishedAt?: Date | string | null
   counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   diagnostics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  enrichmentJobs?: Prisma.EnrichmentJobUncheckedCreateNestedManyWithoutSyncRunInput
 }
 
 export type SyncRunUpdateInput = {
@@ -269,6 +274,7 @@ export type SyncRunUpdateInput = {
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   diagnostics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  enrichmentJobs?: Prisma.EnrichmentJobUpdateManyWithoutSyncRunNestedInput
 }
 
 export type SyncRunUncheckedUpdateInput = {
@@ -279,6 +285,7 @@ export type SyncRunUncheckedUpdateInput = {
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   diagnostics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  enrichmentJobs?: Prisma.EnrichmentJobUncheckedUpdateManyWithoutSyncRunNestedInput
 }
 
 export type SyncRunCreateManyInput = {
@@ -311,6 +318,11 @@ export type SyncRunUncheckedUpdateManyInput = {
   diagnostics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
+export type SyncRunNullableScalarRelationFilter = {
+  is?: Prisma.SyncRunWhereInput | null
+  isNot?: Prisma.SyncRunWhereInput | null
+}
+
 export type SyncRunCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   provider?: Prisma.SortOrder
@@ -337,6 +349,107 @@ export type SyncRunMinOrderByAggregateInput = {
   finishedAt?: Prisma.SortOrder
 }
 
+export type SyncRunCreateNestedOneWithoutEnrichmentJobsInput = {
+  create?: Prisma.XOR<Prisma.SyncRunCreateWithoutEnrichmentJobsInput, Prisma.SyncRunUncheckedCreateWithoutEnrichmentJobsInput>
+  connectOrCreate?: Prisma.SyncRunCreateOrConnectWithoutEnrichmentJobsInput
+  connect?: Prisma.SyncRunWhereUniqueInput
+}
+
+export type SyncRunUpdateOneWithoutEnrichmentJobsNestedInput = {
+  create?: Prisma.XOR<Prisma.SyncRunCreateWithoutEnrichmentJobsInput, Prisma.SyncRunUncheckedCreateWithoutEnrichmentJobsInput>
+  connectOrCreate?: Prisma.SyncRunCreateOrConnectWithoutEnrichmentJobsInput
+  upsert?: Prisma.SyncRunUpsertWithoutEnrichmentJobsInput
+  disconnect?: Prisma.SyncRunWhereInput | boolean
+  delete?: Prisma.SyncRunWhereInput | boolean
+  connect?: Prisma.SyncRunWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.SyncRunUpdateToOneWithWhereWithoutEnrichmentJobsInput, Prisma.SyncRunUpdateWithoutEnrichmentJobsInput>, Prisma.SyncRunUncheckedUpdateWithoutEnrichmentJobsInput>
+}
+
+export type SyncRunCreateWithoutEnrichmentJobsInput = {
+  id?: string
+  provider: $Enums.Provider
+  status: $Enums.SyncStatus
+  startedAt?: Date | string
+  finishedAt?: Date | string | null
+  counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  diagnostics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+}
+
+export type SyncRunUncheckedCreateWithoutEnrichmentJobsInput = {
+  id?: string
+  provider: $Enums.Provider
+  status: $Enums.SyncStatus
+  startedAt?: Date | string
+  finishedAt?: Date | string | null
+  counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  diagnostics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+}
+
+export type SyncRunCreateOrConnectWithoutEnrichmentJobsInput = {
+  where: Prisma.SyncRunWhereUniqueInput
+  create: Prisma.XOR<Prisma.SyncRunCreateWithoutEnrichmentJobsInput, Prisma.SyncRunUncheckedCreateWithoutEnrichmentJobsInput>
+}
+
+export type SyncRunUpsertWithoutEnrichmentJobsInput = {
+  update: Prisma.XOR<Prisma.SyncRunUpdateWithoutEnrichmentJobsInput, Prisma.SyncRunUncheckedUpdateWithoutEnrichmentJobsInput>
+  create: Prisma.XOR<Prisma.SyncRunCreateWithoutEnrichmentJobsInput, Prisma.SyncRunUncheckedCreateWithoutEnrichmentJobsInput>
+  where?: Prisma.SyncRunWhereInput
+}
+
+export type SyncRunUpdateToOneWithWhereWithoutEnrichmentJobsInput = {
+  where?: Prisma.SyncRunWhereInput
+  data: Prisma.XOR<Prisma.SyncRunUpdateWithoutEnrichmentJobsInput, Prisma.SyncRunUncheckedUpdateWithoutEnrichmentJobsInput>
+}
+
+export type SyncRunUpdateWithoutEnrichmentJobsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  provider?: Prisma.EnumProviderFieldUpdateOperationsInput | $Enums.Provider
+  status?: Prisma.EnumSyncStatusFieldUpdateOperationsInput | $Enums.SyncStatus
+  startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  diagnostics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+}
+
+export type SyncRunUncheckedUpdateWithoutEnrichmentJobsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  provider?: Prisma.EnumProviderFieldUpdateOperationsInput | $Enums.Provider
+  status?: Prisma.EnumSyncStatusFieldUpdateOperationsInput | $Enums.SyncStatus
+  startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  diagnostics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+}
+
+
+/**
+ * Count Type SyncRunCountOutputType
+ */
+
+export type SyncRunCountOutputType = {
+  enrichmentJobs: number
+}
+
+export type SyncRunCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  enrichmentJobs?: boolean | SyncRunCountOutputTypeCountEnrichmentJobsArgs
+}
+
+/**
+ * SyncRunCountOutputType without action
+ */
+export type SyncRunCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the SyncRunCountOutputType
+   */
+  select?: Prisma.SyncRunCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * SyncRunCountOutputType without action
+ */
+export type SyncRunCountOutputTypeCountEnrichmentJobsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.EnrichmentJobWhereInput
+}
 
 
 export type SyncRunSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -347,6 +460,8 @@ export type SyncRunSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   finishedAt?: boolean
   counts?: boolean
   diagnostics?: boolean
+  enrichmentJobs?: boolean | Prisma.SyncRun$enrichmentJobsArgs<ExtArgs>
+  _count?: boolean | Prisma.SyncRunCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["syncRun"]>
 
 export type SyncRunSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -380,10 +495,18 @@ export type SyncRunSelectScalar = {
 }
 
 export type SyncRunOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "provider" | "status" | "startedAt" | "finishedAt" | "counts" | "diagnostics", ExtArgs["result"]["syncRun"]>
+export type SyncRunInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  enrichmentJobs?: boolean | Prisma.SyncRun$enrichmentJobsArgs<ExtArgs>
+  _count?: boolean | Prisma.SyncRunCountOutputTypeDefaultArgs<ExtArgs>
+}
+export type SyncRunIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
+export type SyncRunIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
 
 export type $SyncRunPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "SyncRun"
-  objects: {}
+  objects: {
+    enrichmentJobs: Prisma.$EnrichmentJobPayload<ExtArgs>[]
+  }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     provider: $Enums.Provider
@@ -786,6 +909,7 @@ readonly fields: SyncRunFieldRefs;
  */
 export interface Prisma__SyncRunClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  enrichmentJobs<T extends Prisma.SyncRun$enrichmentJobsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SyncRun$enrichmentJobsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EnrichmentJobPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -839,6 +963,10 @@ export type SyncRunFindUniqueArgs<ExtArgs extends runtime.Types.Extensions.Inter
    */
   omit?: Prisma.SyncRunOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SyncRunInclude<ExtArgs> | null
+  /**
    * Filter, which SyncRun to fetch.
    */
   where: Prisma.SyncRunWhereUniqueInput
@@ -857,6 +985,10 @@ export type SyncRunFindUniqueOrThrowArgs<ExtArgs extends runtime.Types.Extension
    */
   omit?: Prisma.SyncRunOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SyncRunInclude<ExtArgs> | null
+  /**
    * Filter, which SyncRun to fetch.
    */
   where: Prisma.SyncRunWhereUniqueInput
@@ -874,6 +1006,10 @@ export type SyncRunFindFirstArgs<ExtArgs extends runtime.Types.Extensions.Intern
    * Omit specific fields from the SyncRun
    */
   omit?: Prisma.SyncRunOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SyncRunInclude<ExtArgs> | null
   /**
    * Filter, which SyncRun to fetch.
    */
@@ -923,6 +1059,10 @@ export type SyncRunFindFirstOrThrowArgs<ExtArgs extends runtime.Types.Extensions
    */
   omit?: Prisma.SyncRunOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SyncRunInclude<ExtArgs> | null
+  /**
    * Filter, which SyncRun to fetch.
    */
   where?: Prisma.SyncRunWhereInput
@@ -970,6 +1110,10 @@ export type SyncRunFindManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * Omit specific fields from the SyncRun
    */
   omit?: Prisma.SyncRunOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SyncRunInclude<ExtArgs> | null
   /**
    * Filter, which SyncRuns to fetch.
    */
@@ -1019,6 +1163,10 @@ export type SyncRunCreateArgs<ExtArgs extends runtime.Types.Extensions.InternalA
    */
   omit?: Prisma.SyncRunOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SyncRunInclude<ExtArgs> | null
+  /**
    * The data needed to create a SyncRun.
    */
   data: Prisma.XOR<Prisma.SyncRunCreateInput, Prisma.SyncRunUncheckedCreateInput>
@@ -1066,6 +1214,10 @@ export type SyncRunUpdateArgs<ExtArgs extends runtime.Types.Extensions.InternalA
    * Omit specific fields from the SyncRun
    */
   omit?: Prisma.SyncRunOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SyncRunInclude<ExtArgs> | null
   /**
    * The data needed to update a SyncRun.
    */
@@ -1133,6 +1285,10 @@ export type SyncRunUpsertArgs<ExtArgs extends runtime.Types.Extensions.InternalA
    */
   omit?: Prisma.SyncRunOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SyncRunInclude<ExtArgs> | null
+  /**
    * The filter to search for the SyncRun to update in case it exists.
    */
   where: Prisma.SyncRunWhereUniqueInput
@@ -1159,6 +1315,10 @@ export type SyncRunDeleteArgs<ExtArgs extends runtime.Types.Extensions.InternalA
    */
   omit?: Prisma.SyncRunOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SyncRunInclude<ExtArgs> | null
+  /**
    * Filter which SyncRun to delete.
    */
   where: Prisma.SyncRunWhereUniqueInput
@@ -1179,6 +1339,30 @@ export type SyncRunDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inter
 }
 
 /**
+ * SyncRun.enrichmentJobs
+ */
+export type SyncRun$enrichmentJobsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the EnrichmentJob
+   */
+  select?: Prisma.EnrichmentJobSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the EnrichmentJob
+   */
+  omit?: Prisma.EnrichmentJobOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.EnrichmentJobInclude<ExtArgs> | null
+  where?: Prisma.EnrichmentJobWhereInput
+  orderBy?: Prisma.EnrichmentJobOrderByWithRelationInput | Prisma.EnrichmentJobOrderByWithRelationInput[]
+  cursor?: Prisma.EnrichmentJobWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.EnrichmentJobScalarFieldEnum | Prisma.EnrichmentJobScalarFieldEnum[]
+}
+
+/**
  * SyncRun without action
  */
 export type SyncRunDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1190,4 +1374,8 @@ export type SyncRunDefaultArgs<ExtArgs extends runtime.Types.Extensions.Internal
    * Omit specific fields from the SyncRun
    */
   omit?: Prisma.SyncRunOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SyncRunInclude<ExtArgs> | null
 }

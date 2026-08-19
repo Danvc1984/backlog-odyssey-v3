@@ -34,7 +34,7 @@
     provider-failure behavior
   - [x] 8b. **Single-game asynchronous enrichment** - detail-page load action,
     overwrite warning, persistent job state, retries, and per-game progress
-  - [ ] 8c. **Catalog-wide enrichment with progress and partial failure** -
+  - [x] 8c. **Catalog-wide enrichment with progress and partial failure** -
     library action to enqueue eligible games and report batch outcomes
   - [ ] 8d. **Post-import enrichment** - enqueue every newly imported Steam game
     without rolling back or duplicating the import

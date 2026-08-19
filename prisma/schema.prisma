@@ -273,6 +273,7 @@ model MetadataSnapshot {
 model EnrichmentJob {
   id               String              @id @default(cuid())
   gameId           String
+  syncRunId        String?
   provider         Provider
   status           EnrichmentJobStatus @default(QUEUED)
   stage            EnrichmentJobStage  @default(MATCHING)
@@ -289,10 +290,12 @@ model EnrichmentJob {
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
 
-  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  game    Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  syncRun SyncRun? @relation(fields: [syncRunId], references: [id], onDelete: SetNull)
 
   @@unique([gameId, provider])
   @@index([status, nextAttemptAt])
+  @@index([syncRunId])
 }
 
 model PersonalTag {
@@ -532,13 +535,14 @@ model WallpaperState {
 }
 
 model SyncRun {
-  id         String    @id @default(cuid())
-  provider   Provider
-  status     SyncStatus
-  startedAt  DateTime  @default(now())
-  finishedAt DateTime?
-  counts     Json?
-  diagnostics Json?
+  id                  String          @id @default(cuid())
+  provider            Provider
+  status              SyncStatus
+  startedAt           DateTime        @default(now())
+  finishedAt          DateTime?
+  counts              Json?
+  diagnostics         Json?
+  enrichmentJobs      EnrichmentJob[]
 }
 
 model CatalogOperation {
