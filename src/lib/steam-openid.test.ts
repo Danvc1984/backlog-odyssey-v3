@@ -121,6 +121,38 @@ describe("verifySteamOpenIdResponse", () => {
     expect(result).toBe(false);
   });
 
+  it("does not accept is_valid:true inside another field", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        text: () => Promise.resolve("not_is_valid:true"),
+      }),
+    );
+
+    const result = await verifySteamOpenIdResponse({
+      "openid.sig": "abc",
+    });
+
+    expect(result).toBe(false);
+  });
+
+  it("returns false for a malformed validation field", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        text: () => Promise.resolve("is_valid"),
+      }),
+    );
+
+    const result = await verifySteamOpenIdResponse({
+      "openid.sig": "abc",
+    });
+
+    expect(result).toBe(false);
+  });
+
   it("returns false when the validation request fails", async () => {
     vi.stubGlobal(
       "fetch",

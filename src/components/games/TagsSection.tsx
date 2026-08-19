@@ -53,7 +53,7 @@ export function TagsSection({
     } else {
       setError(result.error ?? "Failed to add tag");
     }
-  }, [input, gameId, router]);
+  }, [input, gameId, router, tags]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {

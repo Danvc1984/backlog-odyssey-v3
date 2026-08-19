@@ -101,6 +101,23 @@ describe("syncSteamPlaytime", () => {
     expect(transaction).toHaveBeenCalled();
   });
 
+  it("preserves the transaction error when failed-run recovery cannot find the run", async () => {
+    const transactionError = new Error("availability update failed");
+    vi.mocked(fetchOwnedGames).mockResolvedValue([
+      { appid: 10, name: "Portal", playtimeForever: 240, rtimeLastPlayed: 0 },
+    ]);
+    updateManyAvailability.mockRejectedValueOnce(transactionError);
+    updateSyncRun.mockRejectedValueOnce(new Error("SyncRun not found"));
+
+    const result = await syncSteamPlaytime();
+
+    expect(result).toEqual({
+      success: false,
+      data: null,
+      error: "availability update failed",
+    });
+  });
+
   it("returns an error without creating a run when Steam is disconnected", async () => {
     findUniqueConnection.mockResolvedValue(null);
 

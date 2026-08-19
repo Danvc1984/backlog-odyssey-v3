@@ -12,6 +12,10 @@ describe("normalizeName", () => {
   it("folds case, removes punctuation, and collapses whitespace", () => {
     expect(normalizeName("  The Witcher: 3!!!  ")).toBe("the witcher 3");
   });
+
+  it("preserves accented letters while removing punctuation", () => {
+    expect(normalizeName("  Niño: La Aventura  ")).toBe("niño la aventura");
+  });
 });
 
 describe("detectDuplicates", () => {

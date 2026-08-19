@@ -46,7 +46,18 @@ export async function verifySteamOpenIdResponse(
     if (!response.ok) return false;
 
     const text = await response.text();
-    return text.includes("is_valid:true");
+    const fields = new Map(
+      text.split(/\r?\n/).flatMap((line) => {
+        const separatorIndex = line.indexOf(":");
+        if (separatorIndex < 0) return [];
+
+        return [[
+          line.slice(0, separatorIndex).trim(),
+          line.slice(separatorIndex + 1).trim(),
+        ] as const];
+      }),
+    );
+    return fields.get("is_valid") === "true";
   } catch {
     return false;
   }

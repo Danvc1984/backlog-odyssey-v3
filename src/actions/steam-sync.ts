@@ -119,17 +119,21 @@ export async function syncSteamPlaytime() {
     return { success: true as const, data: outcome.counts, error: null };
   } catch (err) {
     if (syncRunId) {
-      await prisma.syncRun.update({
-        where: { id: syncRunId },
-        data: {
-          status: "FAILED",
-          finishedAt: new Date(),
-          counts: jsonCounts({ ...emptyCounts(), failed: 1 }),
-          diagnostics: {
-            error: err instanceof Error ? err.message : "Failed to sync Steam playtime",
+      try {
+        await prisma.syncRun.update({
+          where: { id: syncRunId },
+          data: {
+            status: "FAILED",
+            finishedAt: new Date(),
+            counts: jsonCounts({ ...emptyCounts(), failed: 1 }),
+            diagnostics: {
+              error: err instanceof Error ? err.message : "Failed to sync Steam playtime",
+            },
           },
-        },
-      });
+        });
+      } catch {
+        // The transaction may have rolled back the run before recovery executes.
+      }
     }
 
     return {
