@@ -29,7 +29,6 @@ describe("createDlc", () => {
     const result = await createDlc({
       name: "The DLC",
       baseGameId: "base-1",
-      availabilitySource: "STEAM",
     });
 
     expect(result.success).toBe(true);
@@ -41,13 +40,13 @@ describe("createDlc", () => {
         }),
       }),
     );
+    expect(create.mock.calls[0][0].data).not.toHaveProperty("availability");
   });
 
   it("rejects a missing base game id", async () => {
     const result = await createDlc({
       name: "The DLC",
       baseGameId: "",
-      availabilitySource: "STEAM",
     });
 
     expect(result).toEqual({ success: false, data: null, error: "Invalid input" });
@@ -60,7 +59,6 @@ describe("createDlc", () => {
     const result = await createDlc({
       name: "The DLC",
       baseGameId: "missing",
-      availabilitySource: "STEAM",
     });
 
     expect(result).toEqual({
@@ -77,7 +75,6 @@ describe("createDlc", () => {
     const result = await createDlc({
       name: "Nested DLC",
       baseGameId: "dlc-1",
-      availabilitySource: "STEAM",
     });
 
     expect(result).toEqual({

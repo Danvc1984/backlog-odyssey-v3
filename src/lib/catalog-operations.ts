@@ -14,6 +14,7 @@ export const SNAPSHOT_MODELS = [
   "GameTag",
   "MetadataSnapshot",
   "WishlistEntry",
+  "WishlistMetadataSnapshot",
   "DealOffer",
   "PriceRefresh",
   "CompatibilitySnapshot",
@@ -189,7 +190,7 @@ export interface ExternalIdConflict {
 }
 
 export interface OneToOneConflict {
-  kind: "wishlist" | "compatibility" | "environment";
+  kind: "compatibility" | "environment";
   key: string;
   a: { gameId: string; rowId: string };
   b: { gameId: string; rowId: string };
@@ -206,7 +207,6 @@ export interface MergeSourceGame {
   collections: { collectionId: string }[];
   tags: { tagId: string }[];
   metadataSnapshots: { id: string; provider: string }[];
-  wishlistRowId: string | null;
   compatSnapshots: { id: string; provider: string }[];
   envCompat: { id: string; environment: string }[];
 }
@@ -334,27 +334,16 @@ export function planExternalIdUnion(
 export function planOneToOneConflicts(
   a: {
     gameId: string;
-    wishlistRowId: string | null;
     compatSnapshots: { id: string; provider: string }[];
     envCompat: { id: string; environment: string }[];
   },
   b: {
     gameId: string;
-    wishlistRowId: string | null;
     compatSnapshots: { id: string; provider: string }[];
     envCompat: { id: string; environment: string }[];
   },
 ): OneToOneConflict[] {
   const conflicts: OneToOneConflict[] = [];
-
-  if (a.wishlistRowId && b.wishlistRowId) {
-    conflicts.push({
-      kind: "wishlist",
-      key: "wishlist",
-      a: { gameId: a.gameId, rowId: a.wishlistRowId },
-      b: { gameId: b.gameId, rowId: b.wishlistRowId },
-    });
-  }
 
   const providers = new Set([
     ...a.compatSnapshots.map((row) => row.provider),
@@ -412,13 +401,11 @@ export function buildMergeProposal(input: {
   const oneToOne = planOneToOneConflicts(
     {
       gameId: gameA.id,
-      wishlistRowId: gameA.wishlistRowId,
       compatSnapshots: gameA.compatSnapshots,
       envCompat: gameA.envCompat,
     },
     {
       gameId: gameB.id,
-      wishlistRowId: gameB.wishlistRowId,
       compatSnapshots: gameB.compatSnapshots,
       envCompat: gameB.envCompat,
     },
@@ -519,11 +506,12 @@ function gameScalarRow(game: MergeGraphGame): Record<string, unknown> {
 
 function pushWishlistDeletes(
   pushDelete: (model: SnapshotModel, row: Record<string, unknown>) => void,
-  wishlist: MergeGraphGame["wishlistEntry"],
+  wishlist: MergeGraphGame["wishlistDlcs"][number] | null,
 ) {
   if (!wishlist) return;
-  const { offers = [], refreshes = [], ...row } = wishlist;
+  const { offers = [], refreshes = [], metadataSnapshot, ...row } = wishlist;
   pushDelete("WishlistEntry", row);
+  if (metadataSnapshot) pushDelete("WishlistMetadataSnapshot", metadataSnapshot);
   for (const offer of offers) pushDelete("DealOffer", offer);
   for (const refresh of refreshes) pushDelete("PriceRefresh", refresh);
 }
@@ -545,7 +533,7 @@ export function buildDeleteSnapshotPlan(
     for (const row of node.collections) pushDelete("CollectionMembership", row);
     for (const row of node.tags) pushDelete("GameTag", row);
     for (const row of node.metadataSnapshots) pushDelete("MetadataSnapshot", row);
-    pushWishlistDeletes(pushDelete, node.wishlistEntry);
+    for (const wishlist of node.wishlistDlcs) pushWishlistDeletes(pushDelete, wishlist);
     for (const row of node.compatSnapshots) pushDelete("CompatibilitySnapshot", row);
     for (const row of node.envCompat) pushDelete("EnvironmentCompatibility", row);
     for (const row of node.duplicatesA) pushDelete("PossibleDuplicate", row);
@@ -709,12 +697,13 @@ export interface MergeGraphGame {
     provider: string;
     fetchedAt: Date;
   }[];
-  wishlistEntry: {
+  wishlistDlcs: {
     id: string;
-    gameId: string;
+    baseGameId: string | null;
     offers?: Record<string, unknown>[];
     refreshes?: Record<string, unknown>[];
-  } | null;
+    metadataSnapshot?: Record<string, unknown> | null;
+  }[];
   compatSnapshots: { id: string; gameId: string; provider: string }[];
   envCompat: { id: string; gameId: string; environment: string }[];
   duplicatesA: { id: string; gameBId: string; status: string }[];
@@ -971,16 +960,11 @@ export function planMergeMutations(input: {
     }
   };
 
-  const wishlistMoves: MoveDirective[] = [];
+  const wishlistMoves: MoveDirective[] = discarded.wishlistDlcs.map((row) => {
+    pushMove("WishlistEntry", row);
+    return { id: row.id, row };
+  });
   const wishlistDeletes: MoveDirective[] = [];
-  resolveOneToOne(
-    "wishlist",
-    survivor.wishlistEntry,
-    discarded.wishlistEntry,
-    "WishlistEntry",
-    wishlistMoves,
-    wishlistDeletes,
-  );
 
   const compatMoves: MoveDirective[] = [];
   const compatDeletes: MoveDirective[] = [];

@@ -46,10 +46,11 @@
   deletion, explicit base-game cascade behavior, persistent unresolved-DLC queue,
   manual link/create/discard actions, and one-confirmation base-plus-DLC creation
 
-- [ ] 10a. **Local wishlist, RAWG, and acquisition** - independent base-game and
-  DLC entries, optional provider and external ID, local notes and interest,
-  wishlist RAWG matching and snapshots, manual acquisition into the catalog,
-  metadata transfer, acquired-base removal, and explicit DLC handling
+- [x] 10a. **Local wishlist, RAWG, and acquisition** - independent base-game entries,
+  wishlist DLC linked to owned catalog games, optional provider and external ID, local
+  notes and interest, wishlist RAWG matching and snapshots, manual acquisition into the
+  catalog with metadata transfer, acquired wishlist removal, and optional base-game
+  play state transition on DLC acquisition
 
 - [ ] 10b. **Price enrichment and purchase opportunities** - manual and daily
   Steam/ITAD Mexican price refreshes through the persistent queue, source
@@ -65,8 +66,9 @@
 
 - [ ] 12. **Recommendation engine** - explicit combined runs with three catalog
   play-next and three wishlist buy results, deterministic explanations led by
-  manual signals, optional target-price signals, visible unknown/stale warnings
-  without score penalties, DLC eligibility, dismissal, and calibration
+  manual signals, base-game affinity boost for wishlist DLC, optional target-price
+  signals, visible unknown/stale warnings without score penalties, dismissal, and
+  calibration
 
 - [ ] 13. **Today dashboard** - main game, in-progress games, the latest three
   play-next and three buy results, recent Steam games/playtime, three best
@@ -74,9 +76,10 @@
 
 ## Personalization and operations
 
-- [ ] 14. **Global visual foundation** - light/dark/system modes, accessible
-  contrast, reduced-data behavior, reduced-motion considerations, and fallback
-  visuals
+- [ ] 14. **Global visual foundation and full-app UI review** - light/dark/system
+  modes, accessible contrast, design token consistency, responsive desktop/mobile
+  navigation, comprehensive UI tidy-up across all completed pages and components,
+  reduced-data behavior, reduced-motion safeguards, and fallback visuals
 
 - [ ] 15. **Wallhaven global background** - SFW cached candidates, desktop-oriented
   display, reduced-data behavior, fallback, and attribution

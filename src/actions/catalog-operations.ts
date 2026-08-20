@@ -51,7 +51,6 @@ function toMergeSourceGame(game: {
   collections: { collectionId: string }[];
   tags: { tagId: string }[];
   metadataSnapshots: { id: string; provider: string }[];
-  wishlistEntry: { id: string } | null;
   compatSnapshots: { id: string; provider: string }[];
   envCompat: { id: string; environment: string }[];
 }): MergeSourceGame {
@@ -66,7 +65,6 @@ function toMergeSourceGame(game: {
     collections: game.collections,
     tags: game.tags,
     metadataSnapshots: game.metadataSnapshots,
-    wishlistRowId: game.wishlistEntry?.id ?? null,
     compatSnapshots: game.compatSnapshots,
     envCompat: game.envCompat,
   };
@@ -147,7 +145,7 @@ export async function proposeMerge(input: { duplicateId: string }) {
         collections: { select: { collectionId: true } },
         tags: { select: { tagId: true } },
         metadataSnapshots: { select: { id: true, provider: true } },
-        wishlistEntry: { select: { id: true } },
+        wishlistDlcs: { select: { id: true } },
         compatSnapshots: { select: { id: true, provider: true } },
         envCompat: { select: { id: true, environment: true } },
       },
@@ -214,7 +212,7 @@ const GAME_GRAPH_INCLUDE = {
   collections: true,
   tags: true,
   metadataSnapshots: true,
-  wishlistEntry: { include: { offers: true, refreshes: true } },
+  wishlistDlcs: { include: { offers: true, refreshes: true, metadataSnapshot: true } },
   compatSnapshots: true,
   envCompat: true,
   duplicatesA: true,
@@ -360,7 +358,7 @@ async function executeMergeTransaction(
   );
   await Promise.all(
     mutationPlan.wishlistMoves.map((move) =>
-      tx.wishlistEntry.update({ where: { id: move.id }, data: { gameId: survivorId } }),
+      tx.wishlistEntry.update({ where: { id: move.id }, data: { baseGameId: survivorId } }),
     ),
   );
   await Promise.all(
@@ -486,7 +484,7 @@ export async function previewDelete(input: z.infer<typeof gameIdSchema>) {
         baseGameId: true,
         baseGame: { select: { id: true, name: true } },
         dlcs: { select: { id: true, name: true } },
-        wishlistEntry: { select: { id: true } },
+        wishlistDlcs: { select: { id: true } },
         _count: {
           select: {
             externalIds: true,
@@ -530,7 +528,8 @@ export async function previewDelete(input: z.infer<typeof gameIdSchema>) {
           metadataSnapshots: game._count.metadataSnapshots,
           compatSnapshots: game._count.compatSnapshots,
           envCompat: game._count.envCompat,
-          wishlist: Boolean(game.wishlistEntry),
+          wishlist: game.wishlistDlcs.length > 0,
+          wishlistDlcCount: game.wishlistDlcs.length,
         },
       },
       error: null,
@@ -650,6 +649,7 @@ const MODEL_DELEGATES: Record<SnapshotModel, string> = {
   GameTag: "gameTag",
   MetadataSnapshot: "metadataSnapshot",
   WishlistEntry: "wishlistEntry",
+  WishlistMetadataSnapshot: "wishlistMetadataSnapshot",
   DealOffer: "dealOffer",
   PriceRefresh: "priceRefresh",
   CompatibilitySnapshot: "compatibilitySnapshot",
@@ -659,6 +659,7 @@ const MODEL_DELEGATES: Record<SnapshotModel, string> = {
 
 const RESTORE_ORDER: SnapshotModel[] = [
   "WishlistEntry",
+  "WishlistMetadataSnapshot",
   "DealOffer",
   "PriceRefresh",
   "LibraryEntry",
@@ -676,6 +677,7 @@ const MODEL_DATE_FIELDS: Partial<Record<SnapshotModel, string[]>> = {
   Game: ["createdAt", "updatedAt", "importAt"],
   LibraryEntry: ["createdAt", "updatedAt"],
   WishlistEntry: ["createdAt", "updatedAt"],
+  WishlistMetadataSnapshot: ["fetchedAt", "expiresAt"],
   DealOffer: ["expiresAt", "fetchedAt"],
   PriceRefresh: ["requestedAt", "finishedAt"],
   ExternalGameId: ["createdAt", "updatedAt"],

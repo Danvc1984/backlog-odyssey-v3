@@ -128,6 +128,7 @@ export default async function LibraryPage({
   const entries = await prisma.libraryEntry.findMany({
     where: {
       game: {
+        type: "BASE_GAME",
         name: q
           ? { contains: q, mode: "insensitive" }
           : undefined,
@@ -139,10 +140,13 @@ export default async function LibraryPage({
       ...collectionWhere,
     },
     include: {
-      game: {
-        include: {
-          availability: true,
-        },
+        game: {
+          include: {
+            availability: true,
+            baseGame: {
+              select: { id: true, name: true },
+            },
+          },
       },
     },
     orderBy: (() => {
@@ -231,12 +235,23 @@ export default async function LibraryPage({
                   className="border-b border-border last:border-0"
                 >
                   <td className="px-4 py-3 font-medium">
-                    <Link
-                      href={`/games/${entry.game.id}`}
-                      className="hover:underline"
-                    >
-                      {entry.game.name}
-                    </Link>
+                    {entry.game.type === "DLC" ? (
+                      <>
+                        <span>{entry.game.name}</span>
+                        {entry.game.baseGame && (
+                          <span className="ml-2 text-xs font-normal text-muted-foreground">
+                            DLC for{" "}
+                            <Link href={`/games/${entry.game.baseGame.id}`} className="hover:underline">
+                              {entry.game.baseGame.name}
+                            </Link>
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <Link href={`/games/${entry.game.id}`} className="hover:underline">
+                        {entry.game.name}
+                      </Link>
+                    )}
                     {entry.isMainGame && (
                       <span className="ml-2 inline-flex items-center gap-1 rounded-md bg-primary/15 px-1.5 py-0.5 text-xs font-medium text-primary">
                         <Star className="size-3" />

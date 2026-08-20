@@ -304,11 +304,9 @@ export function MergeGamesDialog({ duplicateId }: { duplicateId: string }) {
                 {proposal.oneToOne.map((conflict) => (
                   <div key={conflict.key} className="grid gap-1.5">
                     <p className="text-sm font-medium">
-                      {conflict.kind === "wishlist"
-                        ? "Wishlist entry"
-                        : conflict.kind === "compatibility"
-                          ? `Compatibility (${conflict.key})`
-                          : `Environment compatibility (${conflict.key})`}{" "}
+                      {conflict.kind === "compatibility"
+                        ? `Compatibility (${conflict.key})`
+                        : `Environment compatibility (${conflict.key})`}{" "}
                       exists on both games
                     </p>
                     <div className="flex flex-col gap-2 sm:flex-row" role="radiogroup">

@@ -8,8 +8,6 @@ const createDlcSchema = z
   .object({
     name: z.string().trim().min(1, "Name is required"),
     baseGameId: z.string().trim().min(1, "Base game is required"),
-    availabilitySource: z.enum(["STEAM", "OTHER_PLATFORM", "ROM"]),
-    displayName: z.string().trim().optional(),
   })
   .strict();
 
@@ -23,7 +21,7 @@ export async function createDlc(input: CreateDlcInput) {
       return { success: false as const, data: null, error: "Invalid input" };
     }
 
-    const { name, baseGameId, availabilitySource, displayName } = parsed.data;
+    const { name, baseGameId } = parsed.data;
     const game = await prisma.$transaction(async (tx) => {
       const baseGame = await tx.game.findUnique({
         where: { id: baseGameId },
@@ -43,14 +41,8 @@ export async function createDlc(input: CreateDlcInput) {
           origin: "MANUAL",
           name,
           baseGame: { connect: { id: baseGameId } },
-          availability: {
-            create: {
-              source: availabilitySource,
-              displayName: displayName || null,
-            },
-          },
         },
-        include: { availability: true, baseGame: true },
+        include: { baseGame: true },
       });
     });
 

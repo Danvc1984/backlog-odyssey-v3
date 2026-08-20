@@ -139,9 +139,9 @@ enum Provider {
 // ---------------------------------------------------------------------------
 
 model User {
-  id            String    @id @default(cuid())
+  id            String             @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?            @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
@@ -199,13 +199,13 @@ model AppSettings {
 }
 
 model SteamConnection {
-  id              Int      @id @default(1)
-  steamId64       String   @unique
-  state           String
-  lastSyncAt      DateTime?
-  counts          Json?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id         Int       @id @default(1)
+  steamId64  String    @unique
+  state      String
+  lastSyncAt DateTime?
+  counts     Json?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
 
 // ---------------------------------------------------------------------------
@@ -213,30 +213,30 @@ model SteamConnection {
 // ---------------------------------------------------------------------------
 
 model Game {
-  id                   String                  @id @default(cuid())
-  type                 GameType                @default(BASE_GAME)
-  origin               Origin
-  name                 String
-  baseGameId           String?
-  importAt             DateTime                 @default(now())
-  createdAt            DateTime                 @default(now())
-  updatedAt            DateTime                 @updatedAt
+  id         String   @id @default(cuid())
+  type       GameType @default(BASE_GAME)
+  origin     Origin
+  name       String
+  baseGameId String?
+  importAt   DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  baseGame             Game?                    @relation("DLCToBase", fields: [baseGameId], references: [id], onDelete: Cascade)
-  dlcs                 Game[]                   @relation("DLCToBase")
-  externalIds          ExternalGameId[]
-  metadataSnapshots    MetadataSnapshot[]
-  enrichmentJobs       EnrichmentJob[]
-  libraryEntry         LibraryEntry?
-  availability         GameAvailability[]
-  wishlistEntry        WishlistEntry?
-  collections          CollectionMembership[]
-  tags                 GameTag[]
-  compatSnapshots      CompatibilitySnapshot[]
-  envCompat            EnvironmentCompatibility[]
-  duplicatesA          PossibleDuplicate[]      @relation("DuplicatePairA")
-  duplicatesB          PossibleDuplicate[]      @relation("DuplicatePairB")
-  recommendationItems  RecommendationItem[]
+  baseGame            Game?                      @relation("DLCToBase", fields: [baseGameId], references: [id], onDelete: Cascade)
+  dlcs                Game[]                     @relation("DLCToBase")
+  externalIds         ExternalGameId[]
+  metadataSnapshots   MetadataSnapshot[]
+  enrichmentJobs      EnrichmentJob[]
+  libraryEntry        LibraryEntry?
+  availability        GameAvailability[]
+  wishlistDlcs        WishlistEntry[]            @relation("WishlistDlcToBase")
+  collections         CollectionMembership[]
+  tags                GameTag[]
+  compatSnapshots     CompatibilitySnapshot[]
+  envCompat           EnvironmentCompatibility[]
+  duplicatesA         PossibleDuplicate[]        @relation("DuplicatePairA")
+  duplicatesB         PossibleDuplicate[]        @relation("DuplicatePairB")
+  recommendationItems RecommendationItem[]
 
   @@index([baseGameId])
   @@index([origin])
@@ -244,14 +244,14 @@ model Game {
 }
 
 model UnresolvedSteamDlc {
-  id             String             @id @default(cuid())
-  steamAppId     String             @unique
+  id             String              @id @default(cuid())
+  steamAppId     String              @unique
   name           String
   steamBaseAppId String?
   status         UnresolvedDlcStatus @default(PENDING)
   discardedAt    DateTime?
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
 
   @@index([status])
 }
@@ -275,12 +275,12 @@ model ExternalGameId {
 // ---------------------------------------------------------------------------
 
 model MetadataSnapshot {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   gameId    String
   provider  Provider
   payload   Json
   sourceUrl String?
-  fetchedAt DateTime @default(now())
+  fetchedAt DateTime  @default(now())
   expiresAt DateTime?
 
   game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
@@ -317,9 +317,9 @@ model EnrichmentJob {
 }
 
 model PersonalTag {
-  id      String    @id @default(cuid())
-  name    String    @unique
-  games   GameTag[]
+  id    String    @id @default(cuid())
+  name  String    @unique
+  games GameTag[]
 }
 
 model GameTag {
@@ -358,22 +358,22 @@ model CollectionMembership {
 // ---------------------------------------------------------------------------
 
 model LibraryEntry {
-  id                    String               @id @default(cuid())
-  gameId                String               @unique
-  playState             PlayState            @default(NOT_STARTED)
-  isMainGame            Boolean              @default(false)
-  priority              Priority?            @default(NONE)
-  interest              Int?
-  rating                Int?
-  preferredEnvironment  Environment?
-  compatOverrideStatus  CompatibilityStatus?
-  compatOverrideReason  String?
-  playSoon              Boolean              @default(false)
-  replayCandidate       Boolean              @default(false)
-  hidden                Boolean              @default(false)
-  notes                 String?
-  createdAt             DateTime             @default(now())
-  updatedAt             DateTime             @updatedAt
+  id                   String               @id @default(cuid())
+  gameId               String               @unique
+  playState            PlayState            @default(NOT_STARTED)
+  isMainGame           Boolean              @default(false)
+  priority             Priority?            @default(NONE)
+  interest             Int?
+  rating               Int?
+  preferredEnvironment Environment?
+  compatOverrideStatus CompatibilityStatus?
+  compatOverrideReason String?
+  playSoon             Boolean              @default(false)
+  replayCandidate      Boolean              @default(false)
+  hidden               Boolean              @default(false)
+  notes                String?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
 
   game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
@@ -382,14 +382,14 @@ model LibraryEntry {
 }
 
 model GameAvailability {
-  id                 String            @id @default(cuid())
+  id                 String             @id @default(cuid())
   gameId             String
   source             AvailabilitySource
   displayName        String?
   steamAppId         String?
   steamPlaytimeTotal BigInt?
   steamLastPlayed    DateTime?
-  addedAt            DateTime          @default(now())
+  addedAt            DateTime           @default(now())
 
   game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
@@ -397,37 +397,57 @@ model GameAvailability {
 }
 
 model WishlistEntry {
-  id          String   @id @default(cuid())
-  gameId      String   @unique
-  interest    Int?
-  targetPrice Decimal? @db.Decimal(10, 2)
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String   @id @default(cuid())
+  name             String
+  type             GameType @default(BASE_GAME)
+  baseGameId       String?
+  interest         Int?
+  targetPriceMxn   Decimal? @db.Decimal(10, 2)
+  notes            String?
+  steamAppId       String?
+  sourcePreference String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  game     Game        @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  offers   DealOffer[]
-  refreshes PriceRefresh[]
+  baseGame         Game?                     @relation("WishlistDlcToBase", fields: [baseGameId], references: [id], onDelete: Cascade)
+  metadataSnapshot WishlistMetadataSnapshot?
+  offers           DealOffer[]
+  refreshes        PriceRefresh[]
 
-  @@index([gameId])
+  @@index([baseGameId])
+  @@index([type])
+}
+
+model WishlistMetadataSnapshot {
+  id              String    @id @default(cuid())
+  wishlistEntryId String    @unique
+  provider        Provider  @default(RAWG)
+  payload         Json
+  sourceUrl       String?
+  fetchedAt       DateTime  @default(now())
+  expiresAt       DateTime?
+
+  wishlistEntry WishlistEntry @relation(fields: [wishlistEntryId], references: [id], onDelete: Cascade)
+
+  @@index([wishlistEntryId, provider])
 }
 
 model DealOffer {
-  id             String   @id @default(cuid())
+  id              String    @id @default(cuid())
   wishlistEntryId String
-  shop           String
-  country        String?
-  currency       String?
-  price          Decimal? @db.Decimal(10, 2)
-  regularPrice   Decimal? @db.Decimal(10, 2)
-  discount       Int?
-  historicalLow  Decimal? @db.Decimal(10, 2)
-  voucher        String?
-  drm            String?
-  platforms      Json?
-  url            String?
-  expiresAt      DateTime?
-  fetchedAt      DateTime @default(now())
+  shop            String
+  country         String?
+  currency        String?
+  price           Decimal?  @db.Decimal(10, 2)
+  regularPrice    Decimal?  @db.Decimal(10, 2)
+  discount        Int?
+  historicalLow   Decimal?  @db.Decimal(10, 2)
+  voucher         String?
+  drm             String?
+  platforms       Json?
+  url             String?
+  expiresAt       DateTime?
+  fetchedAt       DateTime  @default(now())
 
   wishlistEntry WishlistEntry @relation(fields: [wishlistEntryId], references: [id], onDelete: Cascade)
 
@@ -435,13 +455,13 @@ model DealOffer {
 }
 
 model PriceRefresh {
-  id             String   @id @default(cuid())
+  id              String     @id @default(cuid())
   wishlistEntryId String?
-  status         SyncStatus
-  country        String?
-  requestedAt    DateTime @default(now())
-  finishedAt     DateTime?
-  counts         Json?
+  status          SyncStatus
+  country         String?
+  requestedAt     DateTime   @default(now())
+  finishedAt      DateTime?
+  counts          Json?
 
   wishlistEntry WishlistEntry? @relation(fields: [wishlistEntryId], references: [id], onDelete: Cascade)
 }
@@ -451,13 +471,13 @@ model PriceRefresh {
 // ---------------------------------------------------------------------------
 
 model CompatibilitySnapshot {
-  id         String   @id @default(cuid())
-  gameId     String
-  provider   Provider
-  result     Json?
-  sourceUrl  String?
-  fetchedAt  DateTime @default(now())
-  expiresAt  DateTime?
+  id        String    @id @default(cuid())
+  gameId    String
+  provider  Provider
+  result    Json?
+  sourceUrl String?
+  fetchedAt DateTime  @default(now())
+  expiresAt DateTime?
 
   game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
@@ -465,12 +485,12 @@ model CompatibilitySnapshot {
 }
 
 model EnvironmentCompatibility {
-  id        String              @id @default(cuid())
-  gameId    String
+  id          String              @id @default(cuid())
+  gameId      String
   environment Environment
-  status    CompatibilityStatus
-  source    String?
-  updatedAt DateTime            @updatedAt
+  status      CompatibilityStatus
+  source      String?
+  updatedAt   DateTime            @updatedAt
 
   game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
@@ -482,13 +502,13 @@ model EnvironmentCompatibility {
 // ---------------------------------------------------------------------------
 
 model PossibleDuplicate {
-  id          String          @id @default(cuid())
-  gameAId     String
-  gameBId     String
-  evidence    Json?
-  confidence  Float?
-  status      DuplicateStatus @default(OPEN)
-  reviewedAt  DateTime?
+  id         String          @id @default(cuid())
+  gameAId    String
+  gameBId    String
+  evidence   Json?
+  confidence Float?
+  status     DuplicateStatus @default(OPEN)
+  reviewedAt DateTime?
 
   gameA Game @relation("DuplicatePairA", fields: [gameAId], references: [id], onDelete: Cascade)
   gameB Game @relation("DuplicatePairB", fields: [gameBId], references: [id], onDelete: Cascade)
@@ -544,23 +564,23 @@ model RecommendationFeedback {
 // ---------------------------------------------------------------------------
 
 model WallpaperState {
-  id          Int      @id @default(1)
-  candidates  Json?
-  selectedIdx Int      @default(0)
+  id           Int      @id @default(1)
+  candidates   Json?
+  selectedIdx  Int      @default(0)
   renderTarget Json?
-  cachedAt    DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  cachedAt     DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model SyncRun {
-  id                  String          @id @default(cuid())
-  provider            Provider
-  status              SyncStatus
-  startedAt           DateTime        @default(now())
-  finishedAt          DateTime?
-  counts              Json?
-  diagnostics         Json?
-  enrichmentJobs      EnrichmentJob[]
+  id             String          @id @default(cuid())
+  provider       Provider
+  status         SyncStatus
+  startedAt      DateTime        @default(now())
+  finishedAt     DateTime?
+  counts         Json?
+  diagnostics    Json?
+  enrichmentJobs EnrichmentJob[]
 }
 
 model CatalogOperation {

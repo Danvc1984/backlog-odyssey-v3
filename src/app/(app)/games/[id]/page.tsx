@@ -50,6 +50,11 @@ export default async function GameDetailPage({
           select: { id: true, name: true },
           orderBy: { name: "asc" },
         },
+        wishlistDlcs: {
+          where: { type: "DLC" },
+          select: { id: true, name: true, interest: true },
+          orderBy: [{ interest: "desc" }, { name: "asc" }],
+        },
         metadataSnapshots: {
           where: { provider: "RAWG" },
           orderBy: { fetchedAt: "desc" },
@@ -84,6 +89,17 @@ export default async function GameDetailPage({
   if (!game) {
     redirect("/library");
   }
+  if (game.type === "DLC" && game.baseGameId) {
+    redirect(`/games/${game.baseGameId}`);
+  }
+
+  const baseGames = game.type === "BASE_GAME"
+    ? await prisma.game.findMany({
+        where: { type: "BASE_GAME" },
+        select: { id: true, name: true },
+        orderBy: { name: "asc" },
+      })
+    : [];
 
   const otherGameName = possibleDuplicate
     ? possibleDuplicate.gameAId === id
@@ -226,7 +242,13 @@ export default async function GameDetailPage({
       </section>
 
       {game.type === "BASE_GAME" && (
-        <DlcSection baseGameId={game.id} dlcs={game.dlcs} />
+        <DlcSection
+          baseGameId={game.id}
+          baseGameName={game.name}
+          baseGames={baseGames}
+          dlcs={game.dlcs}
+          wishlistDlcs={game.wishlistDlcs}
+        />
       )}
 
       <section>

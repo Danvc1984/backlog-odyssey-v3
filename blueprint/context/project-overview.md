@@ -22,8 +22,9 @@ recommendations without becoming a launcher or storefront.
 
 ## Features
 
-The MVP feature set follows `blueprint/build-plan.md` in order. Feature 8 is the
-current headline area, with `8a` as the active sub-feature.
+The MVP feature set follows `blueprint/build-plan.md` in order. The next planned
+feature is `10a`, after the completed foundation, catalog integrity, RAWG
+enrichment, and DLC queue work.
 
 1. **App shell and auth gate** - Next.js shell and single-user Google access.
 2. **Manual catalog and library base** - Manual games and library filters.
@@ -53,20 +54,23 @@ current headline area, with `8a` as the active sub-feature.
      without rolling back or duplicating the import.
 9. **DLC model and unresolved Steam queue** - Required base-game ownership,
    explicit deletion and cascade behavior, and a persistent manual-review queue.
-10a. **Local wishlist, RAWG, and acquisition** - Independent wishes, optional
-    provider identity, local intent, RAWG snapshots, manual acquisition, and
-    metadata transfer.
+10a. **Local wishlist, RAWG, and acquisition** - Independent base-game wishes,
+    wishlist DLC linked to owned catalog games, optional provider identity,
+    local intent, RAWG snapshots, manual acquisition, metadata transfer,
+    acquired-entry removal, and optional base-game play-state transition.
 10b. **Price enrichment and purchase opportunities** - Manual and daily Mexican
      Steam and ITAD refreshes, source preference, target prices, stale-data
      handling, and opportunity signals.
 11. **Compatibility synthesis** - Asynchronous ProtonDB, Steam Deck Verified,
     anti-cheat, Windows fallback, personal overrides, retries, and progress.
 12. **Recommendation engine** - Explicit explainable play-next and buy runs,
-    deterministic ranking, warnings, DLC eligibility, dismissal, and calibration.
+    deterministic ranking, base-game affinity for wishlist DLC, warnings,
+    dismissal, and calibration.
 13. **Today dashboard** - Main and in-progress games, latest recommendations,
     recent Steam activity, offers, freshness, external links, and operation status.
-14. **Global visual foundation** - Accessible light, dark, and system modes with
-    reduced-data, reduced-motion, and fallback behavior.
+14. **Global visual foundation and full-app UI review** - Accessible light, dark,
+    and system modes, design-token consistency, responsive navigation, full-app
+    component polish, reduced-data, reduced-motion, and fallback behavior.
 15. **Wallhaven global background** - Optional cached SFW desktop background,
     reduced-data behavior, fallback, and attribution.
 16. **Game-detail dynamic themes** - RAWG imagery and derived colors limited to
@@ -178,8 +182,10 @@ data is replaceable and must not corrupt those records.
 
 - Independent, non-provisional wish with name, type (`BASE_GAME` or `DLC`), notes,
   local interest, optional provider and external identifiers, optional MXN target
-  price, optional source preference, and an independent RAWG snapshot.
-- It does not create a `Game` until manual acquisition.
+  price, optional source preference, and an independent RAWG snapshot for base
+  games.
+- A DLC wish requires a relation to one existing catalog base `Game`.
+- It does not create a catalog `Game` until manual acquisition.
 
 #### `WishlistMetadataSnapshot`
 
@@ -238,6 +244,8 @@ data is replaceable and must not corrupt those records.
 - Manual Steam synchronization does not automatically start RAWG enrichment.
 - Wishlist entries remain independent of catalog games until manual acquisition.
 - A DLC cannot be created without resolving an existing or newly created base game.
+- Wishlist DLC acquisition creates a catalog DLC under its linked base game,
+  removes the wishlist entry, and may offer a base-game play-state transition.
 
 ## Tech stack
 
@@ -302,16 +310,15 @@ settings, reduced-data behavior, or reduced-motion safeguards.
 
 ## Open questions
 
-- Assign the project-plan requirement for RAWG match suggestions in manual catalog
-  forms to a specific Feature 8 sub-feature. The approved split currently names
-  server matching and detail/global actions but does not call out that form UI.
-- Confirm the final RAWG API matching and attribution contract before implementing
-  8a. Provider data must remain server-side and source links must be preserved.
-- The project plan requires a persistent PostgreSQL enrichment queue, while the
-  current Prisma schema still needs the concrete `EnrichmentJob` shape. Lock it
-  during 8b before implementing retries or progress.
+- The project plan requires RAWG match suggestions in manual catalog forms, while
+  the build-plan wording emphasizes catalog enrichment actions. Confirm whether
+  that form flow is part of the completed RAWG work or should be revisited in a
+  later feature.
 - Validate the final API contracts for ProtonDB, Steam Deck Verified, and
   anti-cheat before Feature 11. Until then, compatibility evidence stays unknown.
-- Run `/feature` for the next unchecked build-plan leaf, currently `8a`. If the
-  visual direction needs exploration first, `/prototype` can create throwaway
-  static mockups without changing the main app code.
+- Confirm the exact Vercel/Supabase scheduler integration for daily price batches
+  during Feature 18. Steam sync remains user-initiated.
+
+Run `/feature` for the next unchecked build-plan item, currently `10a`. If the
+visual direction needs exploration first, `/prototype` can create throwaway
+static mockups without changing the main app code.

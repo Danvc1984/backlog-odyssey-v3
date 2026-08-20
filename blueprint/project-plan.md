@@ -34,15 +34,16 @@ registration, and collaboration are outside the MVP.
 - RAWG metadata enrichment for catalog and wishlist entries.
 - DLC model with explicit base-game ownership.
 - Persistent manual-review queue for unresolved Steam DLC.
-- Independent wishlist for base games and DLC.
-- Manual wishlist acquisition into the catalog.
+- Independent wishlist for base games and DLC linked to owned catalog games.
+- Manual wishlist acquisition into the catalog with optional base-game play state update.
 - ITAD/Steam price enrichment for wishlist entries.
 - Optional MXN target prices and source preference.
 - Compatibility evidence for Bazzite, Steam Deck, and Windows.
-- Deterministic explainable play-next and buy recommendations.
+- Deterministic explainable play-next and buy recommendations with DLC affinity weighting.
 - Recommendation runs with temporary dismissal and persistent calibration signals.
 - Today dashboard with recent Steam activity and wishlist offers.
-- Global visual foundation and optional Wallhaven background.
+- Global visual foundation, design tokens, and comprehensive full-app UI review.
+- Optional Wallhaven background.
 - Per-game detail themes based on RAWG metadata.
 - Settings and manual JSON export.
 - Deployment and CI readiness as the final planned milestone, without making it
@@ -63,42 +64,53 @@ The following are explicitly outside the MVP:
 `Game` represents catalog entries only. Wishlist entries are independent and
 do not create provisional `Game` records.
 
+A wishlist entry represents either:
+- An unowned base game (independent entry, optionally enriched with RAWG).
+- An unowned DLC for an already-owned catalog base game (requires a relation to
+  an existing catalog `Game`).
+
 A wishlist entry may exist without a provider or external identifier. It may
 store:
 
 - Name.
 - Base game or DLC type.
+- Target base game ID (required if type is DLC).
 - Notes and local interest.
 - Optional external identifiers.
-- Independent RAWG metadata snapshot.
+- Independent RAWG metadata snapshot (for base games).
 
 Price target and Steam/ITAD source preference belong to the later pricing
 feature, not the initial local wishlist feature.
 
-When a wishlist game is acquired manually:
+When a wishlist item is acquired manually:
 
-1. The user chooses the acquisition source.
-2. A real manual `Game` is created immediately.
-3. Wishlist metadata is copied into the game's RAWG snapshot.
-4. The selected availability is added.
-5. The wishlist entry for the base game is removed.
-6. Wishlist DLC remains until individually marked acquired.
+1. **For a base game:**
+   - The user chooses the acquisition source.
+   - A real manual `Game` is created immediately.
+   - Wishlist metadata is copied into the game's RAWG snapshot.
+   - The selected availability is added.
+   - The wishlist entry is removed.
+2. **For a DLC:**
+   - The user marks the wishlist DLC as acquired.
+   - A catalog `Game` (type `DLC`) is created linked to the referenced base game.
+   - The wishlist DLC entry is removed.
+   - The UI offers an optional one-click action to transition the base game's
+     play state (e.g. set to `PLAN_TO_PLAY` or flag `replay: true`).
 
 If a Steam App ID exists in wishlist data, the new manual game retains it so a
 later Steam sync updates the existing game instead of creating a duplicate.
 Duplicate detection remains a fallback for cases without reliable identity.
 
-A DLC cannot be created without resolving an existing or newly created base
-game. DLC acquisition always requires that resolution first. ROMs are excluded
-from wishlist and purchase recommendations.
+ROMs are excluded from wishlist and purchase recommendations.
 
 ## 5. DLC and Unresolved Steam DLC
 
 DLC catalog entries:
 
 - Must point to one existing base game.
-- Are created from a base-game detail flow or through a reviewed Steam-DLC flow.
-- Do not enter play-next recommendations.
+- Are created from a base-game detail flow, through a reviewed Steam-DLC flow,
+  or by acquiring a wishlist DLC.
+- Do not enter play-next recommendations directly.
 - May be deleted individually.
 - Are deleted through an explicit cascade when their base game is deleted.
 
@@ -214,16 +226,15 @@ Wishlist entries are useful either as reminders or planned purchases.
 
 The first wishlist feature is provider-independent:
 
-- Base-game and DLC entries are independent.
+- Base-game wishes are independent; DLC wishes link to owned catalog games.
 - Provider and external identifier are optional.
-- Entries may exist without catalog `Game` records.
 - Notes and local interest are stored locally.
-- Wishlist forms and a global wishlist action suggest/load RAWG metadata.
+- Wishlist forms and a global wishlist action suggest/load RAWG metadata for base games.
 - A base game can be acquired manually into the catalog.
 - Wishlist RAWG metadata transfers to the new catalog game when available.
 - The acquired base wishlist entry is removed.
-- Wishlist DLC remains until individually acquired.
-- The user decides whether associated DLC was purchased.
+- Acquiring a wishlist DLC creates the catalog DLC under the base game and offers
+  an optional prompt to update the base game's play state (e.g. `PLAN_TO_PLAY` or `replay: true`).
 
 ### Price enrichment and opportunity signals
 
@@ -275,8 +286,6 @@ The recommendation engine has two distinct outputs:
 - `play-next`: games already present in the catalog.
 - `buy`: base games and eligible DLC entries in the wishlist.
 
-A wishlist DLC cannot be recommended unless its base game is acquired.
-
 Recommendations are deterministic and explainable. Each item stores visible
 factors such as:
 
@@ -286,7 +295,7 @@ factors such as:
 - Compatibility.
 - Price and target-price status.
 - Provider freshness.
-- DLC eligibility.
+- DLC base-game affinity (ratings, completion status, replay flag of the owned base game).
 - Calibration adjustment.
 
 Recommendations are generated explicitly by the user. One `Update
@@ -326,14 +335,17 @@ It displays:
 The three wishlist offers are sorted primarily by discount percentage, with price
 or target-price status used as a tie-breaker.
 
-## 13. Visual Personalization
+## 13. Visual Personalization and UI Tidy-up
 
-### Global visual foundation
+### Global visual foundation & design system review
 
-The application shell supports:
+The application shell and existing components support:
 
 - Light, dark, and system modes.
-- Accessible contrast and readable overlays.
+- Accessible contrast, semantic color tokens, and readable overlays.
+- Standardized card layouts, badge hierarchies, and sheet/modal behaviors across
+  all views (Library, Game Detail, Wishlist, Dashboard, Settings).
+- Full-app visual polish and component cleanup.
 - Reduced-data and reduced-motion behavior where applicable.
 - Stable local fallback visuals.
 - Settings-controlled behavior.

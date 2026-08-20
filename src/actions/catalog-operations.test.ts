@@ -45,7 +45,6 @@ function makeSourceGame(overrides: Partial<MergeSourceGame> = {}): MergeSourceGa
     collections: [],
     tags: [],
     metadataSnapshots: [],
-    wishlistRowId: null,
     compatSnapshots: [],
     envCompat: [],
     ...overrides,
@@ -82,7 +81,7 @@ function makeGame(overrides: Record<string, unknown> = {}) {
     collections: [],
     tags: [],
     metadataSnapshots: [],
-    wishlistEntry: null,
+    wishlistDlcs: [],
     compatSnapshots: [],
     envCompat: [],
     ...overrides,
@@ -224,27 +223,19 @@ describe("planExternalIdUnion", () => {
 });
 
 describe("planOneToOneConflicts", () => {
-  it("reports a wishlist conflict when both games have an entry", () => {
+  it("does not treat wishlist DLC relations as one-to-one conflicts", () => {
     const result = planOneToOneConflicts(
-      { gameId: "game-a", wishlistRowId: "w1", compatSnapshots: [], envCompat: [] },
-      { gameId: "game-b", wishlistRowId: "w2", compatSnapshots: [], envCompat: [] },
+      { gameId: "game-a", compatSnapshots: [], envCompat: [] },
+      { gameId: "game-b", compatSnapshots: [], envCompat: [] },
     );
 
-    expect(result).toEqual([
-      {
-        kind: "wishlist",
-        key: "wishlist",
-        a: { gameId: "game-a", rowId: "w1" },
-        b: { gameId: "game-b", rowId: "w2" },
-      },
-    ]);
+    expect(result).toEqual([]);
   });
 
   it("reports compatibility conflicts per shared provider", () => {
     const result = planOneToOneConflicts(
       {
         gameId: "game-a",
-        wishlistRowId: null,
         compatSnapshots: [
           { id: "c1", provider: "PROTONDB" },
           { id: "c2", provider: "RAWG" },
@@ -253,7 +244,6 @@ describe("planOneToOneConflicts", () => {
       },
       {
         gameId: "game-b",
-        wishlistRowId: null,
         compatSnapshots: [{ id: "c3", provider: "PROTONDB" }],
         envCompat: [],
       },
@@ -273,13 +263,11 @@ describe("planOneToOneConflicts", () => {
     const result = planOneToOneConflicts(
       {
         gameId: "game-a",
-        wishlistRowId: null,
         compatSnapshots: [],
         envCompat: [{ id: "v1", environment: "BAZZITE" }],
       },
       {
         gameId: "game-b",
-        wishlistRowId: null,
         compatSnapshots: [],
         envCompat: [{ id: "v2", environment: "BAZZITE" }],
       },
@@ -299,13 +287,11 @@ describe("planOneToOneConflicts", () => {
     const result = planOneToOneConflicts(
       {
         gameId: "game-a",
-        wishlistRowId: "w1",
         compatSnapshots: [{ id: "c1", provider: "PROTONDB" }],
         envCompat: [{ id: "v1", environment: "BAZZITE" }],
       },
       {
         gameId: "game-b",
-        wishlistRowId: null,
         compatSnapshots: [],
         envCompat: [],
       },
@@ -561,14 +547,14 @@ describe("proposeMerge", () => {
     }
   });
 
-  it("reports a one-to-one wishlist conflict through the proposal", async () => {
+  it("does not report wishlist DLC relations as one-to-one conflicts", async () => {
     mockFindManyGames.mockResolvedValue([
-      makeGame({ wishlistEntry: { id: "w1" } }),
+      makeGame({ wishlistDlcs: [{ id: "w1" }] }),
       makeGame({
         id: "game-b",
         name: "Hades",
         origin: "STEAM_IMPORT",
-        wishlistEntry: { id: "w2" },
+        wishlistDlcs: [{ id: "w2" }],
       }),
     ]);
 
@@ -576,14 +562,7 @@ describe("proposeMerge", () => {
 
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.oneToOne).toEqual([
-        {
-          kind: "wishlist",
-          key: "wishlist",
-          a: { gameId: "game-a", rowId: "w1" },
-          b: { gameId: "game-b", rowId: "w2" },
-        },
-      ]);
+      expect(result.data.oneToOne).toEqual([]);
     }
   });
 
@@ -626,7 +605,7 @@ function makeGraphGame(overrides: Record<string, unknown> = {}): MergeGraphGame 
     collections: [],
     tags: [],
     metadataSnapshots: [],
-    wishlistEntry: null,
+    wishlistDlcs: [],
     compatSnapshots: [],
     envCompat: [],
     duplicatesA: [],
@@ -694,14 +673,7 @@ describe("resolveMergePlan", () => {
         },
       ],
     },
-    oneToOne: [
-      {
-        kind: "wishlist",
-        key: "wishlist",
-        a: { gameId: "game-a", rowId: "w1" },
-        b: { gameId: "game-b", rowId: "w2" },
-      },
-    ],
+    oneToOne: [],
     relations: { availability: 0, collections: 0, tags: 0, metadataSnapshots: 0 },
   } as Parameters<typeof resolveMergePlan>[0];
 
@@ -711,7 +683,7 @@ describe("resolveMergePlan", () => {
       finalName: "Hades",
       personal: { rating: { side: "a" } },
       externalIds: { steam: { rowId: "e1" } },
-      oneToOne: { wishlist: { side: "b" } },
+      oneToOne: {},
     });
 
     expect(result.ok).toBe(true);
@@ -728,7 +700,6 @@ describe("resolveMergePlan", () => {
         namespace: "itad",
         rowId: "e3",
       });
-      expect(result.plan.oneToOneKeep.wishlist).toBe("b");
     }
   });
 
@@ -738,7 +709,7 @@ describe("resolveMergePlan", () => {
       finalName: "Hades",
       personal: { rating: { value: 7 } },
       externalIds: { steam: { rowId: "e1" } },
-      oneToOne: { wishlist: { side: "a" } },
+      oneToOne: {},
     });
 
     expect(result).toEqual({
@@ -753,7 +724,7 @@ describe("resolveMergePlan", () => {
       finalName: "Hades",
       personal: { rating: { side: "a" } },
       externalIds: { steam: { rowId: "e1" } },
-      oneToOne: { wishlist: { side: "a" } },
+      oneToOne: {},
     });
 
     expect(result).toEqual({
@@ -768,7 +739,7 @@ describe("resolveMergePlan", () => {
       finalName: "   ",
       personal: { rating: { side: "a" } },
       externalIds: { steam: { rowId: "e1" } },
-      oneToOne: { wishlist: { side: "a" } },
+      oneToOne: {},
     });
 
     expect(result).toEqual({ ok: false, message: "Final name is required" });
@@ -780,7 +751,7 @@ describe("resolveMergePlan", () => {
       finalName: "Hades",
       personal: {},
       externalIds: { steam: { rowId: "e1" } },
-      oneToOne: { wishlist: { side: "a" } },
+      oneToOne: {},
     });
 
     expect(result).toEqual({ ok: false, message: 'Merge blocked: choose a value for "rating"' });
@@ -792,7 +763,7 @@ describe("resolveMergePlan", () => {
       finalName: "Hades",
       personal: { rating: "garbage" } as never,
       externalIds: { steam: { rowId: "e1" } },
-      oneToOne: { wishlist: { side: "a" } },
+      oneToOne: {},
     });
 
     expect(result.ok).toBe(false);
@@ -804,7 +775,7 @@ describe("resolveMergePlan", () => {
       finalName: "Hades",
       personal: { rating: { side: "a" } },
       externalIds: { steam: { rowId: "e-other" } },
-      oneToOne: { wishlist: { side: "a" } },
+      oneToOne: {},
     });
 
     expect(result).toEqual({
@@ -822,10 +793,7 @@ describe("resolveMergePlan", () => {
       oneToOne: {},
     });
 
-    expect(result).toEqual({
-      ok: false,
-      message: 'Merge blocked: choose a side for "wishlist"',
-    });
+    expect(result.ok).toBe(true);
   });
 });
 
@@ -967,24 +935,20 @@ describe("planMergeMutations", () => {
     expect(mutations.metadataDeletes.map((m) => m.id)).toEqual(["m-b"]);
   });
 
-  it("removes the losing wishlist row when a side is chosen", () => {
+  it("moves every wishlist DLC from the discarded base game", () => {
     const gameA = makeGraphGame({
       id: "game-a",
-      wishlistEntry: { id: "w-a", gameId: "game-a" },
+      wishlistDlcs: [{ id: "w-a", baseGameId: "game-a" }],
     });
     const gameB = makeGraphGame({
       id: "game-b",
       origin: "STEAM_IMPORT",
-      wishlistEntry: { id: "w-b", gameId: "game-b" },
+      wishlistDlcs: [{ id: "w-b", baseGameId: "game-b" }],
     });
 
-    const keepA = run(gameA, gameB, makeResolvedPlan({ oneToOneKeep: { wishlist: "a" } }));
-    expect(keepA.wishlistMoves.map((m) => m.id)).toEqual(["w-a"]);
-    expect(keepA.wishlistDeletes.map((m) => m.id)).toEqual(["w-b"]);
-
-    const keepB = run(gameA, gameB, makeResolvedPlan({ oneToOneKeep: { wishlist: "b" } }));
-    expect(keepB.wishlistMoves).toEqual([]);
-    expect(keepB.wishlistDeletes.map((m) => m.id)).toEqual(["w-a"]);
+    const mutations = run(gameA, gameB);
+    expect(mutations.wishlistMoves.map((m) => m.id)).toEqual(["w-a"]);
+    expect(mutations.wishlistDeletes).toEqual([]);
   });
 
   it("moves a one-to-one row that only exists on the discarded side", () => {
@@ -1295,7 +1259,7 @@ describe("buildDeleteSnapshotPlan", () => {
       collections: [{ collectionId: "col-1", gameId: "game-a" }],
       tags: [{ tagId: "tag-1", gameId: "game-a" }],
       metadataSnapshots: [{ id: "m1", gameId: "game-a", provider: "RAWG", fetchedAt: new Date("2026-01-01") }],
-      wishlistEntry: { id: "w1", gameId: "game-a" },
+      wishlistDlcs: [{ id: "w1", baseGameId: "game-a" }],
       compatSnapshots: [{ id: "c1", gameId: "game-a", provider: "PROTONDB" }],
       envCompat: [{ id: "v1", gameId: "game-a", environment: "BAZZITE" }],
       duplicatesA: [{ id: "dup-1", gameBId: "game-c", status: "OPEN" }],
@@ -1379,7 +1343,7 @@ describe("previewDelete", () => {
         { id: "game-d1", name: "Hades OST" },
         { id: "game-d2", name: "Hades Soundtrack" },
       ],
-      wishlistEntry: null,
+      wishlistDlcs: [],
       _count: {
         externalIds: 1,
         availability: 2,
@@ -1411,6 +1375,7 @@ describe("previewDelete", () => {
         compatSnapshots: 0,
         envCompat: 1,
         wishlist: false,
+        wishlistDlcCount: 0,
       });
     }
   });

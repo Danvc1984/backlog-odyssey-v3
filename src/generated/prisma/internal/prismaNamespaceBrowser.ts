@@ -68,6 +68,7 @@ export const ModelName = {
   LibraryEntry: 'LibraryEntry',
   GameAvailability: 'GameAvailability',
   WishlistEntry: 'WishlistEntry',
+  WishlistMetadataSnapshot: 'WishlistMetadataSnapshot',
   DealOffer: 'DealOffer',
   PriceRefresh: 'PriceRefresh',
   CompatibilitySnapshot: 'CompatibilitySnapshot',
@@ -321,15 +322,32 @@ export type GameAvailabilityScalarFieldEnum = (typeof GameAvailabilityScalarFiel
 
 export const WishlistEntryScalarFieldEnum = {
   id: 'id',
-  gameId: 'gameId',
+  name: 'name',
+  type: 'type',
+  baseGameId: 'baseGameId',
   interest: 'interest',
-  targetPrice: 'targetPrice',
+  targetPriceMxn: 'targetPriceMxn',
   notes: 'notes',
+  steamAppId: 'steamAppId',
+  sourcePreference: 'sourcePreference',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type WishlistEntryScalarFieldEnum = (typeof WishlistEntryScalarFieldEnum)[keyof typeof WishlistEntryScalarFieldEnum]
+
+
+export const WishlistMetadataSnapshotScalarFieldEnum = {
+  id: 'id',
+  wishlistEntryId: 'wishlistEntryId',
+  provider: 'provider',
+  payload: 'payload',
+  sourceUrl: 'sourceUrl',
+  fetchedAt: 'fetchedAt',
+  expiresAt: 'expiresAt'
+} as const
+
+export type WishlistMetadataSnapshotScalarFieldEnum = (typeof WishlistMetadataSnapshotScalarFieldEnum)[keyof typeof WishlistMetadataSnapshotScalarFieldEnum]
 
 
 export const DealOfferScalarFieldEnum = {

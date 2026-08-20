@@ -1,3 +1,72 @@
-export default function WishlistPage() {
-  return <h1 className="text-2xl font-semibold">Wishlist</h1>;
+import { WishlistFilterBar } from "@/components/wishlist/WishlistFilterBar";
+import { WishlistList } from "@/components/wishlist/WishlistList";
+import { AddWishlistDialog } from "@/components/wishlist/AddWishlistDialog";
+import { prisma } from "@/lib/prisma";
+
+interface WishlistSearchParams {
+  type?: string;
+  interest?: string;
+}
+
+export default async function WishlistPage({
+  searchParams,
+}: {
+  searchParams: Promise<WishlistSearchParams>;
+}) {
+  const params = await searchParams;
+  const type = ["BASE_GAME", "DLC"].includes(params.type ?? "")
+    ? (params.type as "BASE_GAME" | "DLC")
+    : undefined;
+  const interest = Number(params.interest);
+  const interestFilter = Number.isInteger(interest) && interest >= 1 && interest <= 5
+    ? interest
+    : undefined;
+
+  const [entries, baseGames] = await Promise.all([
+    prisma.wishlistEntry.findMany({
+      where: { type, interest: interestFilter },
+      orderBy: [{ interest: "desc" }, { updatedAt: "desc" }],
+      include: {
+        // Keep editable local fields in the card so its client actions remain self-contained.
+        baseGame: {
+          select: {
+            id: true,
+            name: true,
+            metadataSnapshots: {
+              where: { provider: "RAWG" },
+              orderBy: { fetchedAt: "desc" },
+              take: 1,
+              select: { payload: true, sourceUrl: true, fetchedAt: true },
+            },
+          },
+        },
+        metadataSnapshot: {
+          select: { payload: true, sourceUrl: true, fetchedAt: true },
+        },
+      },
+    }),
+    prisma.game.findMany({
+      where: { type: "BASE_GAME" },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold">Wishlist</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Games and DLCs you may want to acquire later.
+          </p>
+        </div>
+        <AddWishlistDialog baseGames={baseGames} />
+      </div>
+      <div className="mt-5">
+        <WishlistFilterBar />
+      </div>
+      <WishlistList entries={entries} baseGames={baseGames} />
+    </div>
+  );
 }

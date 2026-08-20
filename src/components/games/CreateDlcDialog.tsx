@@ -22,15 +22,11 @@ export function CreateDlcDialog({ baseGameId }: { baseGameId: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [availabilitySource, setAvailabilitySource] = useState("STEAM");
-  const [displayName, setDisplayName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const reset = () => {
     setName("");
-    setAvailabilitySource("STEAM");
-    setDisplayName("");
     setError(null);
   };
 
@@ -42,8 +38,6 @@ export function CreateDlcDialog({ baseGameId }: { baseGameId: string }) {
     const result = await createDlc({
       name,
       baseGameId,
-      availabilitySource: availabilitySource as "STEAM" | "OTHER_PLATFORM" | "ROM",
-      displayName: displayName || undefined,
     });
 
     setSubmitting(false);
@@ -69,12 +63,12 @@ export function CreateDlcDialog({ baseGameId }: { baseGameId: string }) {
       <DialogTrigger asChild>
         <Button type="button" variant="outline" size="sm">
           <Plus />
-          Add DLC
+          Add purchased DLC
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add DLC</DialogTitle>
+          <DialogTitle>Add purchased DLC</DialogTitle>
           <DialogDescription>
             Add a DLC entry attached to this base game.
           </DialogDescription>
@@ -90,32 +84,10 @@ export function CreateDlcDialog({ baseGameId }: { baseGameId: string }) {
               required
             />
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="dlc-source">Availability</Label>
-            <select
-              id="dlc-source"
-              value={availabilitySource}
-              onChange={(event) => setAvailabilitySource(event.target.value)}
-              className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm dark:bg-input/30"
-            >
-              <option value="STEAM">Steam</option>
-              <option value="OTHER_PLATFORM">Other platform</option>
-              <option value="ROM">ROM</option>
-            </select>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="dlc-display-name">Display name (optional)</Label>
-            <Input
-              id="dlc-display-name"
-              value={displayName}
-              onChange={(event) => setDisplayName(event.target.value)}
-              placeholder="e.g. Steam edition"
-            />
-          </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
             <Button type="submit" disabled={submitting}>
-              {submitting ? "Adding..." : "Add DLC"}
+              {submitting ? "Adding..." : "Add purchased DLC"}
             </Button>
           </DialogFooter>
         </form>
