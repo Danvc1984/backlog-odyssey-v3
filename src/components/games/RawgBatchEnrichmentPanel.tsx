@@ -50,8 +50,8 @@ function terminalBatchMessage(batch: RawgBatchView): string {
 function shouldShowBatch(batch: RawgBatchView): boolean {
   return (
     batch.status === "RUNNING" ||
-    batch.awaitingMatchGames.length > 0 ||
-    batch.failedGames.length > 0
+    batch.pendingAwaitingMatchGames.length > 0 ||
+    batch.pendingFailedGames.length > 0
   );
 }
 
@@ -221,11 +221,11 @@ export function RawgBatchEnrichmentPanel({
             <span>Needs review: {batch.counts.awaitingMatch}</span>
           </div>
 
-          {batch.awaitingMatchGames.length > 0 && (
+          {batch.pendingAwaitingMatchGames.length > 0 && (
             <div className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3">
               <p className="font-medium">Choose RAWG matches to finish these games</p>
               <ul className="mt-2 space-y-1">
-                {batch.awaitingMatchGames.map((game) => (
+                {batch.pendingAwaitingMatchGames.map((game) => (
                   <li key={game.id}>
                     <Link href={`/games/${game.id}`} className="text-primary hover:underline">
                       {game.name}
@@ -236,11 +236,11 @@ export function RawgBatchEnrichmentPanel({
             </div>
           )}
 
-          {batch.failedGames.length > 0 && (
+          {batch.pendingFailedGames.length > 0 && (
             <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3">
               <p className="font-medium">RAWG could not enrich these games</p>
               <ul className="mt-2 space-y-1">
-                {batch.failedGames.map((game) => (
+                {batch.pendingFailedGames.map((game) => (
                   <li key={game.id}>
                     <Link href={`/games/${game.id}`} className="text-primary hover:underline">
                       {game.name}

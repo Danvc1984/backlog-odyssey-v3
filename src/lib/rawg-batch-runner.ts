@@ -42,6 +42,8 @@ export interface RawgBatchView {
   finishedAt: string | null;
   awaitingMatchGames: Array<{ id: string; name: string }>;
   failedGames: Array<{ id: string; name: string }>;
+  pendingAwaitingMatchGames: Array<{ id: string; name: string }>;
+  pendingFailedGames: Array<{ id: string; name: string }>;
 }
 
 export type RawgBatchRunResult = {
@@ -64,6 +66,67 @@ type RawgBatchRecord = {
   }>;
 };
 
+type RawgPendingBatchRecord = {
+  enrichmentJobs: Array<{
+    status: "AWAITING_MATCH" | "FAILED";
+    game: { id: string; name: string };
+  }>;
+};
+
+type RawgPendingFollowUps = Pick<
+  RawgBatchView,
+  "pendingAwaitingMatchGames" | "pendingFailedGames"
+>;
+
+const emptyPendingFollowUps: RawgPendingFollowUps = {
+  pendingAwaitingMatchGames: [],
+  pendingFailedGames: [],
+};
+
+async function readPendingRawgFollowUps(): Promise<RawgPendingFollowUps> {
+  const batches = (await prisma.syncRun.findMany({
+    where: {
+      provider: "RAWG",
+      enrichmentJobs: {
+        some: {
+          provider: "RAWG",
+          status: { in: ["AWAITING_MATCH", "FAILED"] },
+        },
+      },
+    },
+    select: {
+      enrichmentJobs: {
+        where: {
+          provider: "RAWG",
+          status: { in: ["AWAITING_MATCH", "FAILED"] },
+        },
+        select: {
+          status: true,
+          game: { select: { id: true, name: true } },
+        },
+      },
+    },
+  })) as RawgPendingBatchRecord[];
+  const awaitingMatchGames = new Map<string, { id: string; name: string }>();
+  const failedGames = new Map<string, { id: string; name: string }>();
+  for (const batch of batches) {
+    for (const job of batch.enrichmentJobs) {
+      const games = job.status === "AWAITING_MATCH" ? awaitingMatchGames : failedGames;
+      games.set(job.game.id, job.game);
+    }
+  }
+  return {
+    pendingAwaitingMatchGames: [...awaitingMatchGames.values()],
+    pendingFailedGames: [...failedGames.values()],
+  };
+}
+
+async function addPendingRawgFollowUps(
+  view: RawgBatchView,
+): Promise<RawgBatchRunResult> {
+  return { success: true, data: { ...view, ...(await readPendingRawgFollowUps()) }, error: null };
+}
+
 function batchView(batch: RawgBatchRecord): RawgBatchView {
   const awaitingMatchGames = batch.enrichmentJobs
     .filter((job) => job.status === "AWAITING_MATCH")
@@ -82,6 +145,7 @@ function batchView(batch: RawgBatchRecord): RawgBatchView {
       finishedAt: batch.finishedAt?.toISOString() ?? null,
       awaitingMatchGames,
       failedGames,
+      ...emptyPendingFollowUps,
     };
   }
 
@@ -95,6 +159,7 @@ function batchView(batch: RawgBatchRecord): RawgBatchView {
     finishedAt: batch.finishedAt?.toISOString() ?? null,
     awaitingMatchGames,
     failedGames,
+    ...emptyPendingFollowUps,
   };
 }
 
@@ -122,14 +187,14 @@ async function refreshRawgBatch(batchId: string): Promise<RawgBatchRunResult | n
     },
     select: rawgBatchSelect,
   });
-  return { success: true, data: batchView(updated), error: null };
+  return addPendingRawgFollowUps(batchView(updated));
 }
 
 export async function getRawgBatchStatus(
   batchId: string,
 ): Promise<RawgBatchRunResult | null> {
   const batch = await readRawgBatch(batchId);
-  return batch ? { success: true, data: batchView(batch), error: null } : null;
+  return batch ? addPendingRawgFollowUps(batchView(batch)) : null;
 }
 
 export async function getLatestRawgBatchStatus(): Promise<RawgBatchRunResult | null> {
@@ -145,7 +210,7 @@ export async function getLatestRawgBatchStatus(): Promise<RawgBatchRunResult | n
     select: rawgBatchSelect,
   });
   if (pendingReviewBatch) {
-    return { success: true, data: batchView(pendingReviewBatch), error: null };
+    return addPendingRawgFollowUps(batchView(pendingReviewBatch));
   }
 
   const failedBatch = await prisma.syncRun.findFirst({
@@ -160,7 +225,7 @@ export async function getLatestRawgBatchStatus(): Promise<RawgBatchRunResult | n
     select: rawgBatchSelect,
   });
   if (failedBatch) {
-    return { success: true, data: batchView(failedBatch), error: null };
+    return addPendingRawgFollowUps(batchView(failedBatch));
   }
 
   const latestBatch = await prisma.syncRun.findFirst({
@@ -169,7 +234,7 @@ export async function getLatestRawgBatchStatus(): Promise<RawgBatchRunResult | n
     select: rawgBatchSelect,
   });
   return latestBatch
-    ? { success: true, data: batchView(latestBatch), error: null }
+    ? addPendingRawgFollowUps(batchView(latestBatch))
     : null;
 }
 

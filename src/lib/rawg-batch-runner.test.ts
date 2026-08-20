@@ -31,19 +31,21 @@ function batch(overrides: Record<string, unknown> = {}) {
 
 describe("RAWG catalog batch runner", () => {
   const findBatch = vi.fn();
+  const findPendingBatches = vi.fn();
   const findJobs = vi.fn();
   const updateBatch = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     (prisma as unknown as {
-      syncRun: { findFirst: typeof findBatch; update: typeof updateBatch };
+      syncRun: { findFirst: typeof findBatch; findMany: typeof findPendingBatches; update: typeof updateBatch };
       enrichmentJob: { findMany: typeof findJobs };
-    }).syncRun = { findFirst: findBatch, update: updateBatch };
+    }).syncRun = { findFirst: findBatch, findMany: findPendingBatches, update: updateBatch };
     (prisma as unknown as { enrichmentJob: { findMany: typeof findJobs } }).enrichmentJob = {
       findMany: findJobs,
     };
     findBatch.mockResolvedValue(batch());
+    findPendingBatches.mockResolvedValue([]);
     findJobs.mockResolvedValue([{ id: "job-1" }]);
     updateBatch.mockImplementation(async ({ data }: { data: Record<string, unknown> }) =>
       batch({ ...data }),
@@ -382,5 +384,35 @@ describe("RAWG catalog batch runner", () => {
       }),
     }));
     expect(findBatch).toHaveBeenCalledTimes(2);
+  });
+
+  it("combines pending games from older and newer RAWG batches without duplicates", async () => {
+    findBatch.mockResolvedValue(batch({ id: "batch-new" }));
+    findPendingBatches.mockResolvedValue([
+      {
+        enrichmentJobs: [
+          { status: "AWAITING_MATCH", game: { id: "game-import", name: "Imported Game" } },
+          { status: "FAILED", game: { id: "game-failed", name: "Failed Game" } },
+        ],
+      },
+      {
+        enrichmentJobs: [
+          { status: "AWAITING_MATCH", game: { id: "game-import", name: "Imported Game" } },
+          { status: "AWAITING_MATCH", game: { id: "game-manual", name: "Manual Game" } },
+        ],
+      },
+    ]);
+
+    await expect(getLatestRawgBatchStatus()).resolves.toMatchObject({
+      success: true,
+      data: {
+        id: "batch-new",
+        pendingAwaitingMatchGames: [
+          { id: "game-import", name: "Imported Game" },
+          { id: "game-manual", name: "Manual Game" },
+        ],
+        pendingFailedGames: [{ id: "game-failed", name: "Failed Game" }],
+      },
+    });
   });
 });

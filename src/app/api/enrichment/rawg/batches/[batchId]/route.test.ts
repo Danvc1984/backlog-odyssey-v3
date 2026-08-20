@@ -32,6 +32,8 @@ const batchResult = {
     finishedAt: null,
     awaitingMatchGames: [],
     failedGames: [],
+    pendingAwaitingMatchGames: [],
+    pendingFailedGames: [],
   },
   error: null,
 };
