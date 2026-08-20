@@ -347,22 +347,6 @@ export async function matchRawgGame(
     return { outcome: "MATCHED", matchMethod: "MANUAL_RAWG_SEARCH", game: selected };
   }
 
-  const steamAppId = request.steamAppId;
-  if (steamAppId !== null && steamAppId !== undefined) {
-    if (!isPositiveInteger(steamAppId)) {
-      return unavailable(providerError("MALFORMED_RESPONSE", "Steam App ID is invalid"));
-    }
-
-    const exact = await fetchGame(steamAppId, apiKey, fetchFn);
-    if (exact && "category" in exact) {
-      if (exact.category !== "HTTP" || exact.status !== 404) {
-        return unavailable(exact);
-      }
-    } else if (exact) {
-      return { outcome: "MATCHED", matchMethod: "EXACT_STEAM_APP_ID", game: exact };
-    }
-  }
-
   if (request.title.trim().length === 0) {
     return { outcome: "NOT_FOUND" };
   }

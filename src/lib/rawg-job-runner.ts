@@ -70,21 +70,6 @@ function retryDelay(attempt: number): number {
   return 1000 * 2 ** Math.max(0, attempt - 1);
 }
 
-function steamAppId(job: RunnerJob): number | null {
-  for (const availability of job.game.availability) {
-    if (availability.steamAppId === null) {
-      continue;
-    }
-
-    const parsed = Number(availability.steamAppId);
-    if (Number.isInteger(parsed) && parsed > 0) {
-      return parsed;
-    }
-  }
-
-  return null;
-}
-
 async function readJob(jobId: string): Promise<RunnerJob | null> {
   return prisma.enrichmentJob.findFirst({
     where: { id: jobId, provider: "RAWG" },
@@ -189,7 +174,6 @@ export async function runRawgEnrichmentJob(
   try {
     result = await matchRawgGame({
       title: job.game.name,
-      steamAppId: steamAppId(job),
       selectedRawgId: job.selectedRawgId,
     });
   } catch {

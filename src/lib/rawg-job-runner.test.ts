@@ -105,7 +105,7 @@ describe("RAWG job runner", () => {
     );
   });
 
-  it("forwards the catalog title, exact Steam App ID, and selected match", async () => {
+  it("forwards the catalog title and selected match without a Steam App ID", async () => {
     findFirst.mockResolvedValue(
       job({ selectedRawgId: 456, game: { id: "game-1", name: "Portal 2", availability: [{ steamAppId: "620" }] } }),
     );
@@ -117,12 +117,11 @@ describe("RAWG job runner", () => {
 
     expect(matchRawgGame).toHaveBeenCalledWith({
       title: "Portal 2",
-      steamAppId: 620,
       selectedRawgId: 456,
     });
   });
 
-  it("skips invalid Steam App IDs and uses the first valid one", async () => {
+  it("does not use Steam App IDs when resolving a match", async () => {
     findFirst.mockResolvedValue(
       job({
         game: {
@@ -135,9 +134,7 @@ describe("RAWG job runner", () => {
 
     await runRawgEnrichmentJob("job-1");
 
-    expect(matchRawgGame).toHaveBeenCalledWith(
-      expect.objectContaining({ steamAppId: 620 }),
-    );
+    expect(matchRawgGame).toHaveBeenCalledWith({ title: "Portal 2", selectedRawgId: null });
   });
 
   it("persists a matched game through the existing helper and completes the job", async () => {

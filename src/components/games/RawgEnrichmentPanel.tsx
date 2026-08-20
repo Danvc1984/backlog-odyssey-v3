@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { RefreshCw } from "lucide-react";
 import {
   applyRawgTitle,
   cancelRawgEnrichment,
   loadMoreRawgCandidates,
+  requestRawgMatchReview,
   requestRawgEnrichment,
   selectRawgMatch,
 } from "@/actions/rawg-enrichment";
@@ -189,6 +191,24 @@ export function RawgEnrichmentPanel({
     }
   };
 
+  const startMatchReview = async () => {
+    setRunning(true);
+    setError(null);
+    try {
+      const result = await requestRawgMatchReview({ gameId });
+      if (!result.success) {
+        throw new Error(result.error ?? "Failed to search RAWG matches");
+      }
+      setPendingOverwrite(false);
+      setCandidatePageIndex(0);
+      setJob(result.data.job);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Failed to search RAWG matches");
+    } finally {
+      setRunning(false);
+    }
+  };
+
   const chooseMatch = async (rawgId: number) => {
     if (!job) return;
 
@@ -274,7 +294,6 @@ export function RawgEnrichmentPanel({
     }
   };
 
-  const actionLabel = hasRawgSnapshot ? "Refresh RAWG metadata" : "Load RAWG metadata";
   const canStart = !job || job.status === "SUCCEEDED" || job.status === "FAILED";
 
   return (
@@ -288,11 +307,31 @@ export function RawgEnrichmentPanel({
             Load replaceable RAWG metadata without changing your catalog name automatically.
           </p>
         </div>
-        {canStart && !pendingOverwrite && (
-          <Button type="button" size="sm" disabled={running} onClick={() => void startEnrichment(false)}>
-            {running ? "Starting..." : actionLabel}
-          </Button>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {canStart && !pendingOverwrite && !hasRawgSnapshot && (
+            <Button type="button" size="sm" disabled={running} onClick={() => void startEnrichment(false)}>
+              {running ? "Starting..." : "Load RAWG metadata"}
+            </Button>
+          )}
+          {canStart && !pendingOverwrite && hasRawgSnapshot && (
+            <Button type="button" size="sm" variant="outline" disabled={running} onClick={() => void startMatchReview()}>
+              {running ? "Searching..." : "Choose another match"}
+            </Button>
+          )}
+          {canStart && !pendingOverwrite && hasRawgSnapshot && (
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              disabled={running}
+              onClick={() => void startEnrichment(false)}
+              aria-label="Refresh RAWG metadata"
+              title="Refresh RAWG metadata"
+            >
+              <RefreshCw aria-hidden="true" className={running ? "animate-spin" : undefined} />
+            </Button>
+          )}
+        </div>
       </div>
 
       {rawgTitle && rawgTitle !== catalogName && (

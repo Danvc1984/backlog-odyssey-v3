@@ -23,6 +23,10 @@ const requestRawgEnrichmentSchema = z
   })
   .strict();
 
+const requestRawgMatchReviewSchema = z
+  .object({ gameId: z.string().trim().min(1) })
+  .strict();
+
 const selectRawgMatchSchema = z
   .object({
     jobId: z.string().trim().min(1),
@@ -56,6 +60,10 @@ export type RequestRawgEnrichmentInput = z.input<
   typeof requestRawgEnrichmentSchema
 >;
 
+export type RequestRawgMatchReviewInput = z.infer<
+  typeof requestRawgMatchReviewSchema
+>;
+
 export type SelectRawgMatchInput = z.infer<typeof selectRawgMatchSchema>;
 
 export type CancelRawgEnrichmentInput = z.infer<typeof cancelRawgEnrichmentSchema>;
@@ -81,6 +89,72 @@ function queuedJobData() {
     startedAt: null,
     finishedAt: null,
   };
+}
+
+export async function requestRawgMatchReview(input: RequestRawgMatchReviewInput) {
+  try {
+    await requireUser();
+    const parsed = requestRawgMatchReviewSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false as const, data: null, error: "Invalid input" };
+    }
+
+    const game = await prisma.game.findUnique({
+      where: { id: parsed.data.gameId },
+      select: { id: true, name: true },
+    });
+    if (!game) {
+      return { success: false as const, data: null, error: "Game not found" };
+    }
+
+    const candidates = await searchRawgCandidates(game.name, 1);
+    if (!Array.isArray(candidates)) {
+      return { success: false as const, data: null, error: "RAWG could not search matches" };
+    }
+
+    const existingJob = await prisma.enrichmentJob.findUnique({
+      where: { gameId_provider: { gameId: game.id, provider: "RAWG" } },
+      select: { id: true },
+    });
+    const data = {
+      status: "AWAITING_MATCH" as const,
+      stage: "MATCHING" as const,
+      attempt: 0,
+      progress: 25,
+      candidatePayload: {
+        candidates,
+        nextPage: candidates.length === RAWG_SEARCH_PAGE_SIZE ? 2 : null,
+      } as unknown as Prisma.InputJsonValue,
+      selectedRawgId: null,
+      nextAttemptAt: null,
+      lastErrorCode: "AMBIGUOUS",
+      lastErrorMessage: "Select a RAWG match to continue",
+      startedAt: null,
+      finishedAt: null,
+    };
+    const job = existingJob
+      ? await prisma.enrichmentJob.update({
+          where: { id: existingJob.id },
+          data,
+          select: rawgJobSelect,
+        })
+      : await prisma.enrichmentJob.create({
+          data: { ...data, gameId: game.id, provider: "RAWG", maxAttempts: RAWG_JOB_MAX_ATTEMPTS },
+          select: rawgJobSelect,
+        });
+
+    return {
+      success: true as const,
+      data: { kind: "JOB" as const, job: toRawgEnrichmentJobView(job) },
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false as const,
+      data: null,
+      error: error instanceof Error ? error.message : "Failed to search RAWG matches",
+    };
+  }
 }
 
 export async function requestRawgEnrichment(

@@ -31,17 +31,24 @@ describe("matchRawgGame", () => {
     vi.stubEnv("RAWG_API_KEY", "test-key");
   });
 
-  it("prefers an exact Steam App ID match over title search", async () => {
-    fetchMock.mockResolvedValue(new Response(JSON.stringify(detail), { status: 200 }));
+  it("uses title search instead of treating a Steam App ID as a RAWG ID", async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ results: [{ id: 456, slug: "different-title", name: "Different title" }] }), {
+          status: 200,
+        }),
+      )
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ...detail, id: 456 }), { status: 200 }));
 
     await expect(
-      matchRawgGame({ title: "A different title", steamAppId: 123 }, { fetchFn: fetchMock }),
-    ).resolves.toMatchObject({ outcome: "MATCHED", matchMethod: "EXACT_STEAM_APP_ID" });
+      matchRawgGame({ title: "Different title" }, { fetchFn: fetchMock }),
+    ).resolves.toMatchObject({ outcome: "MATCHED", game: { id: 456 } });
 
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     const requestUrl = new URL(fetchMock.mock.calls[0][0] as string);
-    expect(requestUrl.pathname).toBe("/api/games/123");
-    expect(requestUrl.searchParams.get("key")).toBe("test-key");
+    expect(requestUrl.pathname).toBe("/api/games");
+    expect(requestUrl.searchParams.get("search")).toBe("Different title");
+    expect(new URL(fetchMock.mock.calls[1][0] as string).pathname).toBe("/api/games/456");
   });
 
   it("fetches a persisted selected RAWG ID directly", async () => {
@@ -122,27 +129,11 @@ describe("matchRawgGame", () => {
     });
   });
 
-  it("falls back to title search when the exact App ID is absent", async () => {
-    fetchMock
-      .mockResolvedValueOnce(new Response("not found", { status: 404 }))
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ results: [{ id: 123, slug: "portal-2", name: "Portal 2" }] }), {
-          status: 200,
-        }),
-      )
-      .mockResolvedValueOnce(new Response(JSON.stringify(detail), { status: 200 }));
-
-    await expect(
-      matchRawgGame({ title: "Portal 2", steamAppId: 999 }, { fetchFn: fetchMock }),
-    ).resolves.toMatchObject({ outcome: "MATCHED", matchMethod: "MANUAL_RAWG_SEARCH" });
-    expect(fetchMock).toHaveBeenCalledTimes(3);
-  });
-
   it.each([
     [
       "malformed detail",
       new Response(JSON.stringify({ id: 123 }), { status: 200 }),
-      { title: "Portal 2", steamAppId: 123 },
+      { title: "Portal 2" },
       "MALFORMED_RESPONSE",
     ],
     [
@@ -154,7 +145,7 @@ describe("matchRawgGame", () => {
     [
       "provider failure",
       new Response("unavailable", { status: 503 }),
-      { title: "Portal 2", steamAppId: 123 },
+      { title: "Portal 2" },
       "HTTP",
     ],
   ])("returns a safe provider failure for %s", async (_label, response, request, category) => {

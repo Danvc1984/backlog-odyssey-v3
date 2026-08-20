@@ -14,6 +14,7 @@ import {
   applyRawgTitle,
   cancelRawgEnrichment,
   loadMoreRawgCandidates,
+  requestRawgMatchReview,
   requestRawgEnrichment,
   selectRawgMatch,
 } from "./rawg-enrichment";
@@ -70,7 +71,7 @@ describe("RAWG enrichment actions", () => {
         update: typeof updateJob;
       };
     }).enrichmentJob = { findUnique: findJob, create: createJob, update: updateJob };
-    findGame.mockResolvedValue({ id: "game-1", metadataSnapshots: [] });
+    findGame.mockResolvedValue({ id: "game-1", name: "Hollow Knight", metadataSnapshots: [] });
     findJob.mockResolvedValue(null);
     createJob.mockImplementation(async ({ data }: { data: Record<string, unknown> }) =>
       job({ ...data, id: "job-created" }),
@@ -83,6 +84,29 @@ describe("RAWG enrichment actions", () => {
       name: data.name,
     }));
     vi.mocked(searchRawgCandidates).mockResolvedValue([]);
+  });
+
+  it("searches the current catalog name and creates an awaiting-match job", async () => {
+    vi.mocked(searchRawgCandidates).mockResolvedValue([candidate]);
+    findGame.mockResolvedValue({ id: "game-1", name: "Hollow Knight" });
+
+    const result = await requestRawgMatchReview({ gameId: "game-1" });
+
+    expect(result).toMatchObject({
+      success: true,
+      data: { kind: "JOB", job: { status: "AWAITING_MATCH" } },
+    });
+    expect(searchRawgCandidates).toHaveBeenCalledWith("Hollow Knight", 1);
+    expect(createJob).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          gameId: "game-1",
+          provider: "RAWG",
+          status: "AWAITING_MATCH",
+          candidatePayload: { candidates: [candidate], nextPage: null },
+        }),
+      }),
+    );
   });
 
   it("rejects invalid input before reading the database", async () => {

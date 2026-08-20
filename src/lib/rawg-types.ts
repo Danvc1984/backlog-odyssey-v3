@@ -72,7 +72,6 @@ export type RawgMatchResult =
 
 export interface RawgMatchRequest {
   title: string;
-  steamAppId?: number | null;
   selectedRawgId?: number | null;
 }
 
