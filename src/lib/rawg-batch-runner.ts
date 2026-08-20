@@ -31,6 +31,8 @@ const rawgBatchSelect = {
   },
 } as const;
 
+const RAWG_BATCH_CONCURRENCY = 5;
+
 export interface RawgBatchView {
   id: string;
   status: "RUNNING" | "SUCCESS" | "PARTIAL" | "FAILED";
@@ -183,7 +185,7 @@ export async function runRawgCatalogBatch(
   }
 
   const now = new Date();
-  const nextJob = await prisma.enrichmentJob.findFirst({
+  const readyJobs = await prisma.enrichmentJob.findMany({
     where: {
       syncRunId: batch.id,
       provider: "RAWG",
@@ -194,10 +196,11 @@ export async function runRawgCatalogBatch(
     },
     orderBy: [{ nextAttemptAt: "asc" }, { createdAt: "asc" }],
     select: { id: true },
+    take: RAWG_BATCH_CONCURRENCY,
   });
 
-  if (nextJob) {
-    await runRawgEnrichmentJob(nextJob.id);
+  if (readyJobs.length > 0) {
+    await Promise.all(readyJobs.map((job) => runRawgEnrichmentJob(job.id)));
   }
 
   return refreshRawgBatch(batch.id);

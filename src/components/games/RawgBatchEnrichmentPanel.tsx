@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { startRawgCatalogEnrichment } from "@/actions/rawg-batch-enrichment";
 import { Button } from "@/components/ui/button";
+import { activeRawgBatchPollId } from "@/lib/rawg-batch-polling";
 import type { RawgBatchView } from "@/lib/rawg-batch-runner";
 
 interface RawgBatchEnrichmentPanelProps {
@@ -107,8 +108,10 @@ export function RawgBatchEnrichmentPanel({
     return latest;
   }, [requestBatch, router, showBatch]);
 
+  const activeBatchId = activeRawgBatchPollId(batch);
+
   useEffect(() => {
-    if (!batch || batch.status !== "RUNNING") return;
+    if (!activeBatchId) return;
 
     let cancelled = false;
     let inFlight = false;
@@ -116,7 +119,7 @@ export function RawgBatchEnrichmentPanel({
       if (inFlight) return;
       inFlight = true;
       try {
-        const latest = await refreshBatch(batch.id);
+        const latest = await refreshBatch(activeBatchId);
         if (!cancelled && latest.status === "RUNNING") {
           await runBatch(latest.id);
         }
@@ -135,7 +138,7 @@ export function RawgBatchEnrichmentPanel({
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [batch, refreshBatch, runBatch]);
+  }, [activeBatchId, refreshBatch, runBatch]);
 
   const startBatch = async () => {
     setRunning(true);

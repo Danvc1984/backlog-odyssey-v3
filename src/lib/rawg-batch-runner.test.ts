@@ -31,20 +31,20 @@ function batch(overrides: Record<string, unknown> = {}) {
 
 describe("RAWG catalog batch runner", () => {
   const findBatch = vi.fn();
-  const findJob = vi.fn();
+  const findJobs = vi.fn();
   const updateBatch = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     (prisma as unknown as {
       syncRun: { findFirst: typeof findBatch; update: typeof updateBatch };
-      enrichmentJob: { findFirst: typeof findJob };
+      enrichmentJob: { findMany: typeof findJobs };
     }).syncRun = { findFirst: findBatch, update: updateBatch };
-    (prisma as unknown as { enrichmentJob: { findFirst: typeof findJob } }).enrichmentJob = {
-      findFirst: findJob,
+    (prisma as unknown as { enrichmentJob: { findMany: typeof findJobs } }).enrichmentJob = {
+      findMany: findJobs,
     };
     findBatch.mockResolvedValue(batch());
-    findJob.mockResolvedValue({ id: "job-1" });
+    findJobs.mockResolvedValue([{ id: "job-1" }]);
     updateBatch.mockImplementation(async ({ data }: { data: Record<string, unknown> }) =>
       batch({ ...data }),
     );
@@ -55,12 +55,37 @@ describe("RAWG catalog batch runner", () => {
     });
   });
 
-  it("runs at most one queued job and refreshes its durable summary", async () => {
-    const result = await runRawgCatalogBatch("batch-1");
+  it("runs up to five queued jobs concurrently and refreshes after they settle", async () => {
+    let releaseJobs: (() => void) | undefined;
+    const jobsStarted = new Promise<void>((resolve) => {
+      releaseJobs = resolve;
+    });
+    findJobs.mockResolvedValue([
+      { id: "job-1" },
+      { id: "job-2" },
+      { id: "job-3" },
+      { id: "job-4" },
+      { id: "job-5" },
+    ]);
+    vi.mocked(runRawgEnrichmentJob).mockImplementation(async () => {
+      await jobsStarted;
+      return { success: true, data: {} as never, error: null };
+    });
 
-    expect(runRawgEnrichmentJob).toHaveBeenCalledTimes(1);
+    const batchRun = runRawgCatalogBatch("batch-1");
+    await vi.waitFor(() => expect(runRawgEnrichmentJob).toHaveBeenCalledTimes(5));
+
+    expect(updateBatch).not.toHaveBeenCalled();
+    releaseJobs?.();
+    const result = await batchRun;
+
     expect(runRawgEnrichmentJob).toHaveBeenCalledWith("job-1");
-    expect(findJob).toHaveBeenCalledWith(expect.objectContaining({
+    expect(runRawgEnrichmentJob).toHaveBeenCalledWith("job-2");
+    expect(runRawgEnrichmentJob).toHaveBeenCalledWith("job-3");
+    expect(runRawgEnrichmentJob).toHaveBeenCalledWith("job-4");
+    expect(runRawgEnrichmentJob).toHaveBeenCalledWith("job-5");
+    expect(findJobs).toHaveBeenCalledWith(expect.objectContaining({
+      take: 5,
       where: expect.objectContaining({ syncRunId: "batch-1", provider: "RAWG" }),
     }));
     expect(updateBatch).toHaveBeenCalledWith(expect.objectContaining({
@@ -69,8 +94,84 @@ describe("RAWG catalog batch runner", () => {
     expect(result).toMatchObject({ success: true, data: { status: "RUNNING" } });
   });
 
+  it("runs fewer ready jobs without duplicating them", async () => {
+    findJobs.mockResolvedValue([{ id: "job-1" }, { id: "job-2" }]);
+
+    await runRawgCatalogBatch("batch-1");
+
+    expect(runRawgEnrichmentJob).toHaveBeenCalledTimes(2);
+    expect(runRawgEnrichmentJob).toHaveBeenCalledWith("job-1");
+    expect(runRawgEnrichmentJob).toHaveBeenCalledWith("job-2");
+    expect(new Set(vi.mocked(runRawgEnrichmentJob).mock.calls.map(([jobId]) => jobId)).size).toBe(2);
+  });
+
+  it("leaves the sixth ready job for a later five-job advance", async () => {
+    const readyJobs = Array.from({ length: 6 }, (_, index) => ({
+      id: `job-${index + 1}`,
+      status: "QUEUED" as const,
+      nextAttemptAt: null,
+      game: { id: `game-${index + 1}`, name: `Game ${index + 1}` },
+    }));
+    findBatch.mockResolvedValue(batch({ enrichmentJobs: readyJobs }));
+    findJobs.mockResolvedValue([
+      { id: "job-1" },
+      { id: "job-2" },
+      { id: "job-3" },
+      { id: "job-4" },
+      { id: "job-5" },
+    ]);
+
+    await runRawgCatalogBatch("batch-1");
+
+    expect(findJobs).toHaveBeenCalledWith(expect.objectContaining({ take: 5 }));
+    expect(runRawgEnrichmentJob).toHaveBeenCalledTimes(5);
+    expect(runRawgEnrichmentJob).not.toHaveBeenCalledWith("job-6");
+    expect(new Set(vi.mocked(runRawgEnrichmentJob).mock.calls.map(([jobId]) => jobId)).size).toBe(5);
+  });
+
+  it("keeps rate-limited retries and terminal failures observable after a concurrent group", async () => {
+    const initialJobs = [
+      { id: "job-retry", status: "QUEUED" as const, nextAttemptAt: null, game: { id: "game-retry", name: "Hades" } },
+      { id: "job-failed", status: "QUEUED" as const, nextAttemptAt: null, game: { id: "game-failed", name: "Portal" } },
+    ];
+    const settledJobs = [
+      {
+        id: "job-retry",
+        status: "RETRY_WAIT" as const,
+        nextAttemptAt: new Date(Date.now() + 1_000),
+        game: { id: "game-retry", name: "Hades" },
+      },
+      { id: "job-failed", status: "FAILED" as const, nextAttemptAt: null, game: { id: "game-failed", name: "Portal" } },
+    ];
+    findJobs.mockResolvedValue([{ id: "job-retry" }, { id: "job-failed" }]);
+    findBatch
+      .mockResolvedValueOnce(batch({ enrichmentJobs: initialJobs }))
+      .mockResolvedValueOnce(batch({ enrichmentJobs: settledJobs }));
+    updateBatch.mockImplementation(async ({ data }: { data: Record<string, unknown> }) =>
+      batch({ ...data, enrichmentJobs: settledJobs }),
+    );
+    vi.mocked(runRawgEnrichmentJob)
+      .mockResolvedValueOnce({ success: true, data: { status: "RETRY_WAIT" } as never, error: null })
+      .mockResolvedValueOnce({ success: true, data: { status: "FAILED" } as never, error: null });
+
+    const result = await runRawgCatalogBatch("batch-1");
+
+    expect(runRawgEnrichmentJob).toHaveBeenCalledTimes(2);
+    expect(updateBatch).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ status: "RUNNING", counts: expect.objectContaining({ retryWaiting: 1, failed: 1 }) }),
+    }));
+    expect(result).toMatchObject({
+      success: true,
+      data: {
+        status: "RUNNING",
+        counts: { retryWaiting: 1, failed: 1 },
+        failedGames: [{ id: "game-failed", name: "Portal" }],
+      },
+    });
+  });
+
   it("does not run retry-wait work before it is due", async () => {
-    findJob.mockResolvedValue(null);
+    findJobs.mockResolvedValue([]);
     findBatch
       .mockResolvedValueOnce(batch({
         enrichmentJobs: [{
@@ -92,7 +193,7 @@ describe("RAWG catalog batch runner", () => {
     await runRawgCatalogBatch("batch-1");
 
     expect(runRawgEnrichmentJob).not.toHaveBeenCalled();
-    expect(findJob).toHaveBeenCalledWith(expect.objectContaining({
+    expect(findJobs).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({
         OR: expect.arrayContaining([
           expect.objectContaining({ status: "RETRY_WAIT", nextAttemptAt: { lte: expect.any(Date) } }),
@@ -122,7 +223,7 @@ describe("RAWG catalog batch runner", () => {
         game: { id: "game-review", name: "Hades" },
       },
     ];
-    findJob.mockResolvedValue(null);
+    findJobs.mockResolvedValue([]);
     findBatch
       .mockResolvedValueOnce(batch({
         enrichmentJobs: settledJobs,
@@ -160,7 +261,7 @@ describe("RAWG catalog batch runner", () => {
     const result = await getRawgBatchStatus("batch-1");
 
     expect(result).toMatchObject({ success: true, data: { id: "batch-1" } });
-    expect(findJob).not.toHaveBeenCalled();
+    expect(findJobs).not.toHaveBeenCalled();
     expect(runRawgEnrichmentJob).not.toHaveBeenCalled();
   });
 
