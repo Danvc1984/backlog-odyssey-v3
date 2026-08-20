@@ -18,6 +18,7 @@ describe("importSteamGames", () => {
   const upsertLibraryEntry = vi.fn();
   const createGame = vi.fn();
   const updateConnection = vi.fn();
+  const upsertUnresolvedDlc = vi.fn();
   const transaction = vi.fn();
   const tx = {
     externalGameId: { findUnique: findUniqueExternalId },
@@ -25,6 +26,7 @@ describe("importSteamGames", () => {
     gameAvailability: { updateMany: updateManyAvailability },
     libraryEntry: { upsert: upsertLibraryEntry },
     steamConnection: { update: updateConnection },
+    unresolvedSteamDlc: { upsert: upsertUnresolvedDlc },
   };
 
   beforeEach(() => {
@@ -48,6 +50,7 @@ describe("importSteamGames", () => {
     upsertLibraryEntry.mockResolvedValue({});
     createGame.mockResolvedValue({ id: "game-new" });
     updateConnection.mockResolvedValue({});
+    upsertUnresolvedDlc.mockResolvedValue({});
     vi.mocked(queueRawgForImportedGames).mockResolvedValue({
       batchId: "batch-1",
       queued: 1,
@@ -182,6 +185,38 @@ describe("importSteamGames", () => {
       error: null,
     });
     expect(updateConnection).toHaveBeenCalled();
+  });
+
+  it("queues an owned DLC when its Steam base game is not imported", async () => {
+    findUniqueExternalId.mockResolvedValue(null);
+    vi.mocked(fetchOwnedGames).mockResolvedValue([
+      {
+        appid: 200,
+        name: "Expansion",
+        playtimeForever: 0,
+        rtimeLastPlayed: 0,
+        type: "DLC",
+        steamBaseAppId: "100",
+      },
+    ]);
+
+    const result = await importSteamGames();
+
+    expect(result).toEqual(expect.objectContaining({
+      success: true,
+      data: expect.objectContaining({ imported: 0, updated: 1 }),
+    }));
+    expect(upsertUnresolvedDlc).toHaveBeenCalledWith({
+      where: { steamAppId: "200" },
+      create: { steamAppId: "200", name: "Expansion", steamBaseAppId: "100" },
+      update: {
+        name: "Expansion",
+        steamBaseAppId: "100",
+        status: "PENDING",
+        discardedAt: null,
+      },
+    });
+    expect(createGame).not.toHaveBeenCalled();
   });
 
   it("returns an error when Steam is disconnected", async () => {

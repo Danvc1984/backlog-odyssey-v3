@@ -304,6 +304,23 @@ export type EnumOriginWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumOriginFilter<$PrismaModel>
 }
 
+export type EnumUnresolvedDlcStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.UnresolvedDlcStatus | Prisma.EnumUnresolvedDlcStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.UnresolvedDlcStatus[] | Prisma.ListEnumUnresolvedDlcStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.UnresolvedDlcStatus[] | Prisma.ListEnumUnresolvedDlcStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumUnresolvedDlcStatusFilter<$PrismaModel> | $Enums.UnresolvedDlcStatus
+}
+
+export type EnumUnresolvedDlcStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.UnresolvedDlcStatus | Prisma.EnumUnresolvedDlcStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.UnresolvedDlcStatus[] | Prisma.ListEnumUnresolvedDlcStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.UnresolvedDlcStatus[] | Prisma.ListEnumUnresolvedDlcStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumUnresolvedDlcStatusWithAggregatesFilter<$PrismaModel> | $Enums.UnresolvedDlcStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumUnresolvedDlcStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumUnresolvedDlcStatusFilter<$PrismaModel>
+}
+
 export type EnumMatchMethodFilter<$PrismaModel = never> = {
   equals?: $Enums.MatchMethod | Prisma.EnumMatchMethodFieldRefInput<$PrismaModel>
   in?: $Enums.MatchMethod[] | Prisma.ListEnumMatchMethodFieldRefInput<$PrismaModel>
@@ -1009,6 +1026,23 @@ export type NestedEnumOriginWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumOriginFilter<$PrismaModel>
   _max?: Prisma.NestedEnumOriginFilter<$PrismaModel>
+}
+
+export type NestedEnumUnresolvedDlcStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.UnresolvedDlcStatus | Prisma.EnumUnresolvedDlcStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.UnresolvedDlcStatus[] | Prisma.ListEnumUnresolvedDlcStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.UnresolvedDlcStatus[] | Prisma.ListEnumUnresolvedDlcStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumUnresolvedDlcStatusFilter<$PrismaModel> | $Enums.UnresolvedDlcStatus
+}
+
+export type NestedEnumUnresolvedDlcStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.UnresolvedDlcStatus | Prisma.EnumUnresolvedDlcStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.UnresolvedDlcStatus[] | Prisma.ListEnumUnresolvedDlcStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.UnresolvedDlcStatus[] | Prisma.ListEnumUnresolvedDlcStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumUnresolvedDlcStatusWithAggregatesFilter<$PrismaModel> | $Enums.UnresolvedDlcStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumUnresolvedDlcStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumUnresolvedDlcStatusFilter<$PrismaModel>
 }
 
 export type NestedEnumMatchMethodFilter<$PrismaModel = never> = {

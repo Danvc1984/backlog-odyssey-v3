@@ -119,6 +119,11 @@ enum EnrichmentJobStage {
   FAILED
 }
 
+enum UnresolvedDlcStatus {
+  PENDING
+  DISCARDED
+}
+
 enum Provider {
   PROTONDB
   ARE_WE_ANTICHEAT_YET
@@ -236,6 +241,19 @@ model Game {
   @@index([baseGameId])
   @@index([origin])
   @@index([type])
+}
+
+model UnresolvedSteamDlc {
+  id             String             @id @default(cuid())
+  steamAppId     String             @unique
+  name           String
+  steamBaseAppId String?
+  status         UnresolvedDlcStatus @default(PENDING)
+  discardedAt    DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@index([status])
 }
 
 model ExternalGameId {

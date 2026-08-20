@@ -93,7 +93,7 @@ export default async function LibraryPage({
         : undefined
       : undefined;
 
-  const [manualCollections, systemCollections, latestRawgBatch] = await Promise.all([
+  const [manualCollections, systemCollections, latestRawgBatch, pendingUnresolvedDlc] = await Promise.all([
     prisma.collection.findMany({
       where: { isSystem: false },
       orderBy: { name: "asc" },
@@ -101,6 +101,7 @@ export default async function LibraryPage({
     }),
     getSystemCollections(),
     getLatestRawgBatchStatus(),
+    prisma.unresolvedSteamDlc.count({ where: { status: "PENDING" } }),
   ]);
 
   const systemDef =
@@ -163,6 +164,14 @@ export default async function LibraryPage({
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Library</h1>
         <div className="flex items-center gap-3">
+          {pendingUnresolvedDlc > 0 && (
+            <Link
+              href="/settings"
+              className="rounded-md bg-amber-500/15 px-2 py-1 text-sm font-medium text-amber-700 hover:underline dark:text-amber-300"
+            >
+              Review DLC ({pendingUnresolvedDlc})
+            </Link>
+          )}
           <Link
             href="/library?duplicates=true"
             className="text-sm text-muted-foreground hover:underline"

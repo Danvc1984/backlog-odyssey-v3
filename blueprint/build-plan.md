@@ -41,7 +41,7 @@
 
 ## DLC and wishlist
 
-- [ ] 9. **DLC model and unresolved Steam queue** - DLC created only from a base-game
+- [x] 9. **DLC model and unresolved Steam queue** - DLC created only from a base-game
   detail page or reviewed Steam flow, required base-game relation, individual
   deletion, explicit base-game cascade behavior, persistent unresolved-DLC queue,
   manual link/create/discard actions, and one-confirmation base-plus-DLC creation

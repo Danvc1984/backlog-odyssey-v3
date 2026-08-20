@@ -68,6 +68,32 @@ describe("fetchOwnedGames", () => {
     );
   });
 
+  it("classifies Steam DLC and records its full-game app id", async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            response: {
+              games: [{ appid: 200, name: "Expansion", playtime_forever: 0 }],
+            },
+          }),
+          { status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            "200": { success: true, data: { type: "dlc", fullgame: { appid: 100 } } },
+          }),
+          { status: 200 },
+        ),
+      );
+
+    await expect(fetchOwnedGames("steam-id", "test-key")).resolves.toEqual([
+      expect.objectContaining({ type: "DLC", steamBaseAppId: "100" }),
+    ]);
+  });
+
   it("returns an empty list for malformed payloads and ignores malformed games", async () => {
     fetchMock.mockResolvedValue(
       new Response(

@@ -57,6 +57,7 @@ export const ModelName = {
   AppSettings: 'AppSettings',
   SteamConnection: 'SteamConnection',
   Game: 'Game',
+  UnresolvedSteamDlc: 'UnresolvedSteamDlc',
   ExternalGameId: 'ExternalGameId',
   MetadataSnapshot: 'MetadataSnapshot',
   EnrichmentJob: 'EnrichmentJob',
@@ -180,6 +181,20 @@ export const GameScalarFieldEnum = {
 } as const
 
 export type GameScalarFieldEnum = (typeof GameScalarFieldEnum)[keyof typeof GameScalarFieldEnum]
+
+
+export const UnresolvedSteamDlcScalarFieldEnum = {
+  id: 'id',
+  steamAppId: 'steamAppId',
+  name: 'name',
+  steamBaseAppId: 'steamBaseAppId',
+  status: 'status',
+  discardedAt: 'discardedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UnresolvedSteamDlcScalarFieldEnum = (typeof UnresolvedSteamDlcScalarFieldEnum)[keyof typeof UnresolvedSteamDlcScalarFieldEnum]
 
 
 export const ExternalGameIdScalarFieldEnum = {

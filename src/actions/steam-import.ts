@@ -36,12 +36,66 @@ async function importGame(
       where: { gameId: existing.gameId, source: "STEAM" },
       data: availability,
     });
-    await tx.libraryEntry.upsert({
-      where: { gameId: existing.gameId },
-      create: { gameId: existing.gameId },
-      update: {},
-    });
+    if (game.type !== "DLC") {
+      await tx.libraryEntry.upsert({
+        where: { gameId: existing.gameId },
+        create: { gameId: existing.gameId },
+        update: {},
+      });
+    }
     return { kind: "updated" };
+  }
+
+  if (game.type === "DLC") {
+    const baseExternalId = game.steamBaseAppId
+      ? await tx.externalGameId.findUnique({
+          where: {
+            namespace_externalId: {
+              namespace: "STEAM_APP",
+              externalId: game.steamBaseAppId,
+            },
+          },
+          select: { gameId: true, game: { select: { type: true } } },
+        })
+      : null;
+
+    if (!baseExternalId || baseExternalId.game.type !== "BASE_GAME") {
+      await tx.unresolvedSteamDlc.upsert({
+        where: { steamAppId: externalId },
+        create: {
+          steamAppId: externalId,
+          name: game.name,
+          steamBaseAppId: game.steamBaseAppId ?? null,
+        },
+        update: {
+          name: game.name,
+          steamBaseAppId: game.steamBaseAppId ?? null,
+          status: "PENDING",
+          discardedAt: null,
+        },
+      });
+      return { kind: "updated" };
+    }
+
+    const createdDlc = await tx.game.create({
+      data: {
+        type: "DLC",
+        origin: "STEAM_IMPORT",
+        name: game.name,
+        baseGameId: baseExternalId.gameId,
+        externalIds: {
+          create: {
+            namespaceId: externalId,
+            namespace: "STEAM_APP",
+            externalId,
+            matchMethod: "EXACT_STEAM_APP_ID",
+          },
+        },
+        availability: { create: availability },
+      },
+      select: { id: true },
+    });
+    return { kind: "imported", gameId: createdDlc.id };
   }
 
   const createdGame = await tx.game.create({
@@ -95,7 +149,10 @@ export async function importSteamGames() {
       let updated = 0;
       const createdGameIds: string[] = [];
 
-      for (const game of games) {
+      const orderedGames = [...games].sort(
+        (left, right) => Number(left.type === "DLC") - Number(right.type === "DLC"),
+      );
+      for (const game of orderedGames) {
         const outcome = await importGame(tx, game);
         if (outcome.kind === "imported") {
           imported += 1;

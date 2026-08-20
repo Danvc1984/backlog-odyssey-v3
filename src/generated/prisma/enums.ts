@@ -160,6 +160,14 @@ export const EnrichmentJobStage = {
 export type EnrichmentJobStage = (typeof EnrichmentJobStage)[keyof typeof EnrichmentJobStage]
 
 
+export const UnresolvedDlcStatus = {
+  PENDING: 'PENDING',
+  DISCARDED: 'DISCARDED'
+} as const
+
+export type UnresolvedDlcStatus = (typeof UnresolvedDlcStatus)[keyof typeof UnresolvedDlcStatus]
+
+
 export const Provider = {
   PROTONDB: 'PROTONDB',
   ARE_WE_ANTICHEAT_YET: 'ARE_WE_ANTICHEAT_YET',

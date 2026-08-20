@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PersonalFieldsForm } from "@/components/games/PersonalFieldsForm";
 import { PlayStateSection } from "@/components/games/PlayStateSection";
@@ -11,6 +10,8 @@ import { AvailabilityRowForm } from "@/components/games/AvailabilityRowForm";
 import { GameNameForm } from "@/components/games/GameNameForm";
 import { MetadataSection } from "@/components/games/MetadataSection";
 import { RawgEnrichmentPanel } from "@/components/games/RawgEnrichmentPanel";
+import { DlcSection } from "@/components/games/DlcSection";
+import { ParentBaseGameBanner } from "@/components/games/ParentBaseGameBanner";
 import { rawgJobSelect, toRawgEnrichmentJobView } from "@/lib/rawg-job-view";
 import type { RawgMetadataPayload } from "@/lib/rawg-types";
 
@@ -34,6 +35,9 @@ export default async function GameDetailPage({
     prisma.game.findUnique({
       where: { id },
       include: {
+        baseGame: {
+          select: { id: true, name: true },
+        },
         libraryEntry: true,
         availability: true,
         tags: {
@@ -95,6 +99,11 @@ export default async function GameDetailPage({
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold">{game.name}</h1>
+        {game.type === "DLC" && (
+          <div className="mt-4">
+            <ParentBaseGameBanner baseGame={game.baseGame} />
+          </div>
+        )}
         <div className="mt-4">
           <GameNameForm key={game.name} gameId={game.id} initialName={game.name} />
         </div>
@@ -216,24 +225,9 @@ export default async function GameDetailPage({
         />
       </section>
 
-      <section>
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          DLC
-        </h2>
-        {game.dlcs.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No DLC owned.</p>
-        ) : (
-          <ul className="grid gap-1 text-sm">
-            {game.dlcs.map((dlc) => (
-              <li key={dlc.id}>
-                <Link href={`/games/${dlc.id}`} className="hover:underline">
-                  {dlc.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {game.type === "BASE_GAME" && (
+        <DlcSection baseGameId={game.id} dlcs={game.dlcs} />
+      )}
 
       <section>
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">

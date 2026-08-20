@@ -80,6 +80,22 @@ export async function syncSteamPlaytime() {
         });
 
         if (!externalId) {
+          if (game.type === "DLC") {
+            await tx.unresolvedSteamDlc.upsert({
+              where: { steamAppId: String(game.appid) },
+              create: {
+                steamAppId: String(game.appid),
+                name: game.name,
+                steamBaseAppId: game.steamBaseAppId ?? null,
+              },
+              update: {
+                name: game.name,
+                steamBaseAppId: game.steamBaseAppId ?? null,
+                status: "PENDING",
+                discardedAt: null,
+              },
+            });
+          }
           result.skipped += 1;
           continue;
         }

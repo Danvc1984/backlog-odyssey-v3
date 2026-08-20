@@ -16,11 +16,13 @@ describe("syncSteamPlaytime", () => {
   const updateSyncRun = vi.fn();
   const findUniqueExternalId = vi.fn();
   const updateManyAvailability = vi.fn();
+  const upsertUnresolvedDlc = vi.fn();
   const transaction = vi.fn();
   const tx = {
     syncRun: { create: createSyncRun, update: updateSyncRun },
     externalGameId: { findUnique: findUniqueExternalId },
     gameAvailability: { updateMany: updateManyAvailability },
+    unresolvedSteamDlc: { upsert: upsertUnresolvedDlc },
   };
 
   beforeEach(() => {
@@ -43,6 +45,7 @@ describe("syncSteamPlaytime", () => {
     updateSyncRun.mockResolvedValue({});
     findUniqueExternalId.mockResolvedValue({ gameId: "game-1" });
     updateManyAvailability.mockResolvedValue({ count: 1 });
+    upsertUnresolvedDlc.mockResolvedValue({});
   });
 
   it("updates existing Steam availability and logs success", async () => {
@@ -83,6 +86,33 @@ describe("syncSteamPlaytime", () => {
     expect(updateSyncRun).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ status: "SUCCESS" }),
     }));
+  });
+
+  it("reactivates a discarded unresolved DLC when it remains absent", async () => {
+    findUniqueExternalId.mockResolvedValue(null);
+    vi.mocked(fetchOwnedGames).mockResolvedValue([
+      {
+        appid: 200,
+        name: "Expansion",
+        playtimeForever: 0,
+        rtimeLastPlayed: 0,
+        type: "DLC",
+        steamBaseAppId: "100",
+      },
+    ]);
+
+    await syncSteamPlaytime();
+
+    expect(upsertUnresolvedDlc).toHaveBeenCalledWith({
+      where: { steamAppId: "200" },
+      create: { steamAppId: "200", name: "Expansion", steamBaseAppId: "100" },
+      update: {
+        name: "Expansion",
+        steamBaseAppId: "100",
+        status: "PENDING",
+        discardedAt: null,
+      },
+    });
   });
 
   it("returns a failed result when Steam returns no games", async () => {

@@ -6,6 +6,8 @@ export interface OwnedGame {
   name: string;
   playtimeForever: number;
   rtimeLastPlayed: number;
+  type?: "DLC";
+  steamBaseAppId?: string;
 }
 
 interface SteamOwnedGameResponse {
@@ -18,6 +20,18 @@ interface SteamOwnedGameResponse {
 interface SteamOwnedGamesResponse {
   response?: {
     games?: unknown;
+  };
+}
+
+interface SteamAppDetails {
+  type?: unknown;
+  fullgame?: { appid?: unknown };
+}
+
+interface SteamAppDetailsResponse {
+  [appid: string]: {
+    success?: unknown;
+    data?: SteamAppDetails;
   };
 }
 
@@ -82,11 +96,53 @@ export async function fetchOwnedGames(
       return [];
     }
 
-    return games.flatMap((game) => {
+    const ownedGames = games.flatMap((game) => {
       const normalized = normalizeGame(game);
       return normalized ? [normalized] : [];
+    });
+
+    const details = await fetchOwnedGameDetails(ownedGames.map((game) => game.appid));
+    return ownedGames.map((game) => {
+      const detail = details.get(game.appid);
+      if (detail?.type !== "dlc" || !Number.isInteger(detail.fullGameAppId)) {
+        return game;
+      }
+      return {
+        ...game,
+        type: "DLC" as const,
+        steamBaseAppId: String(detail.fullGameAppId),
+      };
     });
   } catch {
     return [];
   }
+}
+
+async function fetchOwnedGameDetails(appids: number[]) {
+  const details = new Map<number, { type: string; fullGameAppId: number | null }>();
+  await Promise.all(
+    appids.map(async (appid) => {
+      try {
+        const params = new URLSearchParams({ appids: String(appid), filters: "basic" });
+        const response = await fetch(
+          `https://store.steampowered.com/api/appdetails?${params}`,
+          { cache: "no-store" },
+        );
+        if (!response.ok) return;
+        const payload = (await response.json()) as SteamAppDetailsResponse;
+        const app = payload[String(appid)];
+        const fullGameAppId = app?.data?.fullgame?.appid;
+        details.set(appid, {
+          type: typeof app?.data?.type === "string" ? app.data.type : "",
+          fullGameAppId:
+            typeof fullGameAppId === "number" && Number.isInteger(fullGameAppId)
+              ? fullGameAppId
+              : null,
+        });
+      } catch {
+        // A details failure must not prevent importing the owned-game list.
+      }
+    }),
+  );
+  return details;
 }
