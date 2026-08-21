@@ -52,55 +52,75 @@
   catalog with metadata transfer, acquired wishlist removal, and optional base-game
   play state transition on DLC acquisition
 
-- [ ] 10b. **Price enrichment and purchase opportunities** - one global manual
-  Steam/ITAD Mexican-price refresh through a persistent, idempotent queue; cheapest
-  valid-offer selection with visible alternatives and MX activation warnings; optional
-  MXN targets; 48-hour freshness; bounded retries; clear partial failures; and
-  opportunity signals without automatic recommendation runs. Vercel Cron activation is
-  deferred to feature 18.
+- [ ] 10b. **Price enrichment and purchase opportunities** - provenance-tracked
+  identity (Steam import auto-confirm, manual URL/AppID paste, RAWG-derived
+  suggest-and-confirm extending only the wishlist snapshot), ITAD via cached
+  AppID lookup and batched `country=MX` calls behind one global manual refresh
+  on a persistent idempotent queue; cheapest valid-offer selection persisting
+  the cheapest 8-10 offers with visible alternatives and MX activation
+  warnings; display-only historical lows; inline MXN targets; 48-hour
+  freshness; bounded retries; clear partial failures; opportunity badges
+  without automatic recommendation runs. Vercel Cron activation deferred to 18.
 
 - [ ] 10c. **Steam wishlist import and enrichment** - explicit Wishlist import;
-  idempotent Steam-App-ID creation of new base-game wishes with neutral interest and
-  RAWG follow-up; conservative local-match review; persistent ignored and unresolved-DLC
-  queues; silent owned-game omission; and non-authoritative Steam sync status.
+  idempotent Steam-App-ID creation of new base-game wishes with neutral
+  interest and RAWG follow-up; conservative local-match review using the 7a
+  matcher where linking is never automatic and stores identity with
+  provenance; one unresolved-DLC queue shared with library sync and
+  discriminated by source; persistent ignored queue; silent owned-game
+  omission; header sync chip and persistent result summary; non-authoritative
+  Steam sync status.
 
 ## Compatibility and recommendations
 
-- [ ] 11. **Compatibility synthesis** - asynchronous post-RAWG ProtonDB evidence
-  for Bazzite and Steam Deck, Steam Deck Verified fallback, anti-cheat evidence,
-  implicit Windows fallback, mixed-evidence handling, personal overrides,
-  retry states, and batch progress
+- [ ] 11. **Compatibility synthesis** - asynchronous post-RAWG ProtonDB
+  evidence for Bazzite and Steam Deck with Deck Verified fallback; AWAY
+  dataset for anti-cheat; manual Steam AppID entry into ExternalGameId with
+  ROM-only games exempt as not applicable; implicit Windows fallback;
+  mixed-evidence handling with attribution; personal overrides; single
+  180-day freshness window; post-RAWG auto-queue and per-game manual refresh;
+  retry states; batch progress
 
-- [ ] 12. **Recommendation engine** - explicit combined runs with three catalog
-  play-next and three wishlist buy results, deterministic explanations led by
-  manual signals, base-game affinity boost for wishlist DLC, optional target-price
-  signals, visible unknown/stale warnings without score penalties, dismissal, and
-  calibration
+- [ ] 12. **Recommendation engine** - explicit combined runs with three
+  play-next and three buy results; deterministic explanations led by manual
+  signals; eligibility rules (no hidden/main/in-progress/DLC in play-next);
+  compatibility as warning-only context that never moves rank in any state;
+  fresh-discount offer quality with historical-low tiebreaks and stale
+  contributing nothing; boost-only DLC affinity; optional target-price
+  signals; dismissal; calibration with exempt counters; rolling 12-month run
+  retention
 
-- [ ] 13. **Today dashboard** - main game, in-progress games, the latest three
-  play-next and three buy results, recent Steam games/playtime, three best
-  offers, provider freshness, background-operation progress, and external links
+- [ ] 13. **Today dashboard** - post-login landing composing main game,
+  in-progress games, latest three play-next and buy results, recent Steam
+  activity/playtime, three best offers sorted by discount, provider
+  freshness, background-operation progress, and external links
 
 ## Personalization and operations
 
-- [ ] 14. **Global visual foundation and full-app UI review** - light/dark/system
-  modes, accessible contrast, design token consistency, responsive desktop/mobile
-  navigation, comprehensive UI tidy-up across all completed pages and components,
-  reduced-data behavior, reduced-motion safeguards, and fallback visuals
+- [ ] 14. **Global visual foundation and full-app UI review** -
+  prototype-validated dark-first theme derived from blueprint/reference/
+  using dual-accent semantic tokens (cyan interactive, magenta opportunity,
+  amber warning), accessible contrast, token consistency, responsive
+  desktop/mobile navigation, full-app tidy-up, reduced-data and reduced-motion
+  safeguards, fallback visuals
 
-- [ ] 15. **Wallhaven global background** - SFW cached candidates, desktop-oriented
-  display, reduced-data behavior, fallback, and attribution
+- [ ] 15. **Wallhaven global background** - SFW keyword-pool caching (~10
+  candidates), deterministic daily rotation with shuffle, desktop-oriented
+  display, reduced-data hard-off, staleness-triggered queued refresh,
+  fallback, and attribution
 
-- [ ] 16. **Game-detail dynamic themes** - RAWG imagery and derived colors applied
-  only to game detail pages, contrast overlays, accessibility safeguards, and
-  deterministic fallback
+- [ ] 16. **Game-detail dynamic themes** - server-side dominant-color
+  derivation during RAWG enrichment stored in the replaceable snapshot,
+  applied read-only to detail pages with contrast overlays, accessibility
+  safeguards, and deterministic fallback
 
-- [ ] 17. **Settings and manual export** - global Steam/ITAD preference, sessions,
-  theme, accessibility, Wallhaven controls, reduced-data settings, provider
-  refresh/retry controls, queue progress, and personal-data-only JSON export
+- [ ] 17. **Settings and manual export** - sessions, theme and accessibility
+  preferences, Wallhaven controls, reduced-data settings, manual provider
+  refresh/retry controls including the global compatibility sweep, queue
+  progress, wishlist-import diagnostics, and personal-data-only JSON export
 
-- [ ] 18. **Deployment and CI readiness** - Vercel/Supabase environment review,
-  persistent queue and Vercel Cron daily price-refresh configuration, `CRON_SECRET`,
-  queue-overlap protection, production build,
+- [ ] 18. **Deployment and CI readiness** - Vercel/Supabase environment
+  review, Vercel Cron daily price-refresh at 06:00 UTC-6 with `CRON_SECRET`,
+  queue overlap protection, production build,
   smoke test, one reproducible Verify command, and automatic checks when
   configured; final planned step but not an inflexible feature gate

@@ -274,53 +274,107 @@ Price enrichment is a separate feature:
   `429`/`Retry-After` behavior.
 - No ITAD OAuth, Waitlist synchronization, notifications, webhooks, automatic
   currency conversion, or automatic purchasing is included.
+- For each entry, the cheapest 8-10 valid offers are persisted; the selected
+  offer is the cheapest; alternatives render in an expandable view showing
+  store, source, price, discount, and freshness.
+- Historical low is display-only context next to the current price. It never
+  creates or strengthens signals.
+- `targetPriceMxn` edits inline on each wishlist row, plus the edit form.
+- An active opportunity renders as a badge on the wishlist entry itself; no
+  separate section exists in this feature.
+
+### Price identity resolution
+
+A wishlist entry becomes priceable only after its store identity is
+confirmed. Identity has three paths, each recording provenance:
+
+- **Steam wishlist import**: entries created by import carry their verified
+  Steam App ID as confirmed identity.
+- **Manual entry**: the wish form accepts a Steam store URL or raw App ID;
+  the URL is parsed and stored as user-confirmed identity. This also serves
+  as the override path.
+- **RAWG suggestion**: wishlist RAWG enrichment additionally captures Steam
+  store links. A derived App ID is stored only as a suggestion and requires
+  one-click confirmation before the entry is priced. The wishlist RAWG
+  snapshot contract therefore extends to store links; the catalog snapshot
+  contract stays unchanged.
+
+Provenance travels with the identity so the price queue's "confirmed
+identity" rule stays honest. ITAD mapping uses a cached
+Steam-App-ID-to-ITAD-ID lookup; the mapping is stable and cached
+indefinitely. Prices load in batched calls (`country=MX`, up to 200 games
+per request). Keyshop-flag mechanics are validated during the feature spec.
+Known caveat, accepted: the ITAD ToS asks private API users to make contact;
+registration happens through their app-setup page.
 
 ### Manual Steam wishlist import
 
 Steam wishlist import is a later, manual feature distinct from owned-library
 synchronization:
 
-- A visible Wishlist action starts the import. Settings may later link to its
-  status and diagnostics; it does not run automatically.
-- A newly imported base-game entry with a reliable, previously unknown Steam App
-  ID creates a wishlist entry automatically with interest `2` out of `5` and
-  empty notes.
-- Each newly created base-game entry queues the existing wishlist RAWG
-  enrichment flow. Existing local RAWG snapshots are never overwritten by import.
-- A potential match with an existing local wishlist entry is placed in persistent
-  review. The owner explicitly links it or ignores it.
-- Ignored review entries remain suppressed across later imports until manually
+- A visible Wishlist action starts the import; Settings may link to status
+  later. It never runs automatically.
+- A newly imported base-game entry with a reliable, previously unknown Steam
+  App ID creates a wishlist entry automatically with interest `2`/`5` and
+  empty notes, then queues the existing wishlist RAWG enrichment flow.
+  Existing local snapshots are never overwritten by import.
+- Local matching reuses the feature 7a normalized-name matcher. Any
+  candidate - exact names included - goes to persistent review; linking is
+  **never automatic**. Linking stores the Steam App ID with provenance onto
+  the local entry, so later imports skip it silently.
+- Ignored review entries stay suppressed across imports until manually
   restored.
-- A Steam wishlist item already present in the owned catalog is omitted silently.
-- Steam DLC whose required base game is not owned enters a persistent review
-  queue rather than creating an invalid wishlist DLC.
-- Steam title changes and removals do not rename, remove, or otherwise modify
-  local wishlist data. They may be reflected only as non-authoritative sync
-  status.
-- The import is idempotent by Steam App ID and provides a concise result summary
-  for created entries, linked entries, queued reviews, ignored entries, and
-  provider-enrichment status.
+- An item already present in the owned catalog is omitted silently.
+- Unresolved Steam DLC from library sync and wishlist import share **one**
+  persistent queue, discriminated by source (`owned-sync` /
+  `wishlist-import`); each side keeps its own reappear rules. A Steam DLC
+  whose base game is wished but not owned stays queued and resolves
+  naturally on a later import after the base game is acquired.
+- Steam title changes and removals do not modify local data; they surface
+  only as non-authoritative sync status shown in a compact Wishlist-header
+  chip backed by a server-side last-run summary.
+- Each import ends in a persistent result panel: created, linked, queued
+  reviews, ignored, and enrichment status. Idempotent by Steam App ID.
 
 Provider outages never erase the last valid data. The app retains the result,
 marks it stale, displays its age, and allows manual refresh.
 
 ## 10. Compatibility Synthesis
 
-Compatibility evidence covers:
+Compatibility evidence covers Bazzite desktop, Steam Deck, and the Windows
+fallback.
 
-- Bazzite desktop.
-- Steam Deck.
-- Windows fallback.
+All provider evidence keys off a Steam App ID. Catalog games without one get
+a manual "add Steam App ID" affordance on the detail page, writing into the
+existing `ExternalGameId` table with user provenance; evidence queues
+automatically once present.
 
-ProtonDB is the primary source for both Bazzite and Steam Deck. Steam Deck
-Verified is a Steam Deck-specific fallback when ProtonDB lacks evidence.
-Anti-cheat is independent evidence; conflicts are shown as mixed evidence with
-their sources. Windows is implicitly compatible as the fixed fallback, though
-anti-cheat or personal evidence may add a warning.
+Games whose only availability source is ROM are fully exempt from the
+pipeline: no identity entry, no queueing, no unknown warnings. Their
+compatibility reads as **not applicable**, not unknown. Mixed availability
+still receives Steam-based evidence.
 
-Personal compatibility overrides take priority and are never overwritten.
-Unknown or stale evidence remains explicit and produces a visible recommendation
-warning, not a score penalty or exclusion.
+Sources:
+
+- ProtonDB is primary for Bazzite and Steam Deck reports.
+- Steam Deck Verified is the Deck-specific fallback when ProtonDB lacks
+  evidence.
+- Anti-cheat evidence comes from the AreWeAntiCheatYet crowdsourced dataset,
+  cached like other providers; absent data stays explicit unknown.
+- Windows is implicitly compatible as the fixed fallback, though anti-cheat
+  or personal evidence may add a warning.
+
+Mixed evidence shows all sources with attribution. Personal overrides take
+priority and are never overwritten.
+
+Freshness uses a single **180-day window** across all evidence types. Stale
+evidence keeps its values, shows its age, and produces a visible
+recommendation warning - never a penalty. Refresh triggers are the post-RAWG
+automatic queue and per-game manual refresh. A global sweep waits for
+Settings' provider controls (feature 17); scheduled rescheduling waits for
+deployment (feature 18). Provider endpoint stability (ProtonDB summary
+endpoint, Deck Verified categories, AWAY dataset shape) validates during the
+feature spec.
 
 ## 11. Recommendations
 
@@ -341,6 +395,31 @@ factors such as:
 - DLC base-game affinity (ratings, completion status, replay flag of the owned base game).
 - Calibration adjustment.
 
+**Eligibility**
+
+- `play-next`: base games that are not hidden, are not the main game, and are
+  either `NOT_STARTED` or replay-flagged `PLAYED_BEFORE`/`ABANDONED`.
+  `IN_PROGRESS` games appear separately on the dashboard. DLC never enters
+  play-next.
+- `buy`: all wishlist base games and DLC wishes whose base game is owned.
+  Entries without confirmed identity or offers stay eligible on interest
+  alone, carrying an explicit "no pricing yet" warning. ROMs are excluded
+  from purchase recommendations.
+
+**Ranking semantics**
+
+- Compatibility never changes ranking **in any state** - `READY`, `REQUIRED`,
+  or otherwise. It surfaces only as visible warnings and context inside the
+  explanation; unknown and stale behave identically.
+- Buy offer quality: fresh-offer discount percentage earns points; proximity
+  to the historical low breaks ties; stale offers contribute zero
+  offer-quality points, consistent with the 48-hour rule.
+- DLC base-game affinity is boost-only: an owned base rated >=4/5, completed,
+  or replay-flagged grants one fixed boost tier named explicitly in the
+  explanation ("base game X was completed"). Affinity never lowers a score.
+- Manual signals dominate: interest, priority, play state, main-game and
+  hidden flags, then calibration adjustment.
+
 Recommendations are generated explicitly by the user. One `Update
 recommendations` action creates a `RecommendationRun` with both lists; manual
 signals dominate ranking. The dashboard displays the latest three play-next and
@@ -355,6 +434,13 @@ The user-entered interest remains manually editable. When automatic calibration
 has changed it, the detail view explains that the value was adjusted because of
 repeated recommendation dismissals. The technical counter remains an internal
 implementation detail.
+
+Run retention keeps a rolling **12 months** of `RecommendationRun` records;
+creating a new run prunes older ones. Persistent dismissal and calibration
+counters are cumulative personal state and are never pruned.
+
+The `Update recommendations` action lives on the Today dashboard header and
+empty state, and is reachable from the Library and Wishlist headers.
 
 ## 12. Today Dashboard
 
@@ -378,9 +464,28 @@ It displays:
 The three wishlist offers are sorted primarily by discount percentage, with price
 or target-price status used as a tie-breaker.
 
+Successful sign-in redirects to `/today`; the dashboard is the app's front
+door.
+
 ## 13. Visual Personalization and UI Tidy-up
 
 ### Global visual foundation & design system review
+
+Direction is **dark-first**, derived from the reference material in
+`blueprint/reference/`:
+
+- Deep charcoal and navy surfaces; dark mode default, light mode fully
+  supported.
+- **Dual-accent semantic tokens**: cyan/teal for interactive elements,
+  progress, and ready states; magenta/pink for opportunity signals, deals,
+  and buy recommendations; amber for warnings, stale evidence, and mixed
+  compatibility.
+- Rounded cards, pill buttons, and badge chips as the component baseline on
+  shadcn/ui tokens.
+- Bold display typography reserved for page headers and hero moments.
+- Desktop icon sidebar and mobile bottom navigation.
+- `/prototype` runs before feature 14 to lock the look against the references
+  in throwaway mockups.
 
 The application shell and existing components support:
 
@@ -397,23 +502,30 @@ The application shell and existing components support:
 
 Wallhaven controls the optional global application background:
 
-- SFW candidates only.
-- Cached selection.
-- Desktop-oriented presentation.
-- Attribution.
-- Reduced-data behavior.
-- Local fallback when unavailable.
+- SFW candidates only, gathered into a cached pool of roughly ten candidate
+  URLs from a small configurable keyword set (default: gaming-art and
+  landscape tags). `WallpaperState` stores URLs and selection, never
+  binaries.
+- Selection rotates deterministically once per day, with a manual shuffle
+  action.
+- Pool staleness triggers an on-use fetch through the persistent queue; no
+  timed background jobs until deployment.
+- Reduced-data mode disables the wallpaper system entirely: solid token
+  background, zero image fetches.
+- Attribution and local fallback when unavailable.
 
 Wallhaven does not determine functional theme colors or override accessibility.
 
 ### Per-game detail theme
 
-Each game detail page may use its RAWG imagery and derived colors:
+Each game detail page may use its RAWG imagery and derived colors. Theme
+colors derive **server-side during RAWG enrichment**: a small dominant-color
+palette (primary plus dark/muted variants) extracted from stored artwork,
+persisted in the replaceable snapshot, and applied read-only by the page
+under contrast overlays. Missing imagery or reduced-data mode uses the
+deterministic fallback; re-enrichment re-derives the palette.
 
 - Theme applies only to that detail page.
-- Main RAWG image is preferred.
-- Overlay and contrast protect text legibility.
-- Missing or invalid imagery uses a deterministic fallback.
 - The feature respects global theme and accessibility settings.
 
 ## 14. Settings, Export, and Operations
@@ -450,7 +562,9 @@ The scheduler must tolerate duplicate invocations, avoid overlapping claims, and
 leave retry history visible.
 
 Deployment/CI is the final planned milestone, not a reason to block otherwise
-complete product work if an additional MVP feature is discovered first.
+complete product work if an additional MVP feature is discovered first. The
+deployment feature configures Vercel Cron to run the daily price refresh at
+**06:00 UTC-6**.
 
 ## 16. Possible Improvements After the MVP
 
