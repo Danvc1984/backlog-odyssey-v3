@@ -37,7 +37,8 @@ registration, and collaboration are outside the MVP.
 - Independent wishlist for base games and DLC linked to owned catalog games.
 - Manual wishlist acquisition into the catalog with optional base-game play state update.
 - ITAD/Steam price enrichment for wishlist entries.
-- Optional MXN target prices and source preference.
+- Optional MXN target prices, transparent valid-offer comparison, and purchase-opportunity signals.
+- Manual Steam wishlist import with conservative local matching, review queues, and RAWG follow-up for new base-game wishes.
 - Compatibility evidence for Bazzite, Steam Deck, and Windows.
 - Deterministic explainable play-next and buy recommendations with DLC affinity weighting.
 - Recommendation runs with temporary dismissal and persistent calibration signals.
@@ -79,8 +80,10 @@ store:
 - Optional external identifiers.
 - Independent RAWG metadata snapshot (for base games).
 
-Price target and Steam/ITAD source preference belong to the later pricing
-feature, not the initial local wishlist feature.
+Price target and provider offers belong to the later pricing feature, not the
+initial local wishlist feature. Source preference is intentionally excluded:
+when multiple valid offers exist, the app selects the cheapest one while showing
+the alternatives.
 
 When a wishlist item is acquired manually:
 
@@ -218,7 +221,7 @@ in PostgreSQL, rate-limited, and processed in batches. Transient failures retry
 up to three times with increasing delay; final failures remain visible and can be
 manually retried. Failure never removes personal or prior valid provider data.
 
-## 9. Wishlist and Prices
+## 9. Wishlist, Prices, and Steam Import
 
 Wishlist entries are useful either as reminders or planned purchases.
 
@@ -240,23 +243,63 @@ The first wishlist feature is provider-independent:
 
 Price enrichment is a separate feature:
 
+- The Wishlist has one explicit global `Update prices` action. It queues all
+  entries whose store identity has been confirmed and reports refreshed, failed,
+  and identity-required entries.
+- Individual price refresh or retry is out of scope initially.
+- Daily scheduling is deferred to deployment. Vercel Cron will securely trigger
+  the same persistent queue; it enqueues work and returns quickly instead of
+  performing all provider calls in the request.
+- Queue claims and scheduled runs are idempotent and mutually exclusive so a
+  duplicate or overlapping trigger does not repeat provider work.
 - `targetPriceMxn` is optional.
-- Source preference can be global or per-entry.
-- Values are Steam, ITAD, or no preference.
-- No preference selects the cheapest valid Mexican offer across Steam and ITAD.
-- The selected source and store remain visible.
-- Stale prices remain visible but cannot trigger strong purchase recommendations.
-- A fresh valid offer at or below the target creates an opportunity signal.
-- Entries without a target remain eligible for buy recommendations based on
-  interest and offer quality.
-- A daily scheduled refresh updates wishlist prices, discounts, sources, and
-  freshness without starting a recommendation run.
+- Steam and ITAD are compared without global or per-entry source preference.
+  The cheapest valid Mexican offer is selected; its store and source remain
+  visible, alongside all other valid alternatives.
+- Key-store offers may be selected when cheaper, but must prominently warn that
+  regional activation in Mexico must be verified on the seller page.
+- Every valid offer remains visible whether or not the entry has a target price.
+  A fresh selected offer at or below the target creates an opportunity signal.
+- An entry without a target price remains eligible for later buy recommendations
+  based on local interest and offer quality, but has no target-hit signal.
+- An offer is stale after 48 hours. Stale offers retain price, store, source, and
+  age for comparison, but cannot create a strong opportunity signal.
+- Transient provider failures retry at most three times with increasing delay.
+  Final failures remain visible in the global result and can wait for the next
+  global or scheduled refresh.
+- Price refreshes never create or replace a recommendation run.
 - The seller page remains authoritative for regional activation.
 - ITAD is optional, server-side, read-only enrichment.
 - The integration uses `country=MX`, caching, rate-limit handling, and
   `429`/`Retry-After` behavior.
-- No ITAD OAuth, Waitlist synchronization, notifications, webhooks, or automatic
-  currency conversion is included.
+- No ITAD OAuth, Waitlist synchronization, notifications, webhooks, automatic
+  currency conversion, or automatic purchasing is included.
+
+### Manual Steam wishlist import
+
+Steam wishlist import is a later, manual feature distinct from owned-library
+synchronization:
+
+- A visible Wishlist action starts the import. Settings may later link to its
+  status and diagnostics; it does not run automatically.
+- A newly imported base-game entry with a reliable, previously unknown Steam App
+  ID creates a wishlist entry automatically with interest `2` out of `5` and
+  empty notes.
+- Each newly created base-game entry queues the existing wishlist RAWG
+  enrichment flow. Existing local RAWG snapshots are never overwritten by import.
+- A potential match with an existing local wishlist entry is placed in persistent
+  review. The owner explicitly links it or ignores it.
+- Ignored review entries remain suppressed across later imports until manually
+  restored.
+- A Steam wishlist item already present in the owned catalog is omitted silently.
+- Steam DLC whose required base game is not owned enters a persistent review
+  queue rather than creating an invalid wishlist DLC.
+- Steam title changes and removals do not rename, remove, or otherwise modify
+  local wishlist data. They may be reflected only as non-authoritative sync
+  status.
+- The import is idempotent by Steam App ID and provides a concise result summary
+  for created entries, linked entries, queued reviews, ignored entries, and
+  provider-enrichment status.
 
 Provider outages never erase the last valid data. The app retains the result,
 marks it stale, displays its age, and allows manual refresh.
@@ -379,7 +422,8 @@ Settings includes:
 
 - Google session management.
 - Fixed environment display.
-- Global Steam/ITAD preference.
+- Steam wishlist-import status and review access.
+- Vercel Cron price-refresh status and diagnostics once deployment enables it.
 - Theme and accessibility preferences.
 - Wallhaven enablement and refresh controls.
 - Reduced-data behavior.
@@ -399,9 +443,11 @@ Next.js App Router, React, TypeScript, pnpm, Tailwind CSS v4, shadcn/ui,
 Prisma, PostgreSQL/Supabase, Auth.js, Google authentication, Zod, Vitest, and
 Vercel.
 
-The MVP uses a persistent PostgreSQL-backed enrichment queue and scheduled batch
-processor for daily price refreshes. The deployment scheduler is finalized in
-the deployment/readiness feature.
+The MVP uses a persistent PostgreSQL-backed queue for provider work. Price
+refreshes are manually initiated until deployment; the deployment/readiness
+feature configures Vercel Cron and `CRON_SECRET` to enqueue the same daily work.
+The scheduler must tolerate duplicate invocations, avoid overlapping claims, and
+leave retry history visible.
 
 Deployment/CI is the final planned milestone, not a reason to block otherwise
 complete product work if an additional MVP feature is discovered first.

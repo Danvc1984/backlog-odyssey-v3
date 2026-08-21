@@ -52,10 +52,17 @@
   catalog with metadata transfer, acquired wishlist removal, and optional base-game
   play state transition on DLC acquisition
 
-- [ ] 10b. **Price enrichment and purchase opportunities** - manual and daily
-  Steam/ITAD Mexican price refreshes through the persistent queue, source
-  preference, optional MXN target price, valid-offer selection, stale-data
-  handling, provider failure, and opportunity signals without automatic runs
+- [ ] 10b. **Price enrichment and purchase opportunities** - one global manual
+  Steam/ITAD Mexican-price refresh through a persistent, idempotent queue; cheapest
+  valid-offer selection with visible alternatives and MX activation warnings; optional
+  MXN targets; 48-hour freshness; bounded retries; clear partial failures; and
+  opportunity signals without automatic recommendation runs. Vercel Cron activation is
+  deferred to feature 18.
+
+- [ ] 10c. **Steam wishlist import and enrichment** - explicit Wishlist import;
+  idempotent Steam-App-ID creation of new base-game wishes with neutral interest and
+  RAWG follow-up; conservative local-match review; persistent ignored and unresolved-DLC
+  queues; silent owned-game omission; and non-authoritative Steam sync status.
 
 ## Compatibility and recommendations
 
@@ -93,6 +100,7 @@
   refresh/retry controls, queue progress, and personal-data-only JSON export
 
 - [ ] 18. **Deployment and CI readiness** - Vercel/Supabase environment review,
-  persistent queue and daily price-scheduler configuration, production build,
+  persistent queue and Vercel Cron daily price-refresh configuration, `CRON_SECRET`,
+  queue-overlap protection, production build,
   smoke test, one reproducible Verify command, and automatic checks when
   configured; final planned step but not an inflexible feature gate
