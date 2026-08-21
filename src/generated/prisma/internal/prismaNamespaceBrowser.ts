@@ -70,6 +70,7 @@ export const ModelName = {
   WishlistEntry: 'WishlistEntry',
   WishlistMetadataSnapshot: 'WishlistMetadataSnapshot',
   DealOffer: 'DealOffer',
+  ItadIdentity: 'ItadIdentity',
   PriceRefresh: 'PriceRefresh',
   CompatibilitySnapshot: 'CompatibilitySnapshot',
   EnvironmentCompatibility: 'EnvironmentCompatibility',
@@ -361,6 +362,7 @@ export const DealOfferScalarFieldEnum = {
   discount: 'discount',
   historicalLow: 'historicalLow',
   voucher: 'voucher',
+  itadFlag: 'itadFlag',
   drm: 'drm',
   platforms: 'platforms',
   url: 'url',
@@ -369,6 +371,15 @@ export const DealOfferScalarFieldEnum = {
 } as const
 
 export type DealOfferScalarFieldEnum = (typeof DealOfferScalarFieldEnum)[keyof typeof DealOfferScalarFieldEnum]
+
+
+export const ItadIdentityScalarFieldEnum = {
+  steamAppId: 'steamAppId',
+  itadId: 'itadId',
+  fetchedAt: 'fetchedAt'
+} as const
+
+export type ItadIdentityScalarFieldEnum = (typeof ItadIdentityScalarFieldEnum)[keyof typeof ItadIdentityScalarFieldEnum]
 
 
 export const PriceRefreshScalarFieldEnum = {

@@ -1,6 +1,7 @@
 import { WishlistFilterBar } from "@/components/wishlist/WishlistFilterBar";
 import { WishlistList } from "@/components/wishlist/WishlistList";
 import { AddWishlistDialog } from "@/components/wishlist/AddWishlistDialog";
+import { PriceRefreshPanel } from "@/components/wishlist/PriceRefreshPanel";
 import { prisma } from "@/lib/prisma";
 
 interface WishlistSearchParams {
@@ -22,7 +23,7 @@ export default async function WishlistPage({
     ? interest
     : undefined;
 
-  const [entries, baseGames] = await Promise.all([
+  const [entries, baseGames, latestRun] = await Promise.all([
     prisma.wishlistEntry.findMany({
       where: { type, interest: interestFilter },
       orderBy: [{ interest: "desc" }, { updatedAt: "desc" }],
@@ -50,6 +51,7 @@ export default async function WishlistPage({
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
+    prisma.priceRefresh.findFirst({ orderBy: { requestedAt: "desc" } }),
   ]);
 
   return (
@@ -61,7 +63,22 @@ export default async function WishlistPage({
             Games and DLCs you may want to acquire later.
           </p>
         </div>
-        <AddWishlistDialog baseGames={baseGames} />
+        <div className="flex items-start gap-3">
+          <PriceRefreshPanel
+            initialRun={
+              latestRun
+                ? {
+                    id: latestRun.id,
+                    status: latestRun.status,
+                    counts: latestRun.counts,
+                    requestedAt: latestRun.requestedAt,
+                    finishedAt: latestRun.finishedAt,
+                  }
+                : null
+            }
+          />
+          <AddWishlistDialog baseGames={baseGames} />
+        </div>
       </div>
       <div className="mt-5">
         <WishlistFilterBar />

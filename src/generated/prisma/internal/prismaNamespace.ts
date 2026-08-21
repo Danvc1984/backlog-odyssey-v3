@@ -416,6 +416,7 @@ export const ModelName = {
   WishlistEntry: 'WishlistEntry',
   WishlistMetadataSnapshot: 'WishlistMetadataSnapshot',
   DealOffer: 'DealOffer',
+  ItadIdentity: 'ItadIdentity',
   PriceRefresh: 'PriceRefresh',
   CompatibilitySnapshot: 'CompatibilitySnapshot',
   EnvironmentCompatibility: 'EnvironmentCompatibility',
@@ -441,7 +442,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "account" | "session" | "appSettings" | "steamConnection" | "game" | "unresolvedSteamDlc" | "externalGameId" | "metadataSnapshot" | "enrichmentJob" | "personalTag" | "gameTag" | "collection" | "collectionMembership" | "libraryEntry" | "gameAvailability" | "wishlistEntry" | "wishlistMetadataSnapshot" | "dealOffer" | "priceRefresh" | "compatibilitySnapshot" | "environmentCompatibility" | "possibleDuplicate" | "recommendationRun" | "recommendationItem" | "recommendationFeedback" | "wallpaperState" | "syncRun" | "catalogOperation"
+    modelProps: "user" | "account" | "session" | "appSettings" | "steamConnection" | "game" | "unresolvedSteamDlc" | "externalGameId" | "metadataSnapshot" | "enrichmentJob" | "personalTag" | "gameTag" | "collection" | "collectionMembership" | "libraryEntry" | "gameAvailability" | "wishlistEntry" | "wishlistMetadataSnapshot" | "dealOffer" | "itadIdentity" | "priceRefresh" | "compatibilitySnapshot" | "environmentCompatibility" | "possibleDuplicate" | "recommendationRun" | "recommendationItem" | "recommendationFeedback" | "wallpaperState" | "syncRun" | "catalogOperation"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1851,6 +1852,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ItadIdentity: {
+      payload: Prisma.$ItadIdentityPayload<ExtArgs>
+      fields: Prisma.ItadIdentityFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ItadIdentityFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ItadIdentityPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ItadIdentityFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ItadIdentityPayload>
+        }
+        findFirst: {
+          args: Prisma.ItadIdentityFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ItadIdentityPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ItadIdentityFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ItadIdentityPayload>
+        }
+        findMany: {
+          args: Prisma.ItadIdentityFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ItadIdentityPayload>[]
+        }
+        create: {
+          args: Prisma.ItadIdentityCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ItadIdentityPayload>
+        }
+        createMany: {
+          args: Prisma.ItadIdentityCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ItadIdentityCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ItadIdentityPayload>[]
+        }
+        delete: {
+          args: Prisma.ItadIdentityDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ItadIdentityPayload>
+        }
+        update: {
+          args: Prisma.ItadIdentityUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ItadIdentityPayload>
+        }
+        deleteMany: {
+          args: Prisma.ItadIdentityDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ItadIdentityUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ItadIdentityUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ItadIdentityPayload>[]
+        }
+        upsert: {
+          args: Prisma.ItadIdentityUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ItadIdentityPayload>
+        }
+        aggregate: {
+          args: Prisma.ItadIdentityAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateItadIdentity>
+        }
+        groupBy: {
+          args: Prisma.ItadIdentityGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ItadIdentityGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ItadIdentityCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ItadIdentityCountAggregateOutputType> | number
+        }
+      }
+    }
     PriceRefresh: {
       payload: Prisma.$PriceRefreshPayload<ExtArgs>
       fields: Prisma.PriceRefreshFieldRefs
@@ -2893,6 +2968,7 @@ export const DealOfferScalarFieldEnum = {
   discount: 'discount',
   historicalLow: 'historicalLow',
   voucher: 'voucher',
+  itadFlag: 'itadFlag',
   drm: 'drm',
   platforms: 'platforms',
   url: 'url',
@@ -2901,6 +2977,15 @@ export const DealOfferScalarFieldEnum = {
 } as const
 
 export type DealOfferScalarFieldEnum = (typeof DealOfferScalarFieldEnum)[keyof typeof DealOfferScalarFieldEnum]
+
+
+export const ItadIdentityScalarFieldEnum = {
+  steamAppId: 'steamAppId',
+  itadId: 'itadId',
+  fetchedAt: 'fetchedAt'
+} as const
+
+export type ItadIdentityScalarFieldEnum = (typeof ItadIdentityScalarFieldEnum)[keyof typeof ItadIdentityScalarFieldEnum]
 
 
 export const PriceRefreshScalarFieldEnum = {
@@ -3625,6 +3710,7 @@ export type GlobalOmitConfig = {
   wishlistEntry?: Prisma.WishlistEntryOmit
   wishlistMetadataSnapshot?: Prisma.WishlistMetadataSnapshotOmit
   dealOffer?: Prisma.DealOfferOmit
+  itadIdentity?: Prisma.ItadIdentityOmit
   priceRefresh?: Prisma.PriceRefreshOmit
   compatibilitySnapshot?: Prisma.CompatibilitySnapshotOmit
   environmentCompatibility?: Prisma.EnvironmentCompatibilityOmit

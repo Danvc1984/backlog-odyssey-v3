@@ -51,6 +51,7 @@ export type DealOfferMinAggregateOutputType = {
   discount: number | null
   historicalLow: runtime.Decimal | null
   voucher: string | null
+  itadFlag: string | null
   drm: string | null
   url: string | null
   expiresAt: Date | null
@@ -68,6 +69,7 @@ export type DealOfferMaxAggregateOutputType = {
   discount: number | null
   historicalLow: runtime.Decimal | null
   voucher: string | null
+  itadFlag: string | null
   drm: string | null
   url: string | null
   expiresAt: Date | null
@@ -85,6 +87,7 @@ export type DealOfferCountAggregateOutputType = {
   discount: number
   historicalLow: number
   voucher: number
+  itadFlag: number
   drm: number
   platforms: number
   url: number
@@ -119,6 +122,7 @@ export type DealOfferMinAggregateInputType = {
   discount?: true
   historicalLow?: true
   voucher?: true
+  itadFlag?: true
   drm?: true
   url?: true
   expiresAt?: true
@@ -136,6 +140,7 @@ export type DealOfferMaxAggregateInputType = {
   discount?: true
   historicalLow?: true
   voucher?: true
+  itadFlag?: true
   drm?: true
   url?: true
   expiresAt?: true
@@ -153,6 +158,7 @@ export type DealOfferCountAggregateInputType = {
   discount?: true
   historicalLow?: true
   voucher?: true
+  itadFlag?: true
   drm?: true
   platforms?: true
   url?: true
@@ -258,6 +264,7 @@ export type DealOfferGroupByOutputType = {
   discount: number | null
   historicalLow: runtime.Decimal | null
   voucher: string | null
+  itadFlag: string | null
   drm: string | null
   platforms: runtime.JsonValue | null
   url: string | null
@@ -299,6 +306,7 @@ export type DealOfferWhereInput = {
   discount?: Prisma.IntNullableFilter<"DealOffer"> | number | null
   historicalLow?: Prisma.DecimalNullableFilter<"DealOffer"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   voucher?: Prisma.StringNullableFilter<"DealOffer"> | string | null
+  itadFlag?: Prisma.StringNullableFilter<"DealOffer"> | string | null
   drm?: Prisma.StringNullableFilter<"DealOffer"> | string | null
   platforms?: Prisma.JsonNullableFilter<"DealOffer">
   url?: Prisma.StringNullableFilter<"DealOffer"> | string | null
@@ -318,6 +326,7 @@ export type DealOfferOrderByWithRelationInput = {
   discount?: Prisma.SortOrderInput | Prisma.SortOrder
   historicalLow?: Prisma.SortOrderInput | Prisma.SortOrder
   voucher?: Prisma.SortOrderInput | Prisma.SortOrder
+  itadFlag?: Prisma.SortOrderInput | Prisma.SortOrder
   drm?: Prisma.SortOrderInput | Prisma.SortOrder
   platforms?: Prisma.SortOrderInput | Prisma.SortOrder
   url?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -340,6 +349,7 @@ export type DealOfferWhereUniqueInput = Prisma.AtLeast<{
   discount?: Prisma.IntNullableFilter<"DealOffer"> | number | null
   historicalLow?: Prisma.DecimalNullableFilter<"DealOffer"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   voucher?: Prisma.StringNullableFilter<"DealOffer"> | string | null
+  itadFlag?: Prisma.StringNullableFilter<"DealOffer"> | string | null
   drm?: Prisma.StringNullableFilter<"DealOffer"> | string | null
   platforms?: Prisma.JsonNullableFilter<"DealOffer">
   url?: Prisma.StringNullableFilter<"DealOffer"> | string | null
@@ -359,6 +369,7 @@ export type DealOfferOrderByWithAggregationInput = {
   discount?: Prisma.SortOrderInput | Prisma.SortOrder
   historicalLow?: Prisma.SortOrderInput | Prisma.SortOrder
   voucher?: Prisma.SortOrderInput | Prisma.SortOrder
+  itadFlag?: Prisma.SortOrderInput | Prisma.SortOrder
   drm?: Prisma.SortOrderInput | Prisma.SortOrder
   platforms?: Prisma.SortOrderInput | Prisma.SortOrder
   url?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -385,6 +396,7 @@ export type DealOfferScalarWhereWithAggregatesInput = {
   discount?: Prisma.IntNullableWithAggregatesFilter<"DealOffer"> | number | null
   historicalLow?: Prisma.DecimalNullableWithAggregatesFilter<"DealOffer"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   voucher?: Prisma.StringNullableWithAggregatesFilter<"DealOffer"> | string | null
+  itadFlag?: Prisma.StringNullableWithAggregatesFilter<"DealOffer"> | string | null
   drm?: Prisma.StringNullableWithAggregatesFilter<"DealOffer"> | string | null
   platforms?: Prisma.JsonNullableWithAggregatesFilter<"DealOffer">
   url?: Prisma.StringNullableWithAggregatesFilter<"DealOffer"> | string | null
@@ -402,6 +414,7 @@ export type DealOfferCreateInput = {
   discount?: number | null
   historicalLow?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   voucher?: string | null
+  itadFlag?: string | null
   drm?: string | null
   platforms?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   url?: string | null
@@ -421,6 +434,7 @@ export type DealOfferUncheckedCreateInput = {
   discount?: number | null
   historicalLow?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   voucher?: string | null
+  itadFlag?: string | null
   drm?: string | null
   platforms?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   url?: string | null
@@ -438,6 +452,7 @@ export type DealOfferUpdateInput = {
   discount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   historicalLow?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   voucher?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  itadFlag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   drm?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   platforms?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -457,6 +472,7 @@ export type DealOfferUncheckedUpdateInput = {
   discount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   historicalLow?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   voucher?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  itadFlag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   drm?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   platforms?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -475,6 +491,7 @@ export type DealOfferCreateManyInput = {
   discount?: number | null
   historicalLow?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   voucher?: string | null
+  itadFlag?: string | null
   drm?: string | null
   platforms?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   url?: string | null
@@ -492,6 +509,7 @@ export type DealOfferUpdateManyMutationInput = {
   discount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   historicalLow?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   voucher?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  itadFlag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   drm?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   platforms?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -510,6 +528,7 @@ export type DealOfferUncheckedUpdateManyInput = {
   discount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   historicalLow?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   voucher?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  itadFlag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   drm?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   platforms?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -538,6 +557,7 @@ export type DealOfferCountOrderByAggregateInput = {
   discount?: Prisma.SortOrder
   historicalLow?: Prisma.SortOrder
   voucher?: Prisma.SortOrder
+  itadFlag?: Prisma.SortOrder
   drm?: Prisma.SortOrder
   platforms?: Prisma.SortOrder
   url?: Prisma.SortOrder
@@ -563,6 +583,7 @@ export type DealOfferMaxOrderByAggregateInput = {
   discount?: Prisma.SortOrder
   historicalLow?: Prisma.SortOrder
   voucher?: Prisma.SortOrder
+  itadFlag?: Prisma.SortOrder
   drm?: Prisma.SortOrder
   url?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
@@ -580,6 +601,7 @@ export type DealOfferMinOrderByAggregateInput = {
   discount?: Prisma.SortOrder
   historicalLow?: Prisma.SortOrder
   voucher?: Prisma.SortOrder
+  itadFlag?: Prisma.SortOrder
   drm?: Prisma.SortOrder
   url?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
@@ -645,6 +667,7 @@ export type DealOfferCreateWithoutWishlistEntryInput = {
   discount?: number | null
   historicalLow?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   voucher?: string | null
+  itadFlag?: string | null
   drm?: string | null
   platforms?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   url?: string | null
@@ -662,6 +685,7 @@ export type DealOfferUncheckedCreateWithoutWishlistEntryInput = {
   discount?: number | null
   historicalLow?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   voucher?: string | null
+  itadFlag?: string | null
   drm?: string | null
   platforms?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   url?: string | null
@@ -709,6 +733,7 @@ export type DealOfferScalarWhereInput = {
   discount?: Prisma.IntNullableFilter<"DealOffer"> | number | null
   historicalLow?: Prisma.DecimalNullableFilter<"DealOffer"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   voucher?: Prisma.StringNullableFilter<"DealOffer"> | string | null
+  itadFlag?: Prisma.StringNullableFilter<"DealOffer"> | string | null
   drm?: Prisma.StringNullableFilter<"DealOffer"> | string | null
   platforms?: Prisma.JsonNullableFilter<"DealOffer">
   url?: Prisma.StringNullableFilter<"DealOffer"> | string | null
@@ -726,6 +751,7 @@ export type DealOfferCreateManyWishlistEntryInput = {
   discount?: number | null
   historicalLow?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   voucher?: string | null
+  itadFlag?: string | null
   drm?: string | null
   platforms?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   url?: string | null
@@ -743,6 +769,7 @@ export type DealOfferUpdateWithoutWishlistEntryInput = {
   discount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   historicalLow?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   voucher?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  itadFlag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   drm?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   platforms?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -760,6 +787,7 @@ export type DealOfferUncheckedUpdateWithoutWishlistEntryInput = {
   discount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   historicalLow?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   voucher?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  itadFlag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   drm?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   platforms?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -777,6 +805,7 @@ export type DealOfferUncheckedUpdateManyWithoutWishlistEntryInput = {
   discount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   historicalLow?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   voucher?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  itadFlag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   drm?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   platforms?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -797,6 +826,7 @@ export type DealOfferSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   discount?: boolean
   historicalLow?: boolean
   voucher?: boolean
+  itadFlag?: boolean
   drm?: boolean
   platforms?: boolean
   url?: boolean
@@ -816,6 +846,7 @@ export type DealOfferSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   discount?: boolean
   historicalLow?: boolean
   voucher?: boolean
+  itadFlag?: boolean
   drm?: boolean
   platforms?: boolean
   url?: boolean
@@ -835,6 +866,7 @@ export type DealOfferSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   discount?: boolean
   historicalLow?: boolean
   voucher?: boolean
+  itadFlag?: boolean
   drm?: boolean
   platforms?: boolean
   url?: boolean
@@ -854,6 +886,7 @@ export type DealOfferSelectScalar = {
   discount?: boolean
   historicalLow?: boolean
   voucher?: boolean
+  itadFlag?: boolean
   drm?: boolean
   platforms?: boolean
   url?: boolean
@@ -861,7 +894,7 @@ export type DealOfferSelectScalar = {
   fetchedAt?: boolean
 }
 
-export type DealOfferOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "wishlistEntryId" | "shop" | "country" | "currency" | "price" | "regularPrice" | "discount" | "historicalLow" | "voucher" | "drm" | "platforms" | "url" | "expiresAt" | "fetchedAt", ExtArgs["result"]["dealOffer"]>
+export type DealOfferOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "wishlistEntryId" | "shop" | "country" | "currency" | "price" | "regularPrice" | "discount" | "historicalLow" | "voucher" | "itadFlag" | "drm" | "platforms" | "url" | "expiresAt" | "fetchedAt", ExtArgs["result"]["dealOffer"]>
 export type DealOfferInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   wishlistEntry?: boolean | Prisma.WishlistEntryDefaultArgs<ExtArgs>
 }
@@ -888,6 +921,7 @@ export type $DealOfferPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     discount: number | null
     historicalLow: runtime.Decimal | null
     voucher: string | null
+    itadFlag: string | null
     drm: string | null
     platforms: runtime.JsonValue | null
     url: string | null
@@ -1327,6 +1361,7 @@ export interface DealOfferFieldRefs {
   readonly discount: Prisma.FieldRef<"DealOffer", 'Int'>
   readonly historicalLow: Prisma.FieldRef<"DealOffer", 'Decimal'>
   readonly voucher: Prisma.FieldRef<"DealOffer", 'String'>
+  readonly itadFlag: Prisma.FieldRef<"DealOffer", 'String'>
   readonly drm: Prisma.FieldRef<"DealOffer", 'String'>
   readonly platforms: Prisma.FieldRef<"DealOffer", 'Json'>
   readonly url: Prisma.FieldRef<"DealOffer", 'String'>

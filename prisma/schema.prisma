@@ -449,6 +449,7 @@ model DealOffer {
   discount        Int?
   historicalLow   Decimal?  @db.Decimal(10, 2)
   voucher         String?
+  itadFlag        String?
   drm             String?
   platforms       Json?
   url             String?
@@ -458,6 +459,12 @@ model DealOffer {
   wishlistEntry WishlistEntry @relation(fields: [wishlistEntryId], references: [id], onDelete: Cascade)
 
   @@index([wishlistEntryId])
+}
+
+model ItadIdentity {
+  steamAppId String   @id
+  itadId     String
+  fetchedAt  DateTime @default(now())
 }
 
 model PriceRefresh {

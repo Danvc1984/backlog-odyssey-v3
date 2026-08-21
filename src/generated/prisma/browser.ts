@@ -113,6 +113,11 @@ export type WishlistMetadataSnapshot = Prisma.WishlistMetadataSnapshotModel
  */
 export type DealOffer = Prisma.DealOfferModel
 /**
+ * Model ItadIdentity
+ * 
+ */
+export type ItadIdentity = Prisma.ItadIdentityModel
+/**
  * Model PriceRefresh
  * 
  */
