@@ -61,6 +61,23 @@
   warnings; display-only historical lows; inline MXN targets; 48-hour
   freshness; bounded retries; clear partial failures; opportunity badges
   without automatic recommendation runs. Vercel Cron activation deferred to 18.
+  - [x] 10b-a. **Price identity and provenance** - three provenance-tracked
+    identity paths (Steam import auto-confirm, manual Steam URL/AppID paste,
+    RAWG store-link suggest-and-confirm extending only the wishlist snapshot),
+    identity display and edit on wishlist entries, and identity-required state
+    for entries without confirmed store identity. RAWG store URLs proved empty
+    in live data, so the App ID resolves via Steam's keyless `storesearch`
+    exact-name match behind the steam-slug trigger.
+  - [ ] 10b-b. **ITAD prices and refresh queue** - cached Steam-App-ID to
+    ITAD-ID lookup, batched `country=MX` price calls, global manual
+    `Update prices` action on a persistent idempotent queue with overlap
+    protection, bounded retries, 48-hour freshness, partial-failure reporting,
+    and per-entry PriceRefresh diagnostics
+  - [ ] 10b-c. **Offer display and opportunity badges** - cheapest valid-offer
+    selection persisting the cheapest 8-10 offers with expandable visible
+    alternatives, MX keyshop activation warnings, display-only historical
+    lows, inline MXN targets, stale-offer rules, and opportunity badges
+    without starting recommendation runs
 
 - [ ] 10c. **Steam wishlist import and enrichment** - explicit Wishlist import;
   idempotent Steam-App-ID creation of new base-game wishes with neutral

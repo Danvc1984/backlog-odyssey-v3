@@ -134,6 +134,12 @@ enum Provider {
   WALLHAVEN
 }
 
+enum PriceIdentityProvenance {
+  STEAM_IMPORT
+  USER
+  RAWG_SUGGESTION
+}
+
 // ---------------------------------------------------------------------------
 // Authentication (Auth.js with Google, database sessions)
 // ---------------------------------------------------------------------------
@@ -397,17 +403,17 @@ model GameAvailability {
 }
 
 model WishlistEntry {
-  id               String   @id @default(cuid())
-  name             String
-  type             GameType @default(BASE_GAME)
-  baseGameId       String?
-  interest         Int?
-  targetPriceMxn   Decimal? @db.Decimal(10, 2)
-  notes            String?
-  steamAppId       String?
-  sourcePreference String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                   String   @id @default(cuid())
+  name                 String
+  type                 GameType @default(BASE_GAME)
+  baseGameId           String?
+  interest             Int?
+  targetPriceMxn       Decimal? @db.Decimal(10, 2)
+  notes                String?
+  steamAppId           String?
+  steamAppIdProvenance PriceIdentityProvenance?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   baseGame         Game?                     @relation("WishlistDlcToBase", fields: [baseGameId], references: [id], onDelete: Cascade)
   metadataSnapshot WishlistMetadataSnapshot?

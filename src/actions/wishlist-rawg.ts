@@ -5,7 +5,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { matchRawgGame, searchRawgCandidates } from "@/lib/rawg-api";
-import { toRawgMetadataPayload } from "@/lib/rawg-enrichment";
+import { resolveWishlistStoreLink, toWishlistMetadataPayload } from "@/lib/rawg-enrichment";
 
 const searchWishlistRawgSchema = z
   .object({
@@ -106,7 +106,8 @@ export async function enrichWishlistEntryWithRawg(input: unknown) {
     }
 
     const fetchedAt = new Date();
-    const payload = toRawgMetadataPayload(result.game, fetchedAt);
+    const storeLink = await resolveWishlistStoreLink(result.game);
+    const payload = toWishlistMetadataPayload(result.game, fetchedAt, storeLink);
     const snapshot = await prisma.wishlistMetadataSnapshot.upsert({
       where: { wishlistEntryId: entry.id },
       update: {

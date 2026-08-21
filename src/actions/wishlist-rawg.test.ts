@@ -7,11 +7,17 @@ vi.mock("@/lib/rawg-api", () => ({
   searchRawgCandidates: vi.fn(),
 }));
 vi.mock("@/lib/rawg-enrichment", () => ({
-  toRawgMetadataPayload: (game: { id: number; name: string; rawgUrl: string }, fetchedAt: Date) => ({
+  resolveWishlistStoreLink: vi.fn().mockResolvedValue(null),
+  toWishlistMetadataPayload: (
+    game: { id: number; name: string; rawgUrl: string },
+    fetchedAt: Date,
+    storeLink: unknown = null,
+  ) => ({
     schemaVersion: 1,
     rawgId: game.id,
     title: game.name,
     rawgUrl: game.rawgUrl,
+    storeLink,
     attribution: {
       provider: "RAWG",
       sourceUrl: game.rawgUrl,
@@ -23,6 +29,7 @@ vi.mock("@/lib/rawg-enrichment", () => ({
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { matchRawgGame, searchRawgCandidates } from "@/lib/rawg-api";
+import { resolveWishlistStoreLink } from "@/lib/rawg-enrichment";
 import {
   enrichWishlistEntryWithRawg,
   removeWishlistMetadata,
@@ -52,6 +59,10 @@ const rawgGame = {
   alternativeNames: [],
   rawgUpdatedAt: "2026-08-19T00:00:00Z",
   rawgUrl: "https://rawg.io/games/portal-2",
+  stores: [
+    { storeSlug: "steam", storeName: "Steam", url: "https://store.steampowered.com/app/620/Portal_2/" },
+    { storeSlug: "gog", storeName: "GOG", url: "https://www.gog.com/game/portal_2" },
+  ],
 };
 
 beforeEach(() => {
@@ -120,6 +131,25 @@ describe("enrichWishlistEntryWithRawg", () => {
         }),
       }),
     }));
+  });  it("persists the resolved Steam store link with the snapshot", async () => {
+    const link = { steamUrl: "https://store.steampowered.com/app/620", steamAppId: "620" };
+    vi.mocked(resolveWishlistStoreLink).mockResolvedValue(link);
+    vi.mocked(matchRawgGame).mockResolvedValue({
+      outcome: "MATCHED",
+      matchMethod: "MANUAL_RAWG_SEARCH",
+      game: rawgGame,
+    });
+
+    await enrichWishlistEntryWithRawg({ wishlistEntryId: "wish-1", rawgId: 123 });
+
+    expect(mockUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({
+          payload: expect.objectContaining({ storeLink: link }),
+        }),
+      }),
+    );
+    vi.mocked(resolveWishlistStoreLink).mockResolvedValue(null);
   });
 
   it("does not overwrite the snapshot when RAWG fails", async () => {

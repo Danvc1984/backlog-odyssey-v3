@@ -4,6 +4,7 @@ import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
+import { resolveManualSteamAppId } from "@/actions/wishlist-identity";
 
 const wishlistTypeSchema = z.enum(["BASE_GAME", "DLC"]);
 const interestSchema = z.number().int().min(1).max(5);
@@ -94,6 +95,15 @@ export async function createWishlistEntry(input: unknown) {
       };
     }
 
+    let identity: { appId: string; provenance: "USER" } | null = null;
+    if (steamAppId) {
+      const resolved = await resolveManualSteamAppId(steamAppId);
+      if (!resolved.ok) {
+        return { success: false as const, data: null, error: resolved.error };
+      }
+      identity = { appId: resolved.appId, provenance: "USER" };
+    }
+
     const entry = await prisma.$transaction(async (tx) => {
       if (type === "DLC") {
         const parent = await tx.game.findUnique({
@@ -113,7 +123,8 @@ export async function createWishlistEntry(input: unknown) {
           baseGameId: baseGameId ?? null,
           interest: interest ?? null,
           notes: notes ?? null,
-          steamAppId: steamAppId ?? null,
+          steamAppId: identity?.appId ?? null,
+          steamAppIdProvenance: identity?.provenance ?? null,
         },
         include: wishlistInclude,
       });
@@ -137,7 +148,7 @@ export async function updateWishlistEntry(input: unknown) {
       return { success: false as const, data: null, error: "Invalid input" };
     }
 
-    const { id, baseGameId, ...fields } = parsed.data;
+    const { id, baseGameId, steamAppId, ...fields } = parsed.data;
     if (baseGameId !== undefined) {
       const entry = await prisma.wishlistEntry.findUnique({
         where: { id },
@@ -160,9 +171,21 @@ export async function updateWishlistEntry(input: unknown) {
         return { success: false as const, data: null, error: "DLC parent must be a base game" };
       }
     }
+    let identityData: Record<string, string | null> = {};
+    if (steamAppId !== undefined) {
+      if (steamAppId === null) {
+        identityData = { steamAppId: null, steamAppIdProvenance: null };
+      } else {
+        const resolved = await resolveManualSteamAppId(steamAppId, id);
+        if (!resolved.ok) {
+          return { success: false as const, data: null, error: resolved.error };
+        }
+        identityData = { steamAppId: resolved.appId, steamAppIdProvenance: "USER" };
+      }
+    }
     const entry = await prisma.wishlistEntry.update({
       where: { id },
-      data: { ...fields, ...(baseGameId !== undefined && { baseGameId }) },
+      data: { ...fields, ...identityData, ...(baseGameId !== undefined && { baseGameId }) },
       include: wishlistInclude,
     });
 

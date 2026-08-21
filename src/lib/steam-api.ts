@@ -1,5 +1,6 @@
 const OWNED_GAMES_ENDPOINT =
   "https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/";
+const STORE_SEARCH_ENDPOINT = "https://store.steampowered.com/api/storesearch/";
 
 export interface OwnedGame {
   appid: number;
@@ -64,6 +65,65 @@ function normalizeGame(value: unknown): OwnedGame | null {
       ? game.rtime_last_played
       : 0,
   };
+}
+
+import type { WishlistStoreLink } from "./rawg-types";
+
+interface SteamStoreSearchItem {
+  type?: unknown;
+  name?: unknown;
+  id?: unknown;
+}
+
+interface SteamStoreSearchResponse {
+  items?: unknown;
+}
+
+export async function findSteamAppIdByName(
+  name: string,
+  fetchFn: typeof fetch = fetch,
+): Promise<WishlistStoreLink | null> {
+  const term = name.trim();
+  if (term.length === 0) {
+    return null;
+  }
+
+  try {
+    const params = new URLSearchParams({ term, cc: "MX", l: "en" });
+    const response = await fetchFn(`${STORE_SEARCH_ENDPOINT}?${params}`, {
+      cache: "no-store",
+    });
+    if (!response.ok) {
+      return null;
+    }
+    const payload: unknown = await response.json();
+    const items = (payload as SteamStoreSearchResponse).items;
+    if (!Array.isArray(items)) {
+      return null;
+    }
+
+    const exact = items.find((item): item is SteamStoreSearchItem => {
+      if (!item || typeof item !== "object") {
+        return false;
+      }
+      const candidate = item as SteamStoreSearchItem;
+      return (
+        candidate.type === "app" &&
+        typeof candidate.name === "string" &&
+        typeof candidate.id === "number" &&
+        Number.isInteger(candidate.id) &&
+        candidate.id > 0 &&
+        candidate.name.trim().toLowerCase() === term.toLowerCase()
+      );
+    });
+    if (!exact || typeof exact.id !== "number") {
+      return null;
+    }
+    const appId = String(exact.id);
+    return { steamAppId: appId, steamUrl: `https://store.steampowered.com/app/${appId}` };
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchOwnedGames(

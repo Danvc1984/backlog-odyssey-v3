@@ -21,6 +21,23 @@ const detail = {
   playtime: 9,
   alternative_names: [{ name: "Portal 2" }],
   updated: "2026-08-19T00:00:00Z",
+  stores: [
+    {
+      id: 1,
+      url: "https://store.steampowered.com/app/620/Portal_2/",
+      store: { id: 1, name: "Steam", slug: "steam" },
+    },
+    {
+      id: 3,
+      url: "https://www.gog.com/en/game/portal_2",
+      store: { id: 3, name: "GOG", slug: "gog" },
+    },
+    {
+      id: 9,
+      url: null,
+      store: { id: 9, name: "Mystery", slug: null },
+    },
+  ],
 };
 
 describe("matchRawgGame", () => {
@@ -29,6 +46,25 @@ describe("matchRawgGame", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubEnv("RAWG_API_KEY", "test-key");
+  });
+
+  it("parses the stores array from game details", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify(detail), { status: 200 }),
+    );
+
+    const result = await matchRawgGame({ title: "Portal 2", selectedRawgId: 123 }, { fetchFn: fetchMock });
+
+    expect(result).toMatchObject({
+      outcome: "MATCHED",
+      game: {
+        stores: [
+          { storeSlug: "steam", storeName: "Steam", url: "https://store.steampowered.com/app/620/Portal_2/" },
+          { storeSlug: "gog", storeName: "GOG", url: "https://www.gog.com/en/game/portal_2" },
+          { storeSlug: null, storeName: "Mystery", url: null },
+        ],
+      },
+    });
   });
 
   it("uses title search instead of treating a Steam App ID as a RAWG ID", async () => {

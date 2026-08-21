@@ -29,6 +29,7 @@ const matchedGame = {
   alternativeNames: [],
   rawgUpdatedAt: null,
   rawgUrl: "https://rawg.io/games/portal-2",
+  stores: [],
 };
 
 const candidate = {

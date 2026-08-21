@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { RawgMetadataPayload } from "@/lib/rawg-types";
 import { WishlistEntryActions } from "./WishlistEntryActions";
+import { WishlistIdentity } from "./WishlistIdentity";
 
 interface WishlistCardProps {
   baseGames: { id: string; name: string }[];
@@ -13,6 +14,7 @@ interface WishlistCardProps {
     interest: number | null;
     notes: string | null;
     steamAppId: string | null;
+    steamAppIdProvenance: string | null;
     baseGame: {
       id: string;
       name: string;
@@ -76,6 +78,18 @@ export function WishlistCard({ entry, baseGames }: WishlistCardProps) {
             </Link>
           </p>
         )}
+
+        <WishlistIdentity
+          entryId={entry.id}
+          entryName={entry.name}
+          steamAppId={entry.steamAppId}
+          provenance={entry.steamAppIdProvenance}
+          snapshot={
+            entry.metadataSnapshot
+              ? { payload: entry.metadataSnapshot.payload, fetchedAt: entry.metadataSnapshot.fetchedAt }
+              : null
+          }
+        />
 
         {metadata && (
           <div className="space-y-2 text-sm">

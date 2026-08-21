@@ -2861,7 +2861,7 @@ export const WishlistEntryScalarFieldEnum = {
   targetPriceMxn: 'targetPriceMxn',
   notes: 'notes',
   steamAppId: 'steamAppId',
-  sourcePreference: 'sourcePreference',
+  steamAppIdProvenance: 'steamAppIdProvenance',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -3355,6 +3355,20 @@ export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel,
  * Reference to a field of type 'Decimal[]'
  */
 export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>
+    
+
+
+/**
+ * Reference to a field of type 'PriceIdentityProvenance'
+ */
+export type EnumPriceIdentityProvenanceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PriceIdentityProvenance'>
+    
+
+
+/**
+ * Reference to a field of type 'PriceIdentityProvenance[]'
+ */
+export type ListEnumPriceIdentityProvenanceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PriceIdentityProvenance[]'>
     
 
 

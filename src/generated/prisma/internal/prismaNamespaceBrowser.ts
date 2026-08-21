@@ -329,7 +329,7 @@ export const WishlistEntryScalarFieldEnum = {
   targetPriceMxn: 'targetPriceMxn',
   notes: 'notes',
   steamAppId: 'steamAppId',
-  sourcePreference: 'sourcePreference',
+  steamAppIdProvenance: 'steamAppIdProvenance',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

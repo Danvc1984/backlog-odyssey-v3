@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fetchOwnedGames } from "./steam-api";
+import { fetchOwnedGames, findSteamAppIdByName } from "./steam-api";
 
 describe("fetchOwnedGames", () => {
   const fetchMock = vi.fn();
@@ -127,5 +127,61 @@ describe("fetchOwnedGames", () => {
     await expect(fetchOwnedGames("steam-id", "test-key")).resolves.toEqual(
       [],
     );
+  });
+});
+
+describe("findSteamAppIdByName", () => {
+  const fetchMock = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
+  const searchResponse = (items: unknown[]) =>
+    new Response(JSON.stringify({ total: items.length, items }), { status: 200 });
+
+  it("returns the exact-name app match with its store URL", async () => {
+    fetchMock.mockResolvedValue(
+      searchResponse([
+        { type: "sub", name: "Portal 2 Complete", id: 999 },
+        { type: "app", name: "portal 2", id: 620 },
+      ]),
+    );
+
+    await expect(findSteamAppIdByName(" Portal 2 ")).resolves.toEqual({
+      steamAppId: "620",
+      steamUrl: "https://store.steampowered.com/app/620",
+    });
+
+    const url = new URL(fetchMock.mock.calls[0][0] as string);
+    expect(url.pathname).toBe("/api/storesearch/");
+    expect(url.searchParams.get("term")).toBe("Portal 2");
+    expect(url.searchParams.get("cc")).toBe("MX");
+  });
+
+  it("returns null when no item matches the name exactly", async () => {
+    fetchMock.mockResolvedValue(
+      searchResponse([{ type: "app", name: "Portal 2 Soundtrack", id: 323180 }]),
+    );
+
+    await expect(findSteamAppIdByName("Portal 2")).resolves.toBeNull();
+  });
+
+  it("ignores non-app results even with an exact name", async () => {
+    fetchMock.mockResolvedValue(searchResponse([{ type: "bundle", name: "Portal 2", id: 5 }]));
+
+    await expect(findSteamAppIdByName("Portal 2")).resolves.toBeNull();
+  });
+
+  it("returns null on HTTP failure, malformed payloads, and empty terms", async () => {
+    fetchMock.mockResolvedValue(new Response("nope", { status: 500 }));
+    await expect(findSteamAppIdByName("Portal 2")).resolves.toBeNull();
+
+    fetchMock.mockResolvedValue(new Response("not json", { status: 200 }));
+    await expect(findSteamAppIdByName("Portal 2")).resolves.toBeNull();
+
+    await expect(findSteamAppIdByName("   ")).resolves.toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

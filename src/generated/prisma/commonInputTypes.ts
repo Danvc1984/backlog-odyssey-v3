@@ -563,6 +563,13 @@ export type DecimalNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedDecimalNullableFilter<$PrismaModel> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
 }
 
+export type EnumPriceIdentityProvenanceNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.PriceIdentityProvenance | Prisma.EnumPriceIdentityProvenanceFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PriceIdentityProvenance[] | Prisma.ListEnumPriceIdentityProvenanceFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PriceIdentityProvenance[] | Prisma.ListEnumPriceIdentityProvenanceFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPriceIdentityProvenanceNullableFilter<$PrismaModel> | $Enums.PriceIdentityProvenance | null
+}
+
 export type DecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
   equals?: runtime.Decimal | runtime.DecimalJsLike | number | string | Prisma.DecimalFieldRefInput<$PrismaModel> | null
   in?: runtime.Decimal[] | runtime.DecimalJsLike[] | number[] | string[] | Prisma.ListDecimalFieldRefInput<$PrismaModel> | null
@@ -577,6 +584,16 @@ export type DecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
   _sum?: Prisma.NestedDecimalNullableFilter<$PrismaModel>
   _min?: Prisma.NestedDecimalNullableFilter<$PrismaModel>
   _max?: Prisma.NestedDecimalNullableFilter<$PrismaModel>
+}
+
+export type EnumPriceIdentityProvenanceNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PriceIdentityProvenance | Prisma.EnumPriceIdentityProvenanceFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PriceIdentityProvenance[] | Prisma.ListEnumPriceIdentityProvenanceFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PriceIdentityProvenance[] | Prisma.ListEnumPriceIdentityProvenanceFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPriceIdentityProvenanceNullableWithAggregatesFilter<$PrismaModel> | $Enums.PriceIdentityProvenance | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPriceIdentityProvenanceNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPriceIdentityProvenanceNullableFilter<$PrismaModel>
 }
 
 export type EnumSyncStatusFilter<$PrismaModel = never> = {
@@ -1260,6 +1277,13 @@ export type NestedDecimalNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedDecimalNullableFilter<$PrismaModel> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
 }
 
+export type NestedEnumPriceIdentityProvenanceNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.PriceIdentityProvenance | Prisma.EnumPriceIdentityProvenanceFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PriceIdentityProvenance[] | Prisma.ListEnumPriceIdentityProvenanceFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PriceIdentityProvenance[] | Prisma.ListEnumPriceIdentityProvenanceFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPriceIdentityProvenanceNullableFilter<$PrismaModel> | $Enums.PriceIdentityProvenance | null
+}
+
 export type NestedDecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
   equals?: runtime.Decimal | runtime.DecimalJsLike | number | string | Prisma.DecimalFieldRefInput<$PrismaModel> | null
   in?: runtime.Decimal[] | runtime.DecimalJsLike[] | number[] | string[] | Prisma.ListDecimalFieldRefInput<$PrismaModel> | null
@@ -1274,6 +1298,16 @@ export type NestedDecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
   _sum?: Prisma.NestedDecimalNullableFilter<$PrismaModel>
   _min?: Prisma.NestedDecimalNullableFilter<$PrismaModel>
   _max?: Prisma.NestedDecimalNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumPriceIdentityProvenanceNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PriceIdentityProvenance | Prisma.EnumPriceIdentityProvenanceFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PriceIdentityProvenance[] | Prisma.ListEnumPriceIdentityProvenanceFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PriceIdentityProvenance[] | Prisma.ListEnumPriceIdentityProvenanceFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPriceIdentityProvenanceNullableWithAggregatesFilter<$PrismaModel> | $Enums.PriceIdentityProvenance | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPriceIdentityProvenanceNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPriceIdentityProvenanceNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumSyncStatusFilter<$PrismaModel = never> = {

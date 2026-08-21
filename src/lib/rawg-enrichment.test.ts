@@ -6,7 +6,10 @@ vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 import { prisma } from "@/lib/prisma";
 import {
   persistRawgMatch,
+  hasRawgSteamStore,
+  resolveWishlistStoreLink,
   toRawgMetadataPayload,
+  toWishlistMetadataPayload,
 } from "./rawg-enrichment";
 import type { RawgGameDetails, RawgMatchResult } from "./rawg-types";
 
@@ -31,6 +34,7 @@ const game: RawgGameDetails = {
   alternativeNames: ["Portal 2"],
   rawgUpdatedAt: "2026-08-19T00:00:00Z",
   rawgUrl: "https://rawg.io/games/portal-2",
+  stores: [],
 };
 
 const matched: RawgMatchResult = {
@@ -198,5 +202,53 @@ describe("RAWG metadata persistence", () => {
     expect(payload.genres).toEqual([]);
     expect(payload.website).toBeNull();
     expect(payload.rating).toBeNull();
+  });
+});
+
+describe("wishlist store-link extension", () => {
+  it("detects the steam-slug store entry regardless of its empty URL", () => {
+    expect(
+      hasRawgSteamStore([
+        { storeSlug: "gog", storeName: "GOG", url: "" },
+        { storeSlug: "steam", storeName: "Steam", url: "" },
+      ]),
+    ).toBe(true);
+    expect(hasRawgSteamStore([{ storeSlug: "gog", storeName: "GOG", url: null }])).toBe(false);
+  });
+
+  it("returns null without a lookup when RAWG lists no Steam store", async () => {
+    const findSteamAppId = vi.fn();
+
+    expect(
+      await resolveWishlistStoreLink({ ...game, stores: [{ storeSlug: "gog", storeName: "GOG", url: "" }] }, findSteamAppId),
+    ).toBeNull();
+    expect(findSteamAppId).not.toHaveBeenCalled();
+  });
+
+  it("resolves the App ID through the exact-name Steam lookup", async () => {
+    const link = {
+      steamUrl: "https://store.steampowered.com/app/620",
+      steamAppId: "620",
+    };
+    const findSteamAppId = vi.fn().mockResolvedValue(link);
+    const gameWithSteamStore = {
+      ...game,
+      stores: [{ storeSlug: "steam", storeName: "Steam", url: "" }],
+    };
+
+    expect(await resolveWishlistStoreLink(gameWithSteamStore, findSteamAppId)).toEqual(link);
+    expect(findSteamAppId).toHaveBeenCalledWith("Portal 2");
+  });
+
+  it("adds the resolved store link to the wishlist payload only, never the catalog payload", () => {
+    const storeLink = { steamUrl: "https://store.steampowered.com/app/620", steamAppId: "620" };
+
+    expect(toWishlistMetadataPayload(game, fetchedAt, storeLink)).toMatchObject({
+      storeLink,
+    });
+    expect(toWishlistMetadataPayload(game, fetchedAt)).toMatchObject({ storeLink: null });
+
+    const catalogPayload = toRawgMetadataPayload(game, fetchedAt) as unknown as Record<string, unknown>;
+    expect(catalogPayload).not.toHaveProperty("storeLink");
   });
 });

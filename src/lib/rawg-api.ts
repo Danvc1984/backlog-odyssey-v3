@@ -7,6 +7,7 @@ import type {
   RawgNamedValue,
   RawgProviderError,
   RawgSearchCandidate,
+  RawgStoreEntry,
 } from "./rawg-types";
 
 const RAWG_API_BASE_URL = "https://api.rawg.io/api";
@@ -42,6 +43,7 @@ interface RawgApiGame {
   playtime?: unknown;
   alternative_names?: unknown;
   updated?: unknown;
+  stores?: unknown;
 }
 
 interface RawgApiSearchResponse {
@@ -159,7 +161,27 @@ function parseGame(value: unknown): RawgGameDetails | null {
     alternativeNames,
     rawgUpdatedAt: nullableString(game.updated),
     rawgUrl: `${RAWG_WEB_BASE_URL}/${encodeURIComponent(game.slug)}`,
+    stores: parseStores(game.stores),
   };
+}
+
+function parseStores(value: unknown): RawgStoreEntry[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.flatMap((item): RawgStoreEntry[] => {
+    if (!isRecord(item)) {
+      return [];
+    }
+    const store = isRecord(item.store) ? item.store : {};
+    return [
+      {
+        storeSlug: nullableString(store.slug),
+        storeName: nullableString(store.name),
+        url: nullableString(item.url),
+      },
+    ];
+  });
 }
 
 function parseSearchCandidate(value: unknown): RawgSearchCandidate | null {

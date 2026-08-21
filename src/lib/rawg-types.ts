@@ -23,6 +23,12 @@ export interface RawgNamedValue {
   slug: string | null;
 }
 
+export interface RawgStoreEntry {
+  storeSlug: string | null;
+  storeName: string | null;
+  url: string | null;
+}
+
 export interface RawgGameDetails {
   id: number;
   slug: string;
@@ -42,6 +48,7 @@ export interface RawgGameDetails {
   alternativeNames: string[];
   rawgUpdatedAt: string | null;
   rawgUrl: string;
+  stores: RawgStoreEntry[];
 }
 
 export interface RawgSearchCandidate {
@@ -100,6 +107,15 @@ export interface RawgMetadataPayload {
   alternativeNames: string[];
   rawgUrl: string;
   attribution: RawgMetadataAttribution;
+}
+
+export interface WishlistStoreLink {
+  steamUrl: string;
+  steamAppId: string;
+}
+
+export interface RawgWishlistMetadataPayload extends RawgMetadataPayload {
+  storeLink: WishlistStoreLink | null;
 }
 
 export type RawgPersistenceErrorCode =

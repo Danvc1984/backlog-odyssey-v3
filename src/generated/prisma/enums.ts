@@ -179,3 +179,12 @@ export const Provider = {
 } as const
 
 export type Provider = (typeof Provider)[keyof typeof Provider]
+
+
+export const PriceIdentityProvenance = {
+  STEAM_IMPORT: 'STEAM_IMPORT',
+  USER: 'USER',
+  RAWG_SUGGESTION: 'RAWG_SUGGESTION'
+} as const
+
+export type PriceIdentityProvenance = (typeof PriceIdentityProvenance)[keyof typeof PriceIdentityProvenance]

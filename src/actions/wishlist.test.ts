@@ -18,6 +18,7 @@ const mockGameFindUnique = vi.fn();
 const mockUpdate = vi.fn();
 const mockDelete = vi.fn();
 const mockFindMany = vi.fn();
+const mockFindFirst = vi.fn();
 const transaction = vi.fn();
 
 function configurePrisma() {
@@ -28,6 +29,7 @@ function configurePrisma() {
     update: mockUpdate,
     delete: mockDelete,
     findMany: mockFindMany,
+    findFirst: mockFindFirst,
   };
   (prisma as unknown as { game: { findUnique: typeof mockGameFindUnique } }).game = {
     findUnique: mockGameFindUnique,
@@ -48,6 +50,7 @@ beforeEach(() => {
   mockUpdate.mockResolvedValue({ id: "wish-1", name: "Hades II" });
   mockDelete.mockResolvedValue({ id: "wish-1" });
   mockFindMany.mockResolvedValue([]);
+  mockFindFirst.mockResolvedValue(null);
 });
 
 describe("createWishlistEntry", () => {
@@ -121,7 +124,13 @@ describe("wishlist CRUD", () => {
     expect(result.success).toBe(true);
     expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
       where: { id: "wish-1" },
-      data: { name: "New name", interest: 4, notes: "Later", steamAppId: "123" },
+      data: {
+        name: "New name",
+        interest: 4,
+        notes: "Later",
+        steamAppId: "123",
+        steamAppIdProvenance: "USER",
+      },
     }));
   });
 
