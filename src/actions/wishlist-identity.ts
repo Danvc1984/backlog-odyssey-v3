@@ -157,6 +157,7 @@ export async function resolveManualSteamAppId(
   raw: string,
   excludeEntryId?: string,
 ): Promise<{ ok: true; appId: string } | { ok: false; error: string }> {
+  await requireUser();
   const parsedId = parseSteamAppIdInput(raw);
   if (!parsedId.ok) {
     return { ok: false, error: parsedId.reason };

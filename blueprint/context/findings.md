@@ -23,14 +23,6 @@
 **Suggested fix:** Add a unit test in `src/actions/steam-import.test.ts` mocking a base game in `externalGameId` and asserting DLC creation with correct relation linking.
 **Resolution:** Re-examined 2026-08-21 by /audit (scope: full): still missing; no `baseGameId` assertion exists in the file. The sibling branch where an already-known DLC updates availability without a libraryEntry upsert (steam-import.ts:39-45) is also uncovered. Status unchanged: open.
 
-### F-03 [P1] open - Exported Server Action `resolveManualSteamAppId` runs without an auth guard
-
-**File:** src/actions/wishlist-identity.ts:156
-**Found:** 2026-08-21 by /audit (scope: full; lens: security)
-**Why it matters:** The file declares `"use server"` (:1), so Next.js exposes every exported async function as a POSTable HTTP endpoint. This is the only exported action of 52 across 16 action files without a `requireUser()` call. An anonymous caller can probe arbitrary Steam AppIDs and receive the name of any conflicting wishlist entry (`identityConflictMessage` includes `conflict.name`, :164-169), turning private catalog data into an oracle. It violates the project standard that every protected server entry point enforces the allowed email.
-**Suggested fix:** Add `await requireUser()` as the first statement of `resolveManualSteamAppId`. In-repo callers (src/actions/wishlist.ts:100,179) already run behind their own guards, so legitimate flows behave identically. Longer term, move this DB-reading helper into `src/lib/` so it stops being an HTTP surface at all.
-**Resolution:**
-
 ### F-04 [P2] open - Steam import and sync duplicate the unresolved-DLC upsert and connection guards
 
 **File:** src/actions/steam-import.ts:63

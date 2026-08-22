@@ -171,6 +171,13 @@ describe("resolveManualSteamAppId", () => {
       }),
     );
   });
+
+  it("rejects before any query when the auth guard fails", async () => {
+    (requireUser as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("Unauthorized"));
+
+    await expect(resolveManualSteamAppId("620", "wish-1")).rejects.toThrow("Unauthorized");
+    expect(mockFindFirst).not.toHaveBeenCalled();
+  });
 });
 
 describe("confirmRawgSuggestedIdentity", () => {
