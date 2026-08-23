@@ -13,7 +13,7 @@ import { importSteamGames } from "./steam-import";
 
 describe("importSteamGames", () => {
   const findUniqueConnection = vi.fn();
-  const findUniqueExternalId = vi.fn();
+  const findManyExternalId = vi.fn();
   const updateManyAvailability = vi.fn();
   const upsertLibraryEntry = vi.fn();
   const createGame = vi.fn();
@@ -21,7 +21,6 @@ describe("importSteamGames", () => {
   const upsertUnresolvedDlc = vi.fn();
   const transaction = vi.fn();
   const tx = {
-    externalGameId: { findUnique: findUniqueExternalId },
     game: { create: createGame },
     gameAvailability: { updateMany: updateManyAvailability },
     libraryEntry: { upsert: upsertLibraryEntry },
@@ -33,8 +32,12 @@ describe("importSteamGames", () => {
     vi.clearAllMocks();
     process.env.STEAM_WEB_API_KEY = "test-key";
     (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
-    (prisma as unknown as { steamConnection: unknown }).steamConnection = {
+    (prisma as unknown as { steamConnection: Record<string, unknown> }).steamConnection = {
       findUnique: findUniqueConnection,
+      update: updateConnection,
+    };
+    (prisma as unknown as { externalGameId: unknown }).externalGameId = {
+      findMany: findManyExternalId,
     };
     (prisma as unknown as { $transaction: typeof transaction }).$transaction =
       transaction;
@@ -45,7 +48,7 @@ describe("importSteamGames", () => {
       id: 1,
       steamId64: "76561198000000000",
     });
-    findUniqueExternalId.mockResolvedValue(null);
+    findManyExternalId.mockResolvedValue([]);
     updateManyAvailability.mockResolvedValue({ count: 1 });
     upsertLibraryEntry.mockResolvedValue({});
     createGame.mockResolvedValue({ id: "game-new" });
@@ -118,7 +121,9 @@ describe("importSteamGames", () => {
   });
 
   it("updates playtime and last played for an existing Steam game", async () => {
-    findUniqueExternalId.mockResolvedValue({ gameId: "game-1" });
+    findManyExternalId.mockResolvedValue([
+      { externalId: "10", gameId: "game-1", game: { type: "BASE_GAME" } },
+    ]);
     vi.mocked(fetchOwnedGames).mockResolvedValue([
       {
         appid: 10,
@@ -154,9 +159,6 @@ describe("importSteamGames", () => {
   });
 
   it("does not schedule the same newly imported game twice for duplicate Steam input", async () => {
-    findUniqueExternalId
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ gameId: "game-new" });
     vi.mocked(fetchOwnedGames).mockResolvedValue([
       { appid: 10, name: "Portal", playtimeForever: 120, rtimeLastPlayed: 1700000000 },
       { appid: 10, name: "Portal", playtimeForever: 120, rtimeLastPlayed: 1700000000 },
@@ -188,7 +190,6 @@ describe("importSteamGames", () => {
   });
 
   it("queues an owned DLC when its Steam base game is not imported", async () => {
-    findUniqueExternalId.mockResolvedValue(null);
     vi.mocked(fetchOwnedGames).mockResolvedValue([
       {
         appid: 200,
@@ -217,6 +218,122 @@ describe("importSteamGames", () => {
       },
     });
     expect(createGame).not.toHaveBeenCalled();
+  });
+
+  it("creates an owned DLC under its imported base game", async () => {
+    findManyExternalId.mockResolvedValue([
+      { externalId: "100", gameId: "game-base", game: { type: "BASE_GAME" } },
+    ]);
+    vi.mocked(fetchOwnedGames).mockResolvedValue([
+      {
+        appid: 200,
+        name: "Expansion",
+        playtimeForever: 45,
+        rtimeLastPlayed: 1700000000,
+        type: "DLC",
+        steamBaseAppId: "100",
+      },
+    ]);
+
+    const result = await importSteamGames();
+
+    expect(result).toEqual(expect.objectContaining({
+      success: true,
+      data: expect.objectContaining({ imported: 1, updated: 0 }),
+    }));
+    expect(createGame).toHaveBeenCalledWith({
+      data: {
+        type: "DLC",
+        origin: "STEAM_IMPORT",
+        name: "Expansion",
+        baseGameId: "game-base",
+        externalIds: {
+          create: {
+            namespaceId: "200",
+            namespace: "STEAM_APP",
+            externalId: "200",
+            matchMethod: "EXACT_STEAM_APP_ID",
+          },
+        },
+        availability: {
+          create: {
+            source: "STEAM",
+            steamAppId: "200",
+            steamPlaytimeTotal: BigInt(45),
+            steamLastPlayed: new Date(1700000000000),
+          },
+        },
+      },
+      select: { id: true },
+    });
+    expect(upsertUnresolvedDlc).not.toHaveBeenCalled();
+    expect(upsertLibraryEntry).not.toHaveBeenCalled();
+  });
+
+  it("updates a known DLC's availability without touching its library entry", async () => {
+    findManyExternalId.mockResolvedValue([
+      { externalId: "200", gameId: "game-dlc", game: { type: "DLC" } },
+    ]);
+    vi.mocked(fetchOwnedGames).mockResolvedValue([
+      {
+        appid: 200,
+        name: "Expansion",
+        playtimeForever: 90,
+        rtimeLastPlayed: 1700000100,
+        type: "DLC",
+        steamBaseAppId: "100",
+      },
+    ]);
+
+    const result = await importSteamGames();
+
+    expect(result).toEqual(expect.objectContaining({
+      success: true,
+      data: expect.objectContaining({ imported: 0, updated: 1 }),
+    }));
+    expect(updateManyAvailability).toHaveBeenCalledWith({
+      where: { gameId: "game-dlc", source: "STEAM" },
+      data: {
+        source: "STEAM",
+        steamAppId: "200",
+        steamPlaytimeTotal: BigInt(90),
+        steamLastPlayed: new Date(1700000100000),
+      },
+    });
+    expect(upsertLibraryEntry).not.toHaveBeenCalled();
+    expect(createGame).not.toHaveBeenCalled();
+  });
+
+  it("keeps earlier chunks committed when a later chunk fails mid-import", async () => {
+    const games = Array.from({ length: 60 }, (_, index) => ({
+      appid: index + 1,
+      name: `Game ${index + 1}`,
+      playtimeForever: 0,
+      rtimeLastPlayed: 0,
+    }));
+    vi.mocked(fetchOwnedGames).mockResolvedValue(games);
+    let createCalls = 0;
+    createGame.mockImplementation(async () => {
+      createCalls += 1;
+      if (createCalls === 51) {
+        throw new Error("chunk 2 exploded");
+      }
+      return { id: `game-${createCalls}` };
+    });
+
+    const result = await importSteamGames();
+
+    expect(result).toEqual({
+      success: false,
+      data: null,
+      error: "chunk 2 exploded",
+    });
+    expect(createCalls).toBe(51);
+    expect(updateConnection).not.toHaveBeenCalled();
+    expect(queueRawgForImportedGames).toHaveBeenCalledTimes(1);
+    expect(queueRawgForImportedGames).toHaveBeenCalledWith(
+      Array.from({ length: 50 }, (_, index) => `game-${index + 1}`),
+    );
   });
 
   it("returns an error when Steam is disconnected", async () => {

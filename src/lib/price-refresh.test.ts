@@ -3,6 +3,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 vi.mock("./itad-api", () => ({
+  chunkItadIds: (items: unknown[], size = 200) => {
+    const chunks: unknown[][] = [];
+    for (let index = 0; index < items.length; index += size) {
+      chunks.push(items.slice(index, index + size));
+    }
+    return chunks;
+  },
   fetchItadPrices: vi.fn(),
 }));
 vi.mock("./itad-identity", () => ({
@@ -232,8 +239,10 @@ describe("processPriceRefreshEntries", () => {
     ]);
 
     expect(counts).toMatchObject({ total: 3, refreshed: 1, noOffers: 1, notFound: 1 });
-    expect(txDealDelete).toHaveBeenCalledWith({ where: { wishlistEntryId: "w1" } });
-    expect(txDealDelete).toHaveBeenCalledWith({ where: { wishlistEntryId: "w2" } });
+    expect(txDealDelete).toHaveBeenCalledTimes(1);
+    expect(txDealDelete).toHaveBeenCalledWith({
+      where: { wishlistEntryId: { in: ["w1", "w2"] } },
+    });
     expect(txDealCreate).toHaveBeenCalledTimes(1);
     const created = txDealCreate.mock.calls[0][0].data as Array<Record<string, unknown>>;
     expect(created).toHaveLength(1);
@@ -269,11 +278,15 @@ describe("processPriceRefreshEntries", () => {
     expect(txDealCreate).not.toHaveBeenCalled();
   });
 
-  it("keeps already-persisted entries when a later persistence fails", async () => {
-    mockWishlistCount.mockResolvedValue(2);
+  it("keeps later chunks when an earlier chunk's persistence fails", async () => {
+    mockWishlistCount.mockResolvedValue(201);
     vi.mocked(resolveItadIds).mockResolvedValue(new Map([["620", "uuid-620"]]));
     vi.mocked(fetchItadPrices).mockResolvedValue([
-      { itadId: "uuid-620", historyLow: null, deals: [{ shop: { id: 61, name: "Steam" } } as never] },
+      {
+        itadId: "uuid-620",
+        historyLow: null,
+        deals: [{ shop: { id: 61, name: "Steam" }, price: 100, currency: "MXN" } as never],
+      },
     ]);
     mockTransaction.mockReset();
     txDealDelete.mockResolvedValue({ count: 0 });
@@ -285,13 +298,40 @@ describe("processPriceRefreshEntries", () => {
       .mockImplementation(async (callback: (tx: unknown) => unknown) =>
         callback({ dealOffer: { deleteMany: txDealDelete, createMany: txDealCreate } }),
       );
+    const entries = Array.from({ length: 201 }, (_, index) => entry(`w${index + 1}`, "620"));
 
-    const counts = await processPriceRefreshEntries("key", [
-      entry("w1", "620"),
-      entry("w2", "620"),
+    const counts = await processPriceRefreshEntries("key", entries);
+
+    expect(counts).toMatchObject({ total: 201, failed: 200, refreshed: 1 });
+    const lastDelete = txDealDelete.mock.calls.at(-1)?.[0] as {
+      where: { wishlistEntryId: { in: string[] } };
+    };
+    expect(lastDelete.where.wishlistEntryId.in).toEqual(["w201"]);
+    expect(txDealCreate).toHaveBeenCalledTimes(1);
+    const created = txDealCreate.mock.calls[0][0].data as Array<Record<string, unknown>>;
+    expect(created).toHaveLength(1);
+    expect(created[0]).toMatchObject({ wishlistEntryId: "w201" });
+  });
+
+  it("shares one fetch timestamp across a chunk's rows", async () => {
+    mockWishlistCount.mockResolvedValue(2);
+    vi.mocked(resolveItadIds).mockResolvedValue(new Map([["620", "uuid-620"]]));
+    vi.mocked(fetchItadPrices).mockResolvedValue([
+      {
+        itadId: "uuid-620",
+        historyLow: null,
+        deals: [
+          { shop: { id: 61, name: "Steam" }, price: 100, currency: "MXN" } as never,
+          { shop: { id: 62, name: "Fanatical" }, price: 90, currency: "MXN" } as never,
+        ],
+      },
     ]);
 
-    expect(counts).toMatchObject({ failed: 1, refreshed: 1 });
-    expect(txDealCreate).toHaveBeenCalled();
+    await processPriceRefreshEntries("key", [entry("w1", "620"), entry("w2", "620")]);
+
+    const created = txDealCreate.mock.calls[0][0].data as Array<{ fetchedAt: Date }>;
+    expect(created).toHaveLength(4);
+    const stamps = new Set(created.map((row) => row.fetchedAt.getTime()));
+    expect(stamps.size).toBe(1);
   });
 });

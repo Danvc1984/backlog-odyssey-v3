@@ -1,6 +1,7 @@
 const OWNED_GAMES_ENDPOINT =
   "https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/";
 const STORE_SEARCH_ENDPOINT = "https://store.steampowered.com/api/storesearch/";
+const STORE_DETAILS_CONCURRENCY = 8;
 
 export interface OwnedGame {
   appid: number;
@@ -180,29 +181,31 @@ export async function fetchOwnedGames(
 
 async function fetchOwnedGameDetails(appids: number[]) {
   const details = new Map<number, { type: string; fullGameAppId: number | null }>();
-  await Promise.all(
-    appids.map(async (appid) => {
-      try {
-        const params = new URLSearchParams({ appids: String(appid), filters: "basic" });
-        const response = await fetch(
-          `https://store.steampowered.com/api/appdetails?${params}`,
-          { cache: "no-store" },
-        );
-        if (!response.ok) return;
-        const payload = (await response.json()) as SteamAppDetailsResponse;
-        const app = payload[String(appid)];
-        const fullGameAppId = app?.data?.fullgame?.appid;
-        details.set(appid, {
-          type: typeof app?.data?.type === "string" ? app.data.type : "",
-          fullGameAppId:
-            typeof fullGameAppId === "number" && Number.isInteger(fullGameAppId)
-              ? fullGameAppId
-              : null,
-        });
-      } catch {
-        // A details failure must not prevent importing the owned-game list.
-      }
-    }),
-  );
+  for (let index = 0; index < appids.length; index += STORE_DETAILS_CONCURRENCY) {
+    await Promise.all(
+      appids.slice(index, index + STORE_DETAILS_CONCURRENCY).map(async (appid) => {
+        try {
+          const params = new URLSearchParams({ appids: String(appid), filters: "basic" });
+          const response = await fetch(
+            `https://store.steampowered.com/api/appdetails?${params}`,
+            { cache: "no-store" },
+          );
+          if (!response.ok) return;
+          const payload = (await response.json()) as SteamAppDetailsResponse;
+          const app = payload[String(appid)];
+          const fullGameAppId = app?.data?.fullgame?.appid;
+          details.set(appid, {
+            type: typeof app?.data?.type === "string" ? app.data.type : "",
+            fullGameAppId:
+              typeof fullGameAppId === "number" && Number.isInteger(fullGameAppId)
+                ? fullGameAppId
+                : null,
+          });
+        } catch {
+          // A details failure must not prevent importing the owned-game list.
+        }
+      }),
+    );
+  }
   return details;
 }

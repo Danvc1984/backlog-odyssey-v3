@@ -66,10 +66,68 @@ describe("unresolved DLC actions", () => {
     });
 
     expect(result.success).toBe(true);
+    expect(result.data).toEqual({
+      id: "dlc-1",
+      name: "Expansion",
+      type: "DLC",
+      baseGameId: "base-1",
+    });
     expect(createGame).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ type: "DLC", baseGameId: "base-1" }),
     }));
     expect(deleteQueue).toHaveBeenCalledWith({ where: { id: "queue-1" } });
+  });
+
+  it("refuses to link when the target base game is missing", async () => {
+    findBase.mockResolvedValue(null);
+
+    const result = await linkUnresolvedDlc({
+      unresolvedId: "queue-1",
+      targetBaseGameId: "missing",
+    });
+
+    expect(result).toEqual({ success: false, data: null, error: "Base game not found" });
+    expect(createGame).not.toHaveBeenCalled();
+    expect(deleteQueue).not.toHaveBeenCalled();
+  });
+
+  it("refuses to parent a DLC under another DLC", async () => {
+    findBase.mockResolvedValue({ id: "other-dlc", type: "DLC" });
+
+    const result = await linkUnresolvedDlc({
+      unresolvedId: "queue-1",
+      targetBaseGameId: "other-dlc",
+    });
+
+    expect(result).toEqual({
+      success: false,
+      data: null,
+      error: "DLC parent must be a base game",
+    });
+    expect(createGame).not.toHaveBeenCalled();
+    expect(deleteQueue).not.toHaveBeenCalled();
+  });
+
+  it("refuses to create a new base when the Steam identity is unavailable", async () => {
+    findUniqueQueue.mockResolvedValue({
+      id: "queue-1",
+      name: "Expansion",
+      steamAppId: "200",
+      steamBaseAppId: null,
+    });
+
+    const result = await resolveUnresolvedDlcWithNewBase({
+      unresolvedId: "queue-1",
+      baseGameName: "Base game",
+    });
+
+    expect(result).toEqual({
+      success: false,
+      data: null,
+      error: "Steam base game identity is unavailable",
+    });
+    expect(createGame).not.toHaveBeenCalled();
+    expect(deleteQueue).not.toHaveBeenCalled();
   });
 
   it("creates a base game and DLC atomically", async () => {

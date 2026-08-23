@@ -477,6 +477,8 @@ model PriceRefresh {
   counts          Json?
 
   wishlistEntry WishlistEntry? @relation(fields: [wishlistEntryId], references: [id], onDelete: Cascade)
+
+  @@index([status, requestedAt])
 }
 
 // ---------------------------------------------------------------------------
@@ -594,6 +596,8 @@ model SyncRun {
   counts         Json?
   diagnostics    Json?
   enrichmentJobs EnrichmentJob[]
+
+  @@index([provider, status])
 }
 
 model CatalogOperation {

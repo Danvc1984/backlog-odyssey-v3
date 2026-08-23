@@ -4,26 +4,28 @@ import { fetchOwnedGames, type OwnedGame } from "@/lib/steam-api";
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { lastPlayedDate } from "@/lib/steam-utils";
+import { upsertUnresolvedSteamDlc, requireSteamFlowContext } from "@/lib/steam-flow";
 import { queueRawgForImportedGames } from "@/lib/rawg-import-queue";
 
 type ImportGameResult =
   | { kind: "imported"; gameId: string }
   | { kind: "updated" };
 
+type ImportTxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
+const IMPORT_CHUNK_SIZE = 50;
+
+interface KnownIdentity {
+  gameId: string;
+  type: "BASE_GAME" | "DLC";
+}
+
 async function importGame(
-  tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
+  tx: ImportTxClient,
+  identities: Map<string, KnownIdentity>,
   game: OwnedGame,
 ): Promise<ImportGameResult> {
   const externalId = String(game.appid);
-  const existing = await tx.externalGameId.findUnique({
-    where: {
-      namespace_externalId: {
-        namespace: "STEAM_APP",
-        externalId,
-      },
-    },
-  });
-
   const availability = {
     source: "STEAM" as const,
     steamAppId: externalId,
@@ -31,15 +33,16 @@ async function importGame(
     steamLastPlayed: lastPlayedDate(game.rtimeLastPlayed),
   };
 
-  if (existing) {
+  const known = identities.get(externalId);
+  if (known) {
     await tx.gameAvailability.updateMany({
-      where: { gameId: existing.gameId, source: "STEAM" },
+      where: { gameId: known.gameId, source: "STEAM" },
       data: availability,
     });
     if (game.type !== "DLC") {
       await tx.libraryEntry.upsert({
-        where: { gameId: existing.gameId },
-        create: { gameId: existing.gameId },
+        where: { gameId: known.gameId },
+        create: { gameId: known.gameId },
         update: {},
       });
     }
@@ -47,33 +50,12 @@ async function importGame(
   }
 
   if (game.type === "DLC") {
-    const baseExternalId = game.steamBaseAppId
-      ? await tx.externalGameId.findUnique({
-          where: {
-            namespace_externalId: {
-              namespace: "STEAM_APP",
-              externalId: game.steamBaseAppId,
-            },
-          },
-          select: { gameId: true, game: { select: { type: true } } },
-        })
-      : null;
+    const baseIdentity = game.steamBaseAppId
+      ? identities.get(game.steamBaseAppId)
+      : undefined;
 
-    if (!baseExternalId || baseExternalId.game.type !== "BASE_GAME") {
-      await tx.unresolvedSteamDlc.upsert({
-        where: { steamAppId: externalId },
-        create: {
-          steamAppId: externalId,
-          name: game.name,
-          steamBaseAppId: game.steamBaseAppId ?? null,
-        },
-        update: {
-          name: game.name,
-          steamBaseAppId: game.steamBaseAppId ?? null,
-          status: "PENDING",
-          discardedAt: null,
-        },
-      });
+    if (!baseIdentity || baseIdentity.type !== "BASE_GAME") {
+      await upsertUnresolvedSteamDlc(tx, externalId, game);
       return { kind: "updated" };
     }
 
@@ -82,7 +64,7 @@ async function importGame(
         type: "DLC",
         origin: "STEAM_IMPORT",
         name: game.name,
-        baseGameId: baseExternalId.gameId,
+        baseGameId: baseIdentity.gameId,
         externalIds: {
           create: {
             namespaceId: externalId,
@@ -95,6 +77,7 @@ async function importGame(
       },
       select: { id: true },
     });
+    identities.set(externalId, { gameId: createdDlc.id, type: "DLC" });
     return { kind: "imported", gameId: createdDlc.id };
   }
 
@@ -116,73 +99,88 @@ async function importGame(
     },
     select: { id: true },
   });
+  identities.set(externalId, { gameId: createdGame.id, type: "BASE_GAME" });
   return { kind: "imported", gameId: createdGame.id };
 }
 
+async function loadKnownIdentities(
+  games: OwnedGame[],
+): Promise<Map<string, KnownIdentity>> {
+  const identities = new Map<string, KnownIdentity>();
+  const appIds = [
+    ...games.map((game) => String(game.appid)),
+    ...games.flatMap((game) => (game.steamBaseAppId ? [game.steamBaseAppId] : [])),
+  ];
+  if (appIds.length === 0) {
+    return identities;
+  }
+  const knownRows = await prisma.externalGameId.findMany({
+    where: { namespace: "STEAM_APP", externalId: { in: [...new Set(appIds)] } },
+    select: { externalId: true, gameId: true, game: { select: { type: true } } },
+  });
+  for (const row of knownRows) {
+    identities.set(row.externalId, { gameId: row.gameId, type: row.game.type });
+  }
+  return identities;
+}
+
 export async function importSteamGames() {
+  // Survives into the catch so a failed mid-run can still schedule enrichment
+  // for the chunks that already committed.
+  const createdGameIds: string[] = [];
   try {
     await requireUser();
 
-    const connection = await prisma.steamConnection.findUnique({
-      where: { id: 1 },
-    });
-    if (!connection) {
+    const context = await requireSteamFlowContext();
+    if (!context.ok) {
       return {
         success: false as const,
         data: null,
-        error: "Steam account is not connected",
+        error: context.error,
       };
     }
 
-    const apiKey = process.env.STEAM_WEB_API_KEY;
-    if (!apiKey) {
-      return {
-        success: false as const,
-        data: null,
-        error: "STEAM_WEB_API_KEY is not configured",
-      };
-    }
+    const games = await fetchOwnedGames(context.steamId64, context.apiKey);
+    const orderedGames = [...games].sort(
+      (left, right) => Number(left.type === "DLC") - Number(right.type === "DLC"),
+    );
+    const identities = await loadKnownIdentities(games);
 
-    const games = await fetchOwnedGames(connection.steamId64, apiKey);
-    const result = await prisma.$transaction(async (tx) => {
-      let imported = 0;
-      let updated = 0;
-      const createdGameIds: string[] = [];
-
-      const orderedGames = [...games].sort(
-        (left, right) => Number(left.type === "DLC") - Number(right.type === "DLC"),
-      );
-      for (const game of orderedGames) {
-        const outcome = await importGame(tx, game);
-        if (outcome.kind === "imported") {
-          imported += 1;
-          createdGameIds.push(outcome.gameId);
-        } else {
-          updated += 1;
+    let imported = 0;
+    let updated = 0;
+    for (let index = 0; index < orderedGames.length; index += IMPORT_CHUNK_SIZE) {
+      const chunk = orderedGames.slice(index, index + IMPORT_CHUNK_SIZE);
+      await prisma.$transaction(async (tx) => {
+        for (const game of chunk) {
+          const outcome = await importGame(tx, identities, game);
+          if (outcome.kind === "imported") {
+            imported += 1;
+            createdGameIds.push(outcome.gameId);
+          } else {
+            updated += 1;
+          }
         }
-      }
-
-      await tx.steamConnection.update({
-        where: { id: 1 },
-        data: {
-          lastSyncAt: new Date(),
-          counts: { imported, updated },
-        },
       });
+    }
 
-      return { imported, updated, createdGameIds };
+    await prisma.steamConnection.update({
+      where: { id: 1 },
+      data: {
+        lastSyncAt: new Date(),
+        counts: { imported, updated },
+      },
     });
 
     const noRawgQueueWork = { batchId: null, queued: 0, skipped: 0 };
     try {
-      const rawgQueue = result.createdGameIds.length > 0
-        ? await queueRawgForImportedGames(result.createdGameIds)
+      const rawgQueue = createdGameIds.length > 0
+        ? await queueRawgForImportedGames(createdGameIds)
         : noRawgQueueWork;
       return {
         success: true as const,
         data: {
-          imported: result.imported,
-          updated: result.updated,
+          imported,
+          updated,
           rawgQueue: { status: "QUEUED" as const, ...rawgQueue },
         },
         error: null,
@@ -191,14 +189,21 @@ export async function importSteamGames() {
       return {
         success: true as const,
         data: {
-          imported: result.imported,
-          updated: result.updated,
+          imported,
+          updated,
           rawgQueue: { status: "DEFERRED" as const, queued: 0, skipped: 0, batchId: null },
         },
         error: null,
       };
     }
   } catch (err) {
+    if (createdGameIds.length > 0) {
+      try {
+        await queueRawgForImportedGames(createdGameIds);
+      } catch {
+        // Enrichment scheduling must not mask the original import failure.
+      }
+    }
     return {
       success: false as const,
       data: null,

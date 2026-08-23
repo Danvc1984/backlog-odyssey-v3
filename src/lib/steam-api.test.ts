@@ -94,6 +94,36 @@ describe("fetchOwnedGames", () => {
     ]);
   });
 
+  it("bounds concurrent store appdetails lookups for large libraries", async () => {
+    const games = Array.from({ length: 40 }, (_, index) => ({
+      appid: index + 1,
+      name: `Game ${index + 1}`,
+      playtime_forever: 0,
+    }));
+    let inFlight = 0;
+    let peak = 0;
+    fetchMock.mockImplementation(async (url: string | URL) => {
+      if (String(url).includes("GetOwnedGames")) {
+        return new Response(JSON.stringify({ response: { games } }), { status: 200 });
+      }
+      inFlight += 1;
+      peak = Math.max(peak, inFlight);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      const appid = new URL(String(url)).searchParams.get("appids");
+      inFlight -= 1;
+      return new Response(
+        JSON.stringify({ [appid ?? ""]: { success: true, data: { type: "game" } } }),
+        { status: 200 },
+      );
+    });
+
+    const result = await fetchOwnedGames("steam-id", "test-key");
+
+    expect(result).toHaveLength(40);
+    expect(peak).toBeLessThanOrEqual(8);
+    expect(fetchMock).toHaveBeenCalledTimes(41);
+  });
+
   it("returns an empty list for malformed payloads and ignores malformed games", async () => {
     fetchMock.mockResolvedValue(
       new Response(

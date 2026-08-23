@@ -662,8 +662,6 @@ export function resolveMergePlan(
   };
 }
 
-export type OriginString = string;
-
 export interface MergeGraphGame {
   id: string;
   name: string;

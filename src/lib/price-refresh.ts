@@ -3,6 +3,7 @@ import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
+  chunkItadIds,
   fetchItadPrices,
   type ItadDeal,
   type ItadGamePrices,
@@ -133,7 +134,6 @@ function dealToRow(entryId: string, deal: ItadDeal, historyLow: number | null, n
     regularPrice: deal.regular != null ? new Prisma.Decimal(deal.regular) : null,
     discount: deal.cut != null && Number.isFinite(deal.cut) ? Math.round(deal.cut) : null,
     historicalLow: historyLow != null ? new Prisma.Decimal(historyLow) : null,
-    // DEBUG: 
     voucher: deal.voucher,
     itadFlag: deal.flag,
     drm: drm.length > 0 ? drm.join(", ") : null,
@@ -177,8 +177,7 @@ export async function processPriceRefreshEntries(
   }
 
   const pricesById = new Map<string, ItadGamePrices>();
-  for (let index = 0; index < priced.length; index += 200) {
-    const chunk = priced.slice(index, index + 200);
+  for (const chunk of chunkItadIds(priced)) {
     let outcome: ItadGamePrices[] | ItadProviderError;
     try {
       outcome = await fetchItadPrices(
@@ -189,39 +188,39 @@ export async function processPriceRefreshEntries(
       outcome = { category: "NETWORK", message: "ITAD prices could not be fetched" };
     }
     if ("category" in outcome) {
-      for (const { entry } of chunk) {
-        counts.failed += 1;
-      }
+      counts.failed += chunk.length;
       continue;
     }
     for (const game of outcome) {
       pricesById.set(game.itadId, game);
     }
+
+    const now = new Date();
+    const rows: ReturnType<typeof dealToRow>[] = [];
+    const entryIds: string[] = [];
+    const dealtEntryIds: string[] = [];
     for (const { entry, itadId } of chunk) {
       // A known game missing from the price response counts as having no offers.
       const game = pricesById.get(itadId) ?? { itadId, historyLow: null, deals: [] };
-      const now = new Date();
-      try {
-        await prisma.$transaction(async (tx) => {
-          await tx.dealOffer.deleteMany({ where: { wishlistEntryId: entry.id } });
-          if (game.deals.length === 0) {
-            return;
-          }
-          await tx.dealOffer.createMany({
-            data: game.deals.map((deal) =>
-              dealToRow(entry.id, deal, game.historyLow, now),
-            ),
-          });
-        });
-        if (game.deals.length === 0) {
-          counts.noOffers += 1;
-        } else {
-          counts.refreshed += 1;
-        }
-      } catch (err) {
-        // Persistence failures isolate to one entry.
-        counts.failed += 1;
+      entryIds.push(entry.id);
+      if (game.deals.length === 0) {
+        continue;
       }
+      dealtEntryIds.push(entry.id);
+      rows.push(...game.deals.map((deal) => dealToRow(entry.id, deal, game.historyLow, now)));
+    }
+    try {
+      await prisma.$transaction(async (tx) => {
+        await tx.dealOffer.deleteMany({ where: { wishlistEntryId: { in: entryIds } } });
+        if (rows.length > 0) {
+          await tx.dealOffer.createMany({ data: rows });
+        }
+      });
+      counts.refreshed += dealtEntryIds.length;
+      counts.noOffers += entryIds.length - dealtEntryIds.length;
+    } catch {
+      // Persistence failures isolate to the chunk; other chunks keep their progress.
+      counts.failed += entryIds.length;
     }
   }
 

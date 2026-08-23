@@ -104,7 +104,6 @@ export function AddWishlistDialog({
       type,
       baseGameId: type === "DLC" ? baseGameId : undefined,
       interest: Number(interest),
-      rawgId: selectedRawgId ?? undefined,
     });
 
     if (!result.success) {

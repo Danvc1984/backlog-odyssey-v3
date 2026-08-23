@@ -14,13 +14,11 @@ describe("syncSteamPlaytime", () => {
   const findUniqueConnection = vi.fn();
   const createSyncRun = vi.fn();
   const updateSyncRun = vi.fn();
-  const findUniqueExternalId = vi.fn();
+  const findManyExternalId = vi.fn();
   const updateManyAvailability = vi.fn();
   const upsertUnresolvedDlc = vi.fn();
   const transaction = vi.fn();
   const tx = {
-    syncRun: { create: createSyncRun, update: updateSyncRun },
-    externalGameId: { findUnique: findUniqueExternalId },
     gameAvailability: { updateMany: updateManyAvailability },
     unresolvedSteamDlc: { upsert: upsertUnresolvedDlc },
   };
@@ -36,6 +34,9 @@ describe("syncSteamPlaytime", () => {
       create: createSyncRun,
       update: updateSyncRun,
     };
+    (prisma as unknown as Record<string, unknown>).externalGameId = {
+      findMany: findManyExternalId,
+    };
     (prisma as unknown as Record<string, unknown>).$transaction = transaction;
     transaction.mockImplementation(
       async (callback: (client: typeof tx) => unknown) => callback(tx),
@@ -43,7 +44,7 @@ describe("syncSteamPlaytime", () => {
     findUniqueConnection.mockResolvedValue({ id: 1, steamId64: "76561198000000000" });
     createSyncRun.mockResolvedValue({ id: "sync-1" });
     updateSyncRun.mockResolvedValue({});
-    findUniqueExternalId.mockResolvedValue({ gameId: "game-1" });
+    findManyExternalId.mockResolvedValue([{ externalId: "10", gameId: "game-1" }]);
     updateManyAvailability.mockResolvedValue({ count: 1 });
     upsertUnresolvedDlc.mockResolvedValue({});
   });
@@ -74,7 +75,7 @@ describe("syncSteamPlaytime", () => {
   });
 
   it("skips an app that has not been imported", async () => {
-    findUniqueExternalId.mockResolvedValue(null);
+    findManyExternalId.mockResolvedValue([]);
     vi.mocked(fetchOwnedGames).mockResolvedValue([
       { appid: 10, name: "Portal", playtimeForever: 240, rtimeLastPlayed: 0 },
     ]);
@@ -89,7 +90,7 @@ describe("syncSteamPlaytime", () => {
   });
 
   it("reactivates a discarded unresolved DLC when it remains absent", async () => {
-    findUniqueExternalId.mockResolvedValue(null);
+    findManyExternalId.mockResolvedValue([]);
     vi.mocked(fetchOwnedGames).mockResolvedValue([
       {
         appid: 200,
@@ -125,10 +126,48 @@ describe("syncSteamPlaytime", () => {
       data: { synced: 0, skipped: 0, failed: 1 },
       error: "Steam API returned no owned games",
     });
+    expect(createSyncRun).toHaveBeenCalled();
     expect(updateSyncRun).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ status: "FAILED" }),
     }));
-    expect(transaction).toHaveBeenCalled();
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it("keeps earlier chunks committed when a later chunk fails", async () => {
+    const games = Array.from({ length: 60 }, (_, index) => ({
+      appid: index + 1,
+      name: `Game ${index + 1}`,
+      playtimeForever: 10,
+      rtimeLastPlayed: 0,
+    }));
+    vi.mocked(fetchOwnedGames).mockResolvedValue(games);
+    findManyExternalId.mockImplementation(
+      async (args: { where: { externalId: { in: string[] } } }) =>
+        args.where.externalId.in.map((externalId) => ({
+          externalId,
+          gameId: `game-${externalId}`,
+        })),
+    );
+    let availabilityCalls = 0;
+    updateManyAvailability.mockImplementation(async () => {
+      availabilityCalls += 1;
+      if (availabilityCalls === 51) {
+        throw new Error("chunk 2 exploded");
+      }
+      return { count: 1 };
+    });
+
+    const result = await syncSteamPlaytime();
+
+    expect(result).toEqual({
+      success: false,
+      data: null,
+      error: "chunk 2 exploded",
+    });
+    expect(availabilityCalls).toBe(51);
+    expect(updateSyncRun).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ status: "FAILED" }),
+    }));
   });
 
   it("preserves the transaction error when failed-run recovery cannot find the run", async () => {

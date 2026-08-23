@@ -17,7 +17,6 @@ const createWishlistEntrySchema = z
     interest: interestSchema.optional(),
     notes: z.string().optional().nullable(),
     steamAppId: z.string().trim().min(1).optional().nullable(),
-    rawgId: z.number().int().positive().optional(),
   })
   .strict();
 
@@ -60,11 +59,9 @@ const acquireWishlistDlcSchema = z
   })
   .strict();
 
-export type CreateWishlistEntryInput = z.infer<typeof createWishlistEntrySchema>;
 export type UpdateWishlistEntryInput = z.infer<typeof updateWishlistEntrySchema>;
 export type GetWishlistEntriesInput = z.infer<typeof getWishlistEntriesSchema>;
 export type AcquireWishlistBaseGameInput = z.infer<typeof acquireWishlistBaseGameSchema>;
-export type AcquireWishlistDlcInput = z.input<typeof acquireWishlistDlcSchema>;
 
 const wishlistInclude = {
   metadataSnapshot: true,

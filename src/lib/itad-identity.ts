@@ -8,7 +8,6 @@ import {
 } from "./itad-api";
 
 const NOT_FOUND_SENTINEL = "";
-const LOOKUP_CHUNK_SIZE = 200;
 
 export async function resolveItadIds(
   apiKey: string,
@@ -38,7 +37,7 @@ export async function resolveItadIds(
 
   if (misses.length > 0) {
     const lookedUp = new Map<string, string | null>();
-    for (const chunk of chunkItadIds(misses, LOOKUP_CHUNK_SIZE)) {
+    for (const chunk of chunkItadIds(misses)) {
       const outcome = await lookupItadIdsByAppIds(apiKey, chunk);
       if ("category" in outcome) {
         return outcome;

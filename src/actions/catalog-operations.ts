@@ -223,20 +223,9 @@ function orderedPair(id1: string, id2: string): [string, string] {
   return id1 < id2 ? [id1, id2] : [id2, id1];
 }
 
-async function executeMergeTransaction(
-  tx: Prisma.TransactionClient,
-  input: {
-    duplicateId: string;
-    survivorId: string;
-    finalName: string;
-    personal: Record<string, unknown>;
-    externalIds: Record<string, unknown>;
-    oneToOne: Record<string, unknown>;
-    userId: string;
-  },
-) {
+async function loadReviewedPair(tx: Prisma.TransactionClient, duplicateId: string) {
   const duplicate = await tx.possibleDuplicate.findUnique({
-    where: { id: input.duplicateId },
+    where: { id: duplicateId },
   });
   if (!duplicate) throw new Error("Duplicate not found");
   if (duplicate.gameAId === duplicate.gameBId) throw new Error("Duplicate pair is invalid");
@@ -262,6 +251,125 @@ async function executeMergeTransaction(
   if (gameA.type !== "BASE_GAME" || gameB.type !== "BASE_GAME") {
     throw new Error("Duplicate references a non-base game");
   }
+  return { gameA, gameB };
+}
+
+type MergeMutationPlan = ReturnType<typeof planMergeMutations>;
+
+// One ordered batch per relation kind; rows inside a batch are disjoint, so
+// intra-batch parallelism cannot reorder dependent writes.
+async function applyMergeMutations(
+  tx: Prisma.TransactionClient,
+  mutationPlan: MergeMutationPlan,
+): Promise<void> {
+  if (mutationPlan.libraryEntry) {
+    await tx.libraryEntry.update({
+      where: { id: mutationPlan.libraryEntry.rowId },
+      data: mutationPlan.libraryEntry.data,
+    });
+  }
+
+  const survivorId = mutationPlan.survivorId;
+  const discardedId = mutationPlan.discardedId;
+  const batches: Promise<unknown>[][] = [
+    mutationPlan.externalIdMoves.map((move) =>
+      tx.externalGameId.update({ where: { id: move.id }, data: { gameId: survivorId } }),
+    ),
+    mutationPlan.externalIdDeletes.map((move) =>
+      tx.externalGameId.delete({ where: { id: move.id } }),
+    ),
+    mutationPlan.availabilityMoves.map((move) =>
+      tx.gameAvailability.update({ where: { id: move.id }, data: { gameId: survivorId } }),
+    ),
+    mutationPlan.availabilityDeletes.map((move) =>
+      tx.gameAvailability.delete({ where: { id: move.id } }),
+    ),
+    mutationPlan.availabilityMerges.map((merge) =>
+      tx.gameAvailability.update({ where: { id: merge.rowId }, data: merge.data }),
+    ),
+    mutationPlan.collectionMoves.map((move) =>
+      tx.collectionMembership.updateMany({
+        where: { collectionId: move.key, gameId: discardedId },
+        data: { gameId: survivorId },
+      }),
+    ),
+    mutationPlan.collectionDeletes.map((move) =>
+      tx.collectionMembership.deleteMany({
+        where: { collectionId: move.key, gameId: discardedId },
+      }),
+    ),
+    mutationPlan.tagMoves.map((move) =>
+      tx.gameTag.updateMany({
+        where: { tagId: move.key, gameId: discardedId },
+        data: { gameId: survivorId },
+      }),
+    ),
+    mutationPlan.tagDeletes.map((move) =>
+      tx.gameTag.deleteMany({ where: { tagId: move.key, gameId: discardedId } }),
+    ),
+    mutationPlan.metadataMoves.map((move) =>
+      tx.metadataSnapshot.update({ where: { id: move.id }, data: { gameId: survivorId } }),
+    ),
+    mutationPlan.metadataDeletes.map((move) =>
+      tx.metadataSnapshot.delete({ where: { id: move.id } }),
+    ),
+    mutationPlan.wishlistMoves.map((move) =>
+      tx.wishlistEntry.update({ where: { id: move.id }, data: { baseGameId: survivorId } }),
+    ),
+    mutationPlan.wishlistDeletes.map((move) =>
+      tx.wishlistEntry.delete({ where: { id: move.id } }),
+    ),
+    mutationPlan.compatMoves.map((move) =>
+      tx.compatibilitySnapshot.update({ where: { id: move.id }, data: { gameId: survivorId } }),
+    ),
+    mutationPlan.compatDeletes.map((move) =>
+      tx.compatibilitySnapshot.delete({ where: { id: move.id } }),
+    ),
+    mutationPlan.envMoves.map((move) =>
+      tx.environmentCompatibility.update({
+        where: { id: move.id },
+        data: { gameId: survivorId },
+      }),
+    ),
+    mutationPlan.envDeletes.map((move) =>
+      tx.environmentCompatibility.delete({ where: { id: move.id } }),
+    ),
+    mutationPlan.dlcMoves.map((move) =>
+      tx.game.update({ where: { id: move.id }, data: { baseGameId: survivorId } }),
+    ),
+    mutationPlan.duplicateMoves.map((move) => {
+      const original = move.row as { gameAId?: string; gameBId?: string };
+      const remapped = orderedPair(
+        original.gameAId === discardedId ? survivorId : original.gameAId ?? survivorId,
+        original.gameBId === discardedId ? survivorId : original.gameBId ?? survivorId,
+      );
+      return tx.possibleDuplicate.update({
+        where: { id: move.id },
+        data: { gameAId: remapped[0], gameBId: remapped[1] },
+      });
+    }),
+    mutationPlan.duplicateDeletes.map((move) =>
+      tx.possibleDuplicate.delete({ where: { id: move.id } }),
+    ),
+  ];
+  for (const batch of batches) {
+    await Promise.all(batch);
+  }
+}
+
+async function executeMergeTransaction(
+  tx: Prisma.TransactionClient,
+  input: {
+    duplicateId: string;
+    survivorId: string;
+    finalName: string;
+    personal: Record<string, unknown>;
+    externalIds: Record<string, unknown>;
+    oneToOne: Record<string, unknown>;
+    userId: string;
+  },
+) {
+  const { gameA, gameB } = await loadReviewedPair(tx, input.duplicateId);
 
   const proposal = buildMergeProposal({
     duplicateId: input.duplicateId,
@@ -278,140 +386,14 @@ async function executeMergeTransaction(
   });
   if (!resolved.ok) throw new Error(resolved.message);
 
-  const mutationPlan = planMergeMutations({
-    gameA: gameA as MergeGraphGame,
-    gameB: gameB as MergeGraphGame,
-    plan: resolved.plan,
+  const mutationPlan = planMergeMutations({ gameA, gameB, plan: resolved.plan });
+  await applyMergeMutations(tx, mutationPlan);
+
+  await tx.game.update({
+    where: { id: mutationPlan.survivorId },
+    data: { name: mutationPlan.finalName },
   });
-
-  const survivorId = mutationPlan.survivorId;
-  const discardedId = mutationPlan.discardedId;
-
-  if (mutationPlan.libraryEntry) {
-    await tx.libraryEntry.update({
-      where: { id: mutationPlan.libraryEntry.rowId },
-      data: mutationPlan.libraryEntry.data,
-    });
-  }
-  await Promise.all(
-    mutationPlan.externalIdMoves.map((move) =>
-      tx.externalGameId.update({ where: { id: move.id }, data: { gameId: survivorId } }),
-    ),
-  );
-  await Promise.all(
-    mutationPlan.externalIdDeletes.map((move) =>
-      tx.externalGameId.delete({ where: { id: move.id } }),
-    ),
-  );
-  await Promise.all(
-    mutationPlan.availabilityMoves.map((move) =>
-      tx.gameAvailability.update({ where: { id: move.id }, data: { gameId: survivorId } }),
-    ),
-  );
-  await Promise.all(
-    mutationPlan.availabilityDeletes.map((move) =>
-      tx.gameAvailability.delete({ where: { id: move.id } }),
-    ),
-  );
-  await Promise.all(
-    mutationPlan.availabilityMerges.map((merge) =>
-      tx.gameAvailability.update({ where: { id: merge.rowId }, data: merge.data }),
-    ),
-  );
-  await Promise.all(
-    mutationPlan.collectionMoves.map((move) =>
-      tx.collectionMembership.updateMany({
-        where: { collectionId: move.key, gameId: discardedId },
-        data: { gameId: survivorId },
-      }),
-    ),
-  );
-  await Promise.all(
-    mutationPlan.collectionDeletes.map((move) =>
-      tx.collectionMembership.deleteMany({
-        where: { collectionId: move.key, gameId: discardedId },
-      }),
-    ),
-  );
-  await Promise.all(
-    mutationPlan.tagMoves.map((move) =>
-      tx.gameTag.updateMany({
-        where: { tagId: move.key, gameId: discardedId },
-        data: { gameId: survivorId },
-      }),
-    ),
-  );
-  await Promise.all(
-    mutationPlan.tagDeletes.map((move) =>
-      tx.gameTag.deleteMany({ where: { tagId: move.key, gameId: discardedId } }),
-    ),
-  );
-  await Promise.all(
-    mutationPlan.metadataMoves.map((move) =>
-      tx.metadataSnapshot.update({ where: { id: move.id }, data: { gameId: survivorId } }),
-    ),
-  );
-  await Promise.all(
-    mutationPlan.metadataDeletes.map((move) =>
-      tx.metadataSnapshot.delete({ where: { id: move.id } }),
-    ),
-  );
-  await Promise.all(
-    mutationPlan.wishlistMoves.map((move) =>
-      tx.wishlistEntry.update({ where: { id: move.id }, data: { baseGameId: survivorId } }),
-    ),
-  );
-  await Promise.all(
-    mutationPlan.wishlistDeletes.map((move) =>
-      tx.wishlistEntry.delete({ where: { id: move.id } }),
-    ),
-  );
-  await Promise.all(
-    mutationPlan.compatMoves.map((move) =>
-      tx.compatibilitySnapshot.update({ where: { id: move.id }, data: { gameId: survivorId } }),
-    ),
-  );
-  await Promise.all(
-    mutationPlan.compatDeletes.map((move) =>
-      tx.compatibilitySnapshot.delete({ where: { id: move.id } }),
-    ),
-  );
-  await Promise.all(
-    mutationPlan.envMoves.map((move) =>
-      tx.environmentCompatibility.update({ where: { id: move.id }, data: { gameId: survivorId } }),
-    ),
-  );
-  await Promise.all(
-    mutationPlan.envDeletes.map((move) =>
-      tx.environmentCompatibility.delete({ where: { id: move.id } }),
-    ),
-  );
-  await Promise.all(
-    mutationPlan.dlcMoves.map((move) =>
-      tx.game.update({ where: { id: move.id }, data: { baseGameId: survivorId } }),
-    ),
-  );
-  await Promise.all(
-    mutationPlan.duplicateMoves.map((move) => {
-      const original = move.row as { gameAId?: string; gameBId?: string };
-      const remapped = orderedPair(
-        original.gameAId === discardedId ? survivorId : original.gameAId ?? survivorId,
-        original.gameBId === discardedId ? survivorId : original.gameBId ?? survivorId,
-      );
-      return tx.possibleDuplicate.update({
-        where: { id: move.id },
-        data: { gameAId: remapped[0], gameBId: remapped[1] },
-      });
-    }),
-  );
-  await Promise.all(
-    mutationPlan.duplicateDeletes.map((move) =>
-      tx.possibleDuplicate.delete({ where: { id: move.id } }),
-    ),
-  );
-
-  await tx.game.update({ where: { id: survivorId }, data: { name: mutationPlan.finalName } });
-  await tx.game.delete({ where: { id: discardedId } });
+  await tx.game.delete({ where: { id: mutationPlan.discardedId } });
 
   const now = new Date();
   const operation = await tx.catalogOperation.create({
@@ -433,8 +415,8 @@ async function executeMergeTransaction(
     operationId: operation.id,
     state: operation.state,
     expiresAt: operation.expiresAt,
-    survivorId,
-    discardedId,
+    survivorId: mutationPlan.survivorId,
+    discardedId: mutationPlan.discardedId,
   };
 }
 

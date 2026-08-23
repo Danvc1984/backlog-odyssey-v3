@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 vi.mock("./itad-api", () => ({
-  chunkItadIds: (ids: string[], size: number) => {
+  chunkItadIds: (ids: string[], size = 200) => {
     const chunks: string[][] = [];
     for (let index = 0; index < ids.length; index += size) {
       chunks.push(ids.slice(index, index + size));
