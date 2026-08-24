@@ -83,8 +83,30 @@ describe("matchRawgGame", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
     const requestUrl = new URL(fetchMock.mock.calls[0][0] as string);
     expect(requestUrl.pathname).toBe("/api/games");
-    expect(requestUrl.searchParams.get("search")).toBe("Different title");
+    expect(requestUrl.searchParams.get("search")).toBe("different title");
     expect(new URL(fetchMock.mock.calls[1][0] as string).pathname).toBe("/api/games/456");
+  });
+
+  it("normalizes imported Steam titles before querying RAWG without changing exact matching", async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            results: [{ id: 123, slug: "lego-marvel-super-heroes", name: "LEGO Marvel Super Heroes" }],
+          }),
+          { status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ ...detail, name: "LEGO Marvel Super Heroes" }), { status: 200 }),
+      );
+
+    await expect(
+      matchRawgGame({ title: "LEGO® Marvel™ Super Heroes" }, { fetchFn: fetchMock }),
+    ).resolves.toMatchObject({ outcome: "MATCHED", game: { id: 123 } });
+
+    const requestUrl = new URL(fetchMock.mock.calls[0][0] as string);
+    expect(requestUrl.searchParams.get("search")).toBe("lego marvel super heroes");
   });
 
   it("fetches a persisted selected RAWG ID directly", async () => {

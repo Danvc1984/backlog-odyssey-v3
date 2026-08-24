@@ -2,6 +2,9 @@ import { WishlistFilterBar } from "@/components/wishlist/WishlistFilterBar";
 import { WishlistList } from "@/components/wishlist/WishlistList";
 import { AddWishlistDialog } from "@/components/wishlist/AddWishlistDialog";
 import { PriceRefreshPanel } from "@/components/wishlist/PriceRefreshPanel";
+import { ImportSteamWishlistButton } from "@/components/wishlist/ImportSteamWishlistButton";
+import { WishlistImportReviewSection } from "@/components/wishlist/WishlistImportReviewSection";
+import { WishlistSyncChip } from "@/components/wishlist/WishlistSyncChip";
 import { prisma } from "@/lib/prisma";
 import { buildEntryOfferView } from "@/lib/offer-selection";
 
@@ -73,6 +76,8 @@ export default async function WishlistPage({
           </p>
         </div>
         <div className="flex items-start gap-3">
+          <WishlistSyncChip />
+          <ImportSteamWishlistButton />
           <PriceRefreshPanel
             initialRun={
               latestRun
@@ -92,6 +97,7 @@ export default async function WishlistPage({
       <div className="mt-5">
         <WishlistFilterBar />
       </div>
+      <WishlistImportReviewSection />
       <WishlistList entries={entriesWithOfferViews} baseGames={baseGames} />
     </div>
   );

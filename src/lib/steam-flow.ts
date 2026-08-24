@@ -9,17 +9,22 @@ export async function upsertUnresolvedSteamDlc(
   client: SteamFlowDbClient,
   externalId: string,
   game: { name: string; steamBaseAppId?: string },
+  source?: "OWNED_SYNC" | "WISHLIST_IMPORT",
 ): Promise<void> {
+  const sourceData = source ? { source } : {};
+
   await client.unresolvedSteamDlc.upsert({
     where: { steamAppId: externalId },
     create: {
       steamAppId: externalId,
       name: game.name,
       steamBaseAppId: game.steamBaseAppId ?? null,
+      ...sourceData,
     },
     update: {
       name: game.name,
       steamBaseAppId: game.steamBaseAppId ?? null,
+      ...sourceData,
       status: "PENDING",
       discardedAt: null,
     },

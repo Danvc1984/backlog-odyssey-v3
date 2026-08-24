@@ -81,7 +81,7 @@
     lows, inline MXN targets, stale-offer rules, and opportunity badges
     without starting recommendation runs
 
-- [ ] 10c. **Steam wishlist import and enrichment** - explicit Wishlist import;
+- [x] 10c. **Steam wishlist import and enrichment** - explicit Wishlist import;
   idempotent Steam-App-ID creation of new base-game wishes with neutral
   interest and RAWG follow-up; conservative local-match review using the 7a
   matcher where linking is never automatic and stores identity with

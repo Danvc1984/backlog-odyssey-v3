@@ -15,11 +15,15 @@ vi.mock("./itad-api", () => ({
 vi.mock("./itad-identity", () => ({
   resolveItadIds: vi.fn(),
 }));
+vi.mock("./steam-api", () => ({
+  fetchSteamStorePrices: vi.fn(),
+}));
 
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { fetchItadPrices } from "./itad-api";
 import { resolveItadIds } from "./itad-identity";
+import { fetchSteamStorePrices } from "./steam-api";
 import {
   emptyCounts,
   finalizePriceRefresh,
@@ -183,6 +187,7 @@ describe("processPriceRefreshEntries", () => {
   beforeEach(() => {
     vi.mocked(resolveItadIds).mockResolvedValue(new Map());
     vi.mocked(fetchItadPrices).mockResolvedValue([]);
+    vi.mocked(fetchSteamStorePrices).mockResolvedValue(new Map());
   });
 
   it("counts identity-required entries outside the eligible set", async () => {
@@ -202,6 +207,40 @@ describe("processPriceRefreshEntries", () => {
       failed: 0,
       identityRequired: 4,
     });
+  });
+
+  it("persists the direct Steam MX price with its regular price and discount", async () => {
+    mockWishlistCount.mockResolvedValue(1);
+    vi.mocked(resolveItadIds).mockResolvedValue(new Map([["620", "uuid-620"]]));
+    vi.mocked(fetchItadPrices).mockResolvedValue([
+      { itadId: "uuid-620", historyLow: null, deals: [] },
+    ]);
+    vi.mocked(fetchSteamStorePrices).mockResolvedValue(new Map([[
+      "620",
+      {
+        appid: 620,
+        currency: "MXN",
+        regularPrice: 249,
+        price: 124.5,
+        discount: 50,
+        url: "https://store.steampowered.com/app/620/?cc=mx",
+      },
+    ]]));
+
+    await expect(processPriceRefreshEntries("key", [entry("w1", "620")])).resolves.toMatchObject({
+      refreshed: 1,
+      noOffers: 0,
+    });
+    expect(txDealCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: [expect.objectContaining({
+        wishlistEntryId: "w1",
+        shop: "Steam Store",
+        currency: "MXN",
+        price: expect.objectContaining({ toNumber: expect.any(Function) }),
+        regularPrice: expect.objectContaining({ toNumber: expect.any(Function) }),
+        discount: 50,
+      })],
+    }));
   });
 
   it("marks every eligible entry failed when the identity lookup errors", async () => {

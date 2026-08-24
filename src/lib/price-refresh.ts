@@ -10,6 +10,7 @@ import {
   type ItadProviderError,
 } from "./itad-api";
 import { resolveItadIds } from "./itad-identity";
+import { fetchSteamStorePrices, type SteamStorePrice } from "./steam-api";
 
 export const ABANDONED_RUN_MS = 15 * 60 * 1000;
 
@@ -122,7 +123,14 @@ function parseDate(value: string | null): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function dealToRow(entryId: string, deal: ItadDeal, historyLow: number | null, now: Date) {
+type DealOfferRow = Prisma.DealOfferCreateManyInput;
+
+function dealToRow(
+  entryId: string,
+  deal: ItadDeal,
+  historyLow: number | null,
+  now: Date,
+): DealOfferRow {
   const drm = deal.drm ?? [];
   const platforms = deal.platforms ?? [];
   return {
@@ -144,6 +152,35 @@ function dealToRow(entryId: string, deal: ItadDeal, historyLow: number | null, n
   };
 }
 
+function steamPriceToRow(entryId: string, price: SteamStorePrice, now: Date): DealOfferRow {
+  return {
+    wishlistEntryId: entryId,
+    shop: "Steam Store",
+    country: "MX",
+    currency: price.currency,
+    price: new Prisma.Decimal(price.price),
+    regularPrice: new Prisma.Decimal(price.regularPrice),
+    discount: price.discount,
+    historicalLow: null,
+    voucher: null,
+    itadFlag: null,
+    drm: "Steam",
+    platforms: undefined,
+    url: price.url,
+    expiresAt: null,
+    fetchedAt: now,
+  };
+}
+
+async function replaceOffers(entryIds: string[], rows: DealOfferRow[]): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    await tx.dealOffer.deleteMany({ where: { wishlistEntryId: { in: entryIds } } });
+    if (rows.length > 0) {
+      await tx.dealOffer.createMany({ data: rows });
+    }
+  });
+}
+
 export async function processPriceRefreshEntries(
   apiKey: string,
   entries: EligibleEntry[],
@@ -158,12 +195,27 @@ export async function processPriceRefreshEntries(
     return counts;
   }
 
+  const steamPrices = await fetchSteamStorePrices(entries.map((entry) => entry.steamAppId));
+
   const identityLookup = await resolveItadIds(
     apiKey,
     entries.map((entry) => entry.steamAppId),
   );
   if ("category" in identityLookup) {
-    return { ...counts, failed: entries.length };
+    for (const entry of entries) {
+      const steamPrice = steamPrices.get(entry.steamAppId);
+      if (!steamPrice) {
+        counts.failed += 1;
+        continue;
+      }
+      try {
+        await replaceOffers([entry.id], [steamPriceToRow(entry.id, steamPrice, new Date())]);
+        counts.refreshed += 1;
+      } catch {
+        counts.failed += 1;
+      }
+    }
+    return counts;
   }
 
   const priced = entries.flatMap((entry) => {
@@ -196,31 +248,51 @@ export async function processPriceRefreshEntries(
     }
 
     const now = new Date();
-    const rows: ReturnType<typeof dealToRow>[] = [];
+    const rows: DealOfferRow[] = [];
     const entryIds: string[] = [];
     const dealtEntryIds: string[] = [];
     for (const { entry, itadId } of chunk) {
       // A known game missing from the price response counts as having no offers.
       const game = pricesById.get(itadId) ?? { itadId, historyLow: null, deals: [] };
       entryIds.push(entry.id);
+      const steamPrice = steamPrices.get(entry.steamAppId);
+      if (steamPrice) {
+        rows.push(steamPriceToRow(entry.id, steamPrice, now));
+        dealtEntryIds.push(entry.id);
+      }
       if (game.deals.length === 0) {
         continue;
       }
-      dealtEntryIds.push(entry.id);
+      if (!steamPrice) {
+        dealtEntryIds.push(entry.id);
+      }
       rows.push(...game.deals.map((deal) => dealToRow(entry.id, deal, game.historyLow, now)));
     }
     try {
-      await prisma.$transaction(async (tx) => {
-        await tx.dealOffer.deleteMany({ where: { wishlistEntryId: { in: entryIds } } });
-        if (rows.length > 0) {
-          await tx.dealOffer.createMany({ data: rows });
-        }
-      });
+      await replaceOffers(entryIds, rows);
       counts.refreshed += dealtEntryIds.length;
       counts.noOffers += entryIds.length - dealtEntryIds.length;
     } catch {
       // Persistence failures isolate to the chunk; other chunks keep their progress.
       counts.failed += entryIds.length;
+    }
+  }
+
+  const pricedEntryIds = new Set(priced.map(({ entry }) => entry.id));
+  for (const entry of entries) {
+    if (pricedEntryIds.has(entry.id)) {
+      continue;
+    }
+    const steamPrice = steamPrices.get(entry.steamAppId);
+    if (!steamPrice) {
+      continue;
+    }
+    try {
+      await replaceOffers([entry.id], [steamPriceToRow(entry.id, steamPrice, new Date())]);
+      counts.refreshed += 1;
+      counts.notFound -= 1;
+    } catch {
+      counts.failed += 1;
     }
   }
 

@@ -13,6 +13,7 @@ import type {
 const RAWG_API_BASE_URL = "https://api.rawg.io/api";
 const RAWG_WEB_BASE_URL = "https://rawg.io/games";
 export const RAWG_SEARCH_PAGE_SIZE = 5;
+const RAWG_REQUEST_TIMEOUT_MS = 10_000;
 
 interface RawgHttpResponse {
   status: number;
@@ -208,8 +209,9 @@ function parseSearchCandidate(value: unknown): RawgSearchCandidate | null {
   };
 }
 
-function normalizeTitle(title: string): string {
+export function normalizeRawgTitle(title: string): string {
   return title
+    .replace(/[®™]/g, "")
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLocaleLowerCase()
@@ -226,12 +228,16 @@ async function requestJson(
   fetchFn: typeof fetch,
 ): Promise<{ response: RawgHttpResponse; payload: unknown } | { error: RawgProviderError }> {
   let response: RawgHttpResponse;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), RAWG_REQUEST_TIMEOUT_MS);
   try {
-    response = await fetchFn(url, { cache: "no-store" });
+    response = await fetchFn(url, { cache: "no-store", signal: controller.signal });
   } catch {
     return {
       error: providerError("NETWORK", "RAWG could not be reached"),
     };
+  } finally {
+    clearTimeout(timeout);
   }
 
   if (!response.ok) {
@@ -323,7 +329,12 @@ export async function searchRawgCandidates(
     return providerError("MALFORMED_RESPONSE", "RAWG search request is invalid");
   }
 
-  return searchGames(title, apiKey, options.fetchFn ?? fetch, page);
+  const normalizedTitle = normalizeRawgTitle(title);
+  if (normalizedTitle.length === 0) {
+    return providerError("MALFORMED_RESPONSE", "RAWG search request is invalid");
+  }
+
+  return searchGames(normalizedTitle, apiKey, options.fetchFn ?? fetch, page);
 }
 
 async function resolveCandidate(
@@ -373,13 +384,18 @@ export async function matchRawgGame(
     return { outcome: "NOT_FOUND" };
   }
 
-  const search = await searchGames(request.title, apiKey, fetchFn);
+  const normalizedTitle = normalizeRawgTitle(request.title);
+  if (normalizedTitle.length === 0) {
+    return { outcome: "NOT_FOUND" };
+  }
+
+  const search = await searchGames(normalizedTitle, apiKey, fetchFn);
   if (!Array.isArray(search)) {
     return unavailable(search);
   }
 
   const exactTitleCandidates = search.filter(
-    (candidate) => normalizeTitle(candidate.name) === normalizeTitle(request.title),
+    (candidate) => normalizeRawgTitle(candidate.name) === normalizedTitle,
   );
   if (exactTitleCandidates.length === 0) {
     return search.length > 1 ? { outcome: "AMBIGUOUS", candidates: search } : { outcome: "NOT_FOUND" };

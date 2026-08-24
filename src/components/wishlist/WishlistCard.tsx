@@ -73,6 +73,9 @@ function WishlistOfferSection({
   }
 
   const offer = offerView.selected;
+  const steamStoreOffer = [offer, ...offerView.alternatives].find(
+    (candidate) => candidate.shop === "Steam Store",
+  );
   const hasDifferentRegularPrice =
     offer.regularPrice !== null && offer.regularPrice !== offer.price;
 
@@ -124,6 +127,27 @@ function WishlistOfferSection({
       {offerView.isStale && (
         <p className="text-xs text-muted-foreground">Price may be outdated.</p>
       )}
+      {steamStoreOffer && steamStoreOffer !== offer && (
+        <div className="border-t border-border pt-2">
+          <div className="flex items-start justify-between gap-3">
+            <span className="font-medium">Steam Store</span>
+            <span className="font-semibold">
+              {formatCurrency(steamStoreOffer.price, steamStoreOffer.currency)}
+            </span>
+          </div>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+            {steamStoreOffer.discount !== null && steamStoreOffer.discount > 0 && (
+              <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 font-medium text-emerald-400">
+                -{steamStoreOffer.discount}%
+              </span>
+            )}
+            {steamStoreOffer.regularPrice !== null &&
+              steamStoreOffer.regularPrice !== steamStoreOffer.price && (
+                <span>from {formatCurrency(steamStoreOffer.regularPrice, steamStoreOffer.currency)}</span>
+              )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -134,12 +158,24 @@ export function WishlistCard({ entry, baseGames }: WishlistCardProps) {
   const metadata = ownMetadata ?? inheritedMetadata;
   const imageUrl = metadata?.backgroundImageUrls[0] ?? null;
   const sourceUrl = entry.metadataSnapshot?.sourceUrl ?? entry.baseGame?.metadataSnapshots[0]?.sourceUrl ?? metadata?.rawgUrl ?? null;
+  const steamStoreIsSelected = entry.offerView.selected?.shop === "Steam Store";
+  const alternatives = steamStoreIsSelected
+    ? entry.offerView.alternatives
+    : entry.offerView.alternatives.filter((offer) => offer.shop !== "Steam Store");
 
   return (
     <article className="overflow-hidden rounded-lg border border-border bg-card">
       {imageUrl ? (
         <div className="relative h-40 w-full">
-          <Image src={imageUrl} alt="" fill sizes="(min-width: 1280px) 33vw, 100vw" className="object-cover" />
+          <Image
+            src={imageUrl}
+            alt=""
+            fill
+            sizes="(min-width: 1280px) 33vw, 100vw"
+            className="object-cover"
+            loading="lazy"
+            unoptimized
+          />
         </div>
       ) : (
         <div className="flex h-40 items-center justify-center bg-muted text-sm text-muted-foreground">
@@ -171,6 +207,12 @@ export function WishlistCard({ entry, baseGames }: WishlistCardProps) {
           </p>
         )}
 
+        {entry.type === "BASE_GAME" && !ownMetadata && (
+          <p className="text-xs text-muted-foreground">
+            RAWG metadata is not available yet. Use Edit to search and choose a match.
+          </p>
+        )}
+
         <WishlistIdentity
           entryId={entry.id}
           entryName={entry.name}
@@ -187,7 +229,7 @@ export function WishlistCard({ entry, baseGames }: WishlistCardProps) {
           offerView={entry.offerView}
           hasConfirmedIdentity={entry.steamAppId !== null}
         />
-        <WishlistOfferAlternatives alternatives={entry.offerView.alternatives} />
+        <WishlistOfferAlternatives alternatives={alternatives} />
 
         {metadata && (
           <div className="space-y-2 text-sm">

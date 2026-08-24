@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fetchOwnedGames, findSteamAppIdByName } from "./steam-api";
+import {
+  fetchOwnedGames,
+  fetchSteamStorePrices,
+  fetchSteamWishlist,
+  findSteamAppIdByName,
+} from "./steam-api";
 
 describe("fetchOwnedGames", () => {
   const fetchMock = vi.fn();
@@ -84,6 +89,32 @@ describe("fetchOwnedGames", () => {
         new Response(
           JSON.stringify({
             "200": { success: true, data: { type: "dlc", fullgame: { appid: 100 } } },
+          }),
+          { status: 200 },
+        ),
+      );
+
+    await expect(fetchOwnedGames("steam-id", "test-key")).resolves.toEqual([
+      expect.objectContaining({ type: "DLC", steamBaseAppId: "100" }),
+    ]);
+  });
+
+  it("accepts Steam's string-form DLC parent app id", async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            response: {
+              games: [{ appid: 200, name: "Expansion", playtime_forever: 0 }],
+            },
+          }),
+          { status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            "200": { success: true, data: { type: "dlc", fullgame: { appid: "100" } } },
           }),
           { status: 200 },
         ),
@@ -213,5 +244,108 @@ describe("findSteamAppIdByName", () => {
 
     await expect(findSteamAppIdByName("   ")).resolves.toBeNull();
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("fetchSteamWishlist", () => {
+  const fetchMock = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
+  it("fetches wishlist app IDs and enriches names and DLC details", async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ response: { items: [{ appid: 10 }, { appid: 51 }] } }), { status: 200 }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ "10": { success: true, data: { name: "Portal", type: "game" } } }), { status: 200 }),
+      )
+      .mockImplementation(async (url: string | URL) => {
+        const appid = new URL(url).searchParams.get("appids");
+        const data = appid === "51"
+          ? { name: "Expansion", type: "dlc", fullgame: { appid: "10" } }
+          : { name: "Portal", type: "game" };
+        return new Response(JSON.stringify({ [appid ?? ""]: { success: true, data } }), {
+          status: 200,
+        });
+      });
+
+    await expect(fetchSteamWishlist("76561198000000000", "test-key")).resolves.toEqual({
+      games: [
+        { appid: 10, name: "Portal" },
+        { appid: 51, name: "Expansion", type: "DLC", steamBaseAppId: "10" },
+      ],
+      status: "OK",
+    });
+
+    const url = new URL(fetchMock.mock.calls[0][0] as string);
+    expect(url.pathname).toBe("/IWishlistService/GetWishlist/v1/");
+    expect(url.searchParams.get("steamid")).toBe("76561198000000000");
+    expect(url.searchParams.get("key")).toBe("test-key");
+  });
+
+  it("returns an empty list for an empty wishlist", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ response: { items: [] } }), { status: 200 }),
+    );
+
+    await expect(fetchSteamWishlist("steam-id", "test-key")).resolves.toEqual({ games: [], status: "EMPTY" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns an empty list when Steam responds with an HTTP error", async () => {
+    fetchMock.mockResolvedValue(new Response("private", { status: 403 }));
+
+    await expect(fetchSteamWishlist("steam-id", "test-key")).resolves.toEqual({ games: [], status: "UNAVAILABLE" });
+  });
+
+  it("returns an empty list for malformed wishlist JSON", async () => {
+    fetchMock.mockResolvedValue(new Response("not-json", { status: 200 }));
+
+    await expect(fetchSteamWishlist("steam-id", "test-key")).resolves.toEqual({ games: [], status: "UNAVAILABLE" });
+  });
+});
+
+describe("fetchSteamStorePrices", () => {
+  it("returns Mexican Steam Store prices and discounts in major currency units", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          "620": {
+            success: true,
+            data: {
+              price_overview: {
+                currency: "MXN",
+                initial: 24900,
+                final: 12450,
+                discount_percent: 50,
+              },
+            },
+          },
+        }),
+        { status: 200 },
+      ),
+    );
+
+    await expect(fetchSteamStorePrices(["620"], fetchMock)).resolves.toEqual(
+      new Map([[
+        "620",
+        {
+          appid: 620,
+          currency: "MXN",
+          regularPrice: 249,
+          price: 124.5,
+          discount: 50,
+          url: "https://store.steampowered.com/app/620/?cc=mx",
+        },
+      ]]),
+    );
+
+    const requestUrl = new URL(fetchMock.mock.calls[0][0] as string);
+    expect(requestUrl.searchParams.get("cc")).toBe("MX");
+    expect(requestUrl.searchParams.get("filters")).toBe("price_overview");
   });
 });
