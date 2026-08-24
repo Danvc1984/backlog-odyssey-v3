@@ -1,8 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Tag, TriangleAlert } from "lucide-react";
 import type { RawgMetadataPayload } from "@/lib/rawg-types";
 import { WishlistEntryActions } from "./WishlistEntryActions";
 import { WishlistIdentity } from "./WishlistIdentity";
+import { WishlistOfferAlternatives } from "./WishlistOfferAlternatives";
+import type { WishlistOffersView } from "@/types/wishlist-offers";
 
 interface WishlistCardProps {
   baseGames: { id: string; name: string }[];
@@ -13,6 +16,7 @@ interface WishlistCardProps {
     baseGameId: string | null;
     interest: number | null;
     notes: string | null;
+    offerView: WishlistOffersView;
     steamAppId: string | null;
     steamAppIdProvenance: string | null;
     baseGame: {
@@ -34,6 +38,94 @@ function metadataPayload(value: unknown): RawgMetadataPayload | null {
   return typeof payload.title === "string" && Array.isArray(payload.genres)
     ? (value as RawgMetadataPayload)
     : null;
+}
+
+const mxnFormatter = new Intl.NumberFormat("es-MX", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+function formatCurrency(value: number | null, currency: string | null): string {
+  if (value === null) {
+    return "Price unavailable";
+  }
+
+  return `${currency?.trim().toUpperCase() ?? "Unknown currency"} ${mxnFormatter.format(value)}`;
+}
+
+function WishlistOfferSection({
+  offerView,
+  hasConfirmedIdentity,
+}: {
+  offerView: WishlistOffersView;
+  hasConfirmedIdentity: boolean;
+}) {
+  if (!hasConfirmedIdentity) {
+    return null;
+  }
+
+  if (offerView.selected === null) {
+    return (
+      <div className="border-t border-border pt-3 text-sm text-muted-foreground">
+        No offers available
+      </div>
+    );
+  }
+
+  const offer = offerView.selected;
+  const hasDifferentRegularPrice =
+    offer.regularPrice !== null && offer.regularPrice !== offer.price;
+
+  return (
+    <div className="space-y-2 border-t border-border pt-3 text-sm">
+      <div className="flex items-start justify-between gap-3">
+        <span className="font-medium">{offer.shop}</span>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <span className="font-semibold">{formatCurrency(offer.price, offer.currency)}</span>
+          {offer.isKeyshop && (
+            <span
+              className="inline-flex items-center gap-1 text-xs text-amber-300"
+              title="Keyshop - activation not guaranteed in Mexico"
+            >
+              <TriangleAlert className="size-3" aria-hidden="true" />
+              Keyshop - activation not guaranteed in Mexico
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+        {offer.discount !== null && offer.discount > 0 && (
+          <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 font-medium text-emerald-400">
+            -{offer.discount}%
+          </span>
+        )}
+        {hasDifferentRegularPrice && (
+          <span>from {formatCurrency(offer.regularPrice, offer.currency)}</span>
+        )}
+        {offer.historicalLow !== null && (
+          <span>
+            Historical low: {formatCurrency(offer.historicalLow, offer.currency)}
+          </span>
+        )}
+      </div>
+      {offerView.targetPriceMxn !== null && offer.currency?.toUpperCase() === "MXN" && (
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="text-muted-foreground">
+            Target: {formatCurrency(offerView.targetPriceMxn, "MXN")}
+          </span>
+          {offerView.opportunity.hasBadge && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-fuchsia-500/15 px-2 py-0.5 font-medium text-fuchsia-300">
+              <Tag className="size-3" aria-hidden="true" />
+              Opportunity
+            </span>
+          )}
+        </div>
+      )}
+      {offerView.isStale && (
+        <p className="text-xs text-muted-foreground">Price may be outdated.</p>
+      )}
+    </div>
+  );
 }
 
 export function WishlistCard({ entry, baseGames }: WishlistCardProps) {
@@ -90,6 +182,12 @@ export function WishlistCard({ entry, baseGames }: WishlistCardProps) {
               : null
           }
         />
+
+        <WishlistOfferSection
+          offerView={entry.offerView}
+          hasConfirmedIdentity={entry.steamAppId !== null}
+        />
+        <WishlistOfferAlternatives alternatives={entry.offerView.alternatives} />
 
         {metadata && (
           <div className="space-y-2 text-sm">

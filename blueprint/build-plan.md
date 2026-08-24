@@ -52,7 +52,7 @@
   catalog with metadata transfer, acquired wishlist removal, and optional base-game
   play state transition on DLC acquisition
 
-- [ ] 10b. **Price enrichment and purchase opportunities** - provenance-tracked
+- [x] 10b. **Price enrichment and purchase opportunities** - provenance-tracked
   identity (Steam import auto-confirm, manual URL/AppID paste, RAWG-derived
   suggest-and-confirm extending only the wishlist snapshot), ITAD via cached
   AppID lookup and batched `country=MX` calls behind one global manual refresh
@@ -75,7 +75,7 @@
     protection, bounded retries honoring `Retry-After`, 48-hour freshness
     anchors, partial-failure reporting with six outcome buckets, and per-entry
     PriceRefresh diagnostics
-  - [ ] 10b-c. **Offer display and opportunity badges** - cheapest valid-offer
+  - [x] 10b-c. **Offer display and opportunity badges** - cheapest valid-offer
     selection persisting the cheapest 8-10 offers with expandable visible
     alternatives, MX keyshop activation warnings, display-only historical
     lows, inline MXN targets, stale-offer rules, and opportunity badges

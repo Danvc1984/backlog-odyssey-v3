@@ -42,12 +42,16 @@ The checked state and exact ordering come from `blueprint/build-plan.md`.
    explicit deletion/cascade behavior, and manual review queue.
 10a. **Local wishlist, RAWG, and acquisition** - Independent wishes, owned-base
    DLC wishes, RAWG snapshots, and manual acquisition into the catalog.
-10b. **Price enrichment and purchase opportunities** - Provenance-tracked
-   identity (Steam import auto-confirm, manual URL/AppID paste, RAWG-derived
-   suggest-and-confirm), ITAD via cached AppID lookup and batched `country=MX`
-   calls, cheapest 8-10 offers kept with alternatives, MX activation warnings,
-   display-only historical lows, inline MXN targets, 48-hour freshness,
-   bounded retries, and opportunity badges; Vercel Cron deferred to 18.
+10b-a. **Price identity and provenance** - Confirmed Steam identity from import
+   or a manual URL/AppID, plus a suggested identity resolved through Steam
+   `storesearch`, with source provenance and an identity-required state.
+10b-b. **ITAD prices and refresh queue** - Cached Steam-to-ITAD lookup, batched
+   Mexican price calls, one overlap-safe global refresh queue, retry/freshness
+   diagnostics, and clear partial results.
+10b-c. **Offer display and opportunity badges** - Selected cheapest offer,
+   expandable alternatives, real returned-currency display, MX activation
+   warnings, historical-low context, inline MXN targets, stale rules, and
+   opportunity badges without starting recommendation runs.
 10c. **Steam wishlist import and enrichment** - Manual idempotent import,
    conservative 7a-matcher review where linking is never automatic, new-base
    RAWG follow-up, one shared source-discriminated unresolved-DLC queue,
@@ -88,100 +92,111 @@ and retries transient failures at most three times with increasing delay.
 
 ## Data model
 
+The concrete schema lives in `prisma/schema.prisma`. The models below reflect
+the current schema plus planned additions from upcoming features. Fields marked
+`(planned)` do not yet exist in the schema and will be added during their
+feature's implementation.
+
 ### Identity and operations
 
-- `User`, `Account`, `Session`: Auth.js records for the one permitted Google
+- `User`, `Account`, `Session` - Auth.js records for the one permitted Google
   account; the user owns catalog and provider operations.
-- `AppSettings`: singleton for theme, fixed environments, Mexico/UTC-6 display,
-  reduced-data behavior, provider controls, and Wallhaven controls.
-- `SteamConnection`: singleton with `steamId64`, connection state, timestamps,
-  and sync summary.
-- `SyncRun`: provider-operation timing, result, counts, and safe diagnostics.
-- `EnrichmentJob`: provider stage/status, attempts, retry time, progress/batch
-  context, and safe failure detail for catalog or wishlist work. RAWG precedes
-  compatibility.
+- `AppSettings` - singleton: `theme` (enum `LIGHT`/`DARK`/`SYSTEM`),
+  `desktopOs`, `portableDevice`, `fallbackOs`, `priceCountry` (default `MX`),
+  `timeZone` (default `America/Mexico_City`), `wallpaperEnabled`,
+  `reducedData`, `steamDailySyncEnabled`, `itadDailyRefresh`.
+- `SteamConnection` - singleton: `steamId64` (unique), `state`, `lastSyncAt`,
+  `counts` (JSON).
+- `SyncRun` - provider-operation timing: `provider` (enum), `status` (enum
+  `RUNNING`/`SUCCESS`/`FAILED`/`PARTIAL`), `startedAt`, `finishedAt`, `counts`,
+  `diagnostics`.
+- `EnrichmentJob` - provider stage/status, attempts, retry time, progress/batch
+  context, and safe failure detail. Links to `Game` and optionally `SyncRun`.
+  Status enum: `QUEUED`/`RUNNING`/`RETRY_WAIT`/`AWAITING_MATCH`/`SUCCEEDED`/
+  `FAILED`. Stage enum: `MATCHING`/`PERSISTING`/`RETRYING`/`COMPLETE`/`FAILED`.
+  Unique on `[gameId, provider]`.
 
 ### Catalog
 
-- `Game`: catalog-only `id`, `name`, `type` (`BASE_GAME` or `DLC`), origin,
-  timestamps, and optional `baseGameId`. A DLC points to exactly one base game;
-  deleting a base game explicitly cascades to its DLC.
-- `ExternalGameId`: namespace, identifier, and match provenance. Same-namespace
-  conflicts block merge/reassignment. A retained Steam App ID lets later sync
-  update a manually acquired game; a user-entered Steam App ID unlocks
-  compatibility evidence for manual-only games.
-- `GameAvailability`: source (`STEAM`, `OTHER_PLATFORM`, `ROM`), ownership,
-  display name, Steam App ID, playtime, and last-played timestamp. ROM-only
-  games are exempt from the compatibility pipeline.
-- `LibraryEntry`: play state, main-game flag, priority, interest, rating, notes,
-  tags, preferred environment, play/replay flags, hidden state, and personal
-  compatibility override. Only one base game is main.
-- `MetadataSnapshot`: replaceable provider snapshot keyed by provider, including
-  the approved RAWG metadata and attribution. No metadata history is retained.
-- `PossibleDuplicate`: base-game pair, normalized-name evidence, confidence, and
-  `OPEN`/`DISMISSED` review state; detection never merges automatically.
-- `CatalogOperation`: temporary authenticated merge/delete operation with state,
-  affected IDs, minimal reversible snapshot, timestamps, roughly 15-second
-  expiry, and overlap protection.
+- `Game` - `id`, `name`, `type` (`BASE_GAME`/`DLC`), `origin`
+  (`STEAM_IMPORT`/`MANUAL`), `baseGameId` (self-relation, cascade delete),
+  timestamps. Indexes on `baseGameId`, `origin`, `type`.
+- `ExternalGameId` - `namespaceId`, `namespace`, `externalId`, `matchMethod`
+  (`EXACT_STEAM_APP_ID`/`MANUAL_RAWG_SEARCH`/`MANUAL_ITAD_LOOKUP`/`INFERRED`),
+  `gameId`. Unique on `[namespace, externalId]`.
+- `GameAvailability` - `gameId`, `source` (`STEAM`/`OTHER_PLATFORM`/`ROM`),
+  `displayName`, `steamAppId`, `steamPlaytimeTotal`, `steamLastPlayed`.
+- `LibraryEntry` - `gameId` (unique), `playState` (`NOT_STARTED`/`IN_PROGRESS`/
+  `PLAYED_BEFORE`/`ABANDONED`), `isMainGame`, `priority`
+  (`NONE`/`LOW`/`MEDIUM`/`HIGH`), `interest`, `rating`, `preferredEnvironment`
+  (`BAZZITE`/`STEAM_DECK`/`WINDOWS`), `compatOverrideStatus`,
+  `compatOverrideReason`, `playSoon`, `replayCandidate`, `hidden`, `notes`.
+- `MetadataSnapshot` - `gameId`, `provider` (enum), `payload` (JSON),
+  `sourceUrl`, `fetchedAt`, `expiresAt`. Indexed on `[gameId, provider]`.
+- `PossibleDuplicate` - `gameAId`, `gameBId`, `evidence` (JSON), `confidence`,
+  `status` (`OPEN`/`DISMISSED`), `reviewedAt`. Unique on `[gameAId, gameBId]`.
+- `CatalogOperation` - `userId`, `type` (`MERGE`/`DELETE`), `state`
+  (`PENDING`/`UNDONE`/`EXPIRED`/`COMPLETED`), `affectedGameIds` (string array),
+  `snapshot` (JSON), `expiresAt`. Indexed on `[userId, state]` and `expiresAt`.
 
 ### DLC and wishlist
 
-- `UnresolvedSteamDlc`: one persistent review record shared by library sync and
-  wishlist import, discriminated by source (`owned-sync` / `wishlist-import`).
-  It stores Steam identity and temporary-discard state; each source keeps its
-  own reappear rules. A wishlist-side entry resolves naturally once its base
-  game is acquired and a later import runs.
-- `WishlistEntry`: independent wish with name, type (`BASE_GAME` or `DLC`),
-  local notes and interest, optional external/provider identity with
-  provenance (`steam-import`, `user`, or confirmed RAWG suggestion; RAWG
-  derivations stay unconfirmed until one-click confirmation), optional MXN
-  target, and RAWG snapshot for base games. A DLC wish must reference one
-  existing catalog base game and does not create a catalog game until manual
-  acquisition.
-- `WishlistMetadataSnapshot`: replaceable RAWG data owned by a wishlist entry,
-  extended to capture Steam store links for identity suggestions; it can
-  transfer to a newly acquired catalog game.
-- `PriceRefresh`: persistent provider refresh status, timestamps, result, retry,
-  and freshness diagnostics for wishlist offers.
-- `DealOffer`: Mexican offer with source, store, current/regular price, currency,
-  discount, display-only historical low, DRM/platform data, URL, expiry, and
-  freshness. The cheapest 8-10 valid offers persist per entry; the cheapest is
-  selected and all alternatives stay visible. Keyshop offers carry an MX
-  activation warning.
+- `UnresolvedSteamDlc` - `steamAppId` (unique), `name`, `steamBaseAppId`,
+  `status` (`PENDING`/`DISCARDED`), `discardedAt`. Indexed on `status`.
+  > **Planned addition (feature 10c):** a `source` discriminator column
+  > (`owned-sync` / `wishlist-import`) to share one queue between library sync
+  > and wishlist import with per-source reappear rules.
+- `WishlistEntry` - `name`, `type` (`BASE_GAME`/`DLC`), `baseGameId` (cascade
+  delete to base game), `interest`, `targetPriceMxn` (decimal 10,2), `notes`,
+  `steamAppId`, `steamAppIdProvenance` (`STEAM_IMPORT`/`USER`/`RAWG_SUGGESTION`).
+- `WishlistMetadataSnapshot` - `wishlistEntryId` (unique), `provider` (default
+  `RAWG`), `payload` (JSON), `sourceUrl`, `fetchedAt`, `expiresAt`.
+- `DealOffer` - `wishlistEntryId`, `shop`, `country`, `currency`, `price`,
+  `regularPrice`, `discount`, `historicalLow`, `voucher`, `itadFlag`, `drm`,
+  `platforms` (JSON), `url`, `expiresAt`, `fetchedAt`.
+- `ItadIdentity` - `steamAppId` (PK), `itadId`, `fetchedAt`. Cached
+  Steam-App-ID-to-ITAD-ID mapping.
+- `PriceRefresh` - `wishlistEntryId` (optional, cascade), `status`
+  (`RUNNING`/`SUCCESS`/`FAILED`/`PARTIAL`), `country`, `requestedAt`,
+  `finishedAt`, `counts` (JSON). Indexed on `[status, requestedAt]`.
 
 ### Compatibility and recommendations
 
-- `CompatibilitySnapshot`: sourced ProtonDB, Steam Deck Verified, and
-  AreWeAntiCheatYet evidence with provenance and freshness. All evidence keys
-  off a Steam App ID; a single 180-day window governs staleness.
-- `EnvironmentCompatibility`: synthesized Bazzite/Steam Deck status, implicit
-  Windows fallback, mixed evidence with attribution, and a separate personal
-  override that provider refreshes never replace. ROM-only games read as not
-  applicable rather than unknown.
-- `RecommendationRun` and `RecommendationItem`: explicit run timestamp/context,
-  ranked play-next or buy results, score factors, and visible explanations.
-  Runs roll over 12 months; creating a run prunes older ones.
-- `RecommendationFeedback`: temporary per-run dismissal and persistent per-type
-  dismissal counters; three cumulative dismissals lower adjusted interest by one,
-  never below zero. Counters are cumulative personal state and are never pruned.
-- `Collection`, `CollectionMembership`, `PersonalTag`, `GameTag`: manual and
-  calculated organization records.
-- `WallpaperState`: cached SFW candidate URLs (~10 from a configurable keyword
-  set), deterministic daily selection, freshness, render target, and
-  attribution; no image binaries.
+- `CompatibilitySnapshot` - `gameId`, `provider` (enum), `result` (JSON),
+  `sourceUrl`, `fetchedAt`, `expiresAt`. Unique on `[gameId, provider]`.
+- `EnvironmentCompatibility` - `gameId`, `environment` (enum), `status`
+  (`READY`/`READY_WITH_TINKERING`/`FALLBACK_RECOMMENDED`/`REQUIRED`/`UNKNOWN`),
+  `source`, `updatedAt`. Unique on `[gameId, environment]`.
+- `RecommendationRun` - `kind` (`PLAY_NEXT`/`BUY`), `context` (JSON),
+  `createdAt`. Indexed on `[kind, createdAt]`.
+- `RecommendationItem` - `runId`, `gameId`, `rank`, `score`, `positive`,
+  `negative`, `caveats` (all JSON for factor payloads).
+- `RecommendationFeedback` - `gameId`, `kind` (String), `reason`, `expiresAt`,
+  `createdAt`. Indexed on `[gameId, kind]`.
+  > **Planned evolution (feature 12):** persistent per-type dismissal counters
+  > and calibration state; current schema stores transient per-run dismissals.
+
+### Organization and theme
+
+- `PersonalTag` - `name` (unique).
+- `GameTag` - composite `[gameId, tagId]`.
+- `Collection` - `name` (unique), `color`, `icon`, `isSystem`.
+- `CollectionMembership` - composite `[collectionId, gameId]`.
+- `WallpaperState` - singleton: `candidates` (JSON, ~10 SFW URLs),
+  `selectedIdx`, `renderTarget` (JSON), `cachedAt`.
 
 ## Wishlist and provider rules
 
 - Wishlist entries remain independent of catalog games until manual acquisition.
 - Price identity has three provenance-tracked paths: Steam import (confirmed),
-  manual Steam URL/AppID paste (user-confirmed, also the override path), and
-  RAWG store-link suggestions (unconfirmed until one click). The catalog RAWG
-  snapshot contract stays unchanged; only the wishlist snapshot extends.
-- ITAD maps from a cached Steam-App-ID-to-ITAD-ID lookup, then loads prices in
-  batched `country=MX` calls (up to 200 games per request). Keyshop-flag
-  mechanics validate during the 10b spec. Accepted caveat: the ITAD ToS asks
-  private API users to make contact; registration runs through their app-setup
-  page.
+  manual Steam URL/AppID paste (user-confirmed, also the override path), and a
+  derived suggestion (unconfirmed until one click). The catalog RAWG snapshot
+  contract stays unchanged; only the wishlist snapshot extends.
+- ITAD maps from a cached Steam-App-ID-to-ITAD-ID lookup (`ItadIdentity`), then
+  loads prices in batched `country=MX` calls (up to 200 games per request).
+  Keyshop-flag mechanics validate during the 10b spec. Accepted caveat: the ITAD
+  ToS asks private API users to make contact; registration runs through their
+  app-setup page.
 - The Wishlist has one global `Update prices` action. It queues entries with
   confirmed store identity and reports refreshed, failed, and identity-required
   entries. Individual price refresh is initially out of scope.
@@ -230,19 +245,19 @@ and retries transient failures at most three times with increasing delay.
 
 ## UI and routes
 
-- `/`: sign-in landing and Google access gate.
-- `/today`: read-only dashboard and post-login front door with main/in-progress
+- `/` - sign-in landing and Google access gate.
+- `/today` - read-only dashboard and post-login front door with main/in-progress
   games, latest play-next and buy results, Steam activity, offers, freshness,
   and operation progress.
-- `/library`: searchable catalog, filters, manual creation, duplicate review, and
+- `/library` - searchable catalog, filters, manual creation, duplicate review, and
   catalog-wide metadata action.
-- `/wishlist`: independent wishes, RAWG action, identity suggestions, global
+- `/wishlist` - independent wishes, RAWG action, identity suggestions, global
   price refresh, alternatives, opportunity badges, Steam wishlist import, review
   queues, and acquisition.
-- `/games/[id]`: personal fields, availability, metadata, attribution,
+- `/games/[id]` - personal fields, availability, metadata, attribution,
   compatibility (with manual Steam AppID entry), DLC, duplicate warning,
   recommendation explanation, and RAWG loading.
-- `/settings`: sessions, provider controls, visual/accessibility settings,
+- `/settings` - sessions, provider controls, visual/accessibility settings,
   Wallhaven, queue status, wishlist-import diagnostics, and JSON export.
 
 The app is responsive. Desktop uses a dense constrained layout with an icon
@@ -288,11 +303,21 @@ workflow services, notifications, multi-user support, and offline/PWA behavior.
   mechanics and lookup behavior before 10b; ProtonDB summary-endpoint
   stability, Deck Verified categories inside Steam `appdetails`, and
   AreWeAntiCheatYet dataset shape before 11.
+- `project-plan.md` describes RAWG store-link suggestions, while
+  `build-plan.md` records that live RAWG store URLs were empty and the current
+  suggestion resolves through Steam `storesearch`. Reconcile that source-plan
+  wording before a later plan edit.
 - Exact Vercel/Supabase production scheduler configuration remains a deployment
   concern for feature 18; the product decision is fixed (Vercel Cron with
   `CRON_SECRET` at 06:00 UTC-6).
 - Wallhaven anonymous SFW rate limits and keyword-set defaults confirm during
   the feature 15 spec.
+- `UnresolvedSteamDlc` currently lacks the `source` discriminator column needed
+  for feature 10c's shared queue. The column will be added in that feature's
+  migration.
+- `RecommendationFeedback` currently stores transient per-run dismissals as
+  plain `kind` strings. Feature 12 will evolve this into persistent per-type
+  counters and calibration state.
 
-Run `/feature` for the next unchecked item, currently `10b`. Run `/prototype`
+Run `/feature` for the next unchecked item, currently `10c`. Run `/prototype`
 before feature 14 to lock the visual look against `blueprint/reference/`.

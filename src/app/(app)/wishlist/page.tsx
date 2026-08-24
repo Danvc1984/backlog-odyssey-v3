@@ -3,6 +3,7 @@ import { WishlistList } from "@/components/wishlist/WishlistList";
 import { AddWishlistDialog } from "@/components/wishlist/AddWishlistDialog";
 import { PriceRefreshPanel } from "@/components/wishlist/PriceRefreshPanel";
 import { prisma } from "@/lib/prisma";
+import { buildEntryOfferView } from "@/lib/offer-selection";
 
 interface WishlistSearchParams {
   type?: string;
@@ -28,6 +29,9 @@ export default async function WishlistPage({
       where: { type, interest: interestFilter },
       orderBy: [{ interest: "desc" }, { updatedAt: "desc" }],
       include: {
+        offers: {
+          orderBy: [{ price: { sort: "asc", nulls: "last" } }],
+        },
         // Keep editable local fields in the card so its client actions remain self-contained.
         baseGame: {
           select: {
@@ -53,6 +57,11 @@ export default async function WishlistPage({
     }),
     prisma.priceRefresh.findFirst({ orderBy: { requestedAt: "desc" } }),
   ]);
+
+  const entriesWithOfferViews = entries.map(({ offers, targetPriceMxn, ...entry }) => ({
+    ...entry,
+    offerView: buildEntryOfferView(offers, targetPriceMxn, new Date()),
+  }));
 
   return (
     <div>
@@ -83,7 +92,7 @@ export default async function WishlistPage({
       <div className="mt-5">
         <WishlistFilterBar />
       </div>
-      <WishlistList entries={entries} baseGames={baseGames} />
+      <WishlistList entries={entriesWithOfferViews} baseGames={baseGames} />
     </div>
   );
 }
