@@ -65,14 +65,16 @@ The checked state and exact ordering come from `blueprint/build-plan.md`.
    Windows fallback, and per-game refresh.
 11b. **Compatibility batch queue and auto-queue** - Post-RAWG queueing,
    global sweep, progress, and overlap protection.
-11c. **Wishlist detail** - Dedicated `/wishlist/[id]` page reached from the
-   wishlist card title, composing all available wish data: full RAWG
-   metadata, Steam identity with provenance, offers and target price, notes,
-   interest, edit/acquire/delete actions, and a read-only compatibility block
-   (ProtonDB tier, AWAY anti-cheat, derived Windows fallback) for base-game
-   wishes with a confirmed Steam App ID and no personal override; per-entry
-   compatibility refresh and fill-only RAWG enrichment that never overwrites
-   an existing snapshot.
+11c-a. **Wishlist compatibility foundation** - Parallel wishlist evidence
+   storage, provider/synthesis reuse, and quiet per-entry refresh for eligible
+   base-game wishes, without catalog-state reuse, overrides, auto-queue, or a
+   sweep.
+11c-b. **Wishlist detail page** - `/wishlist/[id]` navigation and composition
+   of existing wish data, RAWG metadata, identity, offers, notes, interest,
+   and existing edit/acquire/delete controls.
+11c-c. **Wishlist detail compatibility and enrichment controls** - Read-only
+   compatibility block, eligibility states, detail refresh, and fill-only RAWG
+   enrichment that does not overwrite an existing snapshot.
 11d. **Wishlist compatibility sweep** - Parallel wishlist evidence storage
    keyed by `wishlistEntryId` (`WishlistCompatibilitySnapshot`,
    `WishlistEnvironmentCompatibility`), separate from the catalog pipeline;
@@ -191,11 +193,11 @@ feature's implementation.
 - `EnvironmentCompatibility` - `gameId`, `environment` (enum), `status`
   (`READY`/`READY_WITH_TINKERING`/`FALLBACK_RECOMMENDED`/`REQUIRED`/`UNKNOWN`),
   `source`, `updatedAt`. Unique on `[gameId, environment]`.
-- `WishlistCompatibilitySnapshot` `(planned, 11c/11d)` - `wishlistEntryId`,
+- `WishlistCompatibilitySnapshot` `(planned, 11c-a/11d)` - `wishlistEntryId`,
   `provider` (`PROTONDB`/`ARE_WE_ANTICHEAT_YET`), `result` (JSON), `sourceUrl`,
   `fetchedAt`, `expiresAt`. Unique on `[wishlistEntryId, provider]`. Parallel to
   the catalog snapshot; never shared with `CompatibilitySnapshot`.
-- `WishlistEnvironmentCompatibility` `(planned, 11c/11d)` - `wishlistEntryId`,
+- `WishlistEnvironmentCompatibility` `(planned, 11c-a/11d)` - `wishlistEntryId`,
   `environment` (`BAZZITE`/`WINDOWS`), `status`, `source`, `updatedAt`. Unique
   on `[wishlistEntryId, environment]`.
 - `WishlistCompatSweep` `(planned, 11d)` - manual sweep run record modeled on
@@ -261,12 +263,12 @@ feature's implementation.
   panel (created, linked, queued reviews, ignored, enrichment).
 - Manual entries and Steam imports save first; provider failures never roll back
   local data or remove the last valid provider snapshot.
-- The wishlist detail page (`/wishlist/[id]`, 11c) composes full RAWG metadata,
-  Steam identity and provenance, the offer block, notes and interest, and the
-  edit/acquire/delete actions. Its two per-entry actions are a compatibility
-  refresh (for base-game wishes with a confirmed Steam App ID) and fill-only
-  RAWG enrichment that is hidden once a snapshot exists. Batch progress and
-  error details stay out of the wishlist.
+- `11c-b` adds the wishlist detail page (`/wishlist/[id]`) with full RAWG
+  metadata, Steam identity and provenance, the offer block, notes and interest,
+  and existing edit/acquire/delete actions. `11c-c` adds the read-only
+  compatibility block, detail refresh, and fill-only RAWG enrichment that is
+  hidden once a snapshot exists. Batch progress and error details stay out of
+  the wishlist.
 
 ## Compatibility rules
 
@@ -330,10 +332,10 @@ feature's implementation.
 - `/wishlist` - independent wishes, RAWG action, identity suggestions, global
   price refresh, alternatives, opportunity badges, Steam wishlist import, review
   queues, and acquisition.
-- `/wishlist/[id]` - dedicated wishlist detail (11c): full RAWG metadata,
-  identity and provenance, offers and target price, notes, interest, edit/acquire/
-  delete, a read-only compatibility block, compatibility refresh, and fill-only
-  RAWG enrichment.
+- `/wishlist/[id]` - wishlist detail delivered across 11c-b and 11c-c: full
+  RAWG metadata, identity and provenance, offers and target price, notes,
+  interest, edit/acquire/delete, a read-only compatibility block, compatibility
+  refresh, and fill-only RAWG enrichment.
 - `/games/[id]` - personal fields, availability, metadata, attribution,
   compatibility (with manual Steam AppID entry), DLC, duplicate warning,
   recommendation explanation, and RAWG loading.
@@ -399,5 +401,5 @@ workflow services, notifications, multi-user support, and offline/PWA behavior.
 - Wallhaven anonymous SFW rate limits and keyword-set defaults confirm during
   the feature 15 spec.
 
-Run `/feature` for the next unchecked item, currently `11c`. Run `/prototype`
+Run `/feature` for the next unchecked item, currently `11c-b`. Run `/prototype`
 before feature 14 to lock the visual look against `blueprint/reference/`.

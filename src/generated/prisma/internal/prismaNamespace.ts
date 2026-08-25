@@ -422,6 +422,8 @@ export const ModelName = {
   PriceRefresh: 'PriceRefresh',
   CompatibilitySnapshot: 'CompatibilitySnapshot',
   EnvironmentCompatibility: 'EnvironmentCompatibility',
+  WishlistCompatibilitySnapshot: 'WishlistCompatibilitySnapshot',
+  WishlistEnvironmentCompatibility: 'WishlistEnvironmentCompatibility',
   PossibleDuplicate: 'PossibleDuplicate',
   RecommendationRun: 'RecommendationRun',
   RecommendationItem: 'RecommendationItem',
@@ -444,7 +446,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "account" | "session" | "appSettings" | "steamConnection" | "game" | "unresolvedSteamDlc" | "wishlistImportReview" | "wishlistImportIgnore" | "externalGameId" | "metadataSnapshot" | "enrichmentJob" | "personalTag" | "gameTag" | "collection" | "collectionMembership" | "libraryEntry" | "gameAvailability" | "wishlistEntry" | "wishlistMetadataSnapshot" | "dealOffer" | "itadIdentity" | "priceRefresh" | "compatibilitySnapshot" | "environmentCompatibility" | "possibleDuplicate" | "recommendationRun" | "recommendationItem" | "recommendationFeedback" | "wallpaperState" | "syncRun" | "catalogOperation"
+    modelProps: "user" | "account" | "session" | "appSettings" | "steamConnection" | "game" | "unresolvedSteamDlc" | "wishlistImportReview" | "wishlistImportIgnore" | "externalGameId" | "metadataSnapshot" | "enrichmentJob" | "personalTag" | "gameTag" | "collection" | "collectionMembership" | "libraryEntry" | "gameAvailability" | "wishlistEntry" | "wishlistMetadataSnapshot" | "dealOffer" | "itadIdentity" | "priceRefresh" | "compatibilitySnapshot" | "environmentCompatibility" | "wishlistCompatibilitySnapshot" | "wishlistEnvironmentCompatibility" | "possibleDuplicate" | "recommendationRun" | "recommendationItem" | "recommendationFeedback" | "wallpaperState" | "syncRun" | "catalogOperation"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2298,6 +2300,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    WishlistCompatibilitySnapshot: {
+      payload: Prisma.$WishlistCompatibilitySnapshotPayload<ExtArgs>
+      fields: Prisma.WishlistCompatibilitySnapshotFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WishlistCompatibilitySnapshotFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatibilitySnapshotPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WishlistCompatibilitySnapshotFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatibilitySnapshotPayload>
+        }
+        findFirst: {
+          args: Prisma.WishlistCompatibilitySnapshotFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatibilitySnapshotPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WishlistCompatibilitySnapshotFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatibilitySnapshotPayload>
+        }
+        findMany: {
+          args: Prisma.WishlistCompatibilitySnapshotFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatibilitySnapshotPayload>[]
+        }
+        create: {
+          args: Prisma.WishlistCompatibilitySnapshotCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatibilitySnapshotPayload>
+        }
+        createMany: {
+          args: Prisma.WishlistCompatibilitySnapshotCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WishlistCompatibilitySnapshotCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatibilitySnapshotPayload>[]
+        }
+        delete: {
+          args: Prisma.WishlistCompatibilitySnapshotDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatibilitySnapshotPayload>
+        }
+        update: {
+          args: Prisma.WishlistCompatibilitySnapshotUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatibilitySnapshotPayload>
+        }
+        deleteMany: {
+          args: Prisma.WishlistCompatibilitySnapshotDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WishlistCompatibilitySnapshotUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WishlistCompatibilitySnapshotUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatibilitySnapshotPayload>[]
+        }
+        upsert: {
+          args: Prisma.WishlistCompatibilitySnapshotUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatibilitySnapshotPayload>
+        }
+        aggregate: {
+          args: Prisma.WishlistCompatibilitySnapshotAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWishlistCompatibilitySnapshot>
+        }
+        groupBy: {
+          args: Prisma.WishlistCompatibilitySnapshotGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WishlistCompatibilitySnapshotGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WishlistCompatibilitySnapshotCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WishlistCompatibilitySnapshotCountAggregateOutputType> | number
+        }
+      }
+    }
+    WishlistEnvironmentCompatibility: {
+      payload: Prisma.$WishlistEnvironmentCompatibilityPayload<ExtArgs>
+      fields: Prisma.WishlistEnvironmentCompatibilityFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WishlistEnvironmentCompatibilityFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistEnvironmentCompatibilityPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WishlistEnvironmentCompatibilityFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistEnvironmentCompatibilityPayload>
+        }
+        findFirst: {
+          args: Prisma.WishlistEnvironmentCompatibilityFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistEnvironmentCompatibilityPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WishlistEnvironmentCompatibilityFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistEnvironmentCompatibilityPayload>
+        }
+        findMany: {
+          args: Prisma.WishlistEnvironmentCompatibilityFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistEnvironmentCompatibilityPayload>[]
+        }
+        create: {
+          args: Prisma.WishlistEnvironmentCompatibilityCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistEnvironmentCompatibilityPayload>
+        }
+        createMany: {
+          args: Prisma.WishlistEnvironmentCompatibilityCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WishlistEnvironmentCompatibilityCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistEnvironmentCompatibilityPayload>[]
+        }
+        delete: {
+          args: Prisma.WishlistEnvironmentCompatibilityDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistEnvironmentCompatibilityPayload>
+        }
+        update: {
+          args: Prisma.WishlistEnvironmentCompatibilityUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistEnvironmentCompatibilityPayload>
+        }
+        deleteMany: {
+          args: Prisma.WishlistEnvironmentCompatibilityDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WishlistEnvironmentCompatibilityUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WishlistEnvironmentCompatibilityUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistEnvironmentCompatibilityPayload>[]
+        }
+        upsert: {
+          args: Prisma.WishlistEnvironmentCompatibilityUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistEnvironmentCompatibilityPayload>
+        }
+        aggregate: {
+          args: Prisma.WishlistEnvironmentCompatibilityAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWishlistEnvironmentCompatibility>
+        }
+        groupBy: {
+          args: Prisma.WishlistEnvironmentCompatibilityGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WishlistEnvironmentCompatibilityGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WishlistEnvironmentCompatibilityCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WishlistEnvironmentCompatibilityCountAggregateOutputType> | number
+        }
+      }
+    }
     PossibleDuplicate: {
       payload: Prisma.$PossibleDuplicatePayload<ExtArgs>
       fields: Prisma.PossibleDuplicateFieldRefs
@@ -3207,6 +3357,31 @@ export const EnvironmentCompatibilityScalarFieldEnum = {
 export type EnvironmentCompatibilityScalarFieldEnum = (typeof EnvironmentCompatibilityScalarFieldEnum)[keyof typeof EnvironmentCompatibilityScalarFieldEnum]
 
 
+export const WishlistCompatibilitySnapshotScalarFieldEnum = {
+  id: 'id',
+  wishlistEntryId: 'wishlistEntryId',
+  provider: 'provider',
+  result: 'result',
+  sourceUrl: 'sourceUrl',
+  fetchedAt: 'fetchedAt',
+  expiresAt: 'expiresAt'
+} as const
+
+export type WishlistCompatibilitySnapshotScalarFieldEnum = (typeof WishlistCompatibilitySnapshotScalarFieldEnum)[keyof typeof WishlistCompatibilitySnapshotScalarFieldEnum]
+
+
+export const WishlistEnvironmentCompatibilityScalarFieldEnum = {
+  id: 'id',
+  wishlistEntryId: 'wishlistEntryId',
+  environment: 'environment',
+  status: 'status',
+  source: 'source',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WishlistEnvironmentCompatibilityScalarFieldEnum = (typeof WishlistEnvironmentCompatibilityScalarFieldEnum)[keyof typeof WishlistEnvironmentCompatibilityScalarFieldEnum]
+
+
 export const PossibleDuplicateScalarFieldEnum = {
   id: 'id',
   gameAId: 'gameAId',
@@ -3925,6 +4100,8 @@ export type GlobalOmitConfig = {
   priceRefresh?: Prisma.PriceRefreshOmit
   compatibilitySnapshot?: Prisma.CompatibilitySnapshotOmit
   environmentCompatibility?: Prisma.EnvironmentCompatibilityOmit
+  wishlistCompatibilitySnapshot?: Prisma.WishlistCompatibilitySnapshotOmit
+  wishlistEnvironmentCompatibility?: Prisma.WishlistEnvironmentCompatibilityOmit
   possibleDuplicate?: Prisma.PossibleDuplicateOmit
   recommendationRun?: Prisma.RecommendationRunOmit
   recommendationItem?: Prisma.RecommendationItemOmit

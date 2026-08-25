@@ -76,6 +76,8 @@ export const ModelName = {
   PriceRefresh: 'PriceRefresh',
   CompatibilitySnapshot: 'CompatibilitySnapshot',
   EnvironmentCompatibility: 'EnvironmentCompatibility',
+  WishlistCompatibilitySnapshot: 'WishlistCompatibilitySnapshot',
+  WishlistEnvironmentCompatibility: 'WishlistEnvironmentCompatibility',
   PossibleDuplicate: 'PossibleDuplicate',
   RecommendationRun: 'RecommendationRun',
   RecommendationItem: 'RecommendationItem',
@@ -451,6 +453,31 @@ export const EnvironmentCompatibilityScalarFieldEnum = {
 } as const
 
 export type EnvironmentCompatibilityScalarFieldEnum = (typeof EnvironmentCompatibilityScalarFieldEnum)[keyof typeof EnvironmentCompatibilityScalarFieldEnum]
+
+
+export const WishlistCompatibilitySnapshotScalarFieldEnum = {
+  id: 'id',
+  wishlistEntryId: 'wishlistEntryId',
+  provider: 'provider',
+  result: 'result',
+  sourceUrl: 'sourceUrl',
+  fetchedAt: 'fetchedAt',
+  expiresAt: 'expiresAt'
+} as const
+
+export type WishlistCompatibilitySnapshotScalarFieldEnum = (typeof WishlistCompatibilitySnapshotScalarFieldEnum)[keyof typeof WishlistCompatibilitySnapshotScalarFieldEnum]
+
+
+export const WishlistEnvironmentCompatibilityScalarFieldEnum = {
+  id: 'id',
+  wishlistEntryId: 'wishlistEntryId',
+  environment: 'environment',
+  status: 'status',
+  source: 'source',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WishlistEnvironmentCompatibilityScalarFieldEnum = (typeof WishlistEnvironmentCompatibilityScalarFieldEnum)[keyof typeof WishlistEnvironmentCompatibilityScalarFieldEnum]
 
 
 export const PossibleDuplicateScalarFieldEnum = {

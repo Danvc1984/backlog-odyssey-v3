@@ -115,6 +115,17 @@
     base-game wishes with a confirmed Steam App ID and no personal override;
     per-entry compatibility refresh and fill-only RAWG enrichment that never
     overwrites an existing snapshot
+    - [x] 11c-a. **Wishlist compatibility foundation** - parallel
+      `WishlistCompatibilitySnapshot` and `WishlistEnvironmentCompatibility`
+      storage, provider/synthesis reuse, and a quiet per-entry refresh for
+      eligible base-game wishes; no catalog-state reuse, override, auto-queue,
+      or sweep
+    - [ ] 11c-b. **Wishlist detail page** - `/wishlist/[id]` navigation and
+      composition of existing wish data, RAWG metadata, identity, offers,
+      notes, interest, and existing edit/acquire/delete controls
+    - [ ] 11c-c. **Wishlist detail compatibility and enrichment controls** -
+      read-only compatibility block, eligibility states, detail refresh, and
+      fill-only RAWG enrichment without overwriting a snapshot
   - [ ] 11d. **Wishlist compatibility sweep** - parallel wishlist evidence
     storage keyed by `wishlistEntryId` (`WishlistCompatibilitySnapshot`,
     `WishlistEnvironmentCompatibility`), separate from the catalog pipeline;

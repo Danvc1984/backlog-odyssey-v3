@@ -272,6 +272,8 @@ export type WishlistEntryWhereInput = {
   metadataSnapshot?: Prisma.XOR<Prisma.WishlistMetadataSnapshotNullableScalarRelationFilter, Prisma.WishlistMetadataSnapshotWhereInput> | null
   offers?: Prisma.DealOfferListRelationFilter
   refreshes?: Prisma.PriceRefreshListRelationFilter
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotListRelationFilter
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityListRelationFilter
 }
 
 export type WishlistEntryOrderByWithRelationInput = {
@@ -290,6 +292,8 @@ export type WishlistEntryOrderByWithRelationInput = {
   metadataSnapshot?: Prisma.WishlistMetadataSnapshotOrderByWithRelationInput
   offers?: Prisma.DealOfferOrderByRelationAggregateInput
   refreshes?: Prisma.PriceRefreshOrderByRelationAggregateInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotOrderByRelationAggregateInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityOrderByRelationAggregateInput
 }
 
 export type WishlistEntryWhereUniqueInput = Prisma.AtLeast<{
@@ -311,6 +315,8 @@ export type WishlistEntryWhereUniqueInput = Prisma.AtLeast<{
   metadataSnapshot?: Prisma.XOR<Prisma.WishlistMetadataSnapshotNullableScalarRelationFilter, Prisma.WishlistMetadataSnapshotWhereInput> | null
   offers?: Prisma.DealOfferListRelationFilter
   refreshes?: Prisma.PriceRefreshListRelationFilter
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotListRelationFilter
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityListRelationFilter
 }, "id">
 
 export type WishlistEntryOrderByWithAggregationInput = {
@@ -364,6 +370,8 @@ export type WishlistEntryCreateInput = {
   metadataSnapshot?: Prisma.WishlistMetadataSnapshotCreateNestedOneWithoutWishlistEntryInput
   offers?: Prisma.DealOfferCreateNestedManyWithoutWishlistEntryInput
   refreshes?: Prisma.PriceRefreshCreateNestedManyWithoutWishlistEntryInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotCreateNestedManyWithoutWishlistEntryInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityCreateNestedManyWithoutWishlistEntryInput
 }
 
 export type WishlistEntryUncheckedCreateInput = {
@@ -381,6 +389,8 @@ export type WishlistEntryUncheckedCreateInput = {
   metadataSnapshot?: Prisma.WishlistMetadataSnapshotUncheckedCreateNestedOneWithoutWishlistEntryInput
   offers?: Prisma.DealOfferUncheckedCreateNestedManyWithoutWishlistEntryInput
   refreshes?: Prisma.PriceRefreshUncheckedCreateNestedManyWithoutWishlistEntryInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotUncheckedCreateNestedManyWithoutWishlistEntryInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityUncheckedCreateNestedManyWithoutWishlistEntryInput
 }
 
 export type WishlistEntryUpdateInput = {
@@ -398,6 +408,8 @@ export type WishlistEntryUpdateInput = {
   metadataSnapshot?: Prisma.WishlistMetadataSnapshotUpdateOneWithoutWishlistEntryNestedInput
   offers?: Prisma.DealOfferUpdateManyWithoutWishlistEntryNestedInput
   refreshes?: Prisma.PriceRefreshUpdateManyWithoutWishlistEntryNestedInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotUpdateManyWithoutWishlistEntryNestedInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityUpdateManyWithoutWishlistEntryNestedInput
 }
 
 export type WishlistEntryUncheckedUpdateInput = {
@@ -415,6 +427,8 @@ export type WishlistEntryUncheckedUpdateInput = {
   metadataSnapshot?: Prisma.WishlistMetadataSnapshotUncheckedUpdateOneWithoutWishlistEntryNestedInput
   offers?: Prisma.DealOfferUncheckedUpdateManyWithoutWishlistEntryNestedInput
   refreshes?: Prisma.PriceRefreshUncheckedUpdateManyWithoutWishlistEntryNestedInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotUncheckedUpdateManyWithoutWishlistEntryNestedInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityUncheckedUpdateManyWithoutWishlistEntryNestedInput
 }
 
 export type WishlistEntryCreateManyInput = {
@@ -628,6 +642,34 @@ export type WishlistEntryUpdateOneWithoutRefreshesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.WishlistEntryUpdateToOneWithWhereWithoutRefreshesInput, Prisma.WishlistEntryUpdateWithoutRefreshesInput>, Prisma.WishlistEntryUncheckedUpdateWithoutRefreshesInput>
 }
 
+export type WishlistEntryCreateNestedOneWithoutCompatSnapshotsInput = {
+  create?: Prisma.XOR<Prisma.WishlistEntryCreateWithoutCompatSnapshotsInput, Prisma.WishlistEntryUncheckedCreateWithoutCompatSnapshotsInput>
+  connectOrCreate?: Prisma.WishlistEntryCreateOrConnectWithoutCompatSnapshotsInput
+  connect?: Prisma.WishlistEntryWhereUniqueInput
+}
+
+export type WishlistEntryUpdateOneRequiredWithoutCompatSnapshotsNestedInput = {
+  create?: Prisma.XOR<Prisma.WishlistEntryCreateWithoutCompatSnapshotsInput, Prisma.WishlistEntryUncheckedCreateWithoutCompatSnapshotsInput>
+  connectOrCreate?: Prisma.WishlistEntryCreateOrConnectWithoutCompatSnapshotsInput
+  upsert?: Prisma.WishlistEntryUpsertWithoutCompatSnapshotsInput
+  connect?: Prisma.WishlistEntryWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.WishlistEntryUpdateToOneWithWhereWithoutCompatSnapshotsInput, Prisma.WishlistEntryUpdateWithoutCompatSnapshotsInput>, Prisma.WishlistEntryUncheckedUpdateWithoutCompatSnapshotsInput>
+}
+
+export type WishlistEntryCreateNestedOneWithoutEnvCompatInput = {
+  create?: Prisma.XOR<Prisma.WishlistEntryCreateWithoutEnvCompatInput, Prisma.WishlistEntryUncheckedCreateWithoutEnvCompatInput>
+  connectOrCreate?: Prisma.WishlistEntryCreateOrConnectWithoutEnvCompatInput
+  connect?: Prisma.WishlistEntryWhereUniqueInput
+}
+
+export type WishlistEntryUpdateOneRequiredWithoutEnvCompatNestedInput = {
+  create?: Prisma.XOR<Prisma.WishlistEntryCreateWithoutEnvCompatInput, Prisma.WishlistEntryUncheckedCreateWithoutEnvCompatInput>
+  connectOrCreate?: Prisma.WishlistEntryCreateOrConnectWithoutEnvCompatInput
+  upsert?: Prisma.WishlistEntryUpsertWithoutEnvCompatInput
+  connect?: Prisma.WishlistEntryWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.WishlistEntryUpdateToOneWithWhereWithoutEnvCompatInput, Prisma.WishlistEntryUpdateWithoutEnvCompatInput>, Prisma.WishlistEntryUncheckedUpdateWithoutEnvCompatInput>
+}
+
 export type WishlistEntryCreateWithoutBaseGameInput = {
   id?: string
   name: string
@@ -642,6 +684,8 @@ export type WishlistEntryCreateWithoutBaseGameInput = {
   metadataSnapshot?: Prisma.WishlistMetadataSnapshotCreateNestedOneWithoutWishlistEntryInput
   offers?: Prisma.DealOfferCreateNestedManyWithoutWishlistEntryInput
   refreshes?: Prisma.PriceRefreshCreateNestedManyWithoutWishlistEntryInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotCreateNestedManyWithoutWishlistEntryInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityCreateNestedManyWithoutWishlistEntryInput
 }
 
 export type WishlistEntryUncheckedCreateWithoutBaseGameInput = {
@@ -658,6 +702,8 @@ export type WishlistEntryUncheckedCreateWithoutBaseGameInput = {
   metadataSnapshot?: Prisma.WishlistMetadataSnapshotUncheckedCreateNestedOneWithoutWishlistEntryInput
   offers?: Prisma.DealOfferUncheckedCreateNestedManyWithoutWishlistEntryInput
   refreshes?: Prisma.PriceRefreshUncheckedCreateNestedManyWithoutWishlistEntryInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotUncheckedCreateNestedManyWithoutWishlistEntryInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityUncheckedCreateNestedManyWithoutWishlistEntryInput
 }
 
 export type WishlistEntryCreateOrConnectWithoutBaseGameInput = {
@@ -717,6 +763,8 @@ export type WishlistEntryCreateWithoutMetadataSnapshotInput = {
   baseGame?: Prisma.GameCreateNestedOneWithoutWishlistDlcsInput
   offers?: Prisma.DealOfferCreateNestedManyWithoutWishlistEntryInput
   refreshes?: Prisma.PriceRefreshCreateNestedManyWithoutWishlistEntryInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotCreateNestedManyWithoutWishlistEntryInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityCreateNestedManyWithoutWishlistEntryInput
 }
 
 export type WishlistEntryUncheckedCreateWithoutMetadataSnapshotInput = {
@@ -733,6 +781,8 @@ export type WishlistEntryUncheckedCreateWithoutMetadataSnapshotInput = {
   updatedAt?: Date | string
   offers?: Prisma.DealOfferUncheckedCreateNestedManyWithoutWishlistEntryInput
   refreshes?: Prisma.PriceRefreshUncheckedCreateNestedManyWithoutWishlistEntryInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotUncheckedCreateNestedManyWithoutWishlistEntryInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityUncheckedCreateNestedManyWithoutWishlistEntryInput
 }
 
 export type WishlistEntryCreateOrConnectWithoutMetadataSnapshotInput = {
@@ -765,6 +815,8 @@ export type WishlistEntryUpdateWithoutMetadataSnapshotInput = {
   baseGame?: Prisma.GameUpdateOneWithoutWishlistDlcsNestedInput
   offers?: Prisma.DealOfferUpdateManyWithoutWishlistEntryNestedInput
   refreshes?: Prisma.PriceRefreshUpdateManyWithoutWishlistEntryNestedInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotUpdateManyWithoutWishlistEntryNestedInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityUpdateManyWithoutWishlistEntryNestedInput
 }
 
 export type WishlistEntryUncheckedUpdateWithoutMetadataSnapshotInput = {
@@ -781,6 +833,8 @@ export type WishlistEntryUncheckedUpdateWithoutMetadataSnapshotInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   offers?: Prisma.DealOfferUncheckedUpdateManyWithoutWishlistEntryNestedInput
   refreshes?: Prisma.PriceRefreshUncheckedUpdateManyWithoutWishlistEntryNestedInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotUncheckedUpdateManyWithoutWishlistEntryNestedInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityUncheckedUpdateManyWithoutWishlistEntryNestedInput
 }
 
 export type WishlistEntryCreateWithoutOffersInput = {
@@ -797,6 +851,8 @@ export type WishlistEntryCreateWithoutOffersInput = {
   baseGame?: Prisma.GameCreateNestedOneWithoutWishlistDlcsInput
   metadataSnapshot?: Prisma.WishlistMetadataSnapshotCreateNestedOneWithoutWishlistEntryInput
   refreshes?: Prisma.PriceRefreshCreateNestedManyWithoutWishlistEntryInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotCreateNestedManyWithoutWishlistEntryInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityCreateNestedManyWithoutWishlistEntryInput
 }
 
 export type WishlistEntryUncheckedCreateWithoutOffersInput = {
@@ -813,6 +869,8 @@ export type WishlistEntryUncheckedCreateWithoutOffersInput = {
   updatedAt?: Date | string
   metadataSnapshot?: Prisma.WishlistMetadataSnapshotUncheckedCreateNestedOneWithoutWishlistEntryInput
   refreshes?: Prisma.PriceRefreshUncheckedCreateNestedManyWithoutWishlistEntryInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotUncheckedCreateNestedManyWithoutWishlistEntryInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityUncheckedCreateNestedManyWithoutWishlistEntryInput
 }
 
 export type WishlistEntryCreateOrConnectWithoutOffersInput = {
@@ -845,6 +903,8 @@ export type WishlistEntryUpdateWithoutOffersInput = {
   baseGame?: Prisma.GameUpdateOneWithoutWishlistDlcsNestedInput
   metadataSnapshot?: Prisma.WishlistMetadataSnapshotUpdateOneWithoutWishlistEntryNestedInput
   refreshes?: Prisma.PriceRefreshUpdateManyWithoutWishlistEntryNestedInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotUpdateManyWithoutWishlistEntryNestedInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityUpdateManyWithoutWishlistEntryNestedInput
 }
 
 export type WishlistEntryUncheckedUpdateWithoutOffersInput = {
@@ -861,6 +921,8 @@ export type WishlistEntryUncheckedUpdateWithoutOffersInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   metadataSnapshot?: Prisma.WishlistMetadataSnapshotUncheckedUpdateOneWithoutWishlistEntryNestedInput
   refreshes?: Prisma.PriceRefreshUncheckedUpdateManyWithoutWishlistEntryNestedInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotUncheckedUpdateManyWithoutWishlistEntryNestedInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityUncheckedUpdateManyWithoutWishlistEntryNestedInput
 }
 
 export type WishlistEntryCreateWithoutRefreshesInput = {
@@ -877,6 +939,8 @@ export type WishlistEntryCreateWithoutRefreshesInput = {
   baseGame?: Prisma.GameCreateNestedOneWithoutWishlistDlcsInput
   metadataSnapshot?: Prisma.WishlistMetadataSnapshotCreateNestedOneWithoutWishlistEntryInput
   offers?: Prisma.DealOfferCreateNestedManyWithoutWishlistEntryInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotCreateNestedManyWithoutWishlistEntryInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityCreateNestedManyWithoutWishlistEntryInput
 }
 
 export type WishlistEntryUncheckedCreateWithoutRefreshesInput = {
@@ -893,6 +957,8 @@ export type WishlistEntryUncheckedCreateWithoutRefreshesInput = {
   updatedAt?: Date | string
   metadataSnapshot?: Prisma.WishlistMetadataSnapshotUncheckedCreateNestedOneWithoutWishlistEntryInput
   offers?: Prisma.DealOfferUncheckedCreateNestedManyWithoutWishlistEntryInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotUncheckedCreateNestedManyWithoutWishlistEntryInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityUncheckedCreateNestedManyWithoutWishlistEntryInput
 }
 
 export type WishlistEntryCreateOrConnectWithoutRefreshesInput = {
@@ -925,6 +991,8 @@ export type WishlistEntryUpdateWithoutRefreshesInput = {
   baseGame?: Prisma.GameUpdateOneWithoutWishlistDlcsNestedInput
   metadataSnapshot?: Prisma.WishlistMetadataSnapshotUpdateOneWithoutWishlistEntryNestedInput
   offers?: Prisma.DealOfferUpdateManyWithoutWishlistEntryNestedInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotUpdateManyWithoutWishlistEntryNestedInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityUpdateManyWithoutWishlistEntryNestedInput
 }
 
 export type WishlistEntryUncheckedUpdateWithoutRefreshesInput = {
@@ -941,6 +1009,184 @@ export type WishlistEntryUncheckedUpdateWithoutRefreshesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   metadataSnapshot?: Prisma.WishlistMetadataSnapshotUncheckedUpdateOneWithoutWishlistEntryNestedInput
   offers?: Prisma.DealOfferUncheckedUpdateManyWithoutWishlistEntryNestedInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotUncheckedUpdateManyWithoutWishlistEntryNestedInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityUncheckedUpdateManyWithoutWishlistEntryNestedInput
+}
+
+export type WishlistEntryCreateWithoutCompatSnapshotsInput = {
+  id?: string
+  name: string
+  type?: $Enums.GameType
+  interest?: number | null
+  targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  notes?: string | null
+  steamAppId?: string | null
+  steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  baseGame?: Prisma.GameCreateNestedOneWithoutWishlistDlcsInput
+  metadataSnapshot?: Prisma.WishlistMetadataSnapshotCreateNestedOneWithoutWishlistEntryInput
+  offers?: Prisma.DealOfferCreateNestedManyWithoutWishlistEntryInput
+  refreshes?: Prisma.PriceRefreshCreateNestedManyWithoutWishlistEntryInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityCreateNestedManyWithoutWishlistEntryInput
+}
+
+export type WishlistEntryUncheckedCreateWithoutCompatSnapshotsInput = {
+  id?: string
+  name: string
+  type?: $Enums.GameType
+  baseGameId?: string | null
+  interest?: number | null
+  targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  notes?: string | null
+  steamAppId?: string | null
+  steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  metadataSnapshot?: Prisma.WishlistMetadataSnapshotUncheckedCreateNestedOneWithoutWishlistEntryInput
+  offers?: Prisma.DealOfferUncheckedCreateNestedManyWithoutWishlistEntryInput
+  refreshes?: Prisma.PriceRefreshUncheckedCreateNestedManyWithoutWishlistEntryInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityUncheckedCreateNestedManyWithoutWishlistEntryInput
+}
+
+export type WishlistEntryCreateOrConnectWithoutCompatSnapshotsInput = {
+  where: Prisma.WishlistEntryWhereUniqueInput
+  create: Prisma.XOR<Prisma.WishlistEntryCreateWithoutCompatSnapshotsInput, Prisma.WishlistEntryUncheckedCreateWithoutCompatSnapshotsInput>
+}
+
+export type WishlistEntryUpsertWithoutCompatSnapshotsInput = {
+  update: Prisma.XOR<Prisma.WishlistEntryUpdateWithoutCompatSnapshotsInput, Prisma.WishlistEntryUncheckedUpdateWithoutCompatSnapshotsInput>
+  create: Prisma.XOR<Prisma.WishlistEntryCreateWithoutCompatSnapshotsInput, Prisma.WishlistEntryUncheckedCreateWithoutCompatSnapshotsInput>
+  where?: Prisma.WishlistEntryWhereInput
+}
+
+export type WishlistEntryUpdateToOneWithWhereWithoutCompatSnapshotsInput = {
+  where?: Prisma.WishlistEntryWhereInput
+  data: Prisma.XOR<Prisma.WishlistEntryUpdateWithoutCompatSnapshotsInput, Prisma.WishlistEntryUncheckedUpdateWithoutCompatSnapshotsInput>
+}
+
+export type WishlistEntryUpdateWithoutCompatSnapshotsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumGameTypeFieldUpdateOperationsInput | $Enums.GameType
+  interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  baseGame?: Prisma.GameUpdateOneWithoutWishlistDlcsNestedInput
+  metadataSnapshot?: Prisma.WishlistMetadataSnapshotUpdateOneWithoutWishlistEntryNestedInput
+  offers?: Prisma.DealOfferUpdateManyWithoutWishlistEntryNestedInput
+  refreshes?: Prisma.PriceRefreshUpdateManyWithoutWishlistEntryNestedInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityUpdateManyWithoutWishlistEntryNestedInput
+}
+
+export type WishlistEntryUncheckedUpdateWithoutCompatSnapshotsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumGameTypeFieldUpdateOperationsInput | $Enums.GameType
+  baseGameId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  metadataSnapshot?: Prisma.WishlistMetadataSnapshotUncheckedUpdateOneWithoutWishlistEntryNestedInput
+  offers?: Prisma.DealOfferUncheckedUpdateManyWithoutWishlistEntryNestedInput
+  refreshes?: Prisma.PriceRefreshUncheckedUpdateManyWithoutWishlistEntryNestedInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityUncheckedUpdateManyWithoutWishlistEntryNestedInput
+}
+
+export type WishlistEntryCreateWithoutEnvCompatInput = {
+  id?: string
+  name: string
+  type?: $Enums.GameType
+  interest?: number | null
+  targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  notes?: string | null
+  steamAppId?: string | null
+  steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  baseGame?: Prisma.GameCreateNestedOneWithoutWishlistDlcsInput
+  metadataSnapshot?: Prisma.WishlistMetadataSnapshotCreateNestedOneWithoutWishlistEntryInput
+  offers?: Prisma.DealOfferCreateNestedManyWithoutWishlistEntryInput
+  refreshes?: Prisma.PriceRefreshCreateNestedManyWithoutWishlistEntryInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotCreateNestedManyWithoutWishlistEntryInput
+}
+
+export type WishlistEntryUncheckedCreateWithoutEnvCompatInput = {
+  id?: string
+  name: string
+  type?: $Enums.GameType
+  baseGameId?: string | null
+  interest?: number | null
+  targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  notes?: string | null
+  steamAppId?: string | null
+  steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  metadataSnapshot?: Prisma.WishlistMetadataSnapshotUncheckedCreateNestedOneWithoutWishlistEntryInput
+  offers?: Prisma.DealOfferUncheckedCreateNestedManyWithoutWishlistEntryInput
+  refreshes?: Prisma.PriceRefreshUncheckedCreateNestedManyWithoutWishlistEntryInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotUncheckedCreateNestedManyWithoutWishlistEntryInput
+}
+
+export type WishlistEntryCreateOrConnectWithoutEnvCompatInput = {
+  where: Prisma.WishlistEntryWhereUniqueInput
+  create: Prisma.XOR<Prisma.WishlistEntryCreateWithoutEnvCompatInput, Prisma.WishlistEntryUncheckedCreateWithoutEnvCompatInput>
+}
+
+export type WishlistEntryUpsertWithoutEnvCompatInput = {
+  update: Prisma.XOR<Prisma.WishlistEntryUpdateWithoutEnvCompatInput, Prisma.WishlistEntryUncheckedUpdateWithoutEnvCompatInput>
+  create: Prisma.XOR<Prisma.WishlistEntryCreateWithoutEnvCompatInput, Prisma.WishlistEntryUncheckedCreateWithoutEnvCompatInput>
+  where?: Prisma.WishlistEntryWhereInput
+}
+
+export type WishlistEntryUpdateToOneWithWhereWithoutEnvCompatInput = {
+  where?: Prisma.WishlistEntryWhereInput
+  data: Prisma.XOR<Prisma.WishlistEntryUpdateWithoutEnvCompatInput, Prisma.WishlistEntryUncheckedUpdateWithoutEnvCompatInput>
+}
+
+export type WishlistEntryUpdateWithoutEnvCompatInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumGameTypeFieldUpdateOperationsInput | $Enums.GameType
+  interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  baseGame?: Prisma.GameUpdateOneWithoutWishlistDlcsNestedInput
+  metadataSnapshot?: Prisma.WishlistMetadataSnapshotUpdateOneWithoutWishlistEntryNestedInput
+  offers?: Prisma.DealOfferUpdateManyWithoutWishlistEntryNestedInput
+  refreshes?: Prisma.PriceRefreshUpdateManyWithoutWishlistEntryNestedInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotUpdateManyWithoutWishlistEntryNestedInput
+}
+
+export type WishlistEntryUncheckedUpdateWithoutEnvCompatInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumGameTypeFieldUpdateOperationsInput | $Enums.GameType
+  baseGameId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  metadataSnapshot?: Prisma.WishlistMetadataSnapshotUncheckedUpdateOneWithoutWishlistEntryNestedInput
+  offers?: Prisma.DealOfferUncheckedUpdateManyWithoutWishlistEntryNestedInput
+  refreshes?: Prisma.PriceRefreshUncheckedUpdateManyWithoutWishlistEntryNestedInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotUncheckedUpdateManyWithoutWishlistEntryNestedInput
 }
 
 export type WishlistEntryCreateManyBaseGameInput = {
@@ -970,6 +1216,8 @@ export type WishlistEntryUpdateWithoutBaseGameInput = {
   metadataSnapshot?: Prisma.WishlistMetadataSnapshotUpdateOneWithoutWishlistEntryNestedInput
   offers?: Prisma.DealOfferUpdateManyWithoutWishlistEntryNestedInput
   refreshes?: Prisma.PriceRefreshUpdateManyWithoutWishlistEntryNestedInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotUpdateManyWithoutWishlistEntryNestedInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityUpdateManyWithoutWishlistEntryNestedInput
 }
 
 export type WishlistEntryUncheckedUpdateWithoutBaseGameInput = {
@@ -986,6 +1234,8 @@ export type WishlistEntryUncheckedUpdateWithoutBaseGameInput = {
   metadataSnapshot?: Prisma.WishlistMetadataSnapshotUncheckedUpdateOneWithoutWishlistEntryNestedInput
   offers?: Prisma.DealOfferUncheckedUpdateManyWithoutWishlistEntryNestedInput
   refreshes?: Prisma.PriceRefreshUncheckedUpdateManyWithoutWishlistEntryNestedInput
+  compatSnapshots?: Prisma.WishlistCompatibilitySnapshotUncheckedUpdateManyWithoutWishlistEntryNestedInput
+  envCompat?: Prisma.WishlistEnvironmentCompatibilityUncheckedUpdateManyWithoutWishlistEntryNestedInput
 }
 
 export type WishlistEntryUncheckedUpdateManyWithoutBaseGameInput = {
@@ -1009,11 +1259,15 @@ export type WishlistEntryUncheckedUpdateManyWithoutBaseGameInput = {
 export type WishlistEntryCountOutputType = {
   offers: number
   refreshes: number
+  compatSnapshots: number
+  envCompat: number
 }
 
 export type WishlistEntryCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   offers?: boolean | WishlistEntryCountOutputTypeCountOffersArgs
   refreshes?: boolean | WishlistEntryCountOutputTypeCountRefreshesArgs
+  compatSnapshots?: boolean | WishlistEntryCountOutputTypeCountCompatSnapshotsArgs
+  envCompat?: boolean | WishlistEntryCountOutputTypeCountEnvCompatArgs
 }
 
 /**
@@ -1040,6 +1294,20 @@ export type WishlistEntryCountOutputTypeCountRefreshesArgs<ExtArgs extends runti
   where?: Prisma.PriceRefreshWhereInput
 }
 
+/**
+ * WishlistEntryCountOutputType without action
+ */
+export type WishlistEntryCountOutputTypeCountCompatSnapshotsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.WishlistCompatibilitySnapshotWhereInput
+}
+
+/**
+ * WishlistEntryCountOutputType without action
+ */
+export type WishlistEntryCountOutputTypeCountEnvCompatArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.WishlistEnvironmentCompatibilityWhereInput
+}
+
 
 export type WishlistEntrySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1057,6 +1325,8 @@ export type WishlistEntrySelect<ExtArgs extends runtime.Types.Extensions.Interna
   metadataSnapshot?: boolean | Prisma.WishlistEntry$metadataSnapshotArgs<ExtArgs>
   offers?: boolean | Prisma.WishlistEntry$offersArgs<ExtArgs>
   refreshes?: boolean | Prisma.WishlistEntry$refreshesArgs<ExtArgs>
+  compatSnapshots?: boolean | Prisma.WishlistEntry$compatSnapshotsArgs<ExtArgs>
+  envCompat?: boolean | Prisma.WishlistEntry$envCompatArgs<ExtArgs>
   _count?: boolean | Prisma.WishlistEntryCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["wishlistEntry"]>
 
@@ -1110,6 +1380,8 @@ export type WishlistEntryInclude<ExtArgs extends runtime.Types.Extensions.Intern
   metadataSnapshot?: boolean | Prisma.WishlistEntry$metadataSnapshotArgs<ExtArgs>
   offers?: boolean | Prisma.WishlistEntry$offersArgs<ExtArgs>
   refreshes?: boolean | Prisma.WishlistEntry$refreshesArgs<ExtArgs>
+  compatSnapshots?: boolean | Prisma.WishlistEntry$compatSnapshotsArgs<ExtArgs>
+  envCompat?: boolean | Prisma.WishlistEntry$envCompatArgs<ExtArgs>
   _count?: boolean | Prisma.WishlistEntryCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type WishlistEntryIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1126,6 +1398,8 @@ export type $WishlistEntryPayload<ExtArgs extends runtime.Types.Extensions.Inter
     metadataSnapshot: Prisma.$WishlistMetadataSnapshotPayload<ExtArgs> | null
     offers: Prisma.$DealOfferPayload<ExtArgs>[]
     refreshes: Prisma.$PriceRefreshPayload<ExtArgs>[]
+    compatSnapshots: Prisma.$WishlistCompatibilitySnapshotPayload<ExtArgs>[]
+    envCompat: Prisma.$WishlistEnvironmentCompatibilityPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1537,6 +1811,8 @@ export interface Prisma__WishlistEntryClient<T, Null = never, ExtArgs extends ru
   metadataSnapshot<T extends Prisma.WishlistEntry$metadataSnapshotArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WishlistEntry$metadataSnapshotArgs<ExtArgs>>): Prisma.Prisma__WishlistMetadataSnapshotClient<runtime.Types.Result.GetResult<Prisma.$WishlistMetadataSnapshotPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   offers<T extends Prisma.WishlistEntry$offersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WishlistEntry$offersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DealOfferPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   refreshes<T extends Prisma.WishlistEntry$refreshesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WishlistEntry$refreshesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PriceRefreshPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  compatSnapshots<T extends Prisma.WishlistEntry$compatSnapshotsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WishlistEntry$compatSnapshotsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WishlistCompatibilitySnapshotPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  envCompat<T extends Prisma.WishlistEntry$envCompatArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WishlistEntry$envCompatArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WishlistEnvironmentCompatibilityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2061,6 +2337,54 @@ export type WishlistEntry$refreshesArgs<ExtArgs extends runtime.Types.Extensions
   take?: number
   skip?: number
   distinct?: Prisma.PriceRefreshScalarFieldEnum | Prisma.PriceRefreshScalarFieldEnum[]
+}
+
+/**
+ * WishlistEntry.compatSnapshots
+ */
+export type WishlistEntry$compatSnapshotsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the WishlistCompatibilitySnapshot
+   */
+  select?: Prisma.WishlistCompatibilitySnapshotSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the WishlistCompatibilitySnapshot
+   */
+  omit?: Prisma.WishlistCompatibilitySnapshotOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WishlistCompatibilitySnapshotInclude<ExtArgs> | null
+  where?: Prisma.WishlistCompatibilitySnapshotWhereInput
+  orderBy?: Prisma.WishlistCompatibilitySnapshotOrderByWithRelationInput | Prisma.WishlistCompatibilitySnapshotOrderByWithRelationInput[]
+  cursor?: Prisma.WishlistCompatibilitySnapshotWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.WishlistCompatibilitySnapshotScalarFieldEnum | Prisma.WishlistCompatibilitySnapshotScalarFieldEnum[]
+}
+
+/**
+ * WishlistEntry.envCompat
+ */
+export type WishlistEntry$envCompatArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the WishlistEnvironmentCompatibility
+   */
+  select?: Prisma.WishlistEnvironmentCompatibilitySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the WishlistEnvironmentCompatibility
+   */
+  omit?: Prisma.WishlistEnvironmentCompatibilityOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WishlistEnvironmentCompatibilityInclude<ExtArgs> | null
+  where?: Prisma.WishlistEnvironmentCompatibilityWhereInput
+  orderBy?: Prisma.WishlistEnvironmentCompatibilityOrderByWithRelationInput | Prisma.WishlistEnvironmentCompatibilityOrderByWithRelationInput[]
+  cursor?: Prisma.WishlistEnvironmentCompatibilityWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.WishlistEnvironmentCompatibilityScalarFieldEnum | Prisma.WishlistEnvironmentCompatibilityScalarFieldEnum[]
 }
 
 /**

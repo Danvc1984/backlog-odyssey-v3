@@ -167,6 +167,16 @@ export type CompatibilitySnapshot = Prisma.CompatibilitySnapshotModel
  */
 export type EnvironmentCompatibility = Prisma.EnvironmentCompatibilityModel
 /**
+ * Model WishlistCompatibilitySnapshot
+ *
+ */
+export type WishlistCompatibilitySnapshot = Prisma.WishlistCompatibilitySnapshotModel
+/**
+ * Model WishlistEnvironmentCompatibility
+ *
+ */
+export type WishlistEnvironmentCompatibility = Prisma.WishlistEnvironmentCompatibilityModel
+/**
  * Model PossibleDuplicate
  *
  */

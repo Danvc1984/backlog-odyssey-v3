@@ -451,6 +451,8 @@ model WishlistEntry {
   metadataSnapshot WishlistMetadataSnapshot?
   offers           DealOffer[]
   refreshes        PriceRefresh[]
+  compatSnapshots  WishlistCompatibilitySnapshot[]
+  envCompat        WishlistEnvironmentCompatibility[]
 
   @@index([baseGameId])
   @@index([type])
@@ -548,6 +550,33 @@ model EnvironmentCompatibility {
   game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
   @@unique([gameId, environment])
+}
+
+model WishlistCompatibilitySnapshot {
+  id              String    @id @default(cuid())
+  wishlistEntryId String
+  provider        Provider
+  result          Json?
+  sourceUrl       String?
+  fetchedAt       DateTime  @default(now())
+  expiresAt       DateTime?
+
+  wishlistEntry WishlistEntry @relation(fields: [wishlistEntryId], references: [id], onDelete: Cascade)
+
+  @@unique([wishlistEntryId, provider])
+}
+
+model WishlistEnvironmentCompatibility {
+  id              String              @id @default(cuid())
+  wishlistEntryId String
+  environment     Environment
+  status          CompatibilityStatus
+  source          String?
+  updatedAt       DateTime            @updatedAt
+
+  wishlistEntry WishlistEntry @relation(fields: [wishlistEntryId], references: [id], onDelete: Cascade)
+
+  @@unique([wishlistEntryId, environment])
 }
 
 // ---------------------------------------------------------------------------
