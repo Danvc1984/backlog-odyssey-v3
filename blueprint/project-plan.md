@@ -340,6 +340,36 @@ synchronization:
 Provider outages never erase the last valid data. The app retains the result,
 marks it stale, displays its age, and allows manual refresh.
 
+### Wishlist detail page
+
+Each wishlist entry gets a dedicated detail page at `/wishlist/[id]`, reached
+by linking the card title in the wishlist list. It composes all available
+wishlist data in one place:
+
+- Name, base-game or DLC type, and the base-game link for DLC wishes.
+- Full RAWG metadata snapshot when present: description, genres, release
+  date, playtimes, artwork, and the RAWG source link.
+- Steam identity and provenance, including the add/edit/remove and
+  RAWG-suggestion confirm affordances.
+- Offer block: selected offer, alternatives, target price, opportunity
+  badge, and freshness.
+- Notes and local interest.
+- Edit, acquire into the catalog, and delete actions.
+- A read-only compatibility section (see Compatibility Synthesis) for base
+  games with a confirmed Steam App ID.
+
+Two per-entry actions exist on the detail page:
+
+- **Compatibility refresh** for base-game wishes with a confirmed Steam App
+  ID. Inline, quiet, fail-silent like the auto-trigger.
+- **Fill-only RAWG enrichment**: enriches only when no snapshot exists yet,
+  matching the wishlist auto-enrich behavior. Wishlist data is informational,
+  so unlike the catalog there is no overwrite path - the button is hidden or
+  disabled once a snapshot is present.
+
+These two actions are the only per-entry surfaces; batch progress and error
+details stay out of the wishlist.
+
 ## 10. Compatibility Synthesis
 
 Compatibility evidence uses Bazzite as the primary environment and derives the
@@ -372,9 +402,26 @@ Mixed evidence shows all sources with attribution. Personal overrides apply to
 Bazzite only, take priority, are never overwritten, and consequently affect
 the derived Windows fallback.
 
-Wishlist entries with a confirmed Steam App ID may show the same ProtonDB and
-AWAY evidence on their own detail page. They remain read-only provider evidence:
-wishlist entries have no personal compatibility override.
+Wishlist entries with a confirmed Steam App ID (both `steamAppId` and
+`steamAppIdProvenance` set) show the same ProtonDB and AWAY evidence with the
+derived Windows fallback on their own detail page. Wishlist evidence lives in
+parallel storage keyed by `wishlistEntryId`
+(`WishlistCompatibilitySnapshot` and `WishlistEnvironmentCompatibility`),
+never shared with the catalog: a bought game leaves the wishlist, so reuse
+would buy nothing. Wishlist evidence is provider-derived only - no personal
+compatibility override - and applies to base-game wishes with a confirmed
+Steam App ID; DLC wishes are skipped because their Linux compatibility is
+already carried by the owned base game.
+
+Wishlist compatibility runs through its own jobs, separate from the catalog
+queue. Any confirmed identity auto-queues evidence silently - Steam import,
+manual URL/AppID paste, or RAWG suggest-and-confirm - as an inline call that
+catches and hides provider errors. A quiet async manual sweep covers existing
+confirmed-identity wishes: it confirms "sweep started", shows a completion
+toast, and persists a PriceRefresh-style run record with overlap protection;
+per-entry refresh on the detail page is inline and equally quiet. Absent
+evidence shows a simple "compatibility details not found" note on the detail
+page instead of batch progress or error surfaces.
 
 Freshness uses a single **180-day window** across all evidence types. Stale
 evidence keeps its values, shows its age, and produces a visible

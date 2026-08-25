@@ -65,9 +65,23 @@ The checked state and exact ordering come from `blueprint/build-plan.md`.
    Windows fallback, and per-game refresh.
 11b. **Compatibility batch queue and auto-queue** - Post-RAWG queueing,
    global sweep, progress, and overlap protection.
-11c. **Wishlist compatibility detail** - Dedicated wishlist detail with
-   read-only ProtonDB and AWAY evidence for confirmed Steam App IDs, without a
-   compatibility override.
+11c. **Wishlist detail** - Dedicated `/wishlist/[id]` page reached from the
+   wishlist card title, composing all available wish data: full RAWG
+   metadata, Steam identity with provenance, offers and target price, notes,
+   interest, edit/acquire/delete actions, and a read-only compatibility block
+   (ProtonDB tier, AWAY anti-cheat, derived Windows fallback) for base-game
+   wishes with a confirmed Steam App ID and no personal override; per-entry
+   compatibility refresh and fill-only RAWG enrichment that never overwrites
+   an existing snapshot.
+11d. **Wishlist compatibility sweep** - Parallel wishlist evidence storage
+   keyed by `wishlistEntryId` (`WishlistCompatibilitySnapshot`,
+   `WishlistEnvironmentCompatibility`), separate from the catalog pipeline;
+   auto-trigger on any confirmed Steam identity and a quiet async manual
+   sweep for existing confirmed-identity wishes backed by a PriceRefresh-style
+   run record with overlap protection and a completion toast; base-game wishes
+   only, DLC wishes skipped; inline fail-silent refreshes and a simple
+   "compatibility details not found" note on the detail page; single 180-day
+   freshness window.
 12. **Recommendation engine** - Explicit explainable play-next and buy runs,
    eligibility rules, compatibility as warning-only context that never moves
    rank, fresh-discount offer quality, boost-only DLC affinity, dismissal,
@@ -150,10 +164,12 @@ feature's implementation.
 ### DLC and wishlist
 
 - `UnresolvedSteamDlc` - `steamAppId` (unique), `name`, `steamBaseAppId`,
-  `status` (`PENDING`/`DISCARDED`), `discardedAt`. Indexed on `status`.
-  > **Planned addition (feature 10c):** a `source` discriminator column
-  > (`owned-sync` / `wishlist-import`) to share one queue between library sync
-  > and wishlist import with per-source reappear rules.
+  `source` (`OWNED_SYNC`/`WISHLIST_IMPORT`), `status` (`PENDING`/`DISCARDED`),
+  `discardedAt`. One shared queue for library sync and wishlist import,
+  discriminated by `source`. Indexed on `status`.
+- `WishlistImportReview` - `steamAppId` (unique), `name`, `candidates` (JSON),
+  `status` (`OPEN`/`LINKED`/`IGNORED`), `reviewedAt`.
+- `WishlistImportIgnore` - `steamAppId` (unique), `name`, `createdAt`.
 - `WishlistEntry` - `name`, `type` (`BASE_GAME`/`DLC`), `baseGameId` (cascade
   delete to base game), `interest`, `targetPriceMxn` (decimal 10,2), `notes`,
   `steamAppId`, `steamAppIdProvenance` (`STEAM_IMPORT`/`USER`/`RAWG_SUGGESTION`).
@@ -175,10 +191,23 @@ feature's implementation.
 - `EnvironmentCompatibility` - `gameId`, `environment` (enum), `status`
   (`READY`/`READY_WITH_TINKERING`/`FALLBACK_RECOMMENDED`/`REQUIRED`/`UNKNOWN`),
   `source`, `updatedAt`. Unique on `[gameId, environment]`.
+- `WishlistCompatibilitySnapshot` `(planned, 11c/11d)` - `wishlistEntryId`,
+  `provider` (`PROTONDB`/`ARE_WE_ANTICHEAT_YET`), `result` (JSON), `sourceUrl`,
+  `fetchedAt`, `expiresAt`. Unique on `[wishlistEntryId, provider]`. Parallel to
+  the catalog snapshot; never shared with `CompatibilitySnapshot`.
+- `WishlistEnvironmentCompatibility` `(planned, 11c/11d)` - `wishlistEntryId`,
+  `environment` (`BAZZITE`/`WINDOWS`), `status`, `source`, `updatedAt`. Unique
+  on `[wishlistEntryId, environment]`.
+- `WishlistCompatSweep` `(planned, 11d)` - manual sweep run record modeled on
+  `PriceRefresh`: single RUNNING row for overlap protection, `status`,
+  `requestedAt`, `finishedAt`, `counts` (JSON).
 - `RecommendationRun` - `kind` (`PLAY_NEXT`/`BUY`), `context` (JSON),
   `createdAt`. Indexed on `[kind, createdAt]`.
 - `RecommendationItem` - `runId`, `gameId`, `rank`, `score`, `positive`,
   `negative`, `caveats` (all JSON for factor payloads).
+  > **Planned evolution (feature 12):** `gameId` currently is a required FK to
+  > `Game`, but `buy` items may reference wishlist entries with no catalog
+  > `Game`. The feature 12 spec must decide how buy items are stored.
 - `RecommendationFeedback` - `gameId`, `kind` (String), `reason`, `expiresAt`,
   `createdAt`. Indexed on `[gameId, kind]`.
   > **Planned evolution (feature 12):** persistent per-type dismissal counters
@@ -232,9 +261,42 @@ feature's implementation.
   panel (created, linked, queued reviews, ignored, enrichment).
 - Manual entries and Steam imports save first; provider failures never roll back
   local data or remove the last valid provider snapshot.
-- A wishlist entry with a confirmed Steam App ID may expose the same ProtonDB
-  and AWAY evidence in its dedicated detail view, but does not have a personal
-  compatibility override.
+- The wishlist detail page (`/wishlist/[id]`, 11c) composes full RAWG metadata,
+  Steam identity and provenance, the offer block, notes and interest, and the
+  edit/acquire/delete actions. Its two per-entry actions are a compatibility
+  refresh (for base-game wishes with a confirmed Steam App ID) and fill-only
+  RAWG enrichment that is hidden once a snapshot exists. Batch progress and
+  error details stay out of the wishlist.
+
+## Compatibility rules
+
+- Evidence keys off a Steam App ID. Bazzite is primary (ProtonDB tier plus a
+  per-game ProtonDB link); AWAY anti-cheat evidence shows separately; Windows is
+  derived from effective Bazzite evidence plus anti-cheat status. Personal
+  overrides apply to Bazzite only, take priority, are never overwritten, and
+  affect the derived Windows fallback.
+- Catalog games without a Steam App ID get a manual "add Steam App ID"
+  affordance on the detail page, writing into `ExternalGameId`; evidence queues
+  automatically once present. ROM-only games are fully exempt and read as
+  **not applicable**, never unknown; mixed availability still gets evidence.
+- Freshness uses one **180-day window** for all evidence types. Stale evidence
+  keeps its values, shows its age, and produces a visible recommendation
+  warning - never a penalty.
+- Wishlist evidence (11c/11d) is read-only and lives in parallel storage keyed
+  by `wishlistEntryId`, never shared with the catalog: a bought game leaves the
+  wishlist, so reuse buys nothing. It applies to base-game wishes with a
+  confirmed Steam App ID (`steamAppId` and `steamAppIdProvenance` both set);
+  DLC wishes are skipped because their Linux compatibility is carried by the
+  owned base game. Wishlist evidence has **no personal override**, but does
+  derive the Windows fallback.
+- Wishlist compatibility runs through its own jobs, separate from `EnrichmentJob`.
+  Any confirmed identity - Steam import, manual paste, or RAWG
+  suggest-and-confirm - auto-queues evidence silently as an inline call that
+  catches and hides provider errors. A quiet async manual sweep covers existing
+  confirmed-identity wishes: it confirms "sweep started", shows a completion
+  toast, and persists a PriceRefresh-style run record with overlap protection.
+  Per-entry refresh on the detail page is inline and equally quiet. Absent
+  evidence shows a simple "compatibility details not found" note.
 
 ## Recommendations semantics
 
@@ -253,6 +315,9 @@ feature's implementation.
 - Manual signals dominate: interest, priority, play state, flags, then
   calibration. One `Update recommendations` action (Today header/empty state,
   also Library and Wishlist headers) creates a run with both lists.
+- Dismissal hides an item only during the current run; three cumulative
+  dismissals of the same type lower adjusted interest by one point (floor 0).
+  Runs pruned to a rolling 12 months; counters are cumulative and never pruned.
 
 ## UI and routes
 
@@ -265,8 +330,10 @@ feature's implementation.
 - `/wishlist` - independent wishes, RAWG action, identity suggestions, global
   price refresh, alternatives, opportunity badges, Steam wishlist import, review
   queues, and acquisition.
-- `/wishlist/[id]` - planned dedicated wishlist detail for richer price,
-  metadata, and read-only compatibility evidence.
+- `/wishlist/[id]` - dedicated wishlist detail (11c): full RAWG metadata,
+  identity and provenance, offers and target price, notes, interest, edit/acquire/
+  delete, a read-only compatibility block, compatibility refresh, and fill-only
+  RAWG enrichment.
 - `/games/[id]` - personal fields, availability, metadata, attribution,
   compatibility (with manual Steam AppID entry), DLC, duplicate warning,
   recommendation explanation, and RAWG loading.
@@ -312,24 +379,25 @@ workflow services, notifications, multi-user support, and offline/PWA behavior.
 
 ## Open questions and plan gaps
 
-- Provider contracts validate during their feature specs: ITAD keyshop-flag
-  mechanics and lookup behavior before 10b; ProtonDB summary-endpoint
-  stability and AreWeAntiCheatYet dataset shape before 11.
+- `project-plan.md` §10 says a global compatibility sweep "waits for Settings'
+  provider controls (feature 17)", but `build-plan.md` 11b is complete and
+  already ships the global compatibility sweep from settings. Reconcile that
+  source-plan wording before a later plan edit.
+- `RecommendationItem.gameId` is a required FK to `Game`, but `buy`
+  recommendations may reference wishlist entries that have no catalog `Game`
+  (project plan §4 keeps wishlist entries independent). Decide storage in the
+  feature 12 spec.
 - `project-plan.md` describes RAWG store-link suggestions, while
   `build-plan.md` records that live RAWG store URLs were empty and the current
   suggestion resolves through Steam `storesearch`. Reconcile that source-plan
   wording before a later plan edit.
+- The wishlist compat sweep (11d) may be added to Settings' manual provider
+  controls in feature 17, alongside the catalog global sweep.
 - Exact Vercel/Supabase production scheduler configuration remains a deployment
   concern for feature 18; the product decision is fixed (Vercel Cron with
   `CRON_SECRET` at 06:00 UTC-6).
 - Wallhaven anonymous SFW rate limits and keyword-set defaults confirm during
   the feature 15 spec.
-- `UnresolvedSteamDlc` currently lacks the `source` discriminator column needed
-  for feature 10c's shared queue. The column will be added in that feature's
-  migration.
-- `RecommendationFeedback` currently stores transient per-run dismissals as
-  plain `kind` strings. Feature 12 will evolve this into persistent per-type
-  counters and calibration state.
 
-Run `/feature` for the next unchecked item, currently `11b`. Run `/prototype`
+Run `/feature` for the next unchecked item, currently `11c`. Run `/prototype`
 before feature 14 to lock the visual look against `blueprint/reference/`.

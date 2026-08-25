@@ -107,10 +107,23 @@
   - [x] 11b. **Compatibility batch queue and auto-queue** - post-RAWG
     auto-queue for compatibility jobs; global compatibility sweep from
     settings; batch progress; overlap protection
-  - [ ] 11c. **Wishlist detail** - dedicated wishlist detail
-    page with read-only ProtonDB tier and AWAY anti-cheat evidence for wishes
-    with confirmed Steam App IDs; no personal compatibility override; This detail page also expands on the rest of the data we have available regarding this wishlisted item
-  - [ ] 11d. **Wishlist only compat sweep** - wishlist import process triggers a compatibility sweep after the rawg enrichment, this way games in the wishlist will have compatibility ready for the recomendation engine to take into consideration; compatibility sync can fail silently for games on the wishlist unlike with the main catalog, we could include just a simple message to let the user know compatibility details were not found for a specific game in their details
+  - [ ] 11c. **Wishlist detail** - dedicated `/wishlist/[id]` page reached from
+    the wishlist card title, composing all available wish data: full RAWG
+    metadata, Steam identity with provenance, offers and target price, notes,
+    interest, and the edit/acquire/delete actions; a read-only compatibility
+    block (ProtonDB tier, AWAY anti-cheat, derived Windows fallback) for
+    base-game wishes with a confirmed Steam App ID and no personal override;
+    per-entry compatibility refresh and fill-only RAWG enrichment that never
+    overwrites an existing snapshot
+  - [ ] 11d. **Wishlist compatibility sweep** - parallel wishlist evidence
+    storage keyed by `wishlistEntryId` (`WishlistCompatibilitySnapshot`,
+    `WishlistEnvironmentCompatibility`), separate from the catalog pipeline;
+    auto-trigger on any confirmed Steam identity and a quiet async manual
+    sweep for existing confirmed-identity wishes backed by a
+    PriceRefresh-style run record with overlap protection and a completion
+    toast; base-game wishes only, DLC wishes skipped; inline fail-silent
+    refreshes and a simple "compatibility details not found" note on the
+    detail page; single 180-day freshness window
 
 - [ ] 12. **Recommendation engine** - explicit combined runs with three
   play-next and three buy results; deterministic explanations led by manual
