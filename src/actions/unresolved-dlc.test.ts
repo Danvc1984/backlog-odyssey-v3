@@ -20,6 +20,7 @@ describe("unresolved DLC actions", () => {
   const deleteQueue = vi.fn();
   const findBase = vi.fn();
   const createGame = vi.fn();
+  const createWishlist = vi.fn();
   const transaction = vi.fn();
   const queue = {
     findMany,
@@ -27,7 +28,11 @@ describe("unresolved DLC actions", () => {
     update: updateQueue,
     delete: deleteQueue,
   };
-  const tx = { unresolvedSteamDlc: queue, game: { findUnique: findBase, create: createGame } };
+  const tx = {
+    unresolvedSteamDlc: queue,
+    game: { findUnique: findBase, create: createGame },
+    wishlistEntry: { create: createWishlist },
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -45,6 +50,7 @@ describe("unresolved DLC actions", () => {
     });
     findBase.mockResolvedValue({ id: "base-1", type: "BASE_GAME" });
     createGame.mockResolvedValue({ id: "dlc-1", name: "Expansion", type: "DLC", baseGameId: "base-1" });
+    createWishlist.mockResolvedValue({ id: "wishlist-dlc-1", name: "Expansion", type: "DLC", baseGameId: "base-1" });
     updateQueue.mockResolvedValue({ id: "queue-1", status: "DISCARDED" });
     deleteQueue.mockResolvedValue({});
   });
@@ -75,6 +81,32 @@ describe("unresolved DLC actions", () => {
     expect(createGame).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ type: "DLC", baseGameId: "base-1" }),
     }));
+    expect(deleteQueue).toHaveBeenCalledWith({ where: { id: "queue-1" } });
+  });
+
+  it("links a wishlist-import DLC as wishlist data instead of an acquired game", async () => {
+    findUniqueQueue.mockResolvedValue({
+      id: "queue-1",
+      name: "Expansion",
+      steamAppId: "200",
+      steamBaseAppId: "100",
+      source: "WISHLIST_IMPORT",
+    });
+
+    const result = await linkUnresolvedDlc({
+      unresolvedId: "queue-1",
+      targetBaseGameId: "base-1",
+    });
+
+    expect(result).toEqual({
+      success: true,
+      data: { id: "wishlist-dlc-1", name: "Expansion", type: "DLC", baseGameId: "base-1" },
+      error: null,
+    });
+    expect(createWishlist).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ type: "DLC", baseGameId: "base-1", steamAppId: "200" }),
+    }));
+    expect(createGame).not.toHaveBeenCalled();
     expect(deleteQueue).toHaveBeenCalledWith({ where: { id: "queue-1" } });
   });
 
@@ -125,6 +157,27 @@ describe("unresolved DLC actions", () => {
       success: false,
       data: null,
       error: "Steam base game identity is unavailable",
+    });
+    expect(createGame).not.toHaveBeenCalled();
+    expect(deleteQueue).not.toHaveBeenCalled();
+  });
+
+  it("does not create an acquired base for a wishlist-import DLC", async () => {
+    findUniqueQueue.mockResolvedValue({
+      id: "queue-1",
+      name: "Expansion",
+      steamAppId: "200",
+      steamBaseAppId: "100",
+      source: "WISHLIST_IMPORT",
+    });
+
+    await expect(resolveUnresolvedDlcWithNewBase({
+      unresolvedId: "queue-1",
+      baseGameName: "Base game",
+    })).resolves.toEqual({
+      success: false,
+      data: null,
+      error: "Wishlist DLC needs an existing catalog base game",
     });
     expect(createGame).not.toHaveBeenCalled();
     expect(deleteQueue).not.toHaveBeenCalled();

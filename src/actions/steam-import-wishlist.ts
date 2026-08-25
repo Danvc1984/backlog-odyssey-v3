@@ -81,6 +81,12 @@ async function importWishlistChunk(
   counters: { created: number; queuedReviews: number; ignored: number },
   enrichmentEntryIds: Set<string>,
 ): Promise<void> {
+  const discardWishlistQueueItem = async (steamAppId: string): Promise<void> => {
+    await tx.unresolvedSteamDlc.deleteMany({
+      where: { steamAppId, source: "WISHLIST_IMPORT", status: "PENDING" },
+    });
+  };
+
   for (const game of games) {
     const steamAppId = String(game.appid);
     const existingWishlistEntry = wishlistIdentities.get(steamAppId);
@@ -89,6 +95,13 @@ async function importWishlistChunk(
     }
     if (existingWishlistEntry) {
       if (game.type === "DLC") {
+        const wishlistBase = game.steamBaseAppId
+          ? wishlistIdentities.get(game.steamBaseAppId)
+          : undefined;
+        if (wishlistBase?.type === "BASE_GAME") {
+          await discardWishlistQueueItem(steamAppId);
+          continue;
+        }
         const base = game.steamBaseAppId
           ? catalogIdentities.get(game.steamBaseAppId)
           : undefined;
@@ -131,6 +144,13 @@ async function importWishlistChunk(
     }
 
     if (game.type === "DLC") {
+      const wishlistBase = game.steamBaseAppId
+        ? wishlistIdentities.get(game.steamBaseAppId)
+        : undefined;
+      if (wishlistBase?.type === "BASE_GAME") {
+        await discardWishlistQueueItem(steamAppId);
+        continue;
+      }
       const base = game.steamBaseAppId
         ? catalogIdentities.get(game.steamBaseAppId)
         : undefined;

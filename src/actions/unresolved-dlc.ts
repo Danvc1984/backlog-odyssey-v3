@@ -51,6 +51,23 @@ export async function linkUnresolvedDlc(input: unknown) {
         throw new Error("DLC parent must be a base game");
       }
 
+      if (unresolved.source === "WISHLIST_IMPORT") {
+        const wishlistEntry = await tx.wishlistEntry.create({
+          data: {
+            name: unresolved.name,
+            type: "DLC",
+            baseGameId: baseGame.id,
+            interest: 2,
+            notes: null,
+            steamAppId: unresolved.steamAppId,
+            steamAppIdProvenance: "STEAM_IMPORT",
+          },
+          select: { id: true, name: true, type: true, baseGameId: true },
+        });
+        await tx.unresolvedSteamDlc.delete({ where: { id: unresolved.id } });
+        return wishlistEntry;
+      }
+
       const game = await tx.game.create({
         data: {
           type: "DLC",
@@ -98,6 +115,9 @@ export async function resolveUnresolvedDlcWithNewBase(input: unknown) {
         where: { id: parsed.data.unresolvedId },
       });
       if (!unresolved) throw new Error("Unresolved DLC not found");
+      if (unresolved.source === "WISHLIST_IMPORT") {
+        throw new Error("Wishlist DLC needs an existing catalog base game");
+      }
       if (!unresolved.steamBaseAppId) {
         throw new Error("Steam base game identity is unavailable");
       }

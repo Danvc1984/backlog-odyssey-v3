@@ -31,6 +31,46 @@ export async function upsertUnresolvedSteamDlc(
   });
 }
 
+export async function reconcileWishlistImportDlcs(
+  client: SteamFlowDbClient,
+  baseSteamAppId: string,
+  baseGameId: string,
+): Promise<void> {
+  const pending = await client.unresolvedSteamDlc.findMany({
+    where: {
+      steamBaseAppId: baseSteamAppId,
+      source: "WISHLIST_IMPORT",
+      status: "PENDING",
+    },
+    select: { steamAppId: true, name: true },
+  });
+
+  for (const unresolved of pending) {
+    const existing = await client.wishlistEntry.findFirst({
+      where: { steamAppId: unresolved.steamAppId },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      await client.wishlistEntry.create({
+        data: {
+          name: unresolved.name,
+          type: "DLC",
+          baseGameId,
+          interest: 2,
+          notes: null,
+          steamAppId: unresolved.steamAppId,
+          steamAppIdProvenance: "STEAM_IMPORT",
+        },
+      });
+    }
+
+    await client.unresolvedSteamDlc.delete({
+      where: { steamAppId: unresolved.steamAppId },
+    });
+  }
+}
+
 export type SteamFlowContext =
   | { ok: true; steamId64: string; apiKey: string }
   | { ok: false; error: string };

@@ -3,11 +3,21 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/auth-guard", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 vi.mock("@/lib/steam-api", () => ({ fetchOwnedGames: vi.fn() }));
+vi.mock("@/lib/steam-flow", () => ({
+  requireSteamFlowContext: vi.fn(),
+  reconcileWishlistImportDlcs: vi.fn(),
+  upsertUnresolvedSteamDlc: vi.fn(),
+}));
 vi.mock("@/lib/rawg-import-queue", () => ({ queueRawgForImportedGames: vi.fn() }));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { fetchOwnedGames } from "@/lib/steam-api";
+import {
+  reconcileWishlistImportDlcs,
+  requireSteamFlowContext,
+  upsertUnresolvedSteamDlc,
+} from "@/lib/steam-flow";
 import { queueRawgForImportedGames } from "@/lib/rawg-import-queue";
 import { importSteamGames } from "./steam-import";
 
@@ -18,7 +28,7 @@ describe("importSteamGames", () => {
   const upsertLibraryEntry = vi.fn();
   const createGame = vi.fn();
   const updateConnection = vi.fn();
-  const upsertUnresolvedDlc = vi.fn();
+  const upsertUnresolvedDlc = vi.mocked(upsertUnresolvedSteamDlc);
   const transaction = vi.fn();
   const tx = {
     game: { create: createGame },
@@ -32,6 +42,12 @@ describe("importSteamGames", () => {
     vi.clearAllMocks();
     process.env.STEAM_WEB_API_KEY = "test-key";
     (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    vi.mocked(requireSteamFlowContext).mockResolvedValue({
+      ok: true,
+      steamId64: "76561198000000000",
+      apiKey: "test-key",
+    });
+    vi.mocked(reconcileWishlistImportDlcs).mockResolvedValue(undefined);
     (prisma as unknown as { steamConnection: Record<string, unknown> }).steamConnection = {
       findUnique: findUniqueConnection,
       update: updateConnection,
@@ -53,7 +69,7 @@ describe("importSteamGames", () => {
     upsertLibraryEntry.mockResolvedValue({});
     createGame.mockResolvedValue({ id: "game-new" });
     updateConnection.mockResolvedValue({});
-    upsertUnresolvedDlc.mockResolvedValue({});
+    upsertUnresolvedDlc.mockResolvedValue(undefined);
     vi.mocked(queueRawgForImportedGames).mockResolvedValue({
       batchId: "batch-1",
       queued: 1,
@@ -112,6 +128,7 @@ describe("importSteamGames", () => {
       select: { id: true },
     });
     expect(queueRawgForImportedGames).toHaveBeenCalledWith(["game-new"]);
+    expect(reconcileWishlistImportDlcs).toHaveBeenCalledWith(tx, "10", "game-new");
     expect(updateConnection).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 1 },
@@ -207,16 +224,11 @@ describe("importSteamGames", () => {
       success: true,
       data: expect.objectContaining({ imported: 0, updated: 1 }),
     }));
-    expect(upsertUnresolvedDlc).toHaveBeenCalledWith({
-      where: { steamAppId: "200" },
-      create: { steamAppId: "200", name: "Expansion", steamBaseAppId: "100" },
-      update: {
-        name: "Expansion",
-        steamBaseAppId: "100",
-        status: "PENDING",
-        discardedAt: null,
-      },
-    });
+    expect(upsertUnresolvedDlc).toHaveBeenCalledWith(
+      tx,
+      "200",
+      expect.objectContaining({ name: "Expansion", steamBaseAppId: "100" }),
+    );
     expect(createGame).not.toHaveBeenCalled();
   });
 
@@ -337,7 +349,10 @@ describe("importSteamGames", () => {
   });
 
   it("returns an error when Steam is disconnected", async () => {
-    findUniqueConnection.mockResolvedValue(null);
+    vi.mocked(requireSteamFlowContext).mockResolvedValueOnce({
+      ok: false,
+      error: "Steam account is not connected",
+    });
 
     const result = await importSteamGames();
 
@@ -351,7 +366,10 @@ describe("importSteamGames", () => {
   });
 
   it("returns an error when the Steam API key is missing", async () => {
-    delete process.env.STEAM_WEB_API_KEY;
+    vi.mocked(requireSteamFlowContext).mockResolvedValueOnce({
+      ok: false,
+      error: "STEAM_WEB_API_KEY is not configured",
+    });
 
     const result = await importSteamGames();
 

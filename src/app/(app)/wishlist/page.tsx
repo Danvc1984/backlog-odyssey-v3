@@ -7,10 +7,12 @@ import { WishlistImportReviewSection } from "@/components/wishlist/WishlistImpor
 import { WishlistSyncChip } from "@/components/wishlist/WishlistSyncChip";
 import { prisma } from "@/lib/prisma";
 import { buildEntryOfferView } from "@/lib/offer-selection";
+import { wishlistWhere } from "@/lib/wishlist-search";
 
 interface WishlistSearchParams {
   type?: string;
   interest?: string;
+  q?: string;
 }
 
 export default async function WishlistPage({
@@ -26,10 +28,11 @@ export default async function WishlistPage({
   const interestFilter = Number.isInteger(interest) && interest >= 1 && interest <= 5
     ? interest
     : undefined;
+  const query = params.q?.trim() || undefined;
 
   const [entries, baseGames, latestRun] = await Promise.all([
     prisma.wishlistEntry.findMany({
-      where: { type, interest: interestFilter },
+      where: wishlistWhere({ type, interest: interestFilter, query }),
       orderBy: [{ interest: "desc" }, { updatedAt: "desc" }],
       include: {
         offers: {

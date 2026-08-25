@@ -28,11 +28,13 @@ const updateConnection = vi.fn();
 const createWishlist = vi.fn();
 const updateWishlist = vi.fn();
 const upsertReview = vi.fn();
+const deleteManyUnresolved = vi.fn();
 const transaction = vi.fn();
 
 const tx = {
   wishlistEntry: { create: createWishlist, update: updateWishlist },
   wishlistImportReview: { upsert: upsertReview },
+  unresolvedSteamDlc: { deleteMany: deleteManyUnresolved },
 };
 
 beforeEach(() => {
@@ -67,6 +69,7 @@ beforeEach(() => {
     metadataSnapshot: null,
   }));
   upsertReview.mockResolvedValue({ id: "review-1" });
+  deleteManyUnresolved.mockResolvedValue({ count: 0 });
   transaction.mockImplementation(async (callback: (client: typeof tx) => unknown) => callback(tx));
   (prisma as unknown as Record<string, unknown>).externalGameId = { findMany: findManyExternalId };
   (prisma as unknown as Record<string, unknown>).gameAvailability = { findMany: findManyAvailability };
@@ -189,6 +192,48 @@ describe("importSteamWishlist", () => {
     expect(createWishlist).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ type: "DLC", baseGameId: "game-1", steamAppId: "200" }),
     }));
+  });
+
+  it("skips a DLC when its base game is created in the same wishlist import", async () => {
+    vi.mocked(fetchSteamWishlist).mockResolvedValue({ games: [
+      { appid: 100, name: "Portal" },
+      { appid: 200, name: "Expansion", type: "DLC", steamBaseAppId: "100" },
+    ], status: "OK" });
+
+    const result = await importSteamWishlist();
+
+    expect(result).toMatchObject({ success: true, data: { created: 1 } });
+    expect(createWishlist).toHaveBeenCalledTimes(1);
+    expect(createWishlist).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ name: "Portal", type: "BASE_GAME", steamAppId: "100" }),
+    }));
+    expect(upsertUnresolvedSteamDlc).not.toHaveBeenCalled();
+    expect(deleteManyUnresolved).toHaveBeenCalledWith({
+      where: { steamAppId: "200", source: "WISHLIST_IMPORT", status: "PENDING" },
+    });
+  });
+
+  it("skips a DLC when its base game is already in the wishlist", async () => {
+    vi.mocked(fetchSteamWishlist).mockResolvedValue({ games: [
+      { appid: 200, name: "Expansion", type: "DLC", steamBaseAppId: "100" },
+    ], status: "OK" });
+    findManyWishlist.mockResolvedValue([{
+      id: "wish-100",
+      name: "Portal",
+      type: "BASE_GAME",
+      steamAppId: "100",
+      steamAppIdProvenance: "STEAM_IMPORT",
+      metadataSnapshot: null,
+    }]);
+
+    const result = await importSteamWishlist();
+
+    expect(result).toMatchObject({ success: true, data: { created: 0 } });
+    expect(createWishlist).not.toHaveBeenCalled();
+    expect(upsertUnresolvedSteamDlc).not.toHaveBeenCalled();
+    expect(deleteManyUnresolved).toHaveBeenCalledWith({
+      where: { steamAppId: "200", source: "WISHLIST_IMPORT", status: "PENDING" },
+    });
   });
 
   it("puts a DLC with an unknown catalog base in the wishlist-import queue", async () => {

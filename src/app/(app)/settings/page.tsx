@@ -6,7 +6,7 @@ export default async function SettingsPage() {
   const [steamConnection, unresolvedDlcs, baseGames] = await Promise.all([
     prisma.steamConnection.findUnique({ where: { id: 1 } }),
     prisma.unresolvedSteamDlc.findMany({
-      select: { id: true, steamAppId: true, name: true, steamBaseAppId: true, status: true },
+      select: { id: true, steamAppId: true, name: true, steamBaseAppId: true, source: true, status: true },
       orderBy: [{ status: "asc" }, { createdAt: "asc" }],
     }),
     prisma.game.findMany({

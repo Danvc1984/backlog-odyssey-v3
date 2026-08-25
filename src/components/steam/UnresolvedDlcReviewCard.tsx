@@ -29,6 +29,7 @@ interface UnresolvedDlcItem {
   steamAppId: string;
   name: string;
   steamBaseAppId: string | null;
+  source: "OWNED_SYNC" | "WISHLIST_IMPORT";
   status: UnresolvedDlcStatus;
 }
 
@@ -145,7 +146,7 @@ export function UnresolvedDlcReviewCard({
             Unresolved Steam DLC
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Review owned DLC whose base game is not in the catalog.
+            Review DLC whose base game is not in the catalog.
           </p>
         </div>
         <span className="rounded-md bg-muted px-2 py-1 text-xs font-medium">
@@ -172,10 +173,12 @@ export function UnresolvedDlcReviewCard({
                     <Link2 />
                     Link base game
                   </Button>
-                  <Button type="button" size="sm" onClick={() => openCreateDialog(item)}>
-                    <WandSparkles />
-                    Create base + DLC
-                  </Button>
+                  {item.source === "OWNED_SYNC" && (
+                    <Button type="button" size="sm" onClick={() => openCreateDialog(item)}>
+                      <WandSparkles />
+                      Create base + DLC
+                    </Button>
+                  )}
                   <Button
                     type="button"
                     size="sm"

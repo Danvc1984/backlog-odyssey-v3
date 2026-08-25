@@ -4,7 +4,11 @@ import { fetchOwnedGames, type OwnedGame } from "@/lib/steam-api";
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { lastPlayedDate } from "@/lib/steam-utils";
-import { upsertUnresolvedSteamDlc, requireSteamFlowContext } from "@/lib/steam-flow";
+import {
+  reconcileWishlistImportDlcs,
+  upsertUnresolvedSteamDlc,
+  requireSteamFlowContext,
+} from "@/lib/steam-flow";
 import { queueRawgForImportedGames } from "@/lib/rawg-import-queue";
 
 type ImportGameResult =
@@ -45,6 +49,9 @@ async function importGame(
         create: { gameId: known.gameId },
         update: {},
       });
+      if (known.type === "BASE_GAME") {
+        await reconcileWishlistImportDlcs(tx, externalId, known.gameId);
+      }
     }
     return { kind: "updated" };
   }
@@ -100,6 +107,7 @@ async function importGame(
     select: { id: true },
   });
   identities.set(externalId, { gameId: createdGame.id, type: "BASE_GAME" });
+  await reconcileWishlistImportDlcs(tx, externalId, createdGame.id);
   return { kind: "imported", gameId: createdGame.id };
 }
 
