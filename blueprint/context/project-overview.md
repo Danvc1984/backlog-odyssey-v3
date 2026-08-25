@@ -56,10 +56,18 @@ The checked state and exact ordering come from `blueprint/build-plan.md`.
    conservative 7a-matcher review where linking is never automatic, new-base
    RAWG follow-up, one shared source-discriminated unresolved-DLC queue,
    header sync chip, and persistent result summary.
-11. **Compatibility synthesis** - ProtonDB primary, Deck Verified fallback, AWAY
-   anti-cheat dataset, manual Steam AppID entry, ROM-only exemption as not
-   applicable, Windows fallback, overrides, 180-day freshness, retries, and
-   progress.
+11. **Compatibility synthesis** - Bazzite-first ProtonDB and separately shown
+   AWAY anti-cheat evidence, derived Windows fallback, manual Steam AppID
+   entry, ROM-only exemption as not applicable, Bazzite-only overrides,
+   180-day freshness, retries, and progress.
+11a. **Compatibility evidence and display** - Bazzite evidence, ProtonDB tier
+   and game link, AWAY game link, Bazzite-only override controls, derived
+   Windows fallback, and per-game refresh.
+11b. **Compatibility batch queue and auto-queue** - Post-RAWG queueing,
+   global sweep, progress, and overlap protection.
+11c. **Wishlist compatibility detail** - Dedicated wishlist detail with
+   read-only ProtonDB and AWAY evidence for confirmed Steam App IDs, without a
+   compatibility override.
 12. **Recommendation engine** - Explicit explainable play-next and buy runs,
    eligibility rules, compatibility as warning-only context that never moves
    rank, fresh-discount offer quality, boost-only DLC affinity, dismissal,
@@ -224,6 +232,9 @@ feature's implementation.
   panel (created, linked, queued reviews, ignored, enrichment).
 - Manual entries and Steam imports save first; provider failures never roll back
   local data or remove the last valid provider snapshot.
+- A wishlist entry with a confirmed Steam App ID may expose the same ProtonDB
+  and AWAY evidence in its dedicated detail view, but does not have a personal
+  compatibility override.
 
 ## Recommendations semantics
 
@@ -254,6 +265,8 @@ feature's implementation.
 - `/wishlist` - independent wishes, RAWG action, identity suggestions, global
   price refresh, alternatives, opportunity badges, Steam wishlist import, review
   queues, and acquisition.
+- `/wishlist/[id]` - planned dedicated wishlist detail for richer price,
+  metadata, and read-only compatibility evidence.
 - `/games/[id]` - personal fields, availability, metadata, attribution,
   compatibility (with manual Steam AppID entry), DLC, duplicate warning,
   recommendation explanation, and RAWG loading.
@@ -301,8 +314,7 @@ workflow services, notifications, multi-user support, and offline/PWA behavior.
 
 - Provider contracts validate during their feature specs: ITAD keyshop-flag
   mechanics and lookup behavior before 10b; ProtonDB summary-endpoint
-  stability, Deck Verified categories inside Steam `appdetails`, and
-  AreWeAntiCheatYet dataset shape before 11.
+  stability and AreWeAntiCheatYet dataset shape before 11.
 - `project-plan.md` describes RAWG store-link suggestions, while
   `build-plan.md` records that live RAWG store URLs were empty and the current
   suggestion resolves through Steam `storesearch`. Reconcile that source-plan
@@ -319,5 +331,5 @@ workflow services, notifications, multi-user support, and offline/PWA behavior.
   plain `kind` strings. Feature 12 will evolve this into persistent per-type
   counters and calibration state.
 
-Run `/feature` for the next unchecked item, currently `10c`. Run `/prototype`
+Run `/feature` for the next unchecked item, currently `11b`. Run `/prototype`
 before feature 14 to lock the visual look against `blueprint/reference/`.

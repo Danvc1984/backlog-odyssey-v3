@@ -39,7 +39,8 @@ registration, and collaboration are outside the MVP.
 - ITAD/Steam price enrichment for wishlist entries.
 - Optional MXN target prices, transparent valid-offer comparison, and purchase-opportunity signals.
 - Manual Steam wishlist import with conservative local matching, review queues, and RAWG follow-up for new base-game wishes.
-- Compatibility evidence for Bazzite, Steam Deck, and Windows.
+- Compatibility evidence for Bazzite and its Windows fallback, with wishlist
+  evidence presented separately when a wish has a confirmed Steam App ID.
 - Deterministic explainable play-next and buy recommendations with DLC affinity weighting.
 - Recommendation runs with temporary dismissal and persistent calibration signals.
 - Today dashboard with recent Steam activity and wishlist offers.
@@ -341,8 +342,9 @@ marks it stale, displays its age, and allows manual refresh.
 
 ## 10. Compatibility Synthesis
 
-Compatibility evidence covers Bazzite desktop, Steam Deck, and the Windows
-fallback.
+Compatibility evidence uses Bazzite as the primary environment and derives the
+Windows fallback from it. It does not maintain a separate Steam Deck
+compatibility layer.
 
 All provider evidence keys off a Steam App ID. Catalog games without one get
 a manual "add Steam App ID" affordance on the detail page, writing into the
@@ -356,16 +358,23 @@ still receives Steam-based evidence.
 
 Sources:
 
-- ProtonDB is primary for Bazzite and Steam Deck reports.
-- Steam Deck Verified is the Deck-specific fallback when ProtonDB lacks
-  evidence.
+- ProtonDB is primary for Bazzite/Linux reports, with its tier and a single
+  per-game ProtonDB link shown as evidence.
 - Anti-cheat evidence comes from the AreWeAntiCheatYet crowdsourced dataset,
-  cached like other providers; absent data stays explicit unknown.
-- Windows is implicitly compatible as the fixed fallback, though anti-cheat
-  or personal evidence may add a warning.
+  cached like other providers and shown separately; absent data stays explicit
+  unknown.
+- Windows is derived from effective Bazzite evidence: a game ready without
+  tinkering needs no fallback, tinkering or degraded Linux support recommends a
+  fallback, and denied/broken anti-cheat, not-playable Bazzite evidence, or
+  unknown Bazzite evidence requires it.
 
-Mixed evidence shows all sources with attribution. Personal overrides take
-priority and are never overwritten.
+Mixed evidence shows all sources with attribution. Personal overrides apply to
+Bazzite only, take priority, are never overwritten, and consequently affect
+the derived Windows fallback.
+
+Wishlist entries with a confirmed Steam App ID may show the same ProtonDB and
+AWAY evidence on their own detail page. They remain read-only provider evidence:
+wishlist entries have no personal compatibility override.
 
 Freshness uses a single **180-day window** across all evidence types. Stale
 evidence keeps its values, shows its age, and produces a visible
@@ -373,8 +382,7 @@ recommendation warning - never a penalty. Refresh triggers are the post-RAWG
 automatic queue and per-game manual refresh. A global sweep waits for
 Settings' provider controls (feature 17); scheduled rescheduling waits for
 deployment (feature 18). Provider endpoint stability (ProtonDB summary
-endpoint, Deck Verified categories, AWAY dataset shape) validates during the
-feature spec.
+endpoint and AWAY dataset shape) validates during the feature spec.
 
 ## 11. Recommendations
 

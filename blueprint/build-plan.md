@@ -93,12 +93,23 @@
 ## Compatibility and recommendations
 
 - [ ] 11. **Compatibility synthesis** - asynchronous post-RAWG ProtonDB
-  evidence for Bazzite and Steam Deck with Deck Verified fallback; AWAY
-  dataset for anti-cheat; manual Steam AppID entry into ExternalGameId with
-  ROM-only games exempt as not applicable; implicit Windows fallback;
-  mixed-evidence handling with attribution; personal overrides; single
+  evidence for Bazzite; AWAY dataset for anti-cheat; manual Steam AppID entry
+  into ExternalGameId with ROM-only games exempt as not applicable; Windows
+  fallback; mixed-evidence handling with attribution; Bazzite-only personal
+  overrides; single
   180-day freshness window; post-RAWG auto-queue and per-game manual refresh;
   retry states; batch progress
+  - [x] 11a. **Compatibility evidence and display** - ProtonDB and AWAY API
+    clients; Bazzite evidence plus Windows fallback; manual Steam AppID entry
+    on game detail; ROM-only exemption; Bazzite-only personal overrides;
+    compatibility section with provider evidence, tiers, and per-game refresh;
+    180-day freshness; retry states
+  - [ ] 11b. **Compatibility batch queue and auto-queue** - post-RAWG
+    auto-queue for compatibility jobs; global compatibility sweep from
+    settings; batch progress; overlap protection
+  - [ ] 11c. **Wishlist compatibility detail** - dedicated wishlist detail
+    page with read-only ProtonDB tier and AWAY anti-cheat evidence for wishes
+    with confirmed Steam App IDs; no personal compatibility override
 
 - [ ] 12. **Recommendation engine** - explicit combined runs with three
   play-next and three buy results; deterministic explanations led by manual
