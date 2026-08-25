@@ -22,6 +22,7 @@ interface CountBucket {
   noOffers: number;
   failed: number;
   identityRequired: number;
+  conversionUnavailable?: boolean;
 }
 
 function readCounts(value: unknown): CountBucket {
@@ -79,6 +80,11 @@ export function PriceRefreshPanel({ initialRun }: { initialRun: PriceRefreshRunS
           {counts.failed > 0 && `, ${counts.failed} failed`}
           {counts.identityRequired > 0 && `, ${counts.identityRequired} need Steam identity`}
           {finished && ` · ${finished}`}
+        </p>
+      )}
+      {counts?.conversionUnavailable && (
+        <p className="max-w-72 text-right text-xs text-amber-300">
+          Some ITAD prices could not be converted to MXN. Source currencies remain shown.
         </p>
       )}
       <a

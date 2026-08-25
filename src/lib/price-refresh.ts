@@ -11,6 +11,7 @@ import {
 } from "./itad-api";
 import { resolveItadIds } from "./itad-identity";
 import { fetchSteamStorePrices, type SteamStorePrice } from "./steam-api";
+import { fetchUsdToMxnRate } from "./exchange-rate";
 
 export const ABANDONED_RUN_MS = 15 * 60 * 1000;
 
@@ -21,6 +22,7 @@ export interface PriceRefreshCounts {
   noOffers: number;
   failed: number;
   identityRequired: number;
+  conversionUnavailable?: boolean;
 }
 
 export function emptyCounts(total = 0): PriceRefreshCounts {
@@ -125,23 +127,47 @@ function parseDate(value: string | null): Date | null {
 
 type DealOfferRow = Prisma.DealOfferCreateManyInput;
 
+interface ExchangeRateSnapshot {
+  rate: number;
+  fetchedAt: Date;
+}
+
+function convertedDecimal(value: number | null, exchangeRate: ExchangeRateSnapshot | null): Prisma.Decimal | null {
+  if (value == null) {
+    return null;
+  }
+  const source = new Prisma.Decimal(value);
+  return exchangeRate
+    ? source.mul(new Prisma.Decimal(exchangeRate.rate)).toDecimalPlaces(2)
+    : source;
+}
+
 function dealToRow(
   entryId: string,
   deal: ItadDeal,
   historyLow: number | null,
   now: Date,
+  exchangeRate: ExchangeRateSnapshot | null,
 ): DealOfferRow {
   const drm = deal.drm ?? [];
   const platforms = deal.platforms ?? [];
+  const sourceCurrency = deal.currency?.trim().toUpperCase() ?? null;
+  const shouldConvert = sourceCurrency === "USD" && exchangeRate !== null;
   return {
     wishlistEntryId: entryId,
     shop: deal.shopName ?? "Unknown shop",
     country: "MX",
-    currency: deal.currency,
-    price: deal.price != null ? new Prisma.Decimal(deal.price) : null,
-    regularPrice: deal.regular != null ? new Prisma.Decimal(deal.regular) : null,
+    currency: shouldConvert ? "MXN" : deal.currency,
+    price: convertedDecimal(deal.price, shouldConvert ? exchangeRate : null),
+    regularPrice: convertedDecimal(deal.regular, shouldConvert ? exchangeRate : null),
     discount: deal.cut != null && Number.isFinite(deal.cut) ? Math.round(deal.cut) : null,
-    historicalLow: historyLow != null ? new Prisma.Decimal(historyLow) : null,
+    historicalLow: convertedDecimal(historyLow, shouldConvert ? exchangeRate : null),
+    sourceCurrency: sourceCurrency,
+    sourcePrice: deal.price != null ? new Prisma.Decimal(deal.price) : null,
+    sourceRegularPrice: deal.regular != null ? new Prisma.Decimal(deal.regular) : null,
+    sourceHistoricalLow: historyLow != null ? new Prisma.Decimal(historyLow) : null,
+    exchangeRateToMxn: shouldConvert ? new Prisma.Decimal(exchangeRate.rate) : null,
+    exchangeRateFetchedAt: shouldConvert ? exchangeRate.fetchedAt : null,
     voucher: deal.voucher,
     itadFlag: deal.flag,
     drm: drm.length > 0 ? drm.join(", ") : null,
@@ -193,6 +219,14 @@ export async function processPriceRefreshEntries(
 
   if (entries.length === 0) {
     return counts;
+  }
+
+  let exchangeRate: ExchangeRateSnapshot | null = null;
+  const exchangeRateResult = await fetchUsdToMxnRate();
+  if (exchangeRateResult.ok) {
+    exchangeRate = exchangeRateResult;
+  } else {
+    counts.conversionUnavailable = true;
   }
 
   const steamPrices = await fetchSteamStorePrices(entries.map((entry) => entry.steamAppId));
@@ -266,7 +300,7 @@ export async function processPriceRefreshEntries(
       if (!steamPrice) {
         dealtEntryIds.push(entry.id);
       }
-      rows.push(...game.deals.map((deal) => dealToRow(entry.id, deal, game.historyLow, now)));
+      rows.push(...game.deals.map((deal) => dealToRow(entry.id, deal, game.historyLow, now, exchangeRate)));
     }
     try {
       await replaceOffers(entryIds, rows);

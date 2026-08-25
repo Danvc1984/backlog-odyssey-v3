@@ -480,6 +480,12 @@ model DealOffer {
   regularPrice    Decimal?  @db.Decimal(10, 2)
   discount        Int?
   historicalLow   Decimal?  @db.Decimal(10, 2)
+  sourceCurrency  String?
+  sourcePrice     Decimal?  @db.Decimal(10, 2)
+  sourceRegularPrice Decimal? @db.Decimal(10, 2)
+  sourceHistoricalLow Decimal? @db.Decimal(10, 2)
+  exchangeRateToMxn Decimal? @db.Decimal(14, 6)
+  exchangeRateFetchedAt DateTime?
   voucher         String?
   itadFlag        String?
   drm             String?

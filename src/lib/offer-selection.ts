@@ -10,6 +10,11 @@ export type OfferNumericValue = number | string | { toNumber(): number };
 export interface OfferSelectionInput {
   price?: OfferNumericValue | null;
   currency?: string | null;
+  sourceCurrency?: string | null;
+  sourcePrice?: OfferNumericValue | null;
+  sourceRegularPrice?: OfferNumericValue | null;
+  sourceHistoricalLow?: OfferNumericValue | null;
+  exchangeRateToMxn?: OfferNumericValue | null;
   expiresAt: Date | null;
   fetchedAt: Date | null;
   itadFlag: string | null;
@@ -123,6 +128,11 @@ function toWishlistOfferView(offer: WishlistOfferSource): WishlistOfferView {
     currency: offer.currency,
     price: toNullableNumber(offer.price),
     regularPrice: toNullableNumber(offer.regularPrice),
+    sourceCurrency: offer.sourceCurrency ?? null,
+    sourcePrice: toNullableNumber(offer.sourcePrice ?? null),
+    sourceRegularPrice: toNullableNumber(offer.sourceRegularPrice ?? null),
+    sourceHistoricalLow: toNullableNumber(offer.sourceHistoricalLow ?? null),
+    exchangeRateToMxn: toNullableNumber(offer.exchangeRateToMxn ?? null),
     discount: offer.discount,
     historicalLow: toNullableNumber(offer.historicalLow),
     url: offer.url,

@@ -18,6 +18,17 @@ function formatCurrency(value: number | null, currency: string | null): string {
   return `${currency?.trim().toUpperCase() ?? "Unknown currency"} ${numberFormatter.format(value)}`;
 }
 
+function sourcePriceLabel(offer: WishlistOfferView): string | null {
+  if (
+    offer.sourcePrice === null ||
+    !offer.sourceCurrency ||
+    offer.sourceCurrency.trim().toUpperCase() === offer.currency?.trim().toUpperCase()
+  ) {
+    return null;
+  }
+  return `Source: ${formatCurrency(offer.sourcePrice, offer.sourceCurrency)}`;
+}
+
 export function WishlistOfferAlternatives({
   alternatives,
 }: {
@@ -74,6 +85,9 @@ export function WishlistOfferAlternatives({
               </div>
               <div className="shrink-0 text-right">
                 <span className="font-medium">{formatCurrency(offer.price, offer.currency)}</span>
+                {sourcePriceLabel(offer) && (
+                  <p className="text-muted-foreground">{sourcePriceLabel(offer)}</p>
+                )}
                 {offer.discount !== null && offer.discount > 0 && (
                   <span className="ml-1 text-emerald-400">-{offer.discount}%</span>
                 )}

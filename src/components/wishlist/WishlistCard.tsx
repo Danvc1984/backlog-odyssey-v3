@@ -53,6 +53,17 @@ function formatCurrency(value: number | null, currency: string | null): string {
   return `${currency?.trim().toUpperCase() ?? "Unknown currency"} ${mxnFormatter.format(value)}`;
 }
 
+function sourcePriceLabel(offer: { sourcePrice: number | null; sourceCurrency: string | null; currency: string | null }): string | null {
+  if (
+    offer.sourcePrice === null ||
+    !offer.sourceCurrency ||
+    offer.sourceCurrency.trim().toUpperCase() === offer.currency?.trim().toUpperCase()
+  ) {
+    return null;
+  }
+  return `Source: ${formatCurrency(offer.sourcePrice, offer.sourceCurrency)}`;
+}
+
 function WishlistOfferSection({
   offerView,
   hasConfirmedIdentity,
@@ -96,6 +107,9 @@ function WishlistOfferSection({
           )}
         </div>
       </div>
+      {sourcePriceLabel(offer) && (
+        <p className="text-xs text-muted-foreground">{sourcePriceLabel(offer)}</p>
+      )}
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
         {offer.discount !== null && offer.discount > 0 && (
           <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 font-medium text-emerald-400">
@@ -135,6 +149,9 @@ function WishlistOfferSection({
               {formatCurrency(steamStoreOffer.price, steamStoreOffer.currency)}
             </span>
           </div>
+          {sourcePriceLabel(steamStoreOffer) && (
+            <p className="mt-1 text-xs text-muted-foreground">{sourcePriceLabel(steamStoreOffer)}</p>
+          )}
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
             {steamStoreOffer.discount !== null && steamStoreOffer.discount > 0 && (
               <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 font-medium text-emerald-400">

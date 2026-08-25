@@ -6,6 +6,11 @@ export interface WishlistOfferSource {
   currency: string | null;
   price: OfferNumericValue | null;
   regularPrice: OfferNumericValue | null;
+  sourceCurrency: string | null;
+  sourcePrice: OfferNumericValue | null;
+  sourceRegularPrice: OfferNumericValue | null;
+  sourceHistoricalLow: OfferNumericValue | null;
+  exchangeRateToMxn: OfferNumericValue | null;
   discount: number | null;
   historicalLow: OfferNumericValue | null;
   url: string | null;
@@ -20,6 +25,11 @@ export interface WishlistOfferView {
   currency: string | null;
   price: number | null;
   regularPrice: number | null;
+  sourceCurrency: string | null;
+  sourcePrice: number | null;
+  sourceRegularPrice: number | null;
+  sourceHistoricalLow: number | null;
+  exchangeRateToMxn: number | null;
   discount: number | null;
   historicalLow: number | null;
   url: string | null;

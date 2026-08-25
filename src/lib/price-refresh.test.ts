@@ -18,12 +18,16 @@ vi.mock("./itad-identity", () => ({
 vi.mock("./steam-api", () => ({
   fetchSteamStorePrices: vi.fn(),
 }));
+vi.mock("./exchange-rate", () => ({
+  fetchUsdToMxnRate: vi.fn(),
+}));
 
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { fetchItadPrices } from "./itad-api";
 import { resolveItadIds } from "./itad-identity";
 import { fetchSteamStorePrices } from "./steam-api";
+import { fetchUsdToMxnRate } from "./exchange-rate";
 import {
   emptyCounts,
   finalizePriceRefresh,
@@ -84,6 +88,11 @@ beforeEach(() => {
   mockRunCreate.mockResolvedValue({ id: "run-1" });
   mockRunFindFirst.mockResolvedValue({ id: "run-active" });
   mockRunUpdate.mockResolvedValue({ id: "run-1" });
+  vi.mocked(fetchUsdToMxnRate).mockResolvedValue({
+    ok: true,
+    rate: 20,
+    fetchedAt: new Date("2026-08-21T18:00:00.000Z"),
+  });
 });
 
 const now = new Date("2026-08-21T18:00:00.000Z");
@@ -241,6 +250,62 @@ describe("processPriceRefreshEntries", () => {
         discount: 50,
       })],
     }));
+  });
+
+  it("converts ITAD USD prices to MXN while retaining source values and rate", async () => {
+    mockWishlistCount.mockResolvedValue(1);
+    vi.mocked(resolveItadIds).mockResolvedValue(new Map([["620", "uuid-620"]]));
+    vi.mocked(fetchItadPrices).mockResolvedValue([
+      {
+        itadId: "uuid-620",
+        historyLow: 5,
+        deals: [{ shop: { id: 62, name: "Store" }, price: 9.99, regular: 19.99, currency: "USD" } as never],
+      },
+    ]);
+
+    await processPriceRefreshEntries("key", [entry("w1", "620")]);
+
+    const created = txDealCreate.mock.calls[0][0].data as Array<Record<string, unknown>>;
+    expect(created[0]).toMatchObject({
+      currency: "MXN",
+      price: expect.objectContaining({ toNumber: expect.any(Function) }),
+      regularPrice: expect.objectContaining({ toNumber: expect.any(Function) }),
+      historicalLow: expect.objectContaining({ toNumber: expect.any(Function) }),
+      sourceCurrency: "USD",
+      sourcePrice: expect.objectContaining({ toNumber: expect.any(Function) }),
+      sourceRegularPrice: expect.objectContaining({ toNumber: expect.any(Function) }),
+      sourceHistoricalLow: expect.objectContaining({ toNumber: expect.any(Function) }),
+      exchangeRateToMxn: expect.objectContaining({ toNumber: expect.any(Function) }),
+      exchangeRateFetchedAt: new Date("2026-08-21T18:00:00.000Z"),
+    });
+    expect((created[0].price as Prisma.Decimal).toNumber()).toBe(199.8);
+    expect((created[0].regularPrice as Prisma.Decimal).toNumber()).toBe(399.8);
+    expect((created[0].historicalLow as Prisma.Decimal).toNumber()).toBe(100);
+    expect(fetchUsdToMxnRate).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps source-currency offers when the exchange rate is unavailable", async () => {
+    mockWishlistCount.mockResolvedValue(1);
+    vi.mocked(resolveItadIds).mockResolvedValue(new Map([["620", "uuid-620"]]));
+    vi.mocked(fetchItadPrices).mockResolvedValue([
+      { itadId: "uuid-620", historyLow: null, deals: [{ shop: { id: 62, name: "Store" }, price: 9.99, currency: "USD" } as never] },
+    ]);
+    vi.mocked(fetchUsdToMxnRate).mockResolvedValue({
+      ok: false,
+      error: { category: "NETWORK", message: "offline" },
+    });
+
+    const counts = await processPriceRefreshEntries("key", [entry("w1", "620")]);
+
+    expect(counts.conversionUnavailable).toBe(true);
+    const created = txDealCreate.mock.calls[0][0].data as Array<Record<string, unknown>>;
+    expect(created[0]).toMatchObject({
+      currency: "USD",
+      sourceCurrency: "USD",
+      sourcePrice: expect.objectContaining({ toNumber: expect.any(Function) }),
+      exchangeRateToMxn: null,
+    });
+    expect((created[0].price as Prisma.Decimal).toNumber()).toBe(9.99);
   });
 
   it("marks every eligible entry failed when the identity lookup errors", async () => {
