@@ -229,7 +229,7 @@ export function CompatibilitySection({
       {job && ["QUEUED", "RUNNING", "RETRY_WAIT"].includes(job.status) && (
         <p className="text-xs text-muted-foreground">Refresh {job.status.toLowerCase().replace("_", " ")} ({job.progress}%).</p>
       )}
-      {job?.status === "FAILED" && <p className="text-xs text-destructive">{job.lastErrorMessage}</p>}
+      {job?.status === "FAILED" && !override && <p className="text-xs text-destructive">{job.lastErrorMessage}</p>}
 
       {override && !isRomOnly && !editingOverride && (
         <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm">

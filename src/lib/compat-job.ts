@@ -2,6 +2,10 @@ import type { EnrichmentJobStage, EnrichmentJobStatus } from "@/generated/prisma
 
 export const COMPAT_JOB_MAX_ATTEMPTS = 3;
 
+export function isActiveCompatJobStatus(status: EnrichmentJobStatus): boolean {
+  return status === "QUEUED" || status === "RUNNING" || status === "RETRY_WAIT";
+}
+
 export interface CompatJobView {
   id: string;
   status: EnrichmentJobStatus;

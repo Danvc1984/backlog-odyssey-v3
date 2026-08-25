@@ -104,12 +104,13 @@
     on game detail; ROM-only exemption; Bazzite-only personal overrides;
     compatibility section with provider evidence, tiers, and per-game refresh;
     180-day freshness; retry states
-  - [ ] 11b. **Compatibility batch queue and auto-queue** - post-RAWG
+  - [x] 11b. **Compatibility batch queue and auto-queue** - post-RAWG
     auto-queue for compatibility jobs; global compatibility sweep from
     settings; batch progress; overlap protection
-  - [ ] 11c. **Wishlist compatibility detail** - dedicated wishlist detail
+  - [ ] 11c. **Wishlist detail** - dedicated wishlist detail
     page with read-only ProtonDB tier and AWAY anti-cheat evidence for wishes
-    with confirmed Steam App IDs; no personal compatibility override
+    with confirmed Steam App IDs; no personal compatibility override; This detail page also expands on the rest of the data we have available regarding this wishlisted item
+  - [ ] 11d. **Wishlist only compat sweep** - wishlist import process triggers a compatibility sweep after the rawg enrichment, this way games in the wishlist will have compatibility ready for the recomendation engine to take into consideration; compatibility sync can fail silently for games on the wishlist unlike with the main catalog, we could include just a simple message to let the user know compatibility details were not found for a specific game in their details
 
 - [ ] 12. **Recommendation engine** - explicit combined runs with three
   play-next and three buy results; deterministic explanations led by manual

@@ -4,6 +4,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { matchRawgGame } from "@/lib/rawg-api";
 import { persistRawgMatch } from "@/lib/rawg-enrichment";
+import { queueCompatibilityForGame } from "@/lib/compat-queue";
 import {
   RAWG_JOB_MAX_ATTEMPTS,
   rawgJobProgress,
@@ -237,6 +238,12 @@ export async function runRawgEnrichmentJob(
       persisted.error.message,
       rawgJobProgress("PERSISTING"),
     );
+  }
+
+  try {
+    await queueCompatibilityForGame(job.game.id);
+  } catch {
+    // Compatibility refresh is best-effort and must not invalidate RAWG persistence.
   }
 
   const updated = await prisma.enrichmentJob.update({

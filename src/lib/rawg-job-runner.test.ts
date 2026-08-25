@@ -4,10 +4,12 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 vi.mock("@/lib/rawg-api", () => ({ matchRawgGame: vi.fn() }));
 vi.mock("@/lib/rawg-enrichment", () => ({ persistRawgMatch: vi.fn() }));
+vi.mock("@/lib/compat-queue", () => ({ queueCompatibilityForGame: vi.fn() }));
 
 import { prisma } from "@/lib/prisma";
 import { matchRawgGame } from "@/lib/rawg-api";
 import { persistRawgMatch } from "@/lib/rawg-enrichment";
+import { queueCompatibilityForGame } from "@/lib/compat-queue";
 import { runRawgEnrichmentJob } from "./rawg-job-runner";
 
 const matchedGame = {
@@ -88,6 +90,7 @@ describe("RAWG job runner", () => {
       data: { gameId: "game-1", rawgId: 123, fetchedAt: new Date() },
       error: null,
     });
+    vi.mocked(queueCompatibilityForGame).mockResolvedValue(null);
   });
 
   it("lets only the claimant run work when another claimant wins the race", async () => {
@@ -152,6 +155,7 @@ describe("RAWG job runner", () => {
       expect.objectContaining({ outcome: "MATCHED", game: matchedGame }),
       expect.any(Date),
     );
+    expect(queueCompatibilityForGame).toHaveBeenCalledWith("game-1");
     expect(update).toHaveBeenLastCalledWith(
       expect.objectContaining({
         where: { id: "job-1" },
@@ -159,6 +163,36 @@ describe("RAWG job runner", () => {
       }),
     );
     expect(result).toMatchObject({ success: true, data: { status: "SUCCEEDED", progress: 100 } });
+  });
+
+  it("keeps RAWG successful when compatibility queue skips the game", async () => {
+    vi.mocked(matchRawgGame).mockResolvedValue({
+      outcome: "MATCHED",
+      matchMethod: "EXACT_STEAM_APP_ID",
+      game: matchedGame,
+    });
+    vi.mocked(queueCompatibilityForGame).mockResolvedValue(null);
+
+    const result = await runRawgEnrichmentJob("job-1");
+
+    expect(queueCompatibilityForGame).toHaveBeenCalledWith("game-1");
+    expect(result).toMatchObject({ success: true, data: { status: "SUCCEEDED" } });
+  });
+
+  it("keeps RAWG successful when compatibility queue fails", async () => {
+    vi.mocked(matchRawgGame).mockResolvedValue({
+      outcome: "MATCHED",
+      matchMethod: "EXACT_STEAM_APP_ID",
+      game: matchedGame,
+    });
+    vi.mocked(queueCompatibilityForGame).mockRejectedValueOnce(new Error("compat unavailable"));
+
+    const result = await runRawgEnrichmentJob("job-1");
+
+    expect(result).toMatchObject({ success: true, data: { status: "SUCCEEDED" } });
+    expect(update).toHaveBeenLastCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: "SUCCEEDED" }) }),
+    );
   });
 
   it("stores ambiguous candidates without changing metadata", async () => {
