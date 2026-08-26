@@ -24,8 +24,12 @@ function asCaveats(value: unknown): ExplanationCaveat[] {
   );
 }
 
+export type RecommendationCardTarget =
+  | { kind: "PLAY_NEXT"; gameId: string }
+  | { kind: "BUY"; wishlistEntryId: string };
+
 export interface RecommendationItemCardProps {
-  gameId: string;
+  target: RecommendationCardTarget;
   name: string;
   rank: number;
   score: number;
@@ -35,7 +39,7 @@ export interface RecommendationItemCardProps {
 }
 
 export function RecommendationItemCard({
-  gameId,
+  target,
   name,
   rank,
   score,
@@ -49,8 +53,14 @@ export function RecommendationItemCard({
     return null;
   }
 
+  const href = target.kind === "PLAY_NEXT" ? `/games/${target.gameId}` : `/wishlist/${target.wishlistEntryId}`;
+
   const dismiss = async () => {
-    const result = await dismissRecommendation({ gameId, kind: "PLAY_NEXT" });
+    const result = await dismissRecommendation(
+      target.kind === "PLAY_NEXT"
+        ? { gameId: target.gameId, kind: "PLAY_NEXT" }
+        : { wishlistEntryId: target.wishlistEntryId, kind: "BUY" },
+    );
     if (!result.success) {
       toast.error(result.error ?? "Failed to dismiss recommendation");
       return;
@@ -62,7 +72,7 @@ export function RecommendationItemCard({
   return (
     <div className="rounded-lg border border-border p-4">
       <div className="flex items-baseline justify-between gap-2">
-        <Link href={`/games/${gameId}`} className="text-base font-medium hover:underline">
+        <Link href={href} className="text-base font-medium hover:underline">
           #{rank} {name}
         </Link>
         <span className="rounded-md border border-border px-2 py-0.5 text-xs font-medium">{score} pts</span>

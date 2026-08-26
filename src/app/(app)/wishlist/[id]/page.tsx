@@ -8,6 +8,7 @@ import { WishlistOfferSection } from "@/components/wishlist/WishlistOfferSection
 import { WishlistCompatibilityBlock } from "@/components/wishlist/WishlistCompatibilityBlock";
 import { WishlistRawgFillButton } from "@/components/wishlist/WishlistRawgFillButton";
 import { MetadataSection } from "@/components/games/MetadataSection";
+import { RecommendationItemCard } from "@/components/recommendations/RecommendationItemCard";
 import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
 import { buildEntryOfferView } from "@/lib/offer-selection";
 import { getWishlistCompatibilityEligibility } from "@/lib/wishlist-compatibility";
@@ -75,6 +76,19 @@ export default async function WishlistDetailPage({
   if (!entry) {
     redirect("/wishlist");
   }
+
+  const latestBuyRun = await prisma.recommendationRun.findFirst({
+    where: { kind: "BUY" },
+    orderBy: { createdAt: "desc" },
+    include: {
+      items: {
+        where: { wishlistEntryId: id },
+        orderBy: { rank: "asc" },
+        take: 1,
+      },
+    },
+  });
+  const buyItem = latestBuyRun?.items[0] ?? null;
 
   const ownSnapshot = entry.metadataSnapshot;
   const inheritedSnapshot = entry.baseGame?.metadataSnapshots[0] ?? null;
@@ -175,6 +189,23 @@ export default async function WishlistDetailPage({
         hasConfirmedIdentity={entry.steamAppId !== null}
       />
       <WishlistOfferAlternatives alternatives={alternatives} />
+
+      {buyItem && buyItem.wishlistEntryId === entry.id && (
+        <div>
+          <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+            Buy recommendation
+          </h2>
+          <RecommendationItemCard
+            target={{ kind: "BUY", wishlistEntryId: entry.id }}
+            name={entry.name}
+            rank={buyItem.rank}
+            score={buyItem.score}
+            positive={buyItem.positive}
+            negative={buyItem.negative}
+            caveats={buyItem.caveats}
+          />
+        </div>
+      )}
 
       <WishlistCompatibilityBlock
         wishlistEntryId={entry.id}

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   RecommendationItemCard,
 } from "@/components/recommendations/RecommendationItemCard";
@@ -21,10 +20,17 @@ export default async function TodayPage() {
   const latestBuyRun = await prisma.recommendationRun.findFirst({
     where: { kind: "BUY" },
     orderBy: { createdAt: "desc" },
-    select: { id: true },
+    include: {
+      items: {
+        where: { wishlistEntryId: { not: null } },
+        orderBy: { rank: "asc" },
+        include: { wishlistEntry: { select: { name: true } } },
+      },
+    },
   });
 
   const items = latestPlayNextRun?.items ?? [];
+  const buyItems = latestBuyRun?.items ?? [];
 
   return (
     <div className="space-y-8">
@@ -62,7 +68,7 @@ export default async function TodayPage() {
               return (
                 <RecommendationItemCard
                   key={item.id}
-                  gameId={item.gameId}
+                  target={{ kind: "PLAY_NEXT", gameId: item.gameId }}
                   name={item.game?.name ?? "Unknown game"}
                   rank={item.rank}
                   score={item.score}
@@ -76,17 +82,36 @@ export default async function TodayPage() {
         )}
       </section>
 
-      {latestBuyRun && (
-        <section>
-          <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Buy
-          </h2>
-          <p className="text-sm text-muted-foreground">No buy recommendations yet.</p>
-          <Link href="/wishlist" className="text-xs text-muted-foreground underline-offset-4 hover:underline">
-            Prices live on the wishlist page
-          </Link>
-        </section>
-      )}
+      <section>
+        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+          Buy
+        </h2>
+        {!latestBuyRun ? (
+          <p className="text-sm text-muted-foreground">
+            No buy recommendations yet. Update recommendations to score your wishlist.
+          </p>
+        ) : buyItems.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No eligible wishlist purchases right now.</p>
+        ) : (
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {buyItems.map((item) => {
+              if (!item.wishlistEntryId) return null;
+              return (
+                <RecommendationItemCard
+                  key={item.id}
+                  target={{ kind: "BUY", wishlistEntryId: item.wishlistEntryId }}
+                  name={item.wishlistEntry?.name ?? "Unknown game"}
+                  rank={item.rank}
+                  score={item.score}
+                  positive={item.positive}
+                  negative={item.negative}
+                  caveats={item.caveats}
+                />
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

@@ -154,7 +154,7 @@
       offer quality with historical-low tiebreaks, target-price signal,
       boost-only DLC affinity, no-pricing and stale/keyshop caveats, and
       persisted BUY runs
-    - [ ] 12b-b. **Buy recommendation surfaces** - Buy display on Today and
+    - [x] 12b-b. **Buy recommendation surfaces** - Buy display on Today and
       wishlist detail, explanation/caveat presentation, and in-run dismissal
   - [ ] 12c. **Adaptive recommendation orchestration** - optional post-import
     taste setup from five or six swappable owned games; `PLAYED_BEFORE` and
