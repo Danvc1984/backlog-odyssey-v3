@@ -120,7 +120,7 @@
       storage, provider/synthesis reuse, and a quiet per-entry refresh for
       eligible base-game wishes; no catalog-state reuse, override, auto-queue,
       or sweep
-    - [ ] 11c-b. **Wishlist detail page** - `/wishlist/[id]` navigation and
+    - [x] 11c-b. **Wishlist detail page** - `/wishlist/[id]` navigation and
       composition of existing wish data, RAWG metadata, identity, offers,
       notes, interest, and existing edit/acquire/delete controls
     - [ ] 11c-c. **Wishlist detail compatibility and enrichment controls** -

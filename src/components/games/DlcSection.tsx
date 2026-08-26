@@ -60,7 +60,9 @@ export function DlcSection({
           ))}
           {wishlistDlcs.map((dlc) => (
             <li key={`wishlist-${dlc.id}`} className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2">
-              <span>{dlc.name}</span>
+              <Link href={`/wishlist/${dlc.id}`} className="hover:underline">
+                {dlc.name}
+              </Link>
               <span className="flex shrink-0 items-center gap-2">
                 {dlc.interest ? (
                   <span className="text-muted-foreground" aria-label={`${dlc.interest} of 5 stars`}>
