@@ -15,7 +15,7 @@ import { lookupAway } from "@/lib/away-api";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { lookupProtonDb } from "@/lib/protondb-api";
-import { runWishlistCompatibilityRefresh } from "./wishlist-compatibility-runner";
+import { runWishlistCompatibilityRefresh, silentlyRefreshWishlistCompatibility } from "./wishlist-compatibility-runner";
 
 const findUnique = vi.fn();
 const snapshotUpsert = vi.fn();
@@ -131,5 +131,39 @@ describe("wishlist compatibility runner", () => {
     expect(result).toEqual({ success: false, data: null, error: "DLC" });
     expect(lookupProtonDb).not.toHaveBeenCalled();
     expect(lookupAway).not.toHaveBeenCalled();
+  });
+});
+
+describe("silentlyRefreshWishlistCompatibility", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    Object.assign(prisma, {
+      wishlistEntry: { findUnique },
+      $transaction: transaction,
+    });
+    findUnique.mockResolvedValue(entry);
+    transaction.mockImplementation(async (fn: (tx: unknown) => unknown) =>
+      fn({
+        wishlistCompatibilitySnapshot: { upsert: snapshotUpsert },
+        wishlistEnvironmentCompatibility: { upsert: environmentUpsert },
+      }),
+    );
+    snapshotUpsert.mockResolvedValue({});
+    environmentUpsert.mockResolvedValue({});
+    vi.mocked(lookupProtonDb).mockResolvedValue(protonDb);
+    vi.mocked(lookupAway).mockResolvedValue(away);
+  });
+
+  it("resolves void and preserves previous evidence when a provider throws", async () => {
+    vi.mocked(lookupProtonDb).mockRejectedValue(new Error("network down"));
+
+    await expect(silentlyRefreshWishlistCompatibility("wish-1")).resolves.toBeUndefined();
+    expect(snapshotUpsert).not.toHaveBeenCalled();
+  });
+
+  it("still refreshes evidence through the normal runner on success", async () => {
+    await silentlyRefreshWishlistCompatibility("wish-1");
+
+    expect(snapshotUpsert).toHaveBeenCalledTimes(2);
   });
 });

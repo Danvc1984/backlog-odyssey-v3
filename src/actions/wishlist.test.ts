@@ -2,9 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/auth-guard", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
+vi.mock("@/lib/wishlist-compatibility-runner", () => ({
+  silentlyRefreshWishlistCompatibility: vi.fn(),
+}));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
 import {
   createWishlistEntry,
   deleteWishlistEntry,
@@ -163,5 +167,82 @@ describe("wishlist CRUD", () => {
     expect(mockFindMany).toHaveBeenCalledWith(expect.objectContaining({
       where: { type: "DLC", interest: 4 },
     }));
+  });
+});
+
+describe("compatibility auto-trigger on identity writes", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    transaction.mockImplementation(async (callback: (tx: unknown) => unknown) =>
+      callback({
+        game: { findUnique: mockFindUnique },
+        wishlistEntry: { create: mockCreate, findFirst: mockFindFirst },
+      }),
+    );
+    configurePrisma();
+    mockCreate.mockResolvedValue({ id: "wish-1", name: "Hades II", type: "BASE_GAME" });
+    mockUpdate.mockResolvedValue({ id: "wish-1", name: "Hades II" });
+    mockFindFirst.mockResolvedValue(null);
+    mockFindMany.mockResolvedValue([]);
+  });
+
+  it("triggers one silent refresh when creating a base-game wish with identity", async () => {
+    const result = await createWishlistEntry({
+      name: "Portal 2",
+      type: "BASE_GAME",
+      steamAppId: "620",
+    });
+
+    expect(result.success).toBe(true);
+    expect(silentlyRefreshWishlistCompatibility).toHaveBeenCalledTimes(1);
+    expect(silentlyRefreshWishlistCompatibility).toHaveBeenCalledWith("wish-1");
+  });
+
+  it("triggers no refresh when creating a wish without an identity", async () => {
+    const result = await createWishlistEntry({ name: "Hollow Knight", type: "BASE_GAME" });
+
+    expect(result.success).toBe(true);
+    expect(silentlyRefreshWishlistCompatibility).not.toHaveBeenCalled();
+  });
+
+  it("never triggers for a DLC creation even when it carries an identity", async () => {
+    mockFindUnique.mockResolvedValue({ id: "game-1", type: "BASE_GAME" });
+
+    const result = await createWishlistEntry({
+      name: "The Frozen Wilds",
+      type: "DLC",
+      baseGameId: "game-1",
+      steamAppId: "123",
+    });
+
+    expect(result.success).toBe(true);
+    expect(silentlyRefreshWishlistCompatibility).not.toHaveBeenCalled();
+  });
+
+  it("triggers one silent refresh when updating a base-game wish's identity", async () => {
+    mockUpdate.mockResolvedValue({
+      id: "wish-1",
+      type: "BASE_GAME",
+      steamAppId: "620",
+      steamAppIdProvenance: "USER",
+    });
+
+    const result = await updateWishlistEntry({ id: "wish-1", steamAppId: "620" });
+
+    expect(result.success).toBe(true);
+    expect(silentlyRefreshWishlistCompatibility).toHaveBeenCalledTimes(1);
+    expect(silentlyRefreshWishlistCompatibility).toHaveBeenCalledWith("wish-1");
+  });
+
+  it("does not trigger on a plain field update or on an identity clear", async () => {
+    mockUpdate.mockResolvedValue({ id: "wish-1", type: "BASE_GAME", steamAppId: null });
+
+    const renamed = await updateWishlistEntry({ id: "wish-1", name: "Renamed" });
+    const cleared = await updateWishlistEntry({ id: "wish-1", steamAppId: null });
+
+    expect(renamed.success).toBe(true);
+    expect(cleared.success).toBe(true);
+    expect(silentlyRefreshWishlistCompatibility).not.toHaveBeenCalled();
   });
 });

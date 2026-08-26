@@ -2,9 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/auth-guard", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
+vi.mock("@/lib/wishlist-compatibility-runner", () => ({
+  silentlyRefreshWishlistCompatibility: vi.fn(),
+}));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
 import {
   discardUnresolvedDlc,
   getUnresolvedSteamDlcs,
@@ -227,5 +231,26 @@ describe("unresolved DLC actions", () => {
       data: null,
       error: "Unresolved DLC not found",
     });
+  });
+
+  it("triggers no compatibility refresh when the created wish is a DLC", async () => {
+    findUniqueQueue.mockResolvedValue({
+      id: "queue-1",
+      name: "Expansion",
+      steamAppId: "200",
+      steamBaseAppId: "100",
+      source: "WISHLIST_IMPORT",
+    });
+
+    const result = await linkUnresolvedDlc({
+      unresolvedId: "queue-1",
+      targetBaseGameId: "base-1",
+    });
+
+    expect(result.success).toBe(true);
+    expect(createWishlist).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ type: "DLC", steamAppId: "200" }),
+    }));
+    expect(silentlyRefreshWishlistCompatibility).not.toHaveBeenCalled();
   });
 });

@@ -2,6 +2,7 @@ import { WishlistFilterBar } from "@/components/wishlist/WishlistFilterBar";
 import { WishlistList } from "@/components/wishlist/WishlistList";
 import { AddWishlistDialog } from "@/components/wishlist/AddWishlistDialog";
 import { PriceRefreshPanel } from "@/components/wishlist/PriceRefreshPanel";
+import { WishlistCompatSweepPanel } from "@/components/wishlist/WishlistCompatSweepPanel";
 import { ImportSteamWishlistButton } from "@/components/wishlist/ImportSteamWishlistButton";
 import { WishlistImportReviewSection } from "@/components/wishlist/WishlistImportReviewSection";
 import { WishlistSyncChip } from "@/components/wishlist/WishlistSyncChip";
@@ -30,7 +31,7 @@ export default async function WishlistPage({
     : undefined;
   const query = params.q?.trim() || undefined;
 
-  const [entries, baseGames, latestRun] = await Promise.all([
+  const [entries, baseGames, latestRun, latestCompatSweep] = await Promise.all([
     prisma.wishlistEntry.findMany({
       where: wishlistWhere({ type, interest: interestFilter, query }),
       orderBy: [{ interest: "desc" }, { updatedAt: "desc" }],
@@ -62,6 +63,7 @@ export default async function WishlistPage({
       orderBy: { name: "asc" },
     }),
     prisma.priceRefresh.findFirst({ orderBy: { requestedAt: "desc" } }),
+    prisma.wishlistCompatSweep.findFirst({ orderBy: { requestedAt: "desc" } }),
   ]);
 
   const entriesWithOfferViews = entries.map(({ offers, targetPriceMxn, ...entry }) => ({
@@ -90,6 +92,19 @@ export default async function WishlistPage({
                     counts: latestRun.counts,
                     requestedAt: latestRun.requestedAt,
                     finishedAt: latestRun.finishedAt,
+                  }
+                : null
+            }
+          />
+          <WishlistCompatSweepPanel
+            initialRun={
+              latestCompatSweep
+                ? {
+                    id: latestCompatSweep.id,
+                    status: latestCompatSweep.status,
+                    counts: latestCompatSweep.counts,
+                    requestedAt: latestCompatSweep.requestedAt,
+                    finishedAt: latestCompatSweep.finishedAt,
                   }
                 : null
             }

@@ -5,9 +5,19 @@ import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { parseSteamAppIdInput } from "@/lib/steam-identity";
+import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
 import { storeLinkFromSnapshotPayload, identityConflictMessage } from "@/lib/wishlist-identity-view";
 
 type DbClient = typeof prisma | Prisma.TransactionClient;
+
+async function triggerCompatibilityIfEligible(entry: {
+  id: string;
+  type: string;
+}): Promise<void> {
+  if (entry.type === "BASE_GAME") {
+    await silentlyRefreshWishlistCompatibility(entry.id);
+  }
+}
 
 const setWishlistIdentitySchema = z
   .object({
@@ -89,6 +99,7 @@ export async function setWishlistIdentity(input: unknown) {
         steamAppId: parsedId.appId,
       }, "USER"),
     );
+    await triggerCompatibilityIfEligible(updated);
 
     return { success: true as const, data: updated, error: null };
   } catch (err) {
@@ -142,6 +153,7 @@ export async function confirmSteamImportIdentity(input: unknown) {
     const updated = await prisma.$transaction(async (tx) =>
       writeConfirmedIdentity(tx, parsed.data, "STEAM_IMPORT"),
     );
+    await triggerCompatibilityIfEligible(updated);
 
     return { success: true as const, data: updated, error: null };
   } catch (err) {
@@ -220,6 +232,7 @@ export async function confirmRawgSuggestedIdentity(input: unknown) {
         steamAppIdProvenance: "RAWG_SUGGESTION",
       },
     });
+    await triggerCompatibilityIfEligible(updated);
 
     return { success: true as const, data: updated, error: null };
   } catch (err) {

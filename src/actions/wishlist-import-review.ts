@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
 
 const reviewIdSchema = z.object({ reviewId: z.string().trim().min(1) }).strict();
 const linkReviewSchema = reviewIdSchema.extend({ targetId: z.string().trim().min(1) }).strict();
@@ -47,7 +48,8 @@ export async function linkWishlistImportReview(input: unknown) {
     const parsed = linkReviewSchema.safeParse(input);
     if (!parsed.success) return invalidInput();
 
-    return await prisma.$transaction(async (tx) => {
+    let compatEntryId: string | null = null;
+    const txResult = await prisma.$transaction(async (tx) => {
       const review = await tx.wishlistImportReview.findUnique({
         where: { id: parsed.data.reviewId },
       });
@@ -116,6 +118,9 @@ export async function linkWishlistImportReview(input: unknown) {
             steamAppIdProvenance: "STEAM_IMPORT",
           },
         });
+        if (candidate.type === "BASE_GAME") {
+          compatEntryId = entry.id;
+        }
       }
 
       const resolved = await tx.wishlistImportReview.update({
@@ -124,6 +129,10 @@ export async function linkWishlistImportReview(input: unknown) {
       });
       return { success: true as const, data: resolved, error: null };
     });
+    if (compatEntryId) {
+      await silentlyRefreshWishlistCompatibility(compatEntryId);
+    }
+    return txResult;
   } catch (err) {
     return {
       success: false as const,
@@ -139,7 +148,8 @@ export async function createWishlistImportReviewAsNew(input: unknown) {
     const parsed = reviewIdSchema.safeParse(input);
     if (!parsed.success) return invalidInput();
 
-    return await prisma.$transaction(async (tx) => {
+    let compatEntryId: string | null = null;
+    const txResult = await prisma.$transaction(async (tx) => {
       const review = await tx.wishlistImportReview.findUnique({
         where: { id: parsed.data.reviewId },
       });
@@ -161,12 +171,23 @@ export async function createWishlistImportReviewAsNew(input: unknown) {
           steamAppIdProvenance: "STEAM_IMPORT",
         },
       });
+      if (
+        entry.type === "BASE_GAME" &&
+        entry.steamAppId &&
+        entry.steamAppIdProvenance
+      ) {
+        compatEntryId = entry.id;
+      }
       await tx.wishlistImportReview.update({
         where: { id: review.id },
         data: { status: "LINKED", reviewedAt: new Date() },
       });
       return { success: true as const, data: entry, error: null };
     });
+    if (compatEntryId) {
+      await silentlyRefreshWishlistCompatibility(compatEntryId);
+    }
+    return txResult;
   } catch (err) {
     return {
       success: false as const,

@@ -126,7 +126,7 @@
     - [x] 11c-c. **Wishlist detail compatibility and enrichment controls** -
       read-only compatibility block, eligibility states, detail refresh, and
       fill-only RAWG enrichment without overwriting a snapshot
-  - [ ] 11d. **Wishlist compatibility sweep** - parallel wishlist evidence
+  - [x] 11d. **Wishlist compatibility sweep** - parallel wishlist evidence
     storage keyed by `wishlistEntryId` (`WishlistCompatibilitySnapshot`,
     `WishlistEnvironmentCompatibility`), separate from the catalog pipeline;
     auto-trigger on any confirmed Steam identity and a quiet async manual

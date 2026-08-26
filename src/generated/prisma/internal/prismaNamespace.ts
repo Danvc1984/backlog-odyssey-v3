@@ -420,6 +420,7 @@ export const ModelName = {
   DealOffer: 'DealOffer',
   ItadIdentity: 'ItadIdentity',
   PriceRefresh: 'PriceRefresh',
+  WishlistCompatSweep: 'WishlistCompatSweep',
   CompatibilitySnapshot: 'CompatibilitySnapshot',
   EnvironmentCompatibility: 'EnvironmentCompatibility',
   WishlistCompatibilitySnapshot: 'WishlistCompatibilitySnapshot',
@@ -446,7 +447,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "account" | "session" | "appSettings" | "steamConnection" | "game" | "unresolvedSteamDlc" | "wishlistImportReview" | "wishlistImportIgnore" | "externalGameId" | "metadataSnapshot" | "enrichmentJob" | "personalTag" | "gameTag" | "collection" | "collectionMembership" | "libraryEntry" | "gameAvailability" | "wishlistEntry" | "wishlistMetadataSnapshot" | "dealOffer" | "itadIdentity" | "priceRefresh" | "compatibilitySnapshot" | "environmentCompatibility" | "wishlistCompatibilitySnapshot" | "wishlistEnvironmentCompatibility" | "possibleDuplicate" | "recommendationRun" | "recommendationItem" | "recommendationFeedback" | "wallpaperState" | "syncRun" | "catalogOperation"
+    modelProps: "user" | "account" | "session" | "appSettings" | "steamConnection" | "game" | "unresolvedSteamDlc" | "wishlistImportReview" | "wishlistImportIgnore" | "externalGameId" | "metadataSnapshot" | "enrichmentJob" | "personalTag" | "gameTag" | "collection" | "collectionMembership" | "libraryEntry" | "gameAvailability" | "wishlistEntry" | "wishlistMetadataSnapshot" | "dealOffer" | "itadIdentity" | "priceRefresh" | "wishlistCompatSweep" | "compatibilitySnapshot" | "environmentCompatibility" | "wishlistCompatibilitySnapshot" | "wishlistEnvironmentCompatibility" | "possibleDuplicate" | "recommendationRun" | "recommendationItem" | "recommendationFeedback" | "wallpaperState" | "syncRun" | "catalogOperation"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2152,6 +2153,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    WishlistCompatSweep: {
+      payload: Prisma.$WishlistCompatSweepPayload<ExtArgs>
+      fields: Prisma.WishlistCompatSweepFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WishlistCompatSweepFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatSweepPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WishlistCompatSweepFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatSweepPayload>
+        }
+        findFirst: {
+          args: Prisma.WishlistCompatSweepFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatSweepPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WishlistCompatSweepFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatSweepPayload>
+        }
+        findMany: {
+          args: Prisma.WishlistCompatSweepFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatSweepPayload>[]
+        }
+        create: {
+          args: Prisma.WishlistCompatSweepCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatSweepPayload>
+        }
+        createMany: {
+          args: Prisma.WishlistCompatSweepCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WishlistCompatSweepCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatSweepPayload>[]
+        }
+        delete: {
+          args: Prisma.WishlistCompatSweepDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatSweepPayload>
+        }
+        update: {
+          args: Prisma.WishlistCompatSweepUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatSweepPayload>
+        }
+        deleteMany: {
+          args: Prisma.WishlistCompatSweepDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WishlistCompatSweepUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WishlistCompatSweepUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatSweepPayload>[]
+        }
+        upsert: {
+          args: Prisma.WishlistCompatSweepUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistCompatSweepPayload>
+        }
+        aggregate: {
+          args: Prisma.WishlistCompatSweepAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWishlistCompatSweep>
+        }
+        groupBy: {
+          args: Prisma.WishlistCompatSweepGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WishlistCompatSweepGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WishlistCompatSweepCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WishlistCompatSweepCountAggregateOutputType> | number
+        }
+      }
+    }
     CompatibilitySnapshot: {
       payload: Prisma.$CompatibilitySnapshotPayload<ExtArgs>
       fields: Prisma.CompatibilitySnapshotFieldRefs
@@ -3332,6 +3407,17 @@ export const PriceRefreshScalarFieldEnum = {
 export type PriceRefreshScalarFieldEnum = (typeof PriceRefreshScalarFieldEnum)[keyof typeof PriceRefreshScalarFieldEnum]
 
 
+export const WishlistCompatSweepScalarFieldEnum = {
+  id: 'id',
+  status: 'status',
+  counts: 'counts',
+  requestedAt: 'requestedAt',
+  finishedAt: 'finishedAt'
+} as const
+
+export type WishlistCompatSweepScalarFieldEnum = (typeof WishlistCompatSweepScalarFieldEnum)[keyof typeof WishlistCompatSweepScalarFieldEnum]
+
+
 export const CompatibilitySnapshotScalarFieldEnum = {
   id: 'id',
   gameId: 'gameId',
@@ -4098,6 +4184,7 @@ export type GlobalOmitConfig = {
   dealOffer?: Prisma.DealOfferOmit
   itadIdentity?: Prisma.ItadIdentityOmit
   priceRefresh?: Prisma.PriceRefreshOmit
+  wishlistCompatSweep?: Prisma.WishlistCompatSweepOmit
   compatibilitySnapshot?: Prisma.CompatibilitySnapshotOmit
   environmentCompatibility?: Prisma.EnvironmentCompatibilityOmit
   wishlistCompatibilitySnapshot?: Prisma.WishlistCompatibilitySnapshotOmit

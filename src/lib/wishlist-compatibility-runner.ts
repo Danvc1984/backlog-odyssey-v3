@@ -125,3 +125,13 @@ export async function runWishlistCompatibilityRefresh(
     error: null,
   };
 }
+
+export async function silentlyRefreshWishlistCompatibility(
+  wishlistEntryId: string,
+): Promise<void> {
+  try {
+    await runWishlistCompatibilityRefresh(wishlistEntryId);
+  } catch {
+    return;
+  }
+}

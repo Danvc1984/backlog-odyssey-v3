@@ -10,6 +10,7 @@ import {
   upsertUnresolvedSteamDlc,
 } from "@/lib/steam-flow";
 import { autoEnrichWishlistEntries } from "@/lib/wishlist-rawg-queue";
+import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
 
 const IMPORT_CHUNK_SIZE = 50;
 
@@ -80,6 +81,7 @@ async function importWishlistChunk(
   wishlistCandidates: Candidate[],
   counters: { created: number; queuedReviews: number; ignored: number },
   enrichmentEntryIds: Set<string>,
+  compatTriggerEntryIds: string[],
 ): Promise<void> {
   const discardWishlistQueueItem = async (steamAppId: string): Promise<void> => {
     await tx.unresolvedSteamDlc.deleteMany({
@@ -227,6 +229,7 @@ async function importWishlistChunk(
     wishlistIdentities.set(steamAppId, entry);
     counters.created += 1;
     enrichmentEntryIds.add(entry.id);
+    compatTriggerEntryIds.push(entry.id);
   }
 }
 
@@ -336,6 +339,7 @@ export async function importSteamWishlist(): Promise<
     }));
     const counters = { created: 0, queuedReviews: 0, ignored: 0 };
     const enrichmentEntryIds = new Set<string>();
+    const compatTriggerEntryIds: string[] = [];
     const ignoredIds = new Set(ignored.map((row) => row.steamAppId));
     const orderedGames = [...games].sort(
       (left, right) => Number(left.type === "DLC") - Number(right.type === "DLC"),
@@ -353,8 +357,13 @@ export async function importSteamWishlist(): Promise<
           wishlistCandidates,
           counters,
           enrichmentEntryIds,
+          compatTriggerEntryIds,
         ),
       );
+    }
+
+    for (const entryId of compatTriggerEntryIds) {
+      await silentlyRefreshWishlistCompatibility(entryId);
     }
 
     const result: WishlistImportResult = {

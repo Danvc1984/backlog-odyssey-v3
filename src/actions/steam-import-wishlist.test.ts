@@ -10,11 +10,15 @@ vi.mock("@/lib/steam-flow", () => ({
 vi.mock("@/lib/wishlist-rawg-queue", () => ({
   autoEnrichWishlistEntries: vi.fn().mockResolvedValue({ enriched: 0, skipped: 0 }),
 }));
+vi.mock("@/lib/wishlist-compatibility-runner", () => ({
+  silentlyRefreshWishlistCompatibility: vi.fn(),
+}));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { fetchSteamWishlist } from "@/lib/steam-api";
 import { requireSteamFlowContext, upsertUnresolvedSteamDlc } from "@/lib/steam-flow";
+import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
 import { autoEnrichWishlistEntries } from "@/lib/wishlist-rawg-queue";
 import { enrichImportedWishlist, importSteamWishlist } from "./steam-import-wishlist";
 
@@ -300,5 +304,36 @@ describe("importSteamWishlist", () => {
       error: null,
     });
     expect(autoEnrichWishlistEntries).toHaveBeenCalledWith(["wish-1", "wish-2"]);
+  });
+
+  it("silently refreshes compatibility once per new base-game creation after the import commits", async () => {
+    vi.mocked(fetchSteamWishlist).mockResolvedValue({
+      games: [{ appid: 10, name: "Portal" }],
+      status: "OK",
+    });
+
+    const result = await importSteamWishlist();
+
+    expect(result).toMatchObject({ success: true, data: { created: 1 } });
+    expect(silentlyRefreshWishlistCompatibility).toHaveBeenCalledTimes(1);
+    expect(silentlyRefreshWishlistCompatibility).toHaveBeenCalledWith("wish-1");
+  });
+
+  it("makes no compatibility call for a DLC-only import or for review queues", async () => {
+    vi.mocked(fetchSteamWishlist).mockResolvedValue({ games: [
+      { appid: 100, name: "Portal" },
+      { appid: 200, name: "Expansion", type: "DLC", steamBaseAppId: "100" },
+    ], status: "OK" });
+    findManyExternalId.mockResolvedValue([
+      { externalId: "100", game: { id: "game-1", name: "Portal", type: "BASE_GAME" } },
+    ]);
+
+    const result = await importSteamWishlist();
+
+    expect(result).toMatchObject({ success: true, data: { created: 1 } });
+    expect(createWishlist).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ type: "DLC" }),
+    }));
+    expect(silentlyRefreshWishlistCompatibility).not.toHaveBeenCalled();
   });
 });

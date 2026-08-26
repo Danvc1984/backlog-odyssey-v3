@@ -2,9 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/auth-guard", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
+vi.mock("@/lib/wishlist-compatibility-runner", () => ({
+  silentlyRefreshWishlistCompatibility: vi.fn(),
+}));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
 import {
   createWishlistImportReviewAsNew,
   getWishlistImportReviews,
@@ -155,5 +159,65 @@ describe("wishlist import review actions", () => {
     expect(result.success).toBe(true);
     expect(upsertIgnore).not.toHaveBeenCalled();
     expect(updateReview).not.toHaveBeenCalled();
+  });
+});
+
+describe("compatibility auto-trigger on import review resolution", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(requireUser).mockResolvedValue({} as never);
+    findUniqueReview.mockResolvedValue(openReview());
+    updateReview.mockImplementation(async ({ data }) => ({ ...openReview(), ...data }));
+    findGame.mockResolvedValue(null);
+    upsertExternalId.mockResolvedValue({ id: "external-1" });
+    findWishlist.mockResolvedValue({ id: "target-1" });
+    findFirstWishlist.mockResolvedValue(null);
+    updateWishlist.mockResolvedValue({ id: "target-1" });
+    createWishlist.mockResolvedValue({
+      id: "wish-new",
+      name: "Portal 2",
+      type: "BASE_GAME",
+      steamAppId: "620",
+      steamAppIdProvenance: "STEAM_IMPORT",
+    });
+    transaction.mockImplementation(async (callback: (client: typeof tx) => unknown) =>
+      callback(tx),
+    );
+  });
+
+  it("triggers one silent refresh when linking a review to a base-game wish", async () => {
+    const result = await linkWishlistImportReview({ reviewId: "review-1", targetId: "target-1" });
+
+    expect(result.success).toBe(true);
+    expect(silentlyRefreshWishlistCompatibility).toHaveBeenCalledTimes(1);
+    expect(silentlyRefreshWishlistCompatibility).toHaveBeenCalledWith("target-1");
+  });
+
+  it("does not trigger when the linked wish is a DLC", async () => {
+    findUniqueReview.mockResolvedValue({
+      ...openReview(),
+      candidates: [{ gameId: "target-dlc", name: "Expansion", type: "DLC" }],
+    });
+
+    const result = await linkWishlistImportReview({ reviewId: "review-1", targetId: "target-dlc" });
+
+    expect(result.success).toBe(true);
+    expect(silentlyRefreshWishlistCompatibility).not.toHaveBeenCalled();
+  });
+
+  it("triggers one silent refresh for a wish created from a review", async () => {
+    const result = await createWishlistImportReviewAsNew({ reviewId: "review-1" });
+
+    expect(result.success).toBe(true);
+    expect(silentlyRefreshWishlistCompatibility).toHaveBeenCalledTimes(1);
+    expect(silentlyRefreshWishlistCompatibility).toHaveBeenCalledWith("wish-new");
+  });
+
+  it("triggers no refresh when a resolved review's wish lacks identity fields", async () => {
+    createWishlist.mockResolvedValue({ id: "wish-new", name: "Portal 2", type: "BASE_GAME" });
+
+    await createWishlistImportReviewAsNew({ reviewId: "review-1" });
+
+    expect(silentlyRefreshWishlistCompatibility).not.toHaveBeenCalled();
   });
 });

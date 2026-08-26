@@ -4,6 +4,7 @@ import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
+import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
 import { resolveManualSteamAppId } from "@/actions/wishlist-identity";
 
 const wishlistTypeSchema = z.enum(["BASE_GAME", "DLC"]);
@@ -127,6 +128,10 @@ export async function createWishlistEntry(input: unknown) {
       });
     });
 
+    if (type === "BASE_GAME" && identity) {
+      await silentlyRefreshWishlistCompatibility(entry.id);
+    }
+
     return { success: true as const, data: entry, error: null };
   } catch (err) {
     return {
@@ -185,6 +190,10 @@ export async function updateWishlistEntry(input: unknown) {
       data: { ...fields, ...identityData, ...(baseGameId !== undefined && { baseGameId }) },
       include: wishlistInclude,
     });
+
+    if (steamAppId !== undefined && steamAppId !== null && entry.type === "BASE_GAME") {
+      await silentlyRefreshWishlistCompatibility(entry.id);
+    }
 
     return { success: true as const, data: entry, error: null };
   } catch (err) {

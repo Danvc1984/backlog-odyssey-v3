@@ -74,6 +74,7 @@ export const ModelName = {
   DealOffer: 'DealOffer',
   ItadIdentity: 'ItadIdentity',
   PriceRefresh: 'PriceRefresh',
+  WishlistCompatSweep: 'WishlistCompatSweep',
   CompatibilitySnapshot: 'CompatibilitySnapshot',
   EnvironmentCompatibility: 'EnvironmentCompatibility',
   WishlistCompatibilitySnapshot: 'WishlistCompatibilitySnapshot',
@@ -428,6 +429,17 @@ export const PriceRefreshScalarFieldEnum = {
 } as const
 
 export type PriceRefreshScalarFieldEnum = (typeof PriceRefreshScalarFieldEnum)[keyof typeof PriceRefreshScalarFieldEnum]
+
+
+export const WishlistCompatSweepScalarFieldEnum = {
+  id: 'id',
+  status: 'status',
+  counts: 'counts',
+  requestedAt: 'requestedAt',
+  finishedAt: 'finishedAt'
+} as const
+
+export type WishlistCompatSweepScalarFieldEnum = (typeof WishlistCompatSweepScalarFieldEnum)[keyof typeof WishlistCompatSweepScalarFieldEnum]
 
 
 export const CompatibilitySnapshotScalarFieldEnum = {

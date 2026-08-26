@@ -1,3 +1,5 @@
-# Current Feature
+# Nothing in progress
 
-> Nothing in progress. Run `/feature`, `/fix`, or `/rollback` to start work.
+There is no active feature, fix, or rollback.
+
+Use `/feature`, `/fix`, or `/rollback` to begin the next work item.

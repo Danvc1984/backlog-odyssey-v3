@@ -157,6 +157,11 @@ export type ItadIdentity = Prisma.ItadIdentityModel
  */
 export type PriceRefresh = Prisma.PriceRefreshModel
 /**
+ * Model WishlistCompatSweep
+ *
+ */
+export type WishlistCompatSweep = Prisma.WishlistCompatSweepModel
+/**
  * Model CompatibilitySnapshot
  *
  */

@@ -521,6 +521,16 @@ model PriceRefresh {
   @@index([status, requestedAt])
 }
 
+model WishlistCompatSweep {
+  id          String     @id @default(cuid())
+  status      SyncStatus
+  counts      Json?
+  requestedAt DateTime   @default(now())
+  finishedAt  DateTime?
+
+  @@index([status, requestedAt])
+}
+
 // ---------------------------------------------------------------------------
 // Compatibility
 // ---------------------------------------------------------------------------

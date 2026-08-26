@@ -13,6 +13,8 @@ import {
 } from "@/lib/protondb-api";
 import { synthesizeCompatibility } from "@/lib/compat-synthesis";
 
+export const WISHLIST_COMPAT_FRESHNESS_DAYS = 180;
+
 export interface WishlistCompatibilityEligibilityInput {
   type: string;
   steamAppId: string | null;

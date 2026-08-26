@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
 
 const unresolvedIdSchema = z.object({ unresolvedId: z.string().trim().min(1) }).strict();
 const linkSchema = unresolvedIdSchema.extend({
@@ -36,6 +37,7 @@ export async function linkUnresolvedDlc(input: unknown) {
       return { success: false as const, data: null, error: "Invalid input" };
     }
 
+    let compatEntryId: string | null = null;
     const result = await prisma.$transaction(async (tx) => {
       const unresolved = await tx.unresolvedSteamDlc.findUnique({
         where: { id: parsed.data.unresolvedId },
@@ -64,6 +66,9 @@ export async function linkUnresolvedDlc(input: unknown) {
           },
           select: { id: true, name: true, type: true, baseGameId: true },
         });
+        if (wishlistEntry.type === "BASE_GAME" && wishlistEntry.id) {
+          compatEntryId = wishlistEntry.id;
+        }
         await tx.unresolvedSteamDlc.delete({ where: { id: unresolved.id } });
         return wishlistEntry;
       }
@@ -91,6 +96,9 @@ export async function linkUnresolvedDlc(input: unknown) {
       await tx.unresolvedSteamDlc.delete({ where: { id: unresolved.id } });
       return game;
     });
+    if (compatEntryId) {
+      await silentlyRefreshWishlistCompatibility(compatEntryId);
+    }
 
     return { success: true as const, data: result, error: null };
   } catch (err) {

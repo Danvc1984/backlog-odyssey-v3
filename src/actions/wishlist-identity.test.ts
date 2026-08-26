@@ -2,9 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/auth-guard", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
+vi.mock("@/lib/wishlist-compatibility-runner", () => ({
+  silentlyRefreshWishlistCompatibility: vi.fn(),
+}));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
 import { identityConflictMessage } from "@/lib/wishlist-identity-view";
 import {
   confirmRawgSuggestedIdentity,
@@ -281,5 +285,109 @@ describe("dismissRawgIdentitySuggestion", () => {
     const noLink = await dismissRawgIdentitySuggestion({ wishlistEntryId: "wish-1" });
     expect(noLink.success).toBe(true);
     expect(mockUpdateMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("compatibility auto-trigger on identity confirmation", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    configurePrisma();
+    (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    transaction.mockImplementation(async (callback: (tx: unknown) => unknown) =>
+      callback({
+        wishlistEntry: { findFirst: mockFindFirst, update: mockUpdate },
+      }),
+    );
+    mockFindUnique.mockResolvedValue({ id: "wish-1" });
+    mockFindFirst.mockResolvedValue(null);
+    mockUpdateMany.mockResolvedValue({ count: 1 });
+  });
+
+  it("triggers one silent refresh after a manual identity save on a base game", async () => {
+    mockUpdate.mockResolvedValue({
+      id: "wish-1",
+      type: "BASE_GAME",
+      steamAppId: "620",
+      steamAppIdProvenance: "USER",
+    });
+
+    const result = await setWishlistIdentity({
+      wishlistEntryId: "wish-1",
+      identityInput: "620",
+    });
+
+    expect(result.success).toBe(true);
+    expect(silentlyRefreshWishlistCompatibility).toHaveBeenCalledTimes(1);
+    expect(silentlyRefreshWishlistCompatibility).toHaveBeenCalledWith("wish-1");
+  });
+
+  it("skips the silent refresh when the saved entry is a DLC wish", async () => {
+    mockUpdate.mockResolvedValue({
+      id: "wish-dlc",
+      type: "DLC",
+      steamAppId: "620",
+      steamAppIdProvenance: "USER",
+    });
+
+    const result = await setWishlistIdentity({
+      wishlistEntryId: "wish-dlc",
+      identityInput: "620",
+    });
+
+    expect(result.success).toBe(true);
+    expect(silentlyRefreshWishlistCompatibility).not.toHaveBeenCalled();
+  });
+
+  it("does not trigger on identity removal or suggestion dismissal", async () => {
+    await removeWishlistIdentity({ wishlistEntryId: "wish-1" });
+    await dismissRawgIdentitySuggestion({ wishlistEntryId: "wish-1" });
+
+    expect(silentlyRefreshWishlistCompatibility).not.toHaveBeenCalled();
+  });
+
+  it("triggers one silent refresh after confirming a Steam import identity", async () => {
+    mockUpdate.mockResolvedValue({
+      id: "wish-1",
+      type: "BASE_GAME",
+      steamAppId: "570",
+      steamAppIdProvenance: "STEAM_IMPORT",
+    });
+
+    const result = await confirmSteamImportIdentity({
+      wishlistEntryId: "wish-1",
+      steamAppId: "570",
+    });
+
+    expect(result.success).toBe(true);
+    expect(silentlyRefreshWishlistCompatibility).toHaveBeenCalledTimes(1);
+    expect(silentlyRefreshWishlistCompatibility).toHaveBeenCalledWith("wish-1");
+  });
+
+  it("triggers one silent refresh after confirming the RAWG suggestion", async () => {
+    mockFindUnique.mockResolvedValue({
+      id: "wish-1",
+      type: "BASE_GAME",
+      steamAppId: null,
+      metadataSnapshot: {
+        payload: {
+          storeLink: {
+            steamUrl: "https://store.steampowered.com/app/620/Portal_2/",
+            steamAppId: "620",
+          },
+        },
+      },
+    });
+    mockUpdate.mockResolvedValue({
+      id: "wish-1",
+      type: "BASE_GAME",
+      steamAppId: "620",
+      steamAppIdProvenance: "RAWG_SUGGESTION",
+    });
+
+    const result = await confirmRawgSuggestedIdentity({ wishlistEntryId: "wish-1" });
+
+    expect(result.success).toBe(true);
+    expect(silentlyRefreshWishlistCompatibility).toHaveBeenCalledTimes(1);
+    expect(silentlyRefreshWishlistCompatibility).toHaveBeenCalledWith("wish-1");
   });
 });
