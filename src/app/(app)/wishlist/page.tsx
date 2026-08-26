@@ -6,6 +6,7 @@ import { WishlistCompatSweepPanel } from "@/components/wishlist/WishlistCompatSw
 import { ImportSteamWishlistButton } from "@/components/wishlist/ImportSteamWishlistButton";
 import { WishlistImportReviewSection } from "@/components/wishlist/WishlistImportReviewSection";
 import { WishlistSyncChip } from "@/components/wishlist/WishlistSyncChip";
+import { UpdateRecommendationsButton } from "@/components/recommendations/UpdateRecommendationsButton";
 import { prisma } from "@/lib/prisma";
 import { buildEntryOfferView } from "@/lib/offer-selection";
 import { wishlistWhere } from "@/lib/wishlist-search";
@@ -83,6 +84,7 @@ export default async function WishlistPage({
         <div className="flex items-start gap-3">
           <WishlistSyncChip />
           <ImportSteamWishlistButton />
+          <UpdateRecommendationsButton />
           <PriceRefreshPanel
             initialRun={
               latestRun

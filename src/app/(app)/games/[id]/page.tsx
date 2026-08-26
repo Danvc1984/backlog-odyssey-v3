@@ -14,7 +14,9 @@ import { DlcSection } from "@/components/games/DlcSection";
 import { ParentBaseGameBanner } from "@/components/games/ParentBaseGameBanner";
 import { CatalogSteamIdentityForm } from "@/components/games/CatalogSteamIdentityForm";
 import { CompatibilitySection } from "@/components/games/CompatibilitySection";
+import { caveatChip, factorChip } from "@/components/recommendations/FactorChips";
 import { rawgJobSelect, toRawgEnrichmentJobView } from "@/lib/rawg-job-view";
+import type { ExplanationFactor as ExplanationFactorShape, ExplanationCaveat as ExplanationCaveatShape } from "@/lib/recommendations/types";
 import { compatJobSelect } from "@/lib/compat-job";
 import { awayGameUrl } from "@/lib/away-api";
 import { parseProtonDbSummary, PROTONDB_APP_URL } from "@/lib/protondb-api";
@@ -37,7 +39,7 @@ export default async function GameDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [game, manualCollections, possibleDuplicate] = await Promise.all([
+  const [game, manualCollections, possibleDuplicate, latestPlayNextRun] = await Promise.all([
     prisma.game.findUnique({
       where: { id },
       include: {
@@ -98,6 +100,16 @@ export default async function GameDetailPage({
         gameB: { select: { name: true } },
       },
     }),
+    prisma.recommendationRun.findFirst({
+      where: { kind: "PLAY_NEXT" },
+      orderBy: { createdAt: "desc" },
+      include: {
+        items: {
+          where: { gameId: id },
+          select: { id: true, rank: true, score: true, positive: true, negative: true, caveats: true },
+        },
+      },
+    }),
   ]);
 
   if (!game) {
@@ -140,6 +152,8 @@ export default async function GameDetailPage({
     (latest, snapshot) => (!latest || snapshot.fetchedAt > latest ? snapshot.fetchedAt : latest),
     null,
   );
+
+  const recommendationItem = latestPlayNextRun?.items[0] ?? null;
 
   return (
     <div className="space-y-8">
@@ -255,6 +269,35 @@ export default async function GameDetailPage({
           </div>
         )}
       </section>
+
+      {recommendationItem && (
+        <section>
+          <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+            Latest recommendation
+          </h2>
+          <div className="rounded-lg border border-border p-4">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-base font-medium">#{recommendationItem.rank}</span>
+              <span className="rounded-md border border-border px-2 py-0.5 text-xs font-medium">
+                {recommendationItem.score} pts
+              </span>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {[recommendationItem.positive, recommendationItem.negative].flatMap((value) =>
+                Array.isArray(value) ? (value as unknown[]).filter(
+                  (factor): factor is ExplanationFactorShape =>
+                    typeof factor === "object" && factor !== null && typeof (factor as ExplanationFactorShape).label === "string",
+                ).map((factor) => factorChip(factor)) : [],
+              )}
+              {Array.isArray(recommendationItem.caveats) &&
+                (recommendationItem.caveats as unknown[]).filter(
+                  (caveat): caveat is ExplanationCaveatShape =>
+                    typeof caveat === "object" && caveat !== null && typeof (caveat as ExplanationCaveatShape).label === "string",
+                ).map((caveat) => caveatChip(caveat))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section>
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">

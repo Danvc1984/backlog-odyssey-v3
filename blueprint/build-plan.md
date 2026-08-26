@@ -92,7 +92,7 @@
 
 ## Compatibility and recommendations
 
-- [ ] 11. **Compatibility synthesis** - asynchronous post-RAWG ProtonDB
+- [x] 11. **Compatibility synthesis** - asynchronous post-RAWG ProtonDB
   evidence for Bazzite; AWAY dataset for anti-cheat; manual Steam AppID entry
   into ExternalGameId with ROM-only games exempt as not applicable; Windows
   fallback; mixed-evidence handling with attribution; Bazzite-only personal
@@ -144,6 +144,20 @@
   contributing nothing; boost-only DLC affinity; optional target-price
   signals; dismissal; calibration with exempt counters; rolling 12-month run
   retention
+  - [x] 12a. **Recommendation runs and play-next engine** - dual-reference
+    item storage (catalog game or wishlist entry) and dismissal-log contract,
+    deterministic play-next eligibility, scoring, and explanations,
+    `Update recommendations` action creating both runs with rolling 12-month
+    pruning, Today display with in-run dismissal, and header actions on
+    Library and Wishlist
+  - [ ] 12b. **Buy recommendations** - buy eligibility (wishlist base games
+    and owned-base DLC wishes, ROM exclusion), fresh-discount offer quality
+    with historical-low tiebreaks, target-price signal, boost-only DLC
+    affinity, no-pricing and stale/keyshop caveats, and buy display on Today
+    and wishlist detail
+  - [ ] 12c. **Calibration from dismissal counters** - adjusted interest from
+    per-target dismissal counters applied in both engines (floor 0, counters
+    never pruned), and calibration explanations on game and wishlist detail
 
 - [ ] 13. **Today dashboard** - post-login landing composing main game,
   in-progress games, latest three play-next and buy results, recent Steam

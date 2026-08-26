@@ -453,6 +453,7 @@ model WishlistEntry {
   refreshes        PriceRefresh[]
   compatSnapshots  WishlistCompatibilitySnapshot[]
   envCompat        WishlistEnvironmentCompatibility[]
+  recommendationItems RecommendationItem[]
 
   @@index([baseGameId])
   @@index([type])
@@ -624,31 +625,33 @@ model RecommendationRun {
 }
 
 model RecommendationItem {
-  id        String   @id @default(cuid())
-  runId     String
-  gameId    String
-  rank      Int
-  score     Float
-  positive  Json?
-  negative  Json?
-  caveats   Json?
-  createdAt DateTime @default(now())
+  id              String   @id @default(cuid())
+  runId           String
+  gameId          String?
+  wishlistEntryId String?
+  rank            Int
+  score           Float
+  positive        Json?
+  negative        Json?
+  caveats         Json?
+  createdAt       DateTime @default(now())
 
-  run  RecommendationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
-  game Game              @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  run           RecommendationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  game          Game?             @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  wishlistEntry WishlistEntry?    @relation(fields: [wishlistEntryId], references: [id], onDelete: Cascade)
 
   @@index([runId])
 }
 
 model RecommendationFeedback {
-  id        String    @id @default(cuid())
-  gameId    String
-  kind      String
-  reason    String?
-  expiresAt DateTime?
-  createdAt DateTime  @default(now())
+  id              String             @id @default(cuid())
+  gameId          String?
+  wishlistEntryId String?
+  kind            RecommendationKind
+  createdAt       DateTime           @default(now())
 
   @@index([gameId, kind])
+  @@index([wishlistEntryId, kind])
 }
 
 // ---------------------------------------------------------------------------

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Star, Clock, RotateCcw, EyeOff } from "lucide-react";
 import { CreateGameDialog } from "@/components/games/CreateGameDialog";
+import { UpdateRecommendationsButton } from "@/components/recommendations/UpdateRecommendationsButton";
 import { LibraryFilters } from "@/components/games/LibraryFilters";
 import { DuplicatesList } from "@/components/games/DuplicatesList";
 import { RawgBatchEnrichmentPanel } from "@/components/games/RawgBatchEnrichmentPanel";
@@ -182,6 +183,7 @@ export default async function LibraryPage({
           >
             Review duplicates
           </Link>
+          <UpdateRecommendationsButton />
           <CreateGameDialog />
         </div>
       </div>
