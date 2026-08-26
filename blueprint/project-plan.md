@@ -77,9 +77,16 @@ store:
 - Name.
 - Base game or DLC type.
 - Target base game ID (required if type is DLC).
-- Notes and local interest.
+- Notes, local interest, and an optional personal **Game experience / intention**.
 - Optional external identifiers.
 - Independent RAWG metadata snapshot (for base games).
+
+`Game experience / intention` is one user-selected value per catalog or
+wishlist game, initially one of: PC gaming, Multiplayer & co-op, Couch gaming,
+or On the go. It describes the session the game best suits, not its provider
+platform or compatibility. It is optional, editable, and deliberately
+single-value for the MVP; unclassified games remain eligible with less
+experience-fit evidence.
 
 Price target and provider offers belong to the later pricing feature, not the
 initial local wishlist feature. Source preference is intentionally excluded:
@@ -199,6 +206,8 @@ Initial metadata:
 - Main, extra, and completionist playtime.
 - Alternative names.
 - Developers and publishers.
+- ESRB rating when RAWG provides it; absent or incomplete ratings stay unknown
+  and never imply a maturity classification.
 - Official website.
 - RAWG updated date and local fetched date.
 - Ratings and Metacritic as secondary context.
@@ -438,17 +447,27 @@ The recommendation engine has two distinct outputs:
 - `play-next`: games already present in the catalog.
 - `buy`: base games and eligible DLC entries in the wishlist.
 
-Recommendations are deterministic and explainable. Each item stores visible
+Recommendations are explainable, private, and adaptive. A stable scoring
+baseline remains visible, while an adaptive re-ranker uses provider metadata,
+explicit preferences, and observed personal activity to diversify candidates
+without becoming an opaque or externally hosted model. Each item stores visible
 factors such as:
 
 - Play state.
 - Main-game and hidden flags.
 - Priority and declared interest.
-- Compatibility.
+- Game experience / intention, intended environment, and compatibility.
+- RAWG genres, tags, estimated playtime, release era, publisher, sequel
+  relationship where confidently known, ESRB context when available, Metacritic,
+  and community-rating confidence.
+- Steam playtime and recency when available, with manually marked play history
+  as the safe fallback from a new import onward.
 - Price and target-price status.
 - Provider freshness.
 - DLC base-game affinity (ratings, completion status, replay flag of the owned base game).
 - Calibration adjustment.
+- Recent recommendation exposure, controlled rotation, and an explicit
+  out-of-the-box or change-of-pace rationale.
 
 **Eligibility**
 
@@ -463,22 +482,50 @@ factors such as:
 
 **Ranking semantics**
 
-- Compatibility never changes ranking **in any state** - `READY`, `REQUIRED`,
-  or otherwise. It surfaces only as visible warnings and context inside the
-  explanation; unknown and stale behave identically.
+- Manual fields remain authoritative. **Interest** (`0-5`) is durable personal
+  desire or expected enjoyment and is the core taste signal for play and buy.
+  **Priority** (`NONE`/`LOW`/`MEDIUM`/`HIGH`) is a catalog-only, short-term
+  urgency signal for play-next; it never means the user likes a game more.
+  Detail, quick-create, and bulk-edit surfaces explain these and other personal
+  fields with concise visible helper text.
+- Compatibility is a small practical-fit signal for the intended environment,
+  not a hard gate. Confirmed fit may boost a recommendation; unknown, stale,
+  or poor evidence surfaces caveats and can reduce practical fit, but does not
+  declare a game unplayable or silently exclude it.
 - Buy offer quality: fresh-offer discount percentage earns points; proximity
   to the historical low breaks ties; stale offers contribute zero
   offer-quality points, consistent with the 48-hour rule.
 - DLC base-game affinity is boost-only: an owned base rated >=4/5, completed,
   or replay-flagged grants one fixed boost tier named explicitly in the
   explanation ("base game X was completed"). Affinity never lowers a score.
-- Manual signals dominate: interest, priority, play state, main-game and
-  hidden flags, then calibration adjustment.
+- Publisher, release-era, quality, series, genre/tag, duration, and mature or
+  casual context are soft evidence only. Sparse RAWG data, low rating counts,
+  or uncertain series links lower confidence rather than fabricating preference.
+- No alphabetical tiebreak decides what a person sees. Near-equal qualified
+  candidates use stable, weighted rotation and short exposure cooldowns.
 
-Recommendations are generated explicitly by the user. One `Update
-recommendations` action creates a `RecommendationRun` with both lists; manual
-signals dominate ranking. The dashboard displays the latest three play-next and
-three buy results. Daily price refreshes do not create or replace a run.
+Recommendations are generated explicitly by the user. `Update recommendations`
+works immediately with no form. `Tune this run` is opt-in and may set soft
+preferences for game experience, desired length, genres/tags, sequel posture,
+classic-to-newer era, and casual-to-mature context. A soft preference strongly
+boosts matches and reserves representation when possible, but can relax with a
+visible explanation if the qualified pool is thin. Named presets store these
+optional contexts for reuse.
+
+Each run retains its context, explanations, and qualified candidate batches.
+The dashboard initially displays four play-next roles: two best-fit picks, one
+qualified out-of-the-box pick that favors underrepresented genres, tags, or
+experiences, and one change-of-pace pick different from recent play. It displays
+three buy roles: two best-fit wishlist picks and one exceptional-deal pick. When
+deal-saturation applies - at least three fresh offers discounted 80% or more
+and at least 20% of eligible wishes qualify - Buy instead shows one best-fit and
+two exceptional-deal picks. Deal picks must still clear fit and quality floors;
+a discount never wins by itself.
+
+Each role offers `Show another`, rotating a different item from its retained
+batch without creating a new run. Showing or rotating an item records a light
+exposure and applies a temporary cooldown; it is never a negative signal.
+Daily price refreshes do not create or replace a run.
 
 Dismissing an item hides it only during the current run. A persistent dismissal
 counter is maintained separately for play-next and buy recommendations. After
@@ -488,11 +535,45 @@ interest decreases by one point, with a floor of zero.
 The user-entered interest remains manually editable. When automatic calibration
 has changed it, the detail view explains that the value was adjusted because of
 repeated recommendation dismissals. The technical counter remains an internal
-implementation detail.
+implementation detail. Starting a catalog recommendation is an explicit action:
+it marks the game `IN_PROGRESS`; when no other game is in progress it also
+makes it the main game, otherwise it asks before replacing the main game.
 
-Run retention keeps a rolling **12 months** of `RecommendationRun` records;
-creating a new run prunes older ones. Persistent dismissal and calibration
-counters are cumulative personal state and are never pruned.
+### Cold start, learning, and control
+
+A recently imported library must remain useful before its personal fields are
+filled. Cold-start recommendations diversify metadata-complete owned games by
+genre, experience, length, era, platform fit, and broad quality signals, and
+say explicitly that they are based on imported-library metadata. After import,
+an optional taste setup presents five or six varied owned games. For each, the
+user may mark `I've played this` (also setting `PLAYED_BEFORE`), `I like this`
+(setting Interest to `5/5` unless a personal value already exists), skip it, or
+swap it for another catalog game. Progressive one-tap prompts after viewing,
+starting, dismissing, or completing games invite useful personalization without
+requiring a bulk data chore.
+
+Recommendation-owned data stays private in PostgreSQL and remains separate
+from authoritative catalog fields and replaceable provider snapshots:
+
+- `RecommendationRun` and its items retain context, visible results,
+  explanation factors, and candidate batches for 12 months.
+- Append-only recommendation events record meaningful exposure, rotation,
+  taste-setup answers, starts, completions, abandonment, dismissals, and
+  optional dismissal reasons.
+- A rebuildable derived profile aggregates preferences for genres, tags,
+  experience, length, publisher, era, series, environment, and maturity.
+- User-editable preferences use semantic `Prefer`, `Neutral`, and `Avoid`
+  overrides instead of exposing raw weights. Settings shows the learned profile,
+  its evidence, and these controls.
+- Presets hold named optional Tune-this-run contexts.
+
+Events phase out by usefulness: exposure after 90 days; runs, starts,
+dismissals, and optional reasons after 12 months; played, completed, abandoned,
+and taste-setup events after 24 months. Derived preferences rebuild from the
+retained events and use recency decay before deletion. `Restart recommendations`
+immediately deletes all recommendation-owned runs, events, derived profiles,
+preferences, and presets, while preserving the catalog, ownership, and personal
+catalog data.
 
 The `Update recommendations` action lives on the Today dashboard header and
 empty state, and is reachable from the Library and Wishlist headers.

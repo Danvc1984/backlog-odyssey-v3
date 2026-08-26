@@ -136,14 +136,11 @@
     refreshes and a simple "compatibility details not found" note on the
     detail page; single 180-day freshness window
 
-- [ ] 12. **Recommendation engine** - explicit combined runs with three
-  play-next and three buy results; deterministic explanations led by manual
-  signals; eligibility rules (no hidden/main/in-progress/DLC in play-next);
-  compatibility as warning-only context that never moves rank in any state;
-  fresh-discount offer quality with historical-low tiebreaks and stale
-  contributing nothing; boost-only DLC affinity; optional target-price
-  signals; dismissal; calibration with exempt counters; rolling 12-month run
-  retention
+- [ ] 12. **Recommendation engine** - explicit explainable play and buy runs;
+  deterministic baseline eligibility and scoring, then privacy-preserving
+  adaptive diversification from personal history, editable preferences, and
+  provider metadata; fresh offers, calibration, dismissal, candidate batches,
+  cold-start personalization, and rolling retention
   - [x] 12a. **Recommendation runs and play-next engine** - dual-reference
     item storage (catalog game or wishlist entry) and dismissal-log contract,
     deterministic play-next eligibility, scoring, and explanations,
@@ -155,7 +152,20 @@
     with historical-low tiebreaks, target-price signal, boost-only DLC
     affinity, no-pricing and stale/keyshop caveats, and buy display on Today
     and wishlist detail
-  - [ ] 12c. **Calibration from dismissal counters** - adjusted interest from
+  - [ ] 12c. **Adaptive recommendation orchestration** - optional post-import
+    taste setup from five or six swappable owned games; `PLAYED_BEFORE` and
+    Interest seed actions; one personal Game experience / intention field and
+    contextual field help across detail, quick-create, and bulk edit; opt-in
+    Tune-this-run soft preferences and reusable presets; explainable private
+    event history, derived profile, Prefer/Neutral/Avoid overrides, retention,
+    and full recommender reset; metadata-, Steam-activity-, environment-,
+    compatibility-, quality-, publisher-, release-era-, duration-, genre/tag-,
+    and series-informed re-ranking with uncertainty safeguards; four play roles
+    (two best fit, out-of-the-box, change-of-pace), three buy roles, retained
+    candidate batches, Show another exposure cooldowns, and fresh-deal
+    saturation mode (20% plus three 80%+ eligible offers) without letting
+    discounts alone decide
+  - [ ] 12d. **Calibration from dismissal counters** - adjusted interest from
     per-target dismissal counters applied in both engines (floor 0, counters
     never pruned), and calibration explanations on game and wishlist detail
 

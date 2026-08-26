@@ -65,6 +65,8 @@ The checked state and exact ordering come from `blueprint/build-plan.md`.
    Windows fallback, and per-game refresh.
 11b. **Compatibility batch queue and auto-queue** - Post-RAWG queueing,
    global sweep, progress, and overlap protection.
+11c. **Wishlist detail** - Dedicated wishlist detail composition, including
+   read-only compatible evidence and fill-only RAWG enrichment.
 11c-a. **Wishlist compatibility foundation** - Parallel wishlist evidence
    storage, provider/synthesis reuse, and quiet per-entry refresh for eligible
    base-game wishes, without catalog-state reuse, overrides, auto-queue, or a
@@ -84,10 +86,20 @@ The checked state and exact ordering come from `blueprint/build-plan.md`.
    only, DLC wishes skipped; inline fail-silent refreshes and a simple
    "compatibility details not found" note on the detail page; single 180-day
    freshness window.
-12. **Recommendation engine** - Explicit explainable play-next and buy runs,
-   eligibility rules, compatibility as warning-only context that never moves
-   rank, fresh-discount offer quality, boost-only DLC affinity, dismissal,
-   calibration with exempt counters, and rolling 12-month run retention.
+12. **Recommendation engine** - Explicit explainable play and buy runs with a
+   deterministic baseline, then private adaptive diversification from provider
+   metadata, personal history, and editable preferences.
+12a. **Recommendation runs and play-next engine** - Completed dual-reference
+   item storage, deterministic play-next scoring, explanations, manual runs,
+   in-run dismissal, and rolling run retention.
+12b. **Buy recommendations** - Wishlist eligibility, fresh-offer quality,
+   targets, DLC affinity, pricing caveats, and Buy display.
+12c. **Adaptive recommendation orchestration** - Taste setup, Game experience,
+   contextual tune/preset controls, event/profile/preference storage, cold
+   start, re-ranking, diversified role batches, `Show another`, and deal
+   saturation.
+12d. **Calibration from dismissal counters** - Adjusted interest from per-target
+   dismissals and detail-page explanations.
 13. **Today dashboard** - Post-login landing composing main/in-progress games,
    latest recommendations, Steam activity, offers sorted by discount,
    freshness, links, and operation status.
@@ -154,7 +166,9 @@ feature's implementation.
   `PLAYED_BEFORE`/`ABANDONED`), `isMainGame`, `priority`
   (`NONE`/`LOW`/`MEDIUM`/`HIGH`), `interest`, `rating`, `preferredEnvironment`
   (`BAZZITE`/`STEAM_DECK`/`WINDOWS`), `compatOverrideStatus`,
-  `compatOverrideReason`, `playSoon`, `replayCandidate`, `hidden`, `notes`.
+  `compatOverrideReason`, `playSoon`, `replayCandidate`, `hidden`, `notes`, and
+  `gameExperience` `(planned, 12c)` (`PC_GAMING`/`MULTIPLAYER_COOP`/
+  `COUCH_GAMING`/`ON_THE_GO`, nullable).
 - `MetadataSnapshot` - `gameId`, `provider` (enum), `payload` (JSON),
   `sourceUrl`, `fetchedAt`, `expiresAt`. Indexed on `[gameId, provider]`.
 - `PossibleDuplicate` - `gameAId`, `gameBId`, `evidence` (JSON), `confidence`,
@@ -174,7 +188,8 @@ feature's implementation.
 - `WishlistImportIgnore` - `steamAppId` (unique), `name`, `createdAt`.
 - `WishlistEntry` - `name`, `type` (`BASE_GAME`/`DLC`), `baseGameId` (cascade
   delete to base game), `interest`, `targetPriceMxn` (decimal 10,2), `notes`,
-  `steamAppId`, `steamAppIdProvenance` (`STEAM_IMPORT`/`USER`/`RAWG_SUGGESTION`).
+  `steamAppId`, `steamAppIdProvenance` (`STEAM_IMPORT`/`USER`/`RAWG_SUGGESTION`),
+  and nullable `gameExperience` `(planned, 12c)`.
 - `WishlistMetadataSnapshot` - `wishlistEntryId` (unique), `provider` (default
   `RAWG`), `payload` (JSON), `sourceUrl`, `fetchedAt`, `expiresAt`.
 - `DealOffer` - `wishlistEntryId`, `shop`, `country`, `currency`, `price`,
@@ -204,16 +219,26 @@ feature's implementation.
   `PriceRefresh`: single RUNNING row for overlap protection, `status`,
   `requestedAt`, `finishedAt`, `counts` (JSON).
 - `RecommendationRun` - `kind` (`PLAY_NEXT`/`BUY`), `context` (JSON),
-  `createdAt`. Indexed on `[kind, createdAt]`.
-- `RecommendationItem` - `runId`, `gameId`, `rank`, `score`, `positive`,
-  `negative`, `caveats` (all JSON for factor payloads).
-  > **Planned evolution (feature 12):** `gameId` currently is a required FK to
-  > `Game`, but `buy` items may reference wishlist entries with no catalog
-  > `Game`. The feature 12 spec must decide how buy items are stored.
-- `RecommendationFeedback` - `gameId`, `kind` (String), `reason`, `expiresAt`,
-  `createdAt`. Indexed on `[gameId, kind]`.
-  > **Planned evolution (feature 12):** persistent per-type dismissal counters
-  > and calibration state; current schema stores transient per-run dismissals.
+  `createdAt`. Indexed on `[kind, createdAt]`; 12c extends `context` to retain
+  optional tuning and qualified candidate batches.
+- `RecommendationItem` - `runId`, nullable `gameId` or nullable
+  `wishlistEntryId` (exactly one target enforced in code), `rank`, `score`,
+  `positive`, `negative`, `caveats` (JSON factor payloads).
+- `RecommendationFeedback` - nullable `gameId` or nullable `wishlistEntryId`,
+  `kind` (`PLAY_NEXT`/`BUY`), `createdAt`; one row per dismissal and indexed by
+  target plus kind.
+- `RecommendationEvent` `(planned, 12c)` - append-only recommendation-owned
+  interaction log for exposure, rotation, taste-setup answers, starts,
+  completion, abandonment, dismissal, and optional reason; time-bounded by
+  event kind.
+- `RecommendationProfile` `(planned, 12c)` - rebuildable private aggregate of
+  learned signals, profile version, and rebuild freshness.
+- `RecommendationPreference` `(planned, 12c)` - explicit `PREFER`/`NEUTRAL`/
+  `AVOID` override for a genre, tag, experience, duration band, publisher, era,
+  series, environment, or maturity dimension.
+- `RecommendationPreset` `(planned, 12c)` - named optional Tune-this-run
+  context. A recommender reset removes all recommendation-owned records but
+  preserves the catalog and provider snapshots.
 
 ### Organization and theme
 
@@ -308,25 +333,45 @@ feature's implementation.
 - `buy` eligibility: wishlist base games and DLC wishes with an owned base game.
   Unpriced entries stay eligible on interest alone with an explicit "no pricing
   yet" warning. ROMs are excluded from purchase recommendations.
-- Compatibility never changes ranking in any state; it surfaces only as visible
-  warnings and explanation context, including unknown and stale evidence.
-- Buy offer quality: fresh-offer discount percentage earns points; proximity to
-  the historical low breaks ties; stale offers contribute nothing.
-- DLC base-game affinity is boost-only (owned base rated >=4/5, completed, or
-  replay-flagged), named explicitly in the explanation; it never lowers a score.
-- Manual signals dominate: interest, priority, play state, flags, then
-  calibration. One `Update recommendations` action (Today header/empty state,
-  also Library and Wishlist headers) creates a run with both lists.
-- Dismissal hides an item only during the current run; three cumulative
-  dismissals of the same type lower adjusted interest by one point (floor 0).
-  Runs pruned to a rolling 12 months; counters are cumulative and never pruned.
+- Interest (`0-5`) is durable personal desire and the core taste signal for play
+  and buy. Catalog-only Priority is short-term play-next urgency, not a liking
+  score. Visible field help appears in detail, quick-create, and bulk-edit UI.
+- Compatibility is a small practical-fit factor for the intended environment,
+  not a hard gate. Caveats remain visible; sparse, stale, or uncertain provider
+  data lowers confidence rather than declaring a game unplayable.
+- Metadata and activity evidence may include RAWG genres/tags, estimated
+  playtime, release era, publisher, confident sequel relationship, ESRB when
+  supplied, Metacritic and community-rating confidence, plus Steam playtime and
+  recency. Manual played history is the fallback before Steam activity exists.
+- Provider data is soft evidence. Manual fields remain authoritative; no
+  alphabetical tiebreak decides a displayed recommendation.
+- `Update recommendations` runs immediately. Optional `Tune this run` applies
+  soft preferences for experience, length, genres/tags, sequel posture, era,
+  and mature/casual context; presets reuse that context. Relaxed constraints are
+  explained when the qualified pool is thin.
+- Play output has two best-fit roles, one qualified out-of-the-box role, and one
+  change-of-pace role. Buy output normally has two best-fit roles and one deal
+  role; when three or more fresh 80%+ offers comprise at least 20% of eligible
+  wishes, it instead has one best-fit and two deal roles. Deal roles always meet
+  fit and quality floors.
+- Runs persist context and qualified batches. `Show another` rotates within a
+  role without starting a run; exposure yields only a short cooldown, never a
+  negative signal. Starting a catalog recommendation sets `IN_PROGRESS` and
+  makes it main only when no game is in progress; otherwise the UI asks.
+- Cold-start mode diversifies imported metadata and labels its limited basis.
+  Optional taste setup shows five or six swappable owned games: played marks
+  `PLAYED_BEFORE`; like sets Interest `5/5` unless a personal value exists.
+- A visible profile exposes semantic Prefer/Neutral/Avoid controls and full
+  recommender reset. Exposures expire after 90 days; runs, starts, dismissals,
+  and reasons after 12 months; played, completed, abandoned, and taste-setup
+  events after 24 months. Derived signals decay and rebuild from retained events.
 
 ## UI and routes
 
 - `/` - sign-in landing and Google access gate.
-- `/today` - read-only dashboard and post-login front door with main/in-progress
-  games, latest play-next and buy results, Steam activity, offers, freshness,
-  and operation progress.
+- `/today` - post-login front door with main/in-progress games, adaptive
+  play-next and buy roles, Tune-this-run presets, `Show another`, Steam
+  activity, offers, freshness, and operation progress.
 - `/library` - searchable catalog, filters, manual creation, duplicate review, and
   catalog-wide metadata action.
 - `/wishlist` - independent wishes, RAWG action, identity suggestions, global
@@ -336,11 +381,12 @@ feature's implementation.
   RAWG metadata, identity and provenance, offers and target price, notes,
   interest, edit/acquire/delete, a read-only compatibility block, compatibility
   refresh, and fill-only RAWG enrichment.
-- `/games/[id]` - personal fields, availability, metadata, attribution,
-  compatibility (with manual Steam AppID entry), DLC, duplicate warning,
-  recommendation explanation, and RAWG loading.
-- `/settings` - sessions, provider controls, visual/accessibility settings,
-  Wallhaven, queue status, wishlist-import diagnostics, and JSON export.
+- `/games/[id]` - personal fields and help, Game experience, availability,
+  metadata, attribution, compatibility (with manual Steam AppID entry), DLC,
+  duplicate warning, recommendation explanation, and RAWG loading.
+- `/settings` - sessions, provider controls, recommendation profile/preferences
+  and reset, visual/accessibility settings, Wallhaven, queue status,
+  wishlist-import diagnostics, and JSON export.
 
 The app is responsive. Desktop uses a dense constrained layout with an icon
 sidebar; mobile uses bottom navigation, single-column cards, filter sheets,
@@ -385,14 +431,14 @@ workflow services, notifications, multi-user support, and offline/PWA behavior.
   provider controls (feature 17)", but `build-plan.md` 11b is complete and
   already ships the global compatibility sweep from settings. Reconcile that
   source-plan wording before a later plan edit.
-- `RecommendationItem.gameId` is a required FK to `Game`, but `buy`
-  recommendations may reference wishlist entries that have no catalog `Game`
-  (project plan §4 keeps wishlist entries independent). Decide storage in the
-  feature 12 spec.
 - `project-plan.md` describes RAWG store-link suggestions, while
   `build-plan.md` records that live RAWG store URLs were empty and the current
   suggestion resolves through Steam `storesearch`. Reconcile that source-plan
   wording before a later plan edit.
+- `project-plan.md` phases dismissal events out after 12 months, while
+  `build-plan.md` 12d still says calibration counters are never pruned. Decide
+  whether calibration derives only from retained events or stores a separate
+  durable aggregate before 12d is specified.
 - The wishlist compat sweep (11d) may be added to Settings' manual provider
   controls in feature 17, alongside the catalog global sweep.
 - Exact Vercel/Supabase production scheduler configuration remains a deployment
@@ -401,5 +447,5 @@ workflow services, notifications, multi-user support, and offline/PWA behavior.
 - Wallhaven anonymous SFW rate limits and keyword-set defaults confirm during
   the feature 15 spec.
 
-Run `/feature` for the next unchecked item, currently `11c-b`. Run `/prototype`
+Run `/feature` for the next unchecked item, currently `12b`. Run `/prototype`
 before feature 14 to lock the visual look against `blueprint/reference/`.
