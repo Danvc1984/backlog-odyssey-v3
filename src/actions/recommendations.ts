@@ -8,6 +8,12 @@ import { prisma } from "@/lib/prisma";
 import { parseProtonDbSummary } from "@/lib/protondb-api";
 import { buildCompatContext } from "@/lib/recommendations/compat-context";
 import {
+  isEligibleForBuy,
+  rankBuyCandidates,
+  type BuyCandidate,
+  type BuyOffer,
+} from "@/lib/recommendations/buy";
+import {
   isEligibleForPlayNext,
   rankPlayNextCandidates,
 } from "@/lib/recommendations/play-next";
@@ -95,6 +101,73 @@ function compatEvidenceFor(row: {
   };
 }
 
+async function loadBuyCandidates(client: Prisma.TransactionClient) {
+  const entries = await client.wishlistEntry.findMany({
+    select: {
+      id: true,
+      name: true,
+      type: true,
+      interest: true,
+      targetPriceMxn: true,
+      updatedAt: true,
+      baseGameId: true,
+      offers: {
+        select: {
+          price: true,
+          currency: true,
+          discount: true,
+          historicalLow: true,
+          sourceHistoricalLow: true,
+          expiresAt: true,
+          fetchedAt: true,
+          itadFlag: true,
+        },
+      },
+    },
+  });
+
+  if (entries.length === 0) {
+    return [];
+  }
+
+  const baseGameIds = [
+    ...new Set(
+      entries
+        .map((entry) => entry.baseGameId)
+        .filter((id): id is string => id != null),
+    ),
+  ];
+  const baseGames = await client.game.findMany({
+    where: { id: { in: baseGameIds } },
+    select: {
+      id: true,
+      availability: { select: { source: true } },
+      libraryEntry: {
+        select: {
+          rating: true,
+          playState: true,
+          replayCandidate: true,
+        },
+      },
+    },
+  });
+  const baseById = new Map(baseGames.map((base) => [base.id, base]));
+
+  return entries.map((entry): BuyCandidate => ({
+    id: entry.id,
+    name: entry.name,
+    updatedAt: entry.updatedAt,
+    type: entry.type,
+    interest: entry.interest,
+    targetPriceMxn: entry.targetPriceMxn,
+    offers: entry.offers as BuyOffer[],
+    baseGame:
+      entry.type === "DLC" && entry.baseGameId && baseById.has(entry.baseGameId)
+        ? (baseById.get(entry.baseGameId) ?? null)
+        : null,
+  }));
+}
+
 export async function updateRecommendations() {
   try {
     await requireUser();
@@ -117,8 +190,12 @@ export async function updateRecommendations() {
       const ranked = rankPlayNextCandidates(candidates);
       const evidenceById = new Map(rows.map((row) => [row.id, compatEvidenceFor(row)]));
 
+      const buyCandidates = await loadBuyCandidates(tx);
+      const buyEligibleList = buyCandidates.filter(isEligibleForBuy);
+      const buyRanked = rankBuyCandidates(buyCandidates, now);
+
       const context = {
-        eligible: { playNext: eligible.length, buy: 0 },
+        eligible: { playNext: eligible.length, buy: buyEligibleList.length },
         prunedRuns: pruned.count,
       };
       const contextJson = context as unknown as Prisma.InputJsonValue;
@@ -152,7 +229,20 @@ export async function updateRecommendations() {
       });
 
       const buyRun = await tx.recommendationRun.create({
-        data: { kind: "BUY", context: contextJson },
+        data: {
+          kind: "BUY",
+          context: contextJson,
+          items: {
+            create: buyRanked.map((item) => ({
+              wishlistEntryId: item.id,
+              rank: item.rank,
+              score: item.score,
+              positive: item.positive as unknown as Prisma.InputJsonValue,
+              negative: item.negative as unknown as Prisma.InputJsonValue,
+              caveats: item.caveats as unknown as Prisma.InputJsonValue,
+            })),
+          },
+        },
         select: { id: true },
       });
 
@@ -161,6 +251,8 @@ export async function updateRecommendations() {
         buyRunId: buyRun.id,
         playNextItems: ranked.length,
         playNextEligible: eligible.length,
+        buyItems: buyRanked.length,
+        buyEligible: buyEligibleList.length,
         prunedRuns: pruned.count,
       };
     });

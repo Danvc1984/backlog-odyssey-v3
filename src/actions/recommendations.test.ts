@@ -28,6 +28,7 @@ const transaction = vi.fn();
 const runCreate = vi.fn();
 const runDeleteMany = vi.fn();
 const gameFindMany = vi.fn();
+const wishlistFindMany = vi.fn();
 const feedbackCreate = vi.fn();
 
 function txFactory() {
@@ -35,6 +36,7 @@ function txFactory() {
     recommendationRun: { create: runCreate, deleteMany: runDeleteMany },
     recommendationFeedback: { create: feedbackCreate },
     game: { findMany: gameFindMany },
+    wishlistEntry: { findMany: wishlistFindMany },
   };
 }
 
@@ -52,6 +54,8 @@ beforeEach(() => {
     id: data.kind === "PLAY_NEXT" ? "run-play" : "run-buy",
   }));
   feedbackCreate.mockResolvedValue({ id: "feedback-1" });
+  gameFindMany.mockResolvedValue([]);
+  wishlistFindMany.mockResolvedValue([]);
 });
 
 interface CandidateRowShape {
@@ -110,6 +114,56 @@ function baseRow(): CandidateRowShape {
   };
 }
 
+interface BuyRowShape {
+  id: string;
+  name: string;
+  type: "BASE_GAME" | "DLC";
+  interest: number | null;
+  targetPriceMxn: string | null;
+  updatedAt: Date;
+  baseGameId: string | null;
+  offers: Array<{
+    price: string | null;
+    currency: string;
+    discount: number | null;
+    historicalLow: string | null;
+    sourceHistoricalLow: string | null;
+    expiresAt: Date | null;
+    fetchedAt: Date;
+    itadFlag: string | null;
+  }>;
+}
+
+const NOW = new Date("2026-08-26T12:00:00.000Z");
+
+function buyOffer(overrides: Partial<BuyRowShape["offers"][number]> = {}): BuyRowShape["offers"][number] {
+  return {
+    price: "299.00",
+    currency: "MXN",
+    discount: null,
+    historicalLow: null,
+    sourceHistoricalLow: null,
+    expiresAt: null,
+    fetchedAt: new Date(NOW.getTime() - 2 * 60 * 60 * 1000),
+    itadFlag: null,
+    ...overrides,
+  };
+}
+
+function buyRow(overrides: Partial<BuyRowShape> = {}): BuyRowShape {
+  return {
+    id: "wish-1",
+    name: "Portal 2",
+    type: "BASE_GAME",
+    interest: 2,
+    targetPriceMxn: null,
+    updatedAt: new Date("2026-08-20T00:00:00.000Z"),
+    baseGameId: null,
+    offers: [buyOffer()],
+    ...overrides,
+  };
+}
+
 describe("updateRecommendations", () => {
   it("requires authentication before touching the database", async () => {
     vi.mocked(requireUser).mockRejectedValueOnce(new Error("Unauthorized"));
@@ -162,20 +216,74 @@ describe("updateRecommendations", () => {
     expect(items[0].caveats).toEqual([{ factor: "anticheat", label: "Anti-cheat blocks Linux" }]);
   });
 
-  it("writes the locked context JSON and an empty BUY run", async () => {
+  it("writes the locked context JSON with buy counts and empty-BUY fallback", async () => {
     gameFindMany.mockResolvedValue([baseRow()]);
 
-    await updateRecommendations();
+    const result = await updateRecommendations();
 
-    for (const call of runCreate.mock.calls as Array<[{ data: { context: unknown; kind: string } }]>) {
+    for (const call of runCreate.mock.calls as Array<[{ data: { context: unknown; kind: string; items?: { create: unknown[] } } }]>) {
       expect(call[0].data.context).toEqual({
         eligible: { playNext: 1, buy: 0 },
         prunedRuns: 2,
       });
       if (call[0].data.kind === "BUY") {
-        expect(call[0].data).not.toHaveProperty("items");
+        expect(call[0].data.items?.create).toEqual([]);
       }
     }
+    expect(result.data).toMatchObject({ buyItems: 0, buyEligible: 0 });
+  });
+
+  it("persists BUY items with ranks, scores, factors, and caveats from persisted offers", async () => {
+    wishlistFindMany.mockResolvedValue([
+      {
+        ...buyRow(),
+        interest: 3,
+        offers: [buyOffer({ discount: 50 })],
+      },
+      {
+        ...buyRow(),
+        id: "wish-2",
+        name: "Expansion",
+        type: "DLC" as const,
+        baseGameId: "game-1",
+        interest: null,
+        targetPriceMxn: "350.00",
+        updatedAt: new Date("2026-08-21T00:00:00.000Z"),
+        offers: [buyOffer()],
+      },
+    ]);
+    gameFindMany
+      .mockImplementationOnce(() => Promise.resolve([]))
+      .mockImplementationOnce(() =>
+        Promise.resolve([
+          {
+            id: "game-1",
+            availability: [{ source: "STEAM" }],
+            libraryEntry: { rating: 5, playState: "PLAYED_BEFORE", replayCandidate: false },
+          },
+        ]),
+      );
+
+    const result = await updateRecommendations();
+
+    expect(result.success).toBe(true);
+    expect(result.data).toMatchObject({ buyItems: 2, buyEligible: 2 });
+    const buyCall = runCreate.mock.calls.find(
+      (call) => (call[0] as { data: { kind: string } }).data.kind === "BUY",
+    )!;
+    const items = buyCall[0].data.items.create;
+    expect(items.map((item: { rank: number }) => item.rank)).toEqual([1, 2]);
+    expect(items[0]).toMatchObject({
+      wishlistEntryId: "wish-1",
+      score: 35,
+    });
+    expect(items[0].positive).toContainEqual({ factor: "offer_discount", label: "50% off", points: 5 });
+    expect(items[1]).toMatchObject({
+      wishlistEntryId: "wish-2",
+      score: 8 + 6,
+    });
+    expect(items[1].positive).toContainEqual({ factor: "target_hit", label: "At or below target $350", points: 8 });
+    expect(items[1].positive).toContainEqual({ factor: "dlc_affinity", label: "Owned base game you enjoyed", points: 6 });
   });
 
   it("prunes runs older than the 12-month cutoff only", async () => {

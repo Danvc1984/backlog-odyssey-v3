@@ -147,11 +147,15 @@
     `Update recommendations` action creating both runs with rolling 12-month
     pruning, Today display with in-run dismissal, and header actions on
     Library and Wishlist
-  - [ ] 12b. **Buy recommendations** - buy eligibility (wishlist base games
-    and owned-base DLC wishes, ROM exclusion), fresh-discount offer quality
-    with historical-low tiebreaks, target-price signal, boost-only DLC
-    affinity, no-pricing and stale/keyshop caveats, and buy display on Today
-    and wishlist detail
+  - [ ] 12b. **Buy recommendations** - explainable wishlist purchase picks
+    from fresh offers and personal intent
+    - [x] 12b-a. **Buy recommendation engine** - wishlist eligibility
+      (base games and owned-base DLC wishes, ROM exclusion), fresh-discount
+      offer quality with historical-low tiebreaks, target-price signal,
+      boost-only DLC affinity, no-pricing and stale/keyshop caveats, and
+      persisted BUY runs
+    - [ ] 12b-b. **Buy recommendation surfaces** - Buy display on Today and
+      wishlist detail, explanation/caveat presentation, and in-run dismissal
   - [ ] 12c. **Adaptive recommendation orchestration** - optional post-import
     taste setup from five or six swappable owned games; `PLAYED_BEFORE` and
     Interest seed actions; one personal Game experience / intention field and
