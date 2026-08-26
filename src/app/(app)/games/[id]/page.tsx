@@ -18,6 +18,7 @@ import { rawgJobSelect, toRawgEnrichmentJobView } from "@/lib/rawg-job-view";
 import { compatJobSelect } from "@/lib/compat-job";
 import { awayGameUrl } from "@/lib/away-api";
 import { parseProtonDbSummary, PROTONDB_APP_URL } from "@/lib/protondb-api";
+import { parseAntiCheatEvidence } from "@/lib/compat-evidence";
 import type { RawgMetadataPayload } from "@/lib/rawg-types";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -29,21 +30,6 @@ const ORIGIN_LABELS: Record<string, string> = {
   MANUAL: "Manual entry",
   STEAM_IMPORT: "Steam import",
 };
-
-const AWAY_STATUSES = ["Supported", "Running", "Denied", "Broken", "Planned"] as const;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function hasValue<T extends readonly string[]>(values: T, value: unknown): value is T[number] {
-  return typeof value === "string" && values.includes(value);
-}
-
-function parseAntiCheatEvidence(value: unknown) {
-  if (!isRecord(value) || !hasValue(AWAY_STATUSES, value.status) || !Array.isArray(value.anticheats) || value.anticheats.some((item) => typeof item !== "string")) return null;
-  return { status: value.status, anticheats: value.anticheats as string[] };
-}
 
 export default async function GameDetailPage({
   params,

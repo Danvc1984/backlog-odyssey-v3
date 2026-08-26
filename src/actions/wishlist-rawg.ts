@@ -25,6 +25,10 @@ const removeWishlistMetadataSchema = z
   .object({ wishlistEntryId: z.string().trim().min(1) })
   .strict();
 
+const fillWishlistRawgSchema = z
+  .object({ wishlistEntryId: z.string().trim().min(1) })
+  .strict();
+
 export type SearchWishlistRawgInput = z.infer<typeof searchWishlistRawgSchema>;
 export type EnrichWishlistRawgInput = z.infer<typeof enrichWishlistRawgSchema>;
 
@@ -139,6 +143,89 @@ export async function enrichWishlistEntryWithRawg(input: unknown) {
         err instanceof Error
           ? err.message
           : "Failed to enrich wishlist entry with RAWG",
+    };
+  }
+}
+
+export async function fillWishlistRawgMetadata(input: unknown) {
+  try {
+    await requireUser();
+    const parsed = fillWishlistRawgSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false as const, data: null, error: "Invalid input" };
+    }
+
+    const entry = await prisma.wishlistEntry.findUnique({
+      where: { id: parsed.data.wishlistEntryId },
+      select: { id: true, name: true, type: true, metadataSnapshot: { select: { id: true } } },
+    });
+    if (!entry) {
+      return { success: false as const, data: null, error: "Wishlist entry not found" };
+    }
+    if (entry.type !== "BASE_GAME") {
+      return {
+        success: false as const,
+        data: null,
+        error: "RAWG metadata is only available for base-game wishes",
+      };
+    }
+    // Fill-only guard: an existing own snapshot must never be overwritten.
+    if (entry.metadataSnapshot) {
+      return {
+        success: false as const,
+        data: null,
+        error: "This wish already has RAWG metadata",
+      };
+    }
+
+    const result = await matchRawgGame({ title: entry.name });
+
+    if (result.outcome === "AMBIGUOUS") {
+      return {
+        success: false as const,
+        data: null,
+        error: "Several RAWG games share this title. Use Edit to search and choose a match.",
+      };
+    }
+    if (result.outcome === "NOT_FOUND") {
+      return {
+        success: false as const,
+        data: null,
+        error: "No RAWG match was found for this title. Use Edit to search and choose a match.",
+      };
+    }
+    if (result.outcome !== "MATCHED") {
+      return {
+        success: false as const,
+        data: null,
+        error: result.error.message,
+      };
+    }
+
+    const fetchedAt = new Date();
+    const storeLink = await resolveWishlistStoreLink(result.game);
+    const payload = toWishlistMetadataPayload(result.game, fetchedAt, storeLink);
+    await prisma.wishlistMetadataSnapshot.create({
+      data: {
+        wishlistEntryId: entry.id,
+        provider: "RAWG",
+        payload: payload as unknown as Prisma.InputJsonValue,
+        sourceUrl: result.game.rawgUrl,
+        fetchedAt,
+      },
+    });
+
+    return {
+      success: true as const,
+      data: { rawgId: result.game.id },
+      error: null,
+    };
+  } catch (err) {
+    return {
+      success: false as const,
+      data: null,
+      error:
+        err instanceof Error ? err.message : "Failed to load RAWG metadata for this wish",
     };
   }
 }

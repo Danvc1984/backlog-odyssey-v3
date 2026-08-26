@@ -107,7 +107,7 @@
   - [x] 11b. **Compatibility batch queue and auto-queue** - post-RAWG
     auto-queue for compatibility jobs; global compatibility sweep from
     settings; batch progress; overlap protection
-  - [ ] 11c. **Wishlist detail** - dedicated `/wishlist/[id]` page reached from
+  - [x] 11c. **Wishlist detail** - dedicated `/wishlist/[id]` page reached from
     the wishlist card title, composing all available wish data: full RAWG
     metadata, Steam identity with provenance, offers and target price, notes,
     interest, and the edit/acquire/delete actions; a read-only compatibility
@@ -123,7 +123,7 @@
     - [x] 11c-b. **Wishlist detail page** - `/wishlist/[id]` navigation and
       composition of existing wish data, RAWG metadata, identity, offers,
       notes, interest, and existing edit/acquire/delete controls
-    - [ ] 11c-c. **Wishlist detail compatibility and enrichment controls** -
+    - [x] 11c-c. **Wishlist detail compatibility and enrichment controls** -
       read-only compatibility block, eligibility states, detail refresh, and
       fill-only RAWG enrichment without overwriting a snapshot
   - [ ] 11d. **Wishlist compatibility sweep** - parallel wishlist evidence

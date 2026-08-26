@@ -5,9 +5,14 @@ import { WishlistEntryActions } from "@/components/wishlist/WishlistEntryActions
 import { WishlistIdentity } from "@/components/wishlist/WishlistIdentity";
 import { WishlistOfferAlternatives } from "@/components/wishlist/WishlistOfferAlternatives";
 import { WishlistOfferSection } from "@/components/wishlist/WishlistOfferSection";
+import { WishlistCompatibilityBlock } from "@/components/wishlist/WishlistCompatibilityBlock";
+import { WishlistRawgFillButton } from "@/components/wishlist/WishlistRawgFillButton";
 import { MetadataSection } from "@/components/games/MetadataSection";
 import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
 import { buildEntryOfferView } from "@/lib/offer-selection";
+import { getWishlistCompatibilityEligibility } from "@/lib/wishlist-compatibility";
+import { parseAntiCheatEvidence } from "@/lib/compat-evidence";
+import { parseProtonDbSummary } from "@/lib/protondb-api";
 
 export default async function WishlistDetailPage({
   params,
@@ -30,6 +35,18 @@ export default async function WishlistDetailPage({
         targetPriceMxn: true,
         offers: {
           orderBy: [{ price: { sort: "asc", nulls: "last" } }],
+        },
+        compatSnapshots: {
+          select: {
+            provider: true,
+            result: true,
+            sourceUrl: true,
+            fetchedAt: true,
+            expiresAt: true,
+          },
+        },
+        envCompat: {
+          select: { environment: true, status: true, source: true },
         },
         baseGame: {
           select: {
@@ -70,6 +87,27 @@ export default async function WishlistDetailPage({
   const alternatives = steamStoreIsSelected
     ? offerView.alternatives
     : offerView.alternatives.filter((offer) => offer.shop !== "Steam Store");
+  const eligibility = getWishlistCompatibilityEligibility({
+    type: entry.type,
+    steamAppId: entry.steamAppId,
+    steamAppIdProvenance: entry.steamAppIdProvenance,
+  });
+  const protonDbSnapshot = entry.compatSnapshots.find(
+    (snapshot) => snapshot.provider === "PROTONDB",
+  );
+  const protonDb =
+    eligibility.eligible && protonDbSnapshot
+      ? parseProtonDbSummary(eligibility.steamAppId, protonDbSnapshot.result)
+      : null;
+  const awaySnapshot = entry.compatSnapshots.find(
+    (snapshot) => snapshot.provider === "ARE_WE_ANTICHEAT_YET",
+  );
+  const antiCheat = parseAntiCheatEvidence(awaySnapshot?.result);
+  const latestCompatAt = entry.compatSnapshots.reduce<Date | null>(
+    (latest, snapshot) =>
+      !latest || snapshot.fetchedAt > latest ? snapshot.fetchedAt : latest,
+    null,
+  );
 
   return (
     <div className="space-y-6">
@@ -138,6 +176,19 @@ export default async function WishlistDetailPage({
       />
       <WishlistOfferAlternatives alternatives={alternatives} />
 
+      <WishlistCompatibilityBlock
+        wishlistEntryId={entry.id}
+        eligibility={eligibility}
+        protonDb={protonDb ? { tier: protonDb.tier } : null}
+        antiCheat={antiCheat}
+        environments={entry.envCompat.map((row) => ({
+          environment: row.environment,
+          status: row.status,
+          source: row.source,
+        }))}
+        latestSnapshotAt={latestCompatAt}
+      />
+
       {metadata ? (
         <div className="space-y-2">
           <MetadataSection
@@ -155,6 +206,10 @@ export default async function WishlistDetailPage({
         <p className="text-sm text-muted-foreground">
           RAWG metadata is not available yet. Use Edit to search and choose a match.
         </p>
+      )}
+
+      {!entry.metadataSnapshot && entry.type === "BASE_GAME" && (
+        <WishlistRawgFillButton wishlistEntryId={entry.id} />
       )}
 
       {entry.notes && <p className="text-sm text-muted-foreground">{entry.notes}</p>}
