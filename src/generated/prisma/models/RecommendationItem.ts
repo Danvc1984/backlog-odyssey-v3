@@ -43,6 +43,7 @@ export type RecommendationItemMinAggregateOutputType = {
   wishlistEntryId: string | null
   rank: number | null
   score: number | null
+  role: $Enums.RecommendationRole | null
   createdAt: Date | null
 }
 
@@ -53,6 +54,7 @@ export type RecommendationItemMaxAggregateOutputType = {
   wishlistEntryId: string | null
   rank: number | null
   score: number | null
+  role: $Enums.RecommendationRole | null
   createdAt: Date | null
 }
 
@@ -66,6 +68,7 @@ export type RecommendationItemCountAggregateOutputType = {
   positive: number
   negative: number
   caveats: number
+  role: number
   createdAt: number
   _all: number
 }
@@ -88,6 +91,7 @@ export type RecommendationItemMinAggregateInputType = {
   wishlistEntryId?: true
   rank?: true
   score?: true
+  role?: true
   createdAt?: true
 }
 
@@ -98,6 +102,7 @@ export type RecommendationItemMaxAggregateInputType = {
   wishlistEntryId?: true
   rank?: true
   score?: true
+  role?: true
   createdAt?: true
 }
 
@@ -111,6 +116,7 @@ export type RecommendationItemCountAggregateInputType = {
   positive?: true
   negative?: true
   caveats?: true
+  role?: true
   createdAt?: true
   _all?: true
 }
@@ -211,6 +217,7 @@ export type RecommendationItemGroupByOutputType = {
   positive: runtime.JsonValue | null
   negative: runtime.JsonValue | null
   caveats: runtime.JsonValue | null
+  role: $Enums.RecommendationRole | null
   createdAt: Date
   _count: RecommendationItemCountAggregateOutputType | null
   _avg: RecommendationItemAvgAggregateOutputType | null
@@ -247,6 +254,7 @@ export type RecommendationItemWhereInput = {
   positive?: Prisma.JsonNullableFilter<"RecommendationItem">
   negative?: Prisma.JsonNullableFilter<"RecommendationItem">
   caveats?: Prisma.JsonNullableFilter<"RecommendationItem">
+  role?: Prisma.EnumRecommendationRoleNullableFilter<"RecommendationItem"> | $Enums.RecommendationRole | null
   createdAt?: Prisma.DateTimeFilter<"RecommendationItem"> | Date | string
   run?: Prisma.XOR<Prisma.RecommendationRunScalarRelationFilter, Prisma.RecommendationRunWhereInput>
   game?: Prisma.XOR<Prisma.GameNullableScalarRelationFilter, Prisma.GameWhereInput> | null
@@ -263,6 +271,7 @@ export type RecommendationItemOrderByWithRelationInput = {
   positive?: Prisma.SortOrderInput | Prisma.SortOrder
   negative?: Prisma.SortOrderInput | Prisma.SortOrder
   caveats?: Prisma.SortOrderInput | Prisma.SortOrder
+  role?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   run?: Prisma.RecommendationRunOrderByWithRelationInput
   game?: Prisma.GameOrderByWithRelationInput
@@ -282,6 +291,7 @@ export type RecommendationItemWhereUniqueInput = Prisma.AtLeast<{
   positive?: Prisma.JsonNullableFilter<"RecommendationItem">
   negative?: Prisma.JsonNullableFilter<"RecommendationItem">
   caveats?: Prisma.JsonNullableFilter<"RecommendationItem">
+  role?: Prisma.EnumRecommendationRoleNullableFilter<"RecommendationItem"> | $Enums.RecommendationRole | null
   createdAt?: Prisma.DateTimeFilter<"RecommendationItem"> | Date | string
   run?: Prisma.XOR<Prisma.RecommendationRunScalarRelationFilter, Prisma.RecommendationRunWhereInput>
   game?: Prisma.XOR<Prisma.GameNullableScalarRelationFilter, Prisma.GameWhereInput> | null
@@ -298,6 +308,7 @@ export type RecommendationItemOrderByWithAggregationInput = {
   positive?: Prisma.SortOrderInput | Prisma.SortOrder
   negative?: Prisma.SortOrderInput | Prisma.SortOrder
   caveats?: Prisma.SortOrderInput | Prisma.SortOrder
+  role?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.RecommendationItemCountOrderByAggregateInput
   _avg?: Prisma.RecommendationItemAvgOrderByAggregateInput
@@ -319,6 +330,7 @@ export type RecommendationItemScalarWhereWithAggregatesInput = {
   positive?: Prisma.JsonNullableWithAggregatesFilter<"RecommendationItem">
   negative?: Prisma.JsonNullableWithAggregatesFilter<"RecommendationItem">
   caveats?: Prisma.JsonNullableWithAggregatesFilter<"RecommendationItem">
+  role?: Prisma.EnumRecommendationRoleNullableWithAggregatesFilter<"RecommendationItem"> | $Enums.RecommendationRole | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"RecommendationItem"> | Date | string
 }
 
@@ -329,6 +341,7 @@ export type RecommendationItemCreateInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: $Enums.RecommendationRole | null
   createdAt?: Date | string
   run: Prisma.RecommendationRunCreateNestedOneWithoutItemsInput
   game?: Prisma.GameCreateNestedOneWithoutRecommendationItemsInput
@@ -345,6 +358,7 @@ export type RecommendationItemUncheckedCreateInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: $Enums.RecommendationRole | null
   createdAt?: Date | string
 }
 
@@ -355,6 +369,7 @@ export type RecommendationItemUpdateInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: Prisma.NullableEnumRecommendationRoleFieldUpdateOperationsInput | $Enums.RecommendationRole | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   run?: Prisma.RecommendationRunUpdateOneRequiredWithoutItemsNestedInput
   game?: Prisma.GameUpdateOneWithoutRecommendationItemsNestedInput
@@ -371,6 +386,7 @@ export type RecommendationItemUncheckedUpdateInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: Prisma.NullableEnumRecommendationRoleFieldUpdateOperationsInput | $Enums.RecommendationRole | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -384,6 +400,7 @@ export type RecommendationItemCreateManyInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: $Enums.RecommendationRole | null
   createdAt?: Date | string
 }
 
@@ -394,6 +411,7 @@ export type RecommendationItemUpdateManyMutationInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: Prisma.NullableEnumRecommendationRoleFieldUpdateOperationsInput | $Enums.RecommendationRole | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -407,6 +425,7 @@ export type RecommendationItemUncheckedUpdateManyInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: Prisma.NullableEnumRecommendationRoleFieldUpdateOperationsInput | $Enums.RecommendationRole | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -430,6 +449,7 @@ export type RecommendationItemCountOrderByAggregateInput = {
   positive?: Prisma.SortOrder
   negative?: Prisma.SortOrder
   caveats?: Prisma.SortOrder
+  role?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -445,6 +465,7 @@ export type RecommendationItemMaxOrderByAggregateInput = {
   wishlistEntryId?: Prisma.SortOrder
   rank?: Prisma.SortOrder
   score?: Prisma.SortOrder
+  role?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -455,6 +476,7 @@ export type RecommendationItemMinOrderByAggregateInput = {
   wishlistEntryId?: Prisma.SortOrder
   rank?: Prisma.SortOrder
   score?: Prisma.SortOrder
+  role?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -597,6 +619,10 @@ export type FloatFieldUpdateOperationsInput = {
   divide?: number
 }
 
+export type NullableEnumRecommendationRoleFieldUpdateOperationsInput = {
+  set?: $Enums.RecommendationRole | null
+}
+
 export type RecommendationItemCreateWithoutGameInput = {
   id?: string
   rank: number
@@ -604,6 +630,7 @@ export type RecommendationItemCreateWithoutGameInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: $Enums.RecommendationRole | null
   createdAt?: Date | string
   run: Prisma.RecommendationRunCreateNestedOneWithoutItemsInput
   wishlistEntry?: Prisma.WishlistEntryCreateNestedOneWithoutRecommendationItemsInput
@@ -618,6 +645,7 @@ export type RecommendationItemUncheckedCreateWithoutGameInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: $Enums.RecommendationRole | null
   createdAt?: Date | string
 }
 
@@ -660,6 +688,7 @@ export type RecommendationItemScalarWhereInput = {
   positive?: Prisma.JsonNullableFilter<"RecommendationItem">
   negative?: Prisma.JsonNullableFilter<"RecommendationItem">
   caveats?: Prisma.JsonNullableFilter<"RecommendationItem">
+  role?: Prisma.EnumRecommendationRoleNullableFilter<"RecommendationItem"> | $Enums.RecommendationRole | null
   createdAt?: Prisma.DateTimeFilter<"RecommendationItem"> | Date | string
 }
 
@@ -670,6 +699,7 @@ export type RecommendationItemCreateWithoutWishlistEntryInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: $Enums.RecommendationRole | null
   createdAt?: Date | string
   run: Prisma.RecommendationRunCreateNestedOneWithoutItemsInput
   game?: Prisma.GameCreateNestedOneWithoutRecommendationItemsInput
@@ -684,6 +714,7 @@ export type RecommendationItemUncheckedCreateWithoutWishlistEntryInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: $Enums.RecommendationRole | null
   createdAt?: Date | string
 }
 
@@ -720,6 +751,7 @@ export type RecommendationItemCreateWithoutRunInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: $Enums.RecommendationRole | null
   createdAt?: Date | string
   game?: Prisma.GameCreateNestedOneWithoutRecommendationItemsInput
   wishlistEntry?: Prisma.WishlistEntryCreateNestedOneWithoutRecommendationItemsInput
@@ -734,6 +766,7 @@ export type RecommendationItemUncheckedCreateWithoutRunInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: $Enums.RecommendationRole | null
   createdAt?: Date | string
 }
 
@@ -772,6 +805,7 @@ export type RecommendationItemCreateManyGameInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: $Enums.RecommendationRole | null
   createdAt?: Date | string
 }
 
@@ -782,6 +816,7 @@ export type RecommendationItemUpdateWithoutGameInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: Prisma.NullableEnumRecommendationRoleFieldUpdateOperationsInput | $Enums.RecommendationRole | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   run?: Prisma.RecommendationRunUpdateOneRequiredWithoutItemsNestedInput
   wishlistEntry?: Prisma.WishlistEntryUpdateOneWithoutRecommendationItemsNestedInput
@@ -796,6 +831,7 @@ export type RecommendationItemUncheckedUpdateWithoutGameInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: Prisma.NullableEnumRecommendationRoleFieldUpdateOperationsInput | $Enums.RecommendationRole | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -808,6 +844,7 @@ export type RecommendationItemUncheckedUpdateManyWithoutGameInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: Prisma.NullableEnumRecommendationRoleFieldUpdateOperationsInput | $Enums.RecommendationRole | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -820,6 +857,7 @@ export type RecommendationItemCreateManyWishlistEntryInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: $Enums.RecommendationRole | null
   createdAt?: Date | string
 }
 
@@ -830,6 +868,7 @@ export type RecommendationItemUpdateWithoutWishlistEntryInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: Prisma.NullableEnumRecommendationRoleFieldUpdateOperationsInput | $Enums.RecommendationRole | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   run?: Prisma.RecommendationRunUpdateOneRequiredWithoutItemsNestedInput
   game?: Prisma.GameUpdateOneWithoutRecommendationItemsNestedInput
@@ -844,6 +883,7 @@ export type RecommendationItemUncheckedUpdateWithoutWishlistEntryInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: Prisma.NullableEnumRecommendationRoleFieldUpdateOperationsInput | $Enums.RecommendationRole | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -856,6 +896,7 @@ export type RecommendationItemUncheckedUpdateManyWithoutWishlistEntryInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: Prisma.NullableEnumRecommendationRoleFieldUpdateOperationsInput | $Enums.RecommendationRole | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -868,6 +909,7 @@ export type RecommendationItemCreateManyRunInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: $Enums.RecommendationRole | null
   createdAt?: Date | string
 }
 
@@ -878,6 +920,7 @@ export type RecommendationItemUpdateWithoutRunInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: Prisma.NullableEnumRecommendationRoleFieldUpdateOperationsInput | $Enums.RecommendationRole | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   game?: Prisma.GameUpdateOneWithoutRecommendationItemsNestedInput
   wishlistEntry?: Prisma.WishlistEntryUpdateOneWithoutRecommendationItemsNestedInput
@@ -892,6 +935,7 @@ export type RecommendationItemUncheckedUpdateWithoutRunInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: Prisma.NullableEnumRecommendationRoleFieldUpdateOperationsInput | $Enums.RecommendationRole | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -904,6 +948,7 @@ export type RecommendationItemUncheckedUpdateManyWithoutRunInput = {
   positive?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   negative?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caveats?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  role?: Prisma.NullableEnumRecommendationRoleFieldUpdateOperationsInput | $Enums.RecommendationRole | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -919,6 +964,7 @@ export type RecommendationItemSelect<ExtArgs extends runtime.Types.Extensions.In
   positive?: boolean
   negative?: boolean
   caveats?: boolean
+  role?: boolean
   createdAt?: boolean
   run?: boolean | Prisma.RecommendationRunDefaultArgs<ExtArgs>
   game?: boolean | Prisma.RecommendationItem$gameArgs<ExtArgs>
@@ -935,6 +981,7 @@ export type RecommendationItemSelectCreateManyAndReturn<ExtArgs extends runtime.
   positive?: boolean
   negative?: boolean
   caveats?: boolean
+  role?: boolean
   createdAt?: boolean
   run?: boolean | Prisma.RecommendationRunDefaultArgs<ExtArgs>
   game?: boolean | Prisma.RecommendationItem$gameArgs<ExtArgs>
@@ -951,6 +998,7 @@ export type RecommendationItemSelectUpdateManyAndReturn<ExtArgs extends runtime.
   positive?: boolean
   negative?: boolean
   caveats?: boolean
+  role?: boolean
   createdAt?: boolean
   run?: boolean | Prisma.RecommendationRunDefaultArgs<ExtArgs>
   game?: boolean | Prisma.RecommendationItem$gameArgs<ExtArgs>
@@ -967,10 +1015,11 @@ export type RecommendationItemSelectScalar = {
   positive?: boolean
   negative?: boolean
   caveats?: boolean
+  role?: boolean
   createdAt?: boolean
 }
 
-export type RecommendationItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "runId" | "gameId" | "wishlistEntryId" | "rank" | "score" | "positive" | "negative" | "caveats" | "createdAt", ExtArgs["result"]["recommendationItem"]>
+export type RecommendationItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "runId" | "gameId" | "wishlistEntryId" | "rank" | "score" | "positive" | "negative" | "caveats" | "role" | "createdAt", ExtArgs["result"]["recommendationItem"]>
 export type RecommendationItemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   run?: boolean | Prisma.RecommendationRunDefaultArgs<ExtArgs>
   game?: boolean | Prisma.RecommendationItem$gameArgs<ExtArgs>
@@ -1004,6 +1053,7 @@ export type $RecommendationItemPayload<ExtArgs extends runtime.Types.Extensions.
     positive: runtime.JsonValue | null
     negative: runtime.JsonValue | null
     caveats: runtime.JsonValue | null
+    role: $Enums.RecommendationRole | null
     createdAt: Date
   }, ExtArgs["result"]["recommendationItem"]>
   composites: {}
@@ -1440,6 +1490,7 @@ export interface RecommendationItemFieldRefs {
   readonly positive: Prisma.FieldRef<"RecommendationItem", 'Json'>
   readonly negative: Prisma.FieldRef<"RecommendationItem", 'Json'>
   readonly caveats: Prisma.FieldRef<"RecommendationItem", 'Json'>
+  readonly role: Prisma.FieldRef<"RecommendationItem", 'RecommendationRole'>
   readonly createdAt: Prisma.FieldRef<"RecommendationItem", 'DateTime'>
 }
     

@@ -37,6 +37,12 @@ export interface BuyOffer extends OfferSelectionInput {
   historicalLow?: OfferSelectionInput["price"] | null;
 }
 
+export interface BuyDealInputs {
+  isFresh: boolean;
+  freshDiscount: number | null;
+  isKeyshop: boolean;
+}
+
 export interface BuyCandidate {
   id: string;
   name: string;
@@ -78,6 +84,17 @@ function freshDiscountPoints(offer: BuyOffer, now: Date): number {
     return 0;
   }
   return Math.min(Math.floor(discount / 10), MAX_DISCOUNT_POINTS);
+}
+
+export function getBuyDealInputs(candidate: BuyCandidate, now: Date): BuyDealInputs {
+  const selection = selectCheapestOffers(candidate.offers, now);
+  const selected = selection.selected;
+  if (!selected) return { isFresh: false, freshDiscount: null, isKeyshop: false };
+  return {
+    isFresh: !selection.isStale,
+    freshDiscount: selected.discount ?? null,
+    isKeyshop: isKeyshopOffer(selected),
+  };
 }
 
 export interface ScoredBuyCandidate {

@@ -5,7 +5,7 @@ import { recordRunExposure } from "@/actions/recommendations";
 
 interface RunExposureTrackerProps {
   runId: string;
-  items: Array<{ gameId?: string; wishlistEntryId?: string }>;
+  items: Array<{ gameId?: string; wishlistEntryId?: string; role?: string }>;
 }
 
 export function RunExposureTracker({ runId, items }: RunExposureTrackerProps) {

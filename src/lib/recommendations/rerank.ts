@@ -25,6 +25,8 @@ import { profileDimensionKeys } from "./profile";
 import { PLAY_NEXT_LIMIT, compareRankedPlay } from "./play-next";
 import { BUY_LIMIT, compareBuyTiebreak, type BuyTiebreakView } from "./buy";
 
+const PLAY_NEXT_COLD_START_LIMIT = 4;
+
 export interface TastePreference {
   dimension: RecommendationDimension;
   value: string;
@@ -296,6 +298,9 @@ export interface RerankedPlayItem {
   id: string;
   name: string;
   score: number;
+  tastePoints: number;
+  envStatus: CompatibilityStatus | null;
+  genres: string[];
   positive: ExplanationFactor[];
   negative: ExplanationFactor[];
   caveats: ExplanationCaveat[];
@@ -306,7 +311,7 @@ export function rerankPlayCandidates(
   profile: RecommendationProfilePayload,
   preferences: readonly TastePreference[],
   now: Date,
-): { items: RerankedPlayItem[]; context: RerankRunContext } {
+): { items: RerankedPlayItem[]; pool: RerankedPlayItem[]; context: RerankRunContext } {
   const mode = resolveRerankMode(profile);
   const applied: RerankAppliedFactors = { taste: 0, steam: 0, environment: 0, quality: 0 };
 
@@ -325,6 +330,7 @@ export function rerankPlayCandidates(
 
     let tasteCounted = false;
     let qualityCounted = false;
+    let tastePoints = 0;
     if (mode === "RERANKED") {
       const taste = scoreTaste({ profile, dimensionValues: candidate.dimensionValues, preferences });
       for (const factor of taste.factors) {
@@ -332,6 +338,7 @@ export function rerankPlayCandidates(
         else negative.push(factor);
       }
       score += taste.points;
+      tastePoints = taste.points;
       tasteCounted = taste.points !== 0;
 
       const quality = scoreQuality(candidate.quality);
@@ -353,14 +360,14 @@ export function rerankPlayCandidates(
     return {
       id: candidate.id,
       genres: candidate.dimensionValues.GENRE ?? [],
-      item: { id: candidate.id, name: candidate.name, score, positive, negative, caveats } as RerankedPlayItem,
+      item: { id: candidate.id, name: candidate.name, score, tastePoints, envStatus: candidate.envStatus, genres: candidate.dimensionValues.GENRE ?? [], positive, negative, caveats } as RerankedPlayItem,
     };
   });
 
   let items: RerankedPlayItem[];
   if (mode === "COLD_START") {
     const pickPool = scored.map((entry, index) => ({ index, genres: entry.genres }));
-    const picked = new Set(selectColdStartPicks(pickPool, PLAY_NEXT_LIMIT).map((pick) => pick.index));
+    const picked = new Set(selectColdStartPicks(pickPool, PLAY_NEXT_COLD_START_LIMIT).map((pick) => pick.index));
     items = scored.filter((_, index) => picked.has(index)).map((entry) => entry.item);
   } else {
     items = scored
@@ -369,7 +376,10 @@ export function rerankPlayCandidates(
       .slice(0, PLAY_NEXT_LIMIT);
   }
 
-  return { items, context: { mode, applied } };
+  const adjustedPool = mode === "COLD_START"
+    ? scored.map((entry) => entry.item)
+    : scored.map((entry) => entry.item).sort(compareRankedPlay);
+  return { items, pool: adjustedPool, context: { mode, applied } };
 }
 
 export interface RerankBuyInput {
@@ -381,11 +391,18 @@ export interface RerankBuyInput {
   dimensionValues: CandidateDimensionValues;
   quality: QualityInput;
   tiebreak: BuyTiebreakView;
+  freshDiscount: number | null;
+  isFresh: boolean;
+  isKeyshop: boolean;
 }
 
 export interface RerankedBuyItem {
   id: string;
   score: number;
+  tastePoints: number;
+  freshDiscount: number | null;
+  isFresh: boolean;
+  isKeyshop: boolean;
   positive: ExplanationFactor[];
   negative: ExplanationFactor[];
   caveats: ExplanationCaveat[];
@@ -395,7 +412,7 @@ export function rerankBuyCandidates(
   pool: readonly RerankBuyInput[],
   profile: RecommendationProfilePayload,
   preferences: readonly TastePreference[],
-): { items: RerankedBuyItem[]; context: RerankRunContext } {
+): { items: RerankedBuyItem[]; pool: RerankedBuyItem[]; context: RerankRunContext } {
   const mode = resolveRerankMode(profile);
   const applied: RerankAppliedFactors = { taste: 0, steam: 0, environment: 0, quality: 0 };
 
@@ -406,6 +423,7 @@ export function rerankBuyCandidates(
     let score = candidate.baselineScore;
     let tasteCounted = false;
     let qualityCounted = false;
+    let tastePoints = 0;
 
     if (mode === "RERANKED") {
       const taste = scoreTaste({ profile, dimensionValues: candidate.dimensionValues, preferences });
@@ -414,6 +432,7 @@ export function rerankBuyCandidates(
         else negative.push(factor);
       }
       score += taste.points;
+      tastePoints = taste.points;
       tasteCounted = taste.points !== 0;
 
       const quality = scoreQuality(candidate.quality);
@@ -433,7 +452,17 @@ export function rerankBuyCandidates(
     return {
       genres: candidate.dimensionValues.GENRE ?? [],
       tiebreak: candidate.tiebreak,
-      item: { id: candidate.id, score, positive, negative, caveats } as RerankedBuyItem,
+      item: {
+        id: candidate.id,
+        score,
+        tastePoints,
+        freshDiscount: candidate.freshDiscount,
+        isFresh: candidate.isFresh,
+        isKeyshop: candidate.isKeyshop,
+        positive,
+        negative,
+        caveats,
+      } as RerankedBuyItem,
     };
   });
 
@@ -453,5 +482,14 @@ export function rerankBuyCandidates(
       .map((entry) => entry.item);
   }
 
-  return { items, context: { mode, applied } };
+  const adjustedPool = mode === "COLD_START"
+    ? scored.map((entry) => entry.item)
+    : scored
+        .slice()
+        .sort((left, right) => {
+          if (right.item.score !== left.item.score) return right.item.score - left.item.score;
+          return compareBuyTiebreak(left.tiebreak, right.tiebreak);
+        })
+        .map((entry) => entry.item);
+  return { items, pool: adjustedPool, context: { mode, applied } };
 }

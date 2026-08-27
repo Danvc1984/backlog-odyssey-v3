@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { Prisma } from "@/generated/prisma/client";
+import { Prisma, RecommendationRole } from "@/generated/prisma/client";
 import { requireUser } from "@/lib/auth-guard";
 import { parseAntiCheatEvidence } from "@/lib/compat-evidence";
 import { prisma } from "@/lib/prisma";
@@ -10,6 +10,7 @@ import { buildCompatContext } from "@/lib/recommendations/compat-context";
 import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
 import {
   isEligibleForBuy,
+  getBuyDealInputs,
   rankAllBuyCandidates,
   type BuyCandidate,
   type BuyOffer,
@@ -25,6 +26,7 @@ import {
   type RerankPlayInput,
   type TastePreference,
 } from "@/lib/recommendations/rerank";
+import { assignBuyRoles, assignPlayRoles } from "@/lib/recommendations/roles";
 import { resolveCandidateDimensionValues } from "@/lib/recommendations/profile";
 import type {
   CompatEvidenceInput,
@@ -63,6 +65,7 @@ const recordRunExposureSchema = z.object({
   items: z.array(z.object({
     gameId: z.string().trim().min(1).optional(),
     wishlistEntryId: z.string().trim().min(1).optional(),
+    role: z.nativeEnum(RecommendationRole).optional(),
   }).strict().superRefine((value, ctx) => {
     if ([value.gameId, value.wishlistEntryId].filter(Boolean).length !== 1) {
       ctx.addIssue({ code: "custom", message: "Exactly one target is required" });
@@ -281,6 +284,23 @@ export async function updateRecommendations() {
         };
       });
       const playRerank = rerankPlayCandidates(rerankInputs, profile, preferences, now);
+      const playRoles = assignPlayRoles(
+        playRerank.pool.map((item) => ({
+          id: item.id,
+          tastePoints: item.tastePoints,
+          envStatus: item.envStatus,
+          genres: item.genres,
+        })),
+        playRerank.context.mode,
+      );
+      const playPoolById = new Map<string, (typeof playRerank.pool)[number]>();
+      for (const item of playRerank.pool) {
+        if (!playPoolById.has(item.id)) playPoolById.set(item.id, item);
+      }
+      const playItems = playRoles.assigned.flatMap((assignment) => {
+        const item = playPoolById.get(assignment.id);
+        return item ? [{ ...item, caveats: [...item.caveats, ...assignment.caveats], role: assignment.role }] : [];
+      });
 
       const { candidates: buyCandidates, wishViews } = await loadBuyCandidates(tx);
       const buyEligibleList = buyCandidates.filter(isEligibleForBuy);
@@ -309,9 +329,25 @@ export async function updateRecommendations() {
             updatedAt: buyCandidateById.get(item.id)?.updatedAt ?? now,
             id: item.id,
           },
+          ...getBuyDealInputs(buyCandidateById.get(item.id)!, now),
         };
       });
       const buyRerank = rerankBuyCandidates(buyRerankInputs, profile, preferences);
+      const buyRoles = assignBuyRoles(
+        buyRerank.pool.map((item) => ({
+          id: item.id,
+          interest: buyCandidateById.get(item.id)?.interest ?? null,
+          tastePoints: item.tastePoints,
+          isFresh: item.isFresh,
+          freshDiscount: item.freshDiscount,
+          isKeyshop: item.isKeyshop,
+        })),
+      );
+      const buyPoolById = new Map(buyRerank.pool.map((item) => [item.id, item]));
+      const buyItems = buyRoles.assigned.flatMap((assignment) => {
+        const item = buyPoolById.get(assignment.id);
+        return item ? [{ ...item, caveats: [...item.caveats, ...assignment.caveats], role: assignment.role }] : [];
+      });
 
       const context = {
         eligible: { playNext: eligible.length, buy: buyEligibleList.length },
@@ -319,15 +355,23 @@ export async function updateRecommendations() {
         prunedEvents,
         profile: { rebuiltAt: now.toISOString(), eventsConsidered: profile.evidence.eventsConsidered },
       };
-      const playContextJson = { ...context, rerank: playRerank.context } as unknown as Prisma.InputJsonValue;
-      const buyContextJson = { ...context, rerank: buyRerank.context } as unknown as Prisma.InputJsonValue;
+      const playContextJson = {
+        ...context,
+        rerank: playRerank.context,
+        roles: { batches: playRoles.batches },
+      } as unknown as Prisma.InputJsonValue;
+      const buyContextJson = {
+        ...context,
+        rerank: buyRerank.context,
+        roles: { batches: buyRoles.batches, saturation: buyRoles.saturation },
+      } as unknown as Prisma.InputJsonValue;
 
       const playNextRun = await tx.recommendationRun.create({
         data: {
           kind: "PLAY_NEXT",
           context: playContextJson,
           items: {
-            create: playRerank.items.map((item, index) => {
+            create: playItems.map((item, index) => {
               const evidence = evidenceById.get(item.id)!;
               const verdict = buildCompatContext(evidence, now);
               const positive: ExplanationFactor[] = [
@@ -337,12 +381,13 @@ export async function updateRecommendations() {
               const negative: ExplanationFactor[] = [...item.negative];
               const caveats: ExplanationCaveat[] = [...verdict.caveats, ...item.caveats];
               return {
-                gameId: item.id,
+                game: { connect: { id: item.id } },
                 rank: index + 1,
                 score: item.score,
                 positive: positive as unknown as Prisma.InputJsonValue,
                 negative: negative as unknown as Prisma.InputJsonValue,
                 caveats: caveats as unknown as Prisma.InputJsonValue,
+                role: item.role,
               };
             }),
           },
@@ -355,13 +400,14 @@ export async function updateRecommendations() {
           kind: "BUY",
           context: buyContextJson,
           items: {
-            create: buyRerank.items.map((item, index) => ({
-              wishlistEntryId: item.id,
+            create: buyItems.map((item, index) => ({
+              wishlistEntry: { connect: { id: item.id } },
               rank: index + 1,
               score: item.score,
               positive: item.positive as unknown as Prisma.InputJsonValue,
               negative: item.negative as unknown as Prisma.InputJsonValue,
               caveats: item.caveats as unknown as Prisma.InputJsonValue,
+              role: item.role,
             })),
           },
         },
@@ -371,9 +417,9 @@ export async function updateRecommendations() {
       return {
         playNextRunId: playNextRun.id,
         buyRunId: buyRun.id,
-        playNextItems: playRerank.items.length,
+        playNextItems: playItems.length,
         playNextEligible: eligible.length,
-        buyItems: buyRerank.items.length,
+        buyItems: buyItems.length,
         buyEligible: buyEligibleList.length,
         prunedRuns: pruned.count,
         prunedEvents,
@@ -445,6 +491,7 @@ export async function recordRunExposure(input: unknown) {
         kind: "EXPOSURE" as const,
         gameId: item.gameId ?? null,
         wishlistEntryId: item.wishlistEntryId ?? null,
+        ...(item.role ? { payload: { role: item.role } } : {}),
       })),
     });
     return { success: true as const, data: { count: result.count }, error: null };

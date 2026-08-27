@@ -530,6 +530,7 @@ export const RecommendationItemScalarFieldEnum = {
   positive: 'positive',
   negative: 'negative',
   caveats: 'caveats',
+  role: 'role',
   createdAt: 'createdAt'
 } as const
 

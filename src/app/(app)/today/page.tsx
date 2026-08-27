@@ -8,6 +8,21 @@ import { ColdStartNote } from "@/components/recommendations/ColdStartNote";
 import { prisma } from "@/lib/prisma";
 import { RunExposureTracker } from "@/components/recommendations/RunExposureTracker";
 
+const PLAY_ROLE_GROUPS = [
+  { label: "Best fit", roles: ["BEST_FIT_1", "BEST_FIT_2"] },
+  { label: "Out of the box", roles: ["OUT_OF_THE_BOX"] },
+  { label: "Change of pace", roles: ["CHANGE_OF_PACE"] },
+] as const;
+
+const BUY_ROLE_GROUPS = [
+  { label: "Best fit", roles: ["BEST_FIT_1", "BEST_FIT_2"] },
+  { label: "Deal", roles: ["DEAL"] },
+] as const;
+
+function hasRole(roles: readonly string[], role: string | null): boolean {
+  return role !== null && roles.includes(role);
+}
+
 export default async function TodayPage() {
   const latestPlayNextRun = await prisma.recommendationRun.findFirst({
     where: { kind: "PLAY_NEXT" },
@@ -35,6 +50,8 @@ export default async function TodayPage() {
   const buyItems = latestBuyRun?.items ?? [];
   const playContext = latestPlayNextRun?.context as { rerank?: { mode?: string } } | null | undefined;
   const coldStart = playContext?.rerank?.mode === "COLD_START";
+  const hasPlayRoles = items.some((item) => item.role !== null);
+  const hasBuyRoles = buyItems.some((item) => item.role !== null);
 
   return (
     <div className="space-y-8">
@@ -66,7 +83,7 @@ export default async function TodayPage() {
         {latestPlayNextRun && <ColdStartNote visible={coldStart} />}
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">No eligible games right now.</p>
-        ) : (
+        ) : !hasPlayRoles ? (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {items.map((item) => {
               if (!item.gameId) return null;
@@ -85,19 +102,46 @@ export default async function TodayPage() {
               );
             })}
           </div>
+        ) : (
+          <div className="space-y-5">
+            {PLAY_ROLE_GROUPS.map((group) => {
+              const groupItems = items.filter((item) => hasRole(group.roles, item.role));
+              if (groupItems.length === 0) return null;
+              return (
+                <div key={group.label}>
+                  <h3 className="mb-2 text-sm font-medium text-muted-foreground">{group.label}</h3>
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {groupItems.map((item) => item.gameId ? (
+                      <RecommendationItemCard
+                        key={item.id}
+                        target={{ kind: "PLAY_NEXT", gameId: item.gameId }}
+                        runId={latestPlayNextRun?.id}
+                        name={item.game?.name ?? "Unknown game"}
+                        rank={item.rank}
+                        score={item.score}
+                        positive={item.positive}
+                        negative={item.negative}
+                        caveats={item.caveats}
+                      />
+                    ) : null)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
       </section>
 
       {latestPlayNextRun && (
         <RunExposureTracker
           runId={latestPlayNextRun.id}
-          items={items.flatMap((item) => item.gameId ? [{ gameId: item.gameId }] : [])}
+          items={items.flatMap((item) => item.gameId ? [{ gameId: item.gameId, role: item.role ?? undefined }] : [])}
         />
       )}
       {latestBuyRun && (
         <RunExposureTracker
           runId={latestBuyRun.id}
-          items={buyItems.flatMap((item) => item.wishlistEntryId ? [{ wishlistEntryId: item.wishlistEntryId }] : [])}
+          items={buyItems.flatMap((item) => item.wishlistEntryId ? [{ wishlistEntryId: item.wishlistEntryId, role: item.role ?? undefined }] : [])}
         />
       )}
 
@@ -111,7 +155,7 @@ export default async function TodayPage() {
           </p>
         ) : buyItems.length === 0 ? (
           <p className="text-sm text-muted-foreground">No eligible wishlist purchases right now.</p>
-        ) : (
+        ) : !hasBuyRoles ? (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {buyItems.map((item) => {
               if (!item.wishlistEntryId) return null;
@@ -127,6 +171,33 @@ export default async function TodayPage() {
                   negative={item.negative}
                   caveats={item.caveats}
                 />
+              );
+            })}
+          </div>
+        ) : (
+          <div className="space-y-5">
+            {BUY_ROLE_GROUPS.map((group) => {
+              const groupItems = buyItems.filter((item) => hasRole(group.roles, item.role));
+              if (groupItems.length === 0) return null;
+              return (
+                <div key={group.label}>
+                  <h3 className="mb-2 text-sm font-medium text-muted-foreground">{group.label}</h3>
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {groupItems.map((item) => item.wishlistEntryId ? (
+                      <RecommendationItemCard
+                        key={item.id}
+                        target={{ kind: "BUY", wishlistEntryId: item.wishlistEntryId }}
+                        runId={latestBuyRun?.id}
+                        name={item.wishlistEntry?.name ?? "Unknown game"}
+                        rank={item.rank}
+                        score={item.score}
+                        positive={item.positive}
+                        negative={item.negative}
+                        caveats={item.caveats}
+                      />
+                    ) : null)}
+                  </div>
+                </div>
               );
             })}
           </div>

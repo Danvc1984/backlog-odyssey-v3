@@ -258,7 +258,7 @@ describe("updateRecommendations", () => {
     expect(transaction).not.toHaveBeenCalled();
   });
 
-  it("creates both runs in one transaction with items capped at three and full explanations", async () => {
+  it("creates both runs in one transaction with four cold-start play items and full explanations", async () => {
     const rows: CandidateRowShape[] = [
       { ...baseRow(), libraryEntry: libraryEntry({ interest: 5 }) },
     ];
@@ -276,7 +276,7 @@ describe("updateRecommendations", () => {
 
     expect(result.success).toBe(true);
     expect(result.data).toMatchObject({
-      playNextItems: 3,
+      playNextItems: 4,
       playNextEligible: 5,
       prunedRuns: 2,
     });
@@ -287,10 +287,16 @@ describe("updateRecommendations", () => {
       (call) => (call[0] as { data: { kind: string } }).data.kind === "PLAY_NEXT",
     )!;
     const items = playNextCall[0].data.items.create;
-    expect(items).toHaveLength(3);
-    expect(items.map((item: { rank: number }) => item.rank)).toEqual([1, 2, 3]);
+    expect(items).toHaveLength(4);
+    expect(items.map((item: { rank: number }) => item.rank)).toEqual([1, 2, 3, 4]);
+    expect(items.map((item: { role: string }) => item.role)).toEqual([
+      "BEST_FIT_1",
+      "BEST_FIT_2",
+      "OUT_OF_THE_BOX",
+      "CHANGE_OF_PACE",
+    ]);
     expect(items[0]).toMatchObject({
-      gameId: "game-1",
+      game: { connect: { id: "game-1" } },
       score: 50,
     });
     expect(items[0].positive).toEqual([
@@ -309,19 +315,65 @@ describe("updateRecommendations", () => {
     const result = await updateRecommendations();
 
     for (const call of runCreate.mock.calls as Array<[{ data: { context: unknown; kind: string; items?: { create: unknown[] } } }]>) {
-      expect(call[0].data.context).toEqual({
+      expect(call[0].data.context).toMatchObject({
         eligible: { playNext: 1, buy: 0 },
         prunedRuns: 2,
         prunedEvents: 0,
         profile: expect.objectContaining({ eventsConsidered: 0 }),
         rerank: { mode: "COLD_START", applied: { taste: 0, steam: 0, environment: 0, quality: 0 } },
+        roles: {
+          batches: {
+            BEST_FIT_1: [],
+            BEST_FIT_2: [],
+            CHANGE_OF_PACE: [],
+            DEAL: [],
+            OUT_OF_THE_BOX: [],
+          },
+        },
       });
+      if (call[0].data.kind === "BUY") {
+        expect(call[0].data.context).toMatchObject({
+          roles: { saturation: { saturated: false, fresh80Count: 0, eligibleCount: 0 } },
+        });
+      }
       if (call[0].data.kind === "BUY") {
         expect(call[0].data.items?.create).toEqual([]);
       }
     }
     expect(result.data).toMatchObject({ buyItems: 0, buyEligible: 0 });
     expect(rebuildRecommendationProfile).toHaveBeenCalledTimes(1);
+  });
+
+  it("persists buy roles and additive role context for a three-item run", async () => {
+    gameFindMany
+      .mockResolvedValueOnce([baseRow()])
+      .mockResolvedValueOnce([]);
+    wishlistFindMany.mockResolvedValue([
+      buyRow({ id: "wish-1", interest: 5 }),
+      buyRow({ id: "wish-2", interest: 4 }),
+      buyRow({ id: "wish-3", interest: 2, offers: [buyOffer({ discount: 50 })] }),
+    ]);
+
+    const result = await updateRecommendations();
+
+    expect(result.success).toBe(true);
+    const buyCall = runCreate.mock.calls.find(
+      (call) => (call[0] as { data: { kind: string } }).data.kind === "BUY",
+    )!;
+    const items = buyCall[0].data.items.create;
+    expect(items).toHaveLength(3);
+    expect(items.map((item: { role: string }) => item.role)).toEqual([
+      "BEST_FIT_1",
+      "BEST_FIT_2",
+      "DEAL",
+    ]);
+    expect(buyCall[0].data.context).toMatchObject({
+      eligible: { playNext: 1, buy: 3 },
+      roles: {
+        batches: expect.objectContaining({ DEAL: [] }),
+        saturation: { saturated: false, fresh80Count: 0, eligibleCount: 3 },
+      },
+    });
   });
 
   it("persists BUY items with ranks, scores, factors, and caveats from persisted offers", async () => {
@@ -365,12 +417,12 @@ describe("updateRecommendations", () => {
     const items = buyCall[0].data.items.create;
     expect(items.map((item: { rank: number }) => item.rank)).toEqual([1, 2]);
     expect(items[0]).toMatchObject({
-      wishlistEntryId: "wish-1",
+      wishlistEntry: { connect: { id: "wish-1" } },
       score: 35,
     });
     expect(items[0].positive).toContainEqual({ factor: "offer_discount", label: "50% off", points: 5 });
     expect(items[1]).toMatchObject({
-      wishlistEntryId: "wish-2",
+      wishlistEntry: { connect: { id: "wish-2" } },
       score: 8 + 6,
     });
     expect(items[1].positive).toContainEqual({ factor: "target_hit", label: "At or below target $350", points: 8 });
@@ -494,13 +546,19 @@ describe("recordRunExposure", () => {
 
     const result = await recordRunExposure({
       runId: "run-1",
-      items: [{ gameId: "game-1" }, { wishlistEntryId: "wish-1" }],
+      items: [{ gameId: "game-1", role: "BEST_FIT_1" }, { wishlistEntryId: "wish-1" }],
     });
 
     expect(result).toEqual({ success: true, data: { count: 2 }, error: null });
     expect(eventCreateMany).toHaveBeenCalledWith({
       data: [
-        { runId: "run-1", kind: "EXPOSURE", gameId: "game-1", wishlistEntryId: null },
+        {
+          runId: "run-1",
+          kind: "EXPOSURE",
+          gameId: "game-1",
+          wishlistEntryId: null,
+          payload: { role: "BEST_FIT_1" },
+        },
         { runId: "run-1", kind: "EXPOSURE", gameId: null, wishlistEntryId: "wish-1" },
       ],
     });
@@ -580,7 +638,7 @@ describe("updateRecommendations re-ranking", () => {
       (call) => (call[0] as { data: { kind: string } }).data.kind === "PLAY_NEXT",
     )!;
     const items = playNextCall[0].data.items.create;
-    expect(items.map((item: { gameId: string }) => item.gameId)).toEqual(["game-zzz", "game-aaa"]);
+    expect(items.map((item: { game: { connect: { id: string } } }) => item.game.connect.id)).toEqual(["game-zzz", "game-aaa"]);
     expect(items[0].score).toBe(45);
     expect(items[0].positive).toEqual(expect.arrayContaining([
       { factor: "taste_profile", label: "RPG affinity", points: 3 },
@@ -660,7 +718,7 @@ describe("updateRecommendations buy re-ranking", () => {
       (call) => (call[0] as { data: { kind: string } }).data.kind === "BUY",
     )!;
     const items = buyCall[0].data.items.create;
-    expect(items.map((item: { wishlistEntryId: string }) => item.wishlistEntryId)).toEqual(["wish-rpg", "wish-plain"]);
+    expect(items.map((item: { wishlistEntry: { connect: { id: string } } }) => item.wishlistEntry.connect.id)).toEqual(["wish-rpg", "wish-plain"]);
     expect(items[0].score).toBe(45);
     expect(items[0].positive).toEqual(expect.arrayContaining([
       { factor: "taste_profile", label: "RPG affinity", points: 3 },
@@ -705,7 +763,7 @@ describe("updateRecommendations buy re-ranking", () => {
       (call) => (call[0] as { data: { kind: string } }).data.kind === "BUY",
     )!;
     const items = buyCall[0].data.items.create;
-    expect(items.map((item: { wishlistEntryId: string }) => item.wishlistEntryId)).toEqual(["wish-new", "wish-old"]);
+    expect(items.map((item: { wishlistEntry: { connect: { id: string } } }) => item.wishlistEntry.connect.id)).toEqual(["wish-new", "wish-old"]);
     expect(buyCall[0].data.context).toMatchObject({ rerank: { mode: "RERANKED", applied: { taste: 0, quality: 0 } } });
   });
 

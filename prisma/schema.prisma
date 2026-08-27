@@ -102,6 +102,14 @@ enum RecommendationKind {
   BUY
 }
 
+enum RecommendationRole {
+  BEST_FIT_1
+  BEST_FIT_2
+  OUT_OF_THE_BOX
+  CHANGE_OF_PACE
+  DEAL
+}
+
 enum RecommendationEventKind {
   EXPOSURE
   ROTATION
@@ -674,6 +682,7 @@ model RecommendationItem {
   positive        Json?
   negative        Json?
   caveats         Json?
+  role            RecommendationRole?
   createdAt       DateTime @default(now())
 
   run           RecommendationRun @relation(fields: [runId], references: [id], onDelete: Cascade)

@@ -30,7 +30,8 @@ export type ExplanationFactorKey =
   | "steam_recent"
   | "environment_fit"
   | "quality"
-  | "limited_basis";
+  | "limited_basis"
+  | "role_fallback";
 
 export const RERANK_TASTE_CLAMP = 3;
 export const RERANK_TASTE_TOTAL_CAP = 12;

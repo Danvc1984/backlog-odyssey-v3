@@ -770,6 +770,13 @@ export type FloatFilter<$PrismaModel = never> = {
   not?: Prisma.NestedFloatFilter<$PrismaModel> | number
 }
 
+export type EnumRecommendationRoleNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.RecommendationRole | Prisma.EnumRecommendationRoleFieldRefInput<$PrismaModel> | null
+  in?: $Enums.RecommendationRole[] | Prisma.ListEnumRecommendationRoleFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.RecommendationRole[] | Prisma.ListEnumRecommendationRoleFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumRecommendationRoleNullableFilter<$PrismaModel> | $Enums.RecommendationRole | null
+}
+
 export type FloatWithAggregatesFilter<$PrismaModel = never> = {
   equals?: number | Prisma.FloatFieldRefInput<$PrismaModel>
   in?: number[] | Prisma.ListFloatFieldRefInput<$PrismaModel>
@@ -784,6 +791,16 @@ export type FloatWithAggregatesFilter<$PrismaModel = never> = {
   _sum?: Prisma.NestedFloatFilter<$PrismaModel>
   _min?: Prisma.NestedFloatFilter<$PrismaModel>
   _max?: Prisma.NestedFloatFilter<$PrismaModel>
+}
+
+export type EnumRecommendationRoleNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.RecommendationRole | Prisma.EnumRecommendationRoleFieldRefInput<$PrismaModel> | null
+  in?: $Enums.RecommendationRole[] | Prisma.ListEnumRecommendationRoleFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.RecommendationRole[] | Prisma.ListEnumRecommendationRoleFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumRecommendationRoleNullableWithAggregatesFilter<$PrismaModel> | $Enums.RecommendationRole | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumRecommendationRoleNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumRecommendationRoleNullableFilter<$PrismaModel>
 }
 
 export type EnumRecommendationEventKindFilter<$PrismaModel = never> = {
@@ -1564,6 +1581,13 @@ export type NestedEnumRecommendationKindWithAggregatesFilter<$PrismaModel = neve
   _max?: Prisma.NestedEnumRecommendationKindFilter<$PrismaModel>
 }
 
+export type NestedEnumRecommendationRoleNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.RecommendationRole | Prisma.EnumRecommendationRoleFieldRefInput<$PrismaModel> | null
+  in?: $Enums.RecommendationRole[] | Prisma.ListEnumRecommendationRoleFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.RecommendationRole[] | Prisma.ListEnumRecommendationRoleFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumRecommendationRoleNullableFilter<$PrismaModel> | $Enums.RecommendationRole | null
+}
+
 export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
   equals?: number | Prisma.FloatFieldRefInput<$PrismaModel>
   in?: number[] | Prisma.ListFloatFieldRefInput<$PrismaModel>
@@ -1578,6 +1602,16 @@ export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
   _sum?: Prisma.NestedFloatFilter<$PrismaModel>
   _min?: Prisma.NestedFloatFilter<$PrismaModel>
   _max?: Prisma.NestedFloatFilter<$PrismaModel>
+}
+
+export type NestedEnumRecommendationRoleNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.RecommendationRole | Prisma.EnumRecommendationRoleFieldRefInput<$PrismaModel> | null
+  in?: $Enums.RecommendationRole[] | Prisma.ListEnumRecommendationRoleFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.RecommendationRole[] | Prisma.ListEnumRecommendationRoleFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumRecommendationRoleNullableWithAggregatesFilter<$PrismaModel> | $Enums.RecommendationRole | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumRecommendationRoleNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumRecommendationRoleNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumRecommendationEventKindFilter<$PrismaModel = never> = {

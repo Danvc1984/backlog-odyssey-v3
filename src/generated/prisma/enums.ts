@@ -137,6 +137,17 @@ export const RecommendationKind = {
 export type RecommendationKind = (typeof RecommendationKind)[keyof typeof RecommendationKind]
 
 
+export const RecommendationRole = {
+  BEST_FIT_1: 'BEST_FIT_1',
+  BEST_FIT_2: 'BEST_FIT_2',
+  OUT_OF_THE_BOX: 'OUT_OF_THE_BOX',
+  CHANGE_OF_PACE: 'CHANGE_OF_PACE',
+  DEAL: 'DEAL'
+} as const
+
+export type RecommendationRole = (typeof RecommendationRole)[keyof typeof RecommendationRole]
+
+
 export const RecommendationEventKind = {
   EXPOSURE: 'EXPOSURE',
   ROTATION: 'ROTATION',

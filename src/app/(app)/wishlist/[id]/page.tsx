@@ -15,6 +15,7 @@ import { getWishlistCompatibilityEligibility } from "@/lib/wishlist-compatibilit
 import { parseAntiCheatEvidence } from "@/lib/compat-evidence";
 import { parseProtonDbSummary } from "@/lib/protondb-api";
 import { GAME_EXPERIENCE_LABELS } from "@/lib/personal-field-help";
+import { RecommendationRoleLabel } from "@/components/recommendations/RecommendationRoleLabel";
 
 export default async function WishlistDetailPage({
   params,
@@ -204,6 +205,7 @@ export default async function WishlistDetailPage({
           <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
             Buy recommendation
           </h2>
+          <RecommendationRoleLabel role={buyItem.role} kind="BUY" />
           <RecommendationItemCard
             target={{ kind: "BUY", wishlistEntryId: entry.id }}
             runId={latestBuyRun?.id}
