@@ -1,5 +1,6 @@
-# Nothing in progress
+# Feature: (none)
 
-There is no active feature, fix, or rollback.
+**Status:** none
 
-Use `/feature`, `/fix`, or `/rollback` to begin the next work item.
+Nothing in progress. Run `/feature`, `/fix`, or `/rollback` to start the next
+work item.

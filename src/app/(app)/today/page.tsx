@@ -1,6 +1,7 @@
 import {
   RecommendationItemCard,
 } from "@/components/recommendations/RecommendationItemCard";
+import { ShowAnotherButton } from "@/components/recommendations/ShowAnotherButton";
 import {
   UpdateRecommendationsButton,
 } from "@/components/recommendations/UpdateRecommendationsButton";
@@ -111,11 +112,13 @@ export default async function TodayPage() {
                 <div key={group.label}>
                   <h3 className="mb-2 text-sm font-medium text-muted-foreground">{group.label}</h3>
                   <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    {groupItems.map((item) => item.gameId ? (
-                      <RecommendationItemCard
+                    {groupItems.map((item) => item.gameId && item.role ? (
+                      <ShowAnotherButton
                         key={item.id}
+                        runId={latestPlayNextRun?.id ?? ""}
+                        role={item.role}
+                        itemId={item.id}
                         target={{ kind: "PLAY_NEXT", gameId: item.gameId }}
-                        runId={latestPlayNextRun?.id}
                         name={item.game?.name ?? "Unknown game"}
                         rank={item.rank}
                         score={item.score}
@@ -183,11 +186,13 @@ export default async function TodayPage() {
                 <div key={group.label}>
                   <h3 className="mb-2 text-sm font-medium text-muted-foreground">{group.label}</h3>
                   <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    {groupItems.map((item) => item.wishlistEntryId ? (
-                      <RecommendationItemCard
+                    {groupItems.map((item) => item.wishlistEntryId && item.role ? (
+                      <ShowAnotherButton
                         key={item.id}
+                        runId={latestBuyRun?.id ?? ""}
+                        role={item.role}
+                        itemId={item.id}
                         target={{ kind: "BUY", wishlistEntryId: item.wishlistEntryId }}
-                        runId={latestBuyRun?.id}
                         name={item.wishlistEntry?.name ?? "Unknown game"}
                         rank={item.rank}
                         score={item.score}

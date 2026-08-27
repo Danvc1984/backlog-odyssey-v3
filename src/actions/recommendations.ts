@@ -33,11 +33,13 @@ import type {
   ExplanationCaveat,
   ExplanationFactor,
   PlayNextCandidate,
+  RotatableCandidate,
 } from "@/lib/recommendations/types";
-import { RUN_RETENTION_DAYS } from "@/lib/recommendations/types";
+import { EXPOSURE_COOLDOWN_DAYS, RUN_RETENTION_DAYS } from "@/lib/recommendations/types";
 import { logRecommendationEvent } from "@/lib/recommendations/events";
 import { pruneRecommendationEvents } from "@/lib/recommendations/events";
 import { rebuildRecommendationProfile } from "@/lib/recommendations/profile";
+import { updatePlayState } from "@/actions/game-detail";
 
 const dismissRecommendationSchema = z
   .object({
@@ -80,6 +82,17 @@ const recommendationPreferenceSchema = z.object({
 }).strict();
 
 const recommendationPreferenceIdSchema = z.object({ id: z.string().trim().min(1) }).strict();
+
+const rotateRecommendationRoleSchema = z.object({
+  runId: z.string().trim().min(1),
+  role: z.nativeEnum(RecommendationRole),
+  itemId: z.string().trim().min(1),
+}).strict();
+
+const startPlayingFromRecommendationSchema = z.object({
+  gameId: z.string().trim().min(1),
+  makeMain: z.boolean().optional(),
+}).strict();
 
 async function loadCandidates(client: Prisma.TransactionClient) {
   return client.game.findMany({
@@ -224,6 +237,45 @@ async function loadBuyCandidates(client: Prisma.TransactionClient) {
   };
 }
 
+interface SnapshotSource {
+  id: string;
+  score: number;
+  positive: ExplanationFactor[];
+  negative: ExplanationFactor[];
+  caveats: ExplanationCaveat[];
+}
+
+type BatchEntry = string | RotatableCandidate;
+
+function candidateId(entry: BatchEntry): string {
+  return typeof entry === "string" ? entry : entry.id;
+}
+
+function toRotatableCandidate(entry: BatchEntry): RotatableCandidate {
+  if (typeof entry !== "string") return entry;
+  return { id: entry, score: 0, positive: [], negative: [], caveats: [] };
+}
+
+function toSnapshotBatches(
+  batches: Record<RecommendationRole, string[]>,
+  byId: ReadonlyMap<string, SnapshotSource>,
+): Record<RecommendationRole, RotatableCandidate[]> {
+  const result = {} as Record<RecommendationRole, RotatableCandidate[]>;
+  for (const role of Object.keys(batches) as RecommendationRole[]) {
+    result[role] = (batches[role] ?? [])
+      .map((id) => byId.get(id))
+      .filter((source): source is SnapshotSource => source !== undefined)
+      .map((source) => ({
+        id: source.id,
+        score: source.score,
+        positive: source.positive,
+        negative: source.negative,
+        caveats: source.caveats,
+      }));
+  }
+  return result;
+}
+
 export async function updateRecommendations() {
   try {
     await requireUser();
@@ -358,12 +410,12 @@ export async function updateRecommendations() {
       const playContextJson = {
         ...context,
         rerank: playRerank.context,
-        roles: { batches: playRoles.batches },
+        roles: { batches: toSnapshotBatches(playRoles.batches, playPoolById) },
       } as unknown as Prisma.InputJsonValue;
       const buyContextJson = {
         ...context,
         rerank: buyRerank.context,
-        roles: { batches: buyRoles.batches, saturation: buyRoles.saturation },
+        roles: { batches: toSnapshotBatches(buyRoles.batches, buyPoolById), saturation: buyRoles.saturation },
       } as unknown as Prisma.InputJsonValue;
 
       const playNextRun = await tx.recommendationRun.create({
@@ -433,6 +485,205 @@ export async function updateRecommendations() {
       success: false as const,
       data: null,
       error: err instanceof Error ? err.message : "Failed to update recommendations",
+    };
+  }
+}
+
+export interface RotatedRecommendationItem {
+  itemId: string;
+  role: RecommendationRole;
+  gameId: string | null;
+  wishlistEntryId: string | null;
+  name: string;
+  score: number;
+  positive: ExplanationFactor[];
+  negative: ExplanationFactor[];
+  caveats: ExplanationCaveat[];
+}
+
+export async function rotateRecommendationRole(input: unknown) {
+  try {
+    await requireUser();
+    const parsed = rotateRecommendationRoleSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false as const, data: null, error: "Invalid input" };
+    }
+
+    const { runId, role, itemId } = parsed.data;
+    const run = await prisma.recommendationRun.findUnique({
+      where: { id: runId },
+      select: { id: true, kind: true, context: true },
+    });
+    if (!run) {
+      return { success: false as const, data: null, error: "Run not found" };
+    }
+    const isPlay = run.kind === "PLAY_NEXT";
+
+    const context = run.context as
+      | { roles?: { batches?: Partial<Record<RecommendationRole, BatchEntry[]>> } }
+      | null;
+    const rawBatch = (context?.roles?.batches ?? {})[role] ?? [];
+    if (rawBatch.length === 0) {
+      return { success: true as const, data: { rotated: false, item: null }, error: null };
+    }
+    const batch = rawBatch.map(toRotatableCandidate);
+    const batchIds = batch.map((candidate) => candidate.id).filter((id): id is string => Boolean(id));
+    if (batchIds.length === 0) {
+      return { success: true as const, data: { rotated: false, item: null }, error: null };
+    }
+
+    const item = await prisma.recommendationItem.findFirst({
+      where: { id: itemId, runId, role },
+      select: { id: true, gameId: true, wishlistEntryId: true },
+    });
+    if (!item) {
+      return { success: false as const, data: null, error: "Recommendation item not found" };
+    }
+
+    const cooldownCutoff = new Date(Date.now() - EXPOSURE_COOLDOWN_DAYS * 24 * 60 * 60 * 1000);
+    const recentExcluded = new Set<string>();
+    const recentEvents = await prisma.recommendationEvent.findMany({
+      where: {
+        kind: "EXPOSURE",
+        createdAt: { gte: cooldownCutoff },
+        ...(isPlay ? { gameId: { in: batchIds } } : { wishlistEntryId: { in: batchIds } }),
+      },
+      select: { gameId: true, wishlistEntryId: true },
+    });
+    for (const event of recentEvents) {
+      const id = isPlay ? event.gameId : event.wishlistEntryId;
+      if (id) recentExcluded.add(id);
+    }
+
+    const picked = batch.find((candidate) => !recentExcluded.has(candidate.id)) ?? null;
+    if (!picked) {
+      return { success: true as const, data: { rotated: false, item: null }, error: null };
+    }
+
+    const swapped = await prisma.recommendationItem.updateMany({
+      where: { id: itemId, runId, role },
+      data: {
+        ...(isPlay ? { gameId: picked.id, wishlistEntryId: null } : { gameId: null, wishlistEntryId: picked.id }),
+        score: picked.score,
+        positive: picked.positive as unknown as Prisma.InputJsonValue,
+        negative: picked.negative as unknown as Prisma.InputJsonValue,
+        caveats: picked.caveats as unknown as Prisma.InputJsonValue,
+      },
+    });
+    if (swapped.count === 0) {
+      return { success: false as const, data: null, error: "Recommendation changed concurrently" };
+    }
+
+    const sources = context?.roles?.batches ?? {};
+    const nextBatches: Partial<Record<RecommendationRole, BatchEntry[]>> = {};
+    for (const key of Object.keys(sources) as RecommendationRole[]) {
+      nextBatches[key] = (sources[key] ?? []).filter((entry) => candidateId(entry) !== picked.id);
+    }
+    const nextContext = {
+      ...(context ?? {}),
+      roles: { ...(context?.roles ?? {}), batches: nextBatches },
+    };
+    await prisma.recommendationRun.update({
+      where: { id: runId },
+      data: { context: nextContext as unknown as Prisma.InputJsonValue },
+    });
+
+    try {
+      await logRecommendationEvent(prisma, {
+        kind: "ROTATION",
+        runId,
+        ...(isPlay
+          ? { gameId: item.gameId ?? undefined }
+          : { wishlistEntryId: item.wishlistEntryId ?? undefined }),
+        payload: { role },
+      });
+    } catch {
+      // Event telemetry must not make a successful rotation fail.
+    }
+    try {
+      await logRecommendationEvent(prisma, {
+        kind: "EXPOSURE",
+        runId,
+        ...(isPlay ? { gameId: picked.id } : { wishlistEntryId: picked.id }),
+        payload: { role },
+      });
+    } catch {
+      // Event telemetry must not make a successful rotation fail.
+    }
+
+    const name = isPlay
+      ? (await prisma.game.findUnique({ where: { id: picked.id }, select: { name: true } }))?.name
+      : (await prisma.wishlistEntry.findUnique({ where: { id: picked.id }, select: { name: true } }))?.name;
+
+    const rotatedItem: RotatedRecommendationItem = {
+      itemId,
+      role,
+      gameId: isPlay ? picked.id : null,
+      wishlistEntryId: isPlay ? null : picked.id,
+      name: name ?? "Unknown",
+      score: picked.score,
+      positive: picked.positive,
+      negative: picked.negative,
+      caveats: picked.caveats,
+    };
+    return { success: true as const, data: { rotated: true, item: rotatedItem }, error: null };
+  } catch (err) {
+    return {
+      success: false as const,
+      data: null,
+      error: err instanceof Error ? err.message : "Failed to rotate recommendation",
+    };
+  }
+}
+
+export async function startPlayingFromRecommendation(input: unknown) {
+  try {
+    await requireUser();
+    const parsed = startPlayingFromRecommendationSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false as const, data: null, error: "Invalid input" };
+    }
+
+    const { gameId, makeMain } = parsed.data;
+    const entry = await prisma.libraryEntry.findFirst({
+      where: { gameId },
+      select: { playState: true },
+    });
+    if (!entry) {
+      return { success: false as const, data: null, error: "Library entry not found" };
+    }
+    if (entry.playState === "IN_PROGRESS") {
+      return { success: true as const, data: { started: true, needsMainDecision: false, inProgressGame: null }, error: null };
+    }
+
+    const current = await prisma.libraryEntry.findFirst({
+      where: { playState: "IN_PROGRESS", gameId: { not: gameId } },
+      select: { game: { select: { name: true } } },
+    });
+    if (current && makeMain === undefined) {
+      return {
+        success: true as const,
+        data: { started: false, needsMainDecision: true, inProgressGame: current.game?.name ?? null },
+        error: null,
+      };
+    }
+
+    const mainFlag = current ? (makeMain === true) : true;
+    await updatePlayState(gameId, {
+      playState: "IN_PROGRESS",
+      ...(mainFlag ? { isMainGame: true } : {}),
+    });
+
+    return {
+      success: true as const,
+      data: { started: true, needsMainDecision: false, inProgressGame: null },
+      error: null,
+    };
+  } catch (err) {
+    return {
+      success: false as const,
+      data: null,
+      error: err instanceof Error ? err.message : "Failed to start playing from recommendation",
     };
   }
 }

@@ -78,6 +78,16 @@ export interface ExplanationCaveat {
   label: string;
 }
 
+export const EXPOSURE_COOLDOWN_DAYS = 7;
+
+export interface RotatableCandidate {
+  id: string; // gameId (play runs) or wishlistEntryId (buy runs)
+  score: number;
+  positive: ExplanationFactor[];
+  negative: ExplanationFactor[];
+  caveats: ExplanationCaveat[];
+}
+
 export interface PlayNextLibraryView {
   playState: PlayState;
   priority: Priority | null;

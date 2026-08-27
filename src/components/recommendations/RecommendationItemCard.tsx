@@ -7,6 +7,7 @@ import { X } from "lucide-react";
 import { dismissRecommendation } from "@/actions/recommendations";
 import { Input } from "@/components/ui/input";
 import { caveatChip, factorChip } from "@/components/recommendations/FactorChips";
+import { StartPlayingButton } from "@/components/recommendations/StartPlayingButton";
 import type { ExplanationCaveat, ExplanationFactor } from "@/lib/recommendations/types";
 
 function asFactors(value: unknown): ExplanationFactor[] {
@@ -92,7 +93,8 @@ export function RecommendationItemCard({
           {asCaveats(caveats).map((caveat) => caveatChip(caveat))}
         </div>
       )}
-      <div className="mt-3 flex justify-end">
+      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+        {target.kind === "PLAY_NEXT" && <StartPlayingButton gameId={target.gameId} />}
         {reasonOpen ? (
           <div className="flex w-full flex-wrap items-center justify-end gap-2">
             <Input

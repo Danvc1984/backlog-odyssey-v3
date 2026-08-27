@@ -196,7 +196,7 @@
       Steam activity, environment, compatibility, quality, publisher, era,
       duration, genre/tag, and series with uncertainty safeguards, plus
       cold-start diversification labeled by its limited basis
-    - [ ] 12c-e. **Roles, batches, rotation, and deal saturation** - four play
+    - [x] 12c-e. **Roles, batches, rotation, and deal saturation** - four play
       roles (two best fit, out-of-the-box, change-of-pace) and three buy roles
       (two best fit plus one deal; one best fit plus two deals under fresh-deal
       saturation), qualified candidate batches retained in run context,
@@ -208,7 +208,7 @@
         caveats, buy fit/quality floors and the fresh-deal saturation switch,
         per-role candidate batches retained in run context, role labels on
         Today and wishlist detail, and role in the exposure payload
-      - [ ] 12c-e-b. **Show another, cooldowns, and Start-playing** - rotation
+      - [x] 12c-e-b. **Show another, cooldowns, and Start-playing** - rotation
         within a role consuming the retained batches with ROTATION events and
         item replacement, exposure cooldowns excluding recently shown
         candidates, and the explicit Start-playing action with main-game

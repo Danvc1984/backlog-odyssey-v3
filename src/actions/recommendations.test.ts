@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/auth-guard", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
+vi.mock("@/actions/game-detail", () => ({ updatePlayState: vi.fn() }));
 vi.mock("@/lib/protondb-api", () => ({
   parseProtonDbSummary: vi.fn((_appId: string, payload: unknown) => {
     const candidate = payload as { status?: string; tier?: string; confidence?: string } | null;
@@ -35,7 +36,8 @@ vi.mock("@/lib/recommendations/profile", async (importOriginal) => {
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
-import { RUN_RETENTION_DAYS } from "@/lib/recommendations/types";
+import { updatePlayState } from "@/actions/game-detail";
+import { EXPOSURE_COOLDOWN_DAYS, RUN_RETENTION_DAYS } from "@/lib/recommendations/types";
 import { logRecommendationEvent } from "@/lib/recommendations/events";
 import { rebuildRecommendationProfile } from "@/lib/recommendations/profile";
 import {
@@ -46,11 +48,21 @@ import {
   removeRecommendationPreference,
   rebuildRecommendationProfileAction,
   updateRecommendations,
+  rotateRecommendationRole,
+  startPlayingFromRecommendation,
 } from "./recommendations";
 
 const transaction = vi.fn();
 const runCreate = vi.fn();
 const runDeleteMany = vi.fn();
+const runUpdate = vi.fn();
+const runFindUnique = vi.fn();
+const itemUpdateMany = vi.fn();
+const itemFindFirst = vi.fn();
+const eventFindMany = vi.fn();
+const gameFindUnique = vi.fn();
+const wishlistFindUnique = vi.fn();
+const libraryFindFirst = vi.fn();
 const gameFindMany = vi.fn();
 const wishlistFindMany = vi.fn();
 const feedbackCreate = vi.fn();
@@ -62,6 +74,8 @@ const preferenceUpsert = vi.fn();
 const preferenceDeleteMany = vi.fn();
 const preferenceFindMany = vi.fn();
 const profileDeleteMany = vi.fn();
+
+let recentExposureEvents: Array<{ gameId: string | null; wishlistEntryId: string | null; createdAt: Date }> = [];
 
 const EMPTY_DIMENSIONS = {
   GENRE: {},
@@ -90,18 +104,36 @@ function txFactory() {
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(requireUser).mockResolvedValue({} as never);
-  transaction.mockImplementation(async (callback: (tx: ReturnType<typeof txFactory>) => unknown) =>
-    callback(txFactory()),
-  );
-  const prismaMock = prisma as unknown as Record<string, unknown>;
-  prismaMock.$transaction = transaction;
-  prismaMock.recommendationFeedback = { create: feedbackCreate };
-  prismaMock.recommendationEvent = { create: eventCreate, createMany: eventCreateMany, deleteMany: eventDeleteMany };
-  prismaMock.recommendationPreference = { upsert: preferenceUpsert, deleteMany: preferenceDeleteMany };
+transaction.mockImplementation(async (callback: (tx: ReturnType<typeof txFactory>) => unknown) =>
+      callback(txFactory()),
+    );
+    const prismaMock = prisma as unknown as Record<string, unknown>;
+    prismaMock.$transaction = transaction;
+    prismaMock.recommendationFeedback = { create: feedbackCreate };
+    prismaMock.recommendationEvent = { create: eventCreate, createMany: eventCreateMany, deleteMany: eventDeleteMany, findMany: eventFindMany };
+    prismaMock.recommendationPreference = { upsert: preferenceUpsert, deleteMany: preferenceDeleteMany };
+    prismaMock.recommendationRun = { create: runCreate, update: runUpdate, findUnique: runFindUnique, deleteMany: runDeleteMany };
+    prismaMock.recommendationItem = { findFirst: itemFindFirst, updateMany: itemUpdateMany };
+    prismaMock.libraryEntry = { findFirst: libraryFindFirst };
+    prismaMock.game = { findMany: gameFindMany, findUnique: gameFindUnique };
+    prismaMock.wishlistEntry = { findMany: wishlistFindMany, findUnique: wishlistFindUnique };
   runDeleteMany.mockResolvedValue({ count: 2 });
   runCreate.mockImplementation(async ({ data }: { data: { kind: string } }) => ({
     id: data.kind === "PLAY_NEXT" ? "run-play" : "run-buy",
   }));
+  runUpdate.mockResolvedValue({ id: "run-1" });
+  runFindUnique.mockResolvedValue(null);
+  itemUpdateMany.mockResolvedValue({ count: 1 });
+  itemFindFirst.mockResolvedValue(null);
+  eventFindMany.mockResolvedValue([]);
+  gameFindUnique.mockResolvedValue(null);
+  wishlistFindUnique.mockResolvedValue(null);
+  libraryFindFirst.mockResolvedValue(null);
+  vi.mocked(updatePlayState).mockResolvedValue({
+    success: true,
+    data: {},
+    error: null,
+  } as never);
   feedbackCreate.mockResolvedValue({ id: "feedback-1" });
   eventCreateMany.mockResolvedValue({ count: 0 });
   eventDeleteMany.mockResolvedValue({ count: 0 });
@@ -117,6 +149,10 @@ beforeEach(() => {
   profileDeleteMany.mockResolvedValue({ count: 0 });
   gameFindMany.mockResolvedValue([]);
   wishlistFindMany.mockResolvedValue([]);
+  recentExposureEvents = [];
+  eventFindMany.mockImplementation(async ({ where }: { where?: { createdAt?: { gte?: Date } } }) =>
+    recentExposureEvents.filter((event) => !where?.createdAt?.gte || event.createdAt.getTime() >= where.createdAt!.gte!.getTime()),
+  );
 });
 
 describe("recommendation preferences", () => {
@@ -459,6 +495,83 @@ describe("updateRecommendations", () => {
       (call) => (call[0] as { data: { kind: string } }).data.kind === "PLAY_NEXT",
     )!;
     expect(playNextCall[0].data.items.create).toEqual([]);
+  });
+
+  it("writes scored snapshot batches into the play context and keeps role assignment unchanged", async () => {
+    const rows: CandidateRowShape[] = [];
+    for (let index = 1; index <= 6; index += 1) {
+      rows.push({
+        ...baseRow(),
+        id: `game-${index}`,
+        name: `Game ${index}`,
+        libraryEntry: libraryEntry({ interest: index }),
+      });
+    }
+    gameFindMany.mockResolvedValue(rows);
+
+    const result = await updateRecommendations();
+
+    expect(result.success).toBe(true);
+    const playNextCall = runCreate.mock.calls.find(
+      (call) => (call[0] as { data: { kind: string } }).data.kind === "PLAY_NEXT",
+    )!;
+    const context = playNextCall[0].data.context as {
+      roles: { batches: Record<string, Array<{ id: string; score: number; positive: unknown[]; negative: unknown[]; caveats: unknown[] }>> };
+    };
+    const snapshots = context.roles.batches.BEST_FIT_1;
+    expect(snapshots).toHaveLength(2);
+    for (const snapshot of snapshots) {
+      expect(snapshot).toEqual(expect.objectContaining({
+        id: expect.any(String),
+        score: expect.any(Number),
+        positive: expect.any(Array),
+        negative: expect.any(Array),
+        caveats: expect.any(Array),
+      }));
+    }
+    expect(playNextCall[0].data.items.create.map((item: { role: string }) => item.role)).toEqual([
+      "BEST_FIT_1",
+      "BEST_FIT_2",
+      "OUT_OF_THE_BOX",
+      "CHANGE_OF_PACE",
+    ]);
+  });
+
+  it("writes scored snapshot batches into the buy context with role assignment unchanged", async () => {
+    gameFindMany
+      .mockImplementationOnce(() => Promise.resolve([]))
+      .mockImplementationOnce(() => Promise.resolve([]));
+    wishlistFindMany.mockResolvedValue([
+      buyRow({ id: "wish-1", interest: 5 }),
+      buyRow({ id: "wish-2", interest: 4 }),
+      buyRow({ id: "wish-3", interest: 3 }),
+      buyRow({ id: "wish-4", interest: 2 }),
+    ]);
+
+    const result = await updateRecommendations();
+
+    expect(result.success).toBe(true);
+    expect(result.data).toMatchObject({ buyItems: 3, buyEligible: 4 });
+    const buyCall = runCreate.mock.calls.find(
+      (call) => (call[0] as { data: { kind: string } }).data.kind === "BUY",
+    )!;
+    const context = buyCall[0].data.context as {
+      roles: { batches: Record<string, Array<{ id: string; score: number; positive: unknown[]; caveats: unknown[] }>> };
+    };
+    for (const snapshot of context.roles.batches.DEAL) {
+      expect(snapshot).toEqual(expect.objectContaining({
+        id: expect.any(String),
+        score: expect.any(Number),
+        positive: expect.any(Array),
+        negative: expect.any(Array),
+        caveats: expect.any(Array),
+      }));
+    }
+    expect(buyCall[0].data.items.create.map((item: { role: string }) => item.role)).toEqual([
+      "BEST_FIT_1",
+      "BEST_FIT_2",
+      "DEAL",
+    ]);
   });
 });
 
@@ -809,5 +922,297 @@ describe("updateRecommendations buy re-ranking", () => {
     const items = buyCall[0].data.items.create;
     expect(items[0].score).toBe(8 + 6 + 3);
     expect(items[0].positive).toContainEqual({ factor: "taste_profile", label: "RPG affinity", points: 3 });
+  });
+});
+
+describe("rotateRecommendationRole", () => {
+  function playRun(batches: Record<string, Array<{ id: string; score: number }>>) {
+    runFindUnique.mockResolvedValue({
+      id: "run-play",
+      kind: "PLAY_NEXT",
+      context: { roles: { batches } },
+    });
+  }
+
+  const DAY = 24 * 60 * 60 * 1000;
+
+  it("picks the first non-cooldown candidate in batch order and swaps the row in place", async () => {
+    playRun({
+      BEST_FIT_1: [
+        { id: "game-a", score: 30 },
+        { id: "game-b", score: 20 },
+      ],
+      BEST_FIT_2: [{ id: "game-a", score: 30 }],
+      OUT_OF_THE_BOX: [],
+      CHANGE_OF_PACE: [],
+      DEAL: [],
+    });
+    itemFindFirst.mockResolvedValue({ id: "item-1", gameId: "game-1", wishlistEntryId: null });
+    gameFindUnique.mockResolvedValue({ name: "Game B" });
+
+    const result = await rotateRecommendationRole({ runId: "run-play", role: "BEST_FIT_1", itemId: "item-1" });
+
+    expect(result.success).toBe(true);
+    expect(result.data).toMatchObject({
+      rotated: true,
+      item: { itemId: "item-1", role: "BEST_FIT_1", gameId: "game-a", name: "Game B", score: 30 },
+    });
+    expect(itemUpdateMany).toHaveBeenCalledWith({
+      where: { id: "item-1", runId: "run-play", role: "BEST_FIT_1" },
+      data: expect.objectContaining({ gameId: "game-a", wishlistEntryId: null, score: 30 }),
+    });
+  });
+
+  it("removes the swapped-in candidate from every role batch in the persisted context", async () => {
+    playRun({
+      "BEST_FIT_1": [{ id: "game-a", score: 30 }, { id: "game-x", score: 10 }],
+      "BEST_FIT_2": [{ id: "game-a", score: 30 }],
+      "CHANGE_OF_PACE": [{ id: "game-a", score: 30 }, { id: "game-y", score: 5 }],
+      "OUT_OF_THE_BOX": [],
+      "DEAL": [],
+    });
+    itemFindFirst.mockResolvedValue({ id: "item-1", gameId: "game-z", wishlistEntryId: null });
+    gameFindUnique.mockResolvedValue({ name: "Game A" });
+
+    const result = await rotateRecommendationRole({ role: "BEST_FIT_1", runId: "run-play", itemId: "item-1" });
+
+    expect(result.success).toBe(true);
+    const updateCall = runUpdate.mock.calls[0][0] as { where: { id: string }; data: { context: { roles: { batches: Record<string, Array<{ id: string }>> } } } };
+    expect(updateCall.where.id).toBe("run-play");
+    const batches = updateCall.data.context.roles.batches;
+    for (const role of Object.keys(batches)) {
+      expect(batches[role].map((candidate) => candidate.id)).not.toContain("game-a");
+    }
+  });
+
+  it("emits ROTATION for the replaced item and EXPOSURE for the replacement", async () => {
+    playRun({
+      "BEST_FIT_1": [{ id: "game-a", score: 30 }, { id: "game-b", score: 20 }],
+      "BEST_FIT_2": [], "OUT_OF_THE_BOX": [], "CHANGE_OF_PACE": [], "DEAL": [],
+    });
+    itemFindFirst.mockResolvedValue({ id: "item-1", gameId: "game-old", wishlistEntryId: null });
+    gameFindUnique.mockResolvedValue({ name: "Game A" });
+
+    await rotateRecommendationRole({ role: "BEST_FIT_1", runId: "run-play", itemId: "item-1" });
+
+    expect(logRecommendationEvent).toHaveBeenCalledWith(prisma, expect.objectContaining({
+      kind: "ROTATION", runId: "run-play", gameId: "game-old", payload: { role: "BEST_FIT_1" },
+    }));
+    expect(logRecommendationEvent).toHaveBeenCalledWith(prisma, expect.objectContaining({
+      kind: "EXPOSURE", runId: "run-play", gameId: "game-a", payload: { role: "BEST_FIT_1" },
+    }));
+  });
+
+  it("still rotates when event writes fail without blocking the swap", async () => {
+    playRun({ "BEST_FIT_1": [{ id: "game-b", score: 20 }], "BEST_FIT_2": [], "OUT_OF_THE_BOX": [], "CHANGE_OF_PACE": [], "DEAL": [] });
+    itemFindFirst.mockResolvedValue({ id: "item-1", gameId: "game-old", wishlistEntryId: null });
+    gameFindUnique.mockResolvedValue({ name: "Game B" });
+    vi.mocked(logRecommendationEvent).mockRejectedValue(new Error("event unavailable"));
+
+    const result = await rotateRecommendationRole({ role: "BEST_FIT_1", runId: "run-play", itemId: "item-1" });
+
+    expect(result.success).toBe(true);
+    expect(result.data?.rotated).toBe(true);
+    expect(itemUpdateMany).toHaveBeenCalled();
+  });
+
+  it("excludes a candidate exposed within the cooldown window and treats an old exposure as pickable", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-27T00:00:00.000Z"));
+    const now = Date.now();
+    recentExposureEvents = [
+      { gameId: "game-recent", wishlistEntryId: null, createdAt: new Date(now - 6 * DAY) },
+      { gameId: "game-old", wishlistEntryId: null, createdAt: new Date(now - (7 * DAY + 60_000)) },
+    ];
+    playRun({
+      "BEST_FIT_1": [{ id: "game-recent", score: 40 }, { id: "game-old", score: 10 }],
+      "BEST_FIT_2": [], "OUT_OF_THE_BOX": [], "CHANGE_OF_PACE": [], "DEAL": [],
+    });
+    itemFindFirst.mockResolvedValue({ id: "item-1", gameId: "-1", wishlistEntryId: null });
+    gameFindUnique.mockResolvedValue({ name: "Old" });
+
+    const result = await rotateRecommendationRole({ role: "BEST_FIT_1", runId: "run-play", itemId: "item-1" });
+
+    expect(eventFindMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ createdAt: { gte: expect.any(Date) } }),
+    }));
+    const cutoff = (eventFindMany.mock.calls[0][0] as { where: { createdAt: { gte: Date } } }).where.createdAt.gte.getTime();
+    expect(now - cutoff).toBe(EXPOSURE_COOLDOWN_DAYS * DAY);
+    expect(result.success).toBe(true);
+    expect(result.data).toMatchObject({ rotated: true, item: { gameId: "game-old" } });
+    vi.useRealTimers();
+  });
+
+  it("returns rotated false without mutating when the role batch is drained by cooldown", async () => {
+    playRun({
+      "BEST_FIT_1": [{ id: "game-a", score: 30 }],
+      "BEST_FIT_2": [], "OUT_OF_THE_BOX": [], "CHANGE_OF_PACE": [], "DEAL": [],
+    });
+    recentExposureEvents = [{ gameId: "game-a", wishlistEntryId: null, createdAt: new Date(Date.now() - 1 * DAY) }];
+    itemFindFirst.mockResolvedValue({ id: "item-1", gameId: "game-a", wishlistEntryId: null });
+
+    const result = await rotateRecommendationRole({ role: "BEST_FIT_1", runId: "run-play", itemId: "item-1" });
+
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual({ rotated: false, item: null });
+    expect(itemUpdateMany).not.toHaveBeenCalled();
+    expect(runUpdate).not.toHaveBeenCalled();
+    expect(logRecommendationEvent).not.toHaveBeenCalled();
+  });
+
+  it("returns { rotated: false } without mutating when the batch is empty", async () => {
+    playRun({
+      "BEST_FIT_1": [], "BEST_FIT_2": [], "OUT_OF_THE_BOX": [], "CHANGE_OF_PACE": [], "DEAL": [],
+    });
+
+    const result = await rotateRecommendationRole({ role: "BEST_FIT_1", runId: "run-play", itemId: "item-1" });
+
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual({ rotated: false, item: null });
+    expect(itemFindFirst).not.toHaveBeenCalled();
+    expect(runUpdate).not.toHaveBeenCalled();
+  });
+
+  it("reports an optimistic-race error when the guarded update rows is zero", async () => {
+    playRun({ "BEST_FIT_1": [{ id: "game-a", score: 30 }] });
+    itemFindFirst.mockResolvedValue({ id: "item-1", gameId: "game-old", wishlistEntryId: null });
+    itemUpdateMany.mockResolvedValueOnce({ count: 0 });
+
+    const result = await rotateRecommendationRole({ role: "BEST_FIT_1", runId: "run-play", itemId: "item-1" });
+
+    expect(result.success).toBe(false);
+    expect(result.data).toBeNull();
+    expect(runUpdate).not.toHaveBeenCalled();
+    expect(logRecommendationEvent).not.toHaveBeenCalled();
+  });
+
+  it("rotates a buy role using the wishlist target column", async () => {
+    runFindUnique.mockResolvedValue({
+      id: "run-buy",
+      kind: "BUY",
+      context: {
+        roles: {
+          batches: {
+            BEST_FIT_1: [{ id: "wish-a", score: 25 }, { id: "wish-b", score: 15 }],
+            BEST_FIT_2: [], OUT_OF_THE_BOX: [], CHANGE_OF_PACE: [], DEAL: [],
+          },
+        },
+      },
+    });
+    itemFindFirst.mockResolvedValue({ id: "item-9", gameId: null, wishlistEntryId: "wish-old" });
+    wishlistFindUnique.mockResolvedValue({ name: "Wish A" });
+
+    const result = await rotateRecommendationRole({ role: "BEST_FIT_1", runId: "run-buy", itemId: "item-9" });
+
+    expect(result.success).toBe(true);
+    expect(result.data).toMatchObject({ rotated: true, item: { wishlistEntryId: "wish-a", name: "Wish A" } });
+    expect(itemUpdateMany).toHaveBeenCalledWith({
+      where: { id: "item-9", runId: "run-buy", role: "BEST_FIT_1" },
+      data: expect.objectContaining({ gameId: null, wishlistEntryId: "wish-a", score: 25 }),
+    });
+    expect(logRecommendationEvent).toHaveBeenCalledWith(prisma, expect.objectContaining({
+      kind: "ROTATION", wishlistEntryId: "wish-old",
+    }));
+  });
+
+  it("supports legacy runs whose batches are bare ids instead of snapshots", async () => {
+    playRun({
+      "BEST_FIT_1": ["game-a", "game-b", "game-c"] as unknown as Array<{ id: string; score: number }>,
+      "BEST_FIT_2": [], "OUT_OF_THE_BOX": [], "CHANGE_OF_PACE": [], "DEAL": [],
+    });
+    itemFindFirst.mockResolvedValue({ id: "item-1", gameId: "game-old", wishlistEntryId: null });
+    gameFindUnique.mockResolvedValue({ name: "Game A" });
+
+    const result = await rotateRecommendationRole({ role: "BEST_FIT_1", runId: "run-play", itemId: "item-1" });
+
+    expect(result.success).toBe(true);
+    expect(result.data).toMatchObject({ rotated: true, item: { gameId: "game-a" } });
+    expect(itemUpdateMany).toHaveBeenCalled();
+    expect(runUpdate).toHaveBeenCalled();
+    const where = (itemUpdateMany.mock.calls[0][0] as { data: { gameId: string } }).data;
+    expect(where.gameId).toBe("game-a");
+  });
+
+  it("rejects invalid role values and missing targets", async () => {
+    expect(await rotateRecommendationRole({ runId: "run-1", role: "MAYBE", itemId: "i" })).toMatchObject({ success: false });
+    expect(await rotateRecommendationRole({ role: "BEST_FIT_1", itemId: "i" })).toMatchObject({ success: false });
+    expect(itemUpdateMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("startPlayingFromRecommendation", () => {
+  it("no-ops when the entry is already in progress", async () => {
+    libraryFindFirst.mockResolvedValue({ playState: "IN_PROGRESS" });
+
+    const result = await startPlayingFromRecommendation({ gameId: "game-1" });
+
+    expect(result.success).toBe(true);
+    expect(result.data).toMatchObject({ started: true, needsMainDecision: false });
+    expect(updatePlayState).not.toHaveBeenCalled();
+  });
+
+  it("returns needsMainDecision with the current in-progress game's name and leaves the entry untouched", async () => {
+    libraryFindFirst
+      .mockResolvedValueOnce({ playState: "NOT_STARTED" })
+      .mockResolvedValueOnce({ game: { name: "Half-Life" } });
+
+    const result = await startPlayingFromRecommendation({ gameId: "game-1" });
+
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual({ started: false, needsMainDecision: true, inProgressGame: "Half-Life" });
+    expect(updatePlayState).not.toHaveBeenCalled();
+  });
+
+  it("clears the previous main when another game is in progress and makeMain is true", async () => {
+    libraryFindFirst
+      .mockResolvedValueOnce({ playState: "NOT_STARTED" })
+      .mockResolvedValueOnce({ game: { name: "Half-Life" } });
+
+    const result = await startPlayingFromRecommendation({ gameId: "game-1", makeMain: true });
+
+    expect(result.success).toBe(true);
+    expect(updatePlayState).toHaveBeenCalledWith("game-1", { playState: "IN_PROGRESS", isMainGame: true });
+  });
+
+  it("starts without a main when another game is in progress and makeMain is false", async () => {
+    libraryFindFirst
+      .mockResolvedValueOnce({ playState: "NOT_STARTED" })
+      .mockResolvedValueOnce({ game: { name: "Half-Life" } });
+
+    const result = await startPlayingFromRecommendation({ gameId: "game-1", makeMain: false });
+
+    expect(result.success).toBe(true);
+    expect(updatePlayState).toHaveBeenCalledWith("game-1", { playState: "IN_PROGRESS" });
+  });
+
+  it("becomes main automatically when nothing else is in progress, regardless of makeMain input", async () => {
+    libraryFindFirst
+      .mockResolvedValueOnce({ playState: "NOT_STARTED" })
+      .mockResolvedValueOnce(null);
+
+    const result = await startPlayingFromRecommendation({ gameId: "game-1" });
+
+    expect(result.success).toBe(true);
+    expect(updatePlayState).toHaveBeenCalledWith("game-1", { playState: "IN_PROGRESS", isMainGame: true });
+  });
+
+  it("fails clearly when the library entry is missing", async () => {
+    libraryFindFirst.mockResolvedValue(null);
+
+    const result = await startPlayingFromRecommendation({ gameId: "missing" });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Library entry not found");
+    expect(updatePlayState).not.toHaveBeenCalled();
+  });
+
+  it("rejects malformed input without touching the database", async () => {
+    const missing = await startPlayingFromRecommendation({});
+    const badType = await startPlayingFromRecommendation({ gameId: "game-1", makeMain: "yes" });
+
+    expect(missing.success).toBe(false);
+    expect(badType.success).toBe(false);
+    expect(libraryFindFirst).not.toHaveBeenCalled();
+    expect(updatePlayState).not.toHaveBeenCalled();
   });
 });
