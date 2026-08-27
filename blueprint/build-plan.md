@@ -218,6 +218,16 @@
       posture, era, casual/mature) with named `RecommendationPreset` reuse,
       and optional post-import taste setup from five or six swappable owned
       games with `PLAYED_BEFORE` and Interest seed actions
+      - [ ] 12c-f-a. **Tune-this-run and presets** - a persisted per-engine
+        tune context (experience, length, genres/tags, sequel posture, era,
+        casual/mature) weighting the candidate pool before the baseline with
+        thin-pool explanations, named `RecommendationPreset` save/load/delete,
+        tune panels on Today, and reset coverage
+      - [ ] 12c-f-b. **Taste setup** - optional post-import flow picking five
+        or six swappable owned games with `PLAYED_BEFORE` and Interest seed
+        actions, one personal Game experience field and preferred environment
+        on seed-picked games, and `TASTE_SETUP_ANSWER` events feeding the
+        profile
   - [ ] 12d. **Calibration from dismissal counters** - adjusted interest from
     per-target dismissal counters applied in both engines (floor 0, counters
     never pruned), and calibration explanations on game and wishlist detail
