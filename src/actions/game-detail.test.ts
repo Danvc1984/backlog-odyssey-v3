@@ -2,9 +2,20 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@/lib/auth-guard", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
+vi.mock("@/lib/recommendations/events", () => ({
+  logRecommendationEvent: vi.fn(),
+  playStateTransitionKind: vi.fn((previous: string, next: string) => {
+    if (previous === next || next === "NOT_STARTED") return null;
+    if (next === "IN_PROGRESS") return "START";
+    if (next === "PLAYED_BEFORE") return "COMPLETION";
+    if (next === "ABANDONED") return "ABANDONMENT";
+    return null;
+  }),
+}));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { logRecommendationEvent } from "@/lib/recommendations/events";
 import {
   updatePersonalFields,
   addTagToGame,
@@ -255,6 +266,7 @@ describe("updatePlayState", () => {
   const mockUpdateMany = vi.fn();
   const mockTxUpdate = vi.fn();
   const mockTransaction = vi.fn();
+  const mockFindUnique = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -263,15 +275,18 @@ describe("updatePlayState", () => {
       libraryEntry: {
         update: typeof mockUpdate;
         updateMany: typeof mockUpdateMany;
+        findUnique: typeof mockFindUnique;
       };
       $transaction: typeof mockTransaction;
     }).libraryEntry = {
       update: mockUpdate,
       updateMany: mockUpdateMany,
+      findUnique: mockFindUnique,
     };
     (prisma as unknown as { $transaction: typeof mockTransaction }).$transaction =
       mockTransaction;
     mockUpdate.mockResolvedValue({});
+    mockFindUnique.mockResolvedValue({ playState: "NOT_STARTED" });
     mockTransaction.mockImplementation(
       async (
         fn: (client: {
@@ -301,6 +316,28 @@ describe("updatePlayState", () => {
       data: { playState: "IN_PROGRESS" },
     });
     expect(mockTransaction).not.toHaveBeenCalled();
+    expect(logRecommendationEvent).toHaveBeenCalledWith(prisma, { kind: "START", gameId: "game-1" });
+  });
+
+  it.each([
+    ["IN_PROGRESS", "PLAYED_BEFORE", "COMPLETION"],
+    ["IN_PROGRESS", "ABANDONED", "ABANDONMENT"],
+  ])("logs %s -> %s as %s", async (previous, next, kind) => {
+    mockFindUnique.mockResolvedValue({ playState: previous });
+    await updatePlayState("game-1", { playState: next as never });
+    expect(logRecommendationEvent).toHaveBeenCalledWith(prisma, { kind, gameId: "game-1" });
+  });
+
+  it("does not log unchanged, omitted, or reset-to-not-started states", async () => {
+    await updatePlayState("game-1", { playState: "NOT_STARTED" });
+    await updatePlayState("game-1", {});
+    expect(logRecommendationEvent).not.toHaveBeenCalled();
+  });
+
+  it("keeps the update successful when event logging fails", async () => {
+    vi.mocked(logRecommendationEvent).mockRejectedValueOnce(new Error("event unavailable"));
+    const result = await updatePlayState("game-1", { playState: "IN_PROGRESS" });
+    expect(result.success).toBe(true);
   });
 
   it("clears previous main game and sets the new one in a transaction", async () => {

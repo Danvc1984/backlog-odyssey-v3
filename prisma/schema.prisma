@@ -102,6 +102,16 @@ enum RecommendationKind {
   BUY
 }
 
+enum RecommendationEventKind {
+  EXPOSURE
+  ROTATION
+  TASTE_SETUP_ANSWER
+  START
+  COMPLETION
+  ABANDONMENT
+  DISMISSAL
+}
+
 enum SyncStatus {
   RUNNING
   SUCCESS
@@ -261,6 +271,7 @@ model Game {
   duplicatesA         PossibleDuplicate[]        @relation("DuplicatePairA")
   duplicatesB         PossibleDuplicate[]        @relation("DuplicatePairB")
   recommendationItems RecommendationItem[]
+  recommendationEvents RecommendationEvent[]
 
   @@index([baseGameId])
   @@index([origin])
@@ -463,6 +474,7 @@ model WishlistEntry {
   compatSnapshots  WishlistCompatibilitySnapshot[]
   envCompat        WishlistEnvironmentCompatibility[]
   recommendationItems RecommendationItem[]
+  recommendationEvents RecommendationEvent[]
 
   @@index([baseGameId])
   @@index([type])
@@ -629,6 +641,7 @@ model RecommendationRun {
   context   Json?
   createdAt DateTime             @default(now())
   items     RecommendationItem[]
+  events    RecommendationEvent[]
 
   @@index([kind, createdAt])
 }
@@ -661,6 +674,26 @@ model RecommendationFeedback {
 
   @@index([gameId, kind])
   @@index([wishlistEntryId, kind])
+}
+
+model RecommendationEvent {
+  id              String                  @id @default(cuid())
+  kind            RecommendationEventKind
+  gameId          String?
+  wishlistEntryId String?
+  runId           String?
+  reason          String?
+  payload         Json?
+  createdAt       DateTime                @default(now())
+
+  game          Game?             @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  wishlistEntry WishlistEntry?    @relation(fields: [wishlistEntryId], references: [id], onDelete: Cascade)
+  run           RecommendationRun? @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([kind, createdAt])
+  @@index([gameId, kind])
+  @@index([wishlistEntryId, kind])
+  @@index([runId])
 }
 
 // ---------------------------------------------------------------------------

@@ -174,7 +174,7 @@
       nullable personal field on `LibraryEntry` and `WishlistEntry`, editable
       on game detail and wishlist edit, read-only on wishlist detail, and
       concise visible field help on the personal-field surfaces
-    - [ ] 12c-b. **Recommendation events, retention, and reset** - append-only
+    - [x] 12c-b. **Recommendation events, retention, and reset** - append-only
       `RecommendationEvent` log (exposure, rotation, taste-setup answers,
       starts, completions, abandonment, dismissals, optional reasons),
       time-bounded retention by event kind (90 days / 12 months / 24 months),

@@ -171,6 +171,7 @@ export type RecommendationRunWhereInput = {
   context?: Prisma.JsonNullableFilter<"RecommendationRun">
   createdAt?: Prisma.DateTimeFilter<"RecommendationRun"> | Date | string
   items?: Prisma.RecommendationItemListRelationFilter
+  events?: Prisma.RecommendationEventListRelationFilter
 }
 
 export type RecommendationRunOrderByWithRelationInput = {
@@ -179,6 +180,7 @@ export type RecommendationRunOrderByWithRelationInput = {
   context?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   items?: Prisma.RecommendationItemOrderByRelationAggregateInput
+  events?: Prisma.RecommendationEventOrderByRelationAggregateInput
 }
 
 export type RecommendationRunWhereUniqueInput = Prisma.AtLeast<{
@@ -190,6 +192,7 @@ export type RecommendationRunWhereUniqueInput = Prisma.AtLeast<{
   context?: Prisma.JsonNullableFilter<"RecommendationRun">
   createdAt?: Prisma.DateTimeFilter<"RecommendationRun"> | Date | string
   items?: Prisma.RecommendationItemListRelationFilter
+  events?: Prisma.RecommendationEventListRelationFilter
 }, "id">
 
 export type RecommendationRunOrderByWithAggregationInput = {
@@ -218,6 +221,7 @@ export type RecommendationRunCreateInput = {
   context?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   items?: Prisma.RecommendationItemCreateNestedManyWithoutRunInput
+  events?: Prisma.RecommendationEventCreateNestedManyWithoutRunInput
 }
 
 export type RecommendationRunUncheckedCreateInput = {
@@ -226,6 +230,7 @@ export type RecommendationRunUncheckedCreateInput = {
   context?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   items?: Prisma.RecommendationItemUncheckedCreateNestedManyWithoutRunInput
+  events?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutRunInput
 }
 
 export type RecommendationRunUpdateInput = {
@@ -234,6 +239,7 @@ export type RecommendationRunUpdateInput = {
   context?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   items?: Prisma.RecommendationItemUpdateManyWithoutRunNestedInput
+  events?: Prisma.RecommendationEventUpdateManyWithoutRunNestedInput
 }
 
 export type RecommendationRunUncheckedUpdateInput = {
@@ -242,6 +248,7 @@ export type RecommendationRunUncheckedUpdateInput = {
   context?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   items?: Prisma.RecommendationItemUncheckedUpdateManyWithoutRunNestedInput
+  events?: Prisma.RecommendationEventUncheckedUpdateManyWithoutRunNestedInput
 }
 
 export type RecommendationRunCreateManyInput = {
@@ -289,6 +296,11 @@ export type RecommendationRunScalarRelationFilter = {
   isNot?: Prisma.RecommendationRunWhereInput
 }
 
+export type RecommendationRunNullableScalarRelationFilter = {
+  is?: Prisma.RecommendationRunWhereInput | null
+  isNot?: Prisma.RecommendationRunWhereInput | null
+}
+
 export type EnumRecommendationKindFieldUpdateOperationsInput = {
   set?: $Enums.RecommendationKind
 }
@@ -307,11 +319,28 @@ export type RecommendationRunUpdateOneRequiredWithoutItemsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.RecommendationRunUpdateToOneWithWhereWithoutItemsInput, Prisma.RecommendationRunUpdateWithoutItemsInput>, Prisma.RecommendationRunUncheckedUpdateWithoutItemsInput>
 }
 
+export type RecommendationRunCreateNestedOneWithoutEventsInput = {
+  create?: Prisma.XOR<Prisma.RecommendationRunCreateWithoutEventsInput, Prisma.RecommendationRunUncheckedCreateWithoutEventsInput>
+  connectOrCreate?: Prisma.RecommendationRunCreateOrConnectWithoutEventsInput
+  connect?: Prisma.RecommendationRunWhereUniqueInput
+}
+
+export type RecommendationRunUpdateOneWithoutEventsNestedInput = {
+  create?: Prisma.XOR<Prisma.RecommendationRunCreateWithoutEventsInput, Prisma.RecommendationRunUncheckedCreateWithoutEventsInput>
+  connectOrCreate?: Prisma.RecommendationRunCreateOrConnectWithoutEventsInput
+  upsert?: Prisma.RecommendationRunUpsertWithoutEventsInput
+  disconnect?: Prisma.RecommendationRunWhereInput | boolean
+  delete?: Prisma.RecommendationRunWhereInput | boolean
+  connect?: Prisma.RecommendationRunWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.RecommendationRunUpdateToOneWithWhereWithoutEventsInput, Prisma.RecommendationRunUpdateWithoutEventsInput>, Prisma.RecommendationRunUncheckedUpdateWithoutEventsInput>
+}
+
 export type RecommendationRunCreateWithoutItemsInput = {
   id?: string
   kind: $Enums.RecommendationKind
   context?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
+  events?: Prisma.RecommendationEventCreateNestedManyWithoutRunInput
 }
 
 export type RecommendationRunUncheckedCreateWithoutItemsInput = {
@@ -319,6 +348,7 @@ export type RecommendationRunUncheckedCreateWithoutItemsInput = {
   kind: $Enums.RecommendationKind
   context?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
+  events?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutRunInput
 }
 
 export type RecommendationRunCreateOrConnectWithoutItemsInput = {
@@ -342,6 +372,7 @@ export type RecommendationRunUpdateWithoutItemsInput = {
   kind?: Prisma.EnumRecommendationKindFieldUpdateOperationsInput | $Enums.RecommendationKind
   context?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  events?: Prisma.RecommendationEventUpdateManyWithoutRunNestedInput
 }
 
 export type RecommendationRunUncheckedUpdateWithoutItemsInput = {
@@ -349,6 +380,55 @@ export type RecommendationRunUncheckedUpdateWithoutItemsInput = {
   kind?: Prisma.EnumRecommendationKindFieldUpdateOperationsInput | $Enums.RecommendationKind
   context?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  events?: Prisma.RecommendationEventUncheckedUpdateManyWithoutRunNestedInput
+}
+
+export type RecommendationRunCreateWithoutEventsInput = {
+  id?: string
+  kind: $Enums.RecommendationKind
+  context?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  items?: Prisma.RecommendationItemCreateNestedManyWithoutRunInput
+}
+
+export type RecommendationRunUncheckedCreateWithoutEventsInput = {
+  id?: string
+  kind: $Enums.RecommendationKind
+  context?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  items?: Prisma.RecommendationItemUncheckedCreateNestedManyWithoutRunInput
+}
+
+export type RecommendationRunCreateOrConnectWithoutEventsInput = {
+  where: Prisma.RecommendationRunWhereUniqueInput
+  create: Prisma.XOR<Prisma.RecommendationRunCreateWithoutEventsInput, Prisma.RecommendationRunUncheckedCreateWithoutEventsInput>
+}
+
+export type RecommendationRunUpsertWithoutEventsInput = {
+  update: Prisma.XOR<Prisma.RecommendationRunUpdateWithoutEventsInput, Prisma.RecommendationRunUncheckedUpdateWithoutEventsInput>
+  create: Prisma.XOR<Prisma.RecommendationRunCreateWithoutEventsInput, Prisma.RecommendationRunUncheckedCreateWithoutEventsInput>
+  where?: Prisma.RecommendationRunWhereInput
+}
+
+export type RecommendationRunUpdateToOneWithWhereWithoutEventsInput = {
+  where?: Prisma.RecommendationRunWhereInput
+  data: Prisma.XOR<Prisma.RecommendationRunUpdateWithoutEventsInput, Prisma.RecommendationRunUncheckedUpdateWithoutEventsInput>
+}
+
+export type RecommendationRunUpdateWithoutEventsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumRecommendationKindFieldUpdateOperationsInput | $Enums.RecommendationKind
+  context?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  items?: Prisma.RecommendationItemUpdateManyWithoutRunNestedInput
+}
+
+export type RecommendationRunUncheckedUpdateWithoutEventsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumRecommendationKindFieldUpdateOperationsInput | $Enums.RecommendationKind
+  context?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  items?: Prisma.RecommendationItemUncheckedUpdateManyWithoutRunNestedInput
 }
 
 
@@ -358,10 +438,12 @@ export type RecommendationRunUncheckedUpdateWithoutItemsInput = {
 
 export type RecommendationRunCountOutputType = {
   items: number
+  events: number
 }
 
 export type RecommendationRunCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   items?: boolean | RecommendationRunCountOutputTypeCountItemsArgs
+  events?: boolean | RecommendationRunCountOutputTypeCountEventsArgs
 }
 
 /**
@@ -381,6 +463,13 @@ export type RecommendationRunCountOutputTypeCountItemsArgs<ExtArgs extends runti
   where?: Prisma.RecommendationItemWhereInput
 }
 
+/**
+ * RecommendationRunCountOutputType without action
+ */
+export type RecommendationRunCountOutputTypeCountEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RecommendationEventWhereInput
+}
+
 
 export type RecommendationRunSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -388,6 +477,7 @@ export type RecommendationRunSelect<ExtArgs extends runtime.Types.Extensions.Int
   context?: boolean
   createdAt?: boolean
   items?: boolean | Prisma.RecommendationRun$itemsArgs<ExtArgs>
+  events?: boolean | Prisma.RecommendationRun$eventsArgs<ExtArgs>
   _count?: boolean | Prisma.RecommendationRunCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["recommendationRun"]>
 
@@ -415,6 +505,7 @@ export type RecommendationRunSelectScalar = {
 export type RecommendationRunOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "kind" | "context" | "createdAt", ExtArgs["result"]["recommendationRun"]>
 export type RecommendationRunInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   items?: boolean | Prisma.RecommendationRun$itemsArgs<ExtArgs>
+  events?: boolean | Prisma.RecommendationRun$eventsArgs<ExtArgs>
   _count?: boolean | Prisma.RecommendationRunCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type RecommendationRunIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -424,6 +515,7 @@ export type $RecommendationRunPayload<ExtArgs extends runtime.Types.Extensions.I
   name: "RecommendationRun"
   objects: {
     items: Prisma.$RecommendationItemPayload<ExtArgs>[]
+    events: Prisma.$RecommendationEventPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -825,6 +917,7 @@ readonly fields: RecommendationRunFieldRefs;
 export interface Prisma__RecommendationRunClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   items<T extends Prisma.RecommendationRun$itemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.RecommendationRun$itemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RecommendationItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  events<T extends Prisma.RecommendationRun$eventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.RecommendationRun$eventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RecommendationEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1272,6 +1365,30 @@ export type RecommendationRun$itemsArgs<ExtArgs extends runtime.Types.Extensions
   take?: number
   skip?: number
   distinct?: Prisma.RecommendationItemScalarFieldEnum | Prisma.RecommendationItemScalarFieldEnum[]
+}
+
+/**
+ * RecommendationRun.events
+ */
+export type RecommendationRun$eventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RecommendationEvent
+   */
+  select?: Prisma.RecommendationEventSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the RecommendationEvent
+   */
+  omit?: Prisma.RecommendationEventOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RecommendationEventInclude<ExtArgs> | null
+  where?: Prisma.RecommendationEventWhereInput
+  orderBy?: Prisma.RecommendationEventOrderByWithRelationInput | Prisma.RecommendationEventOrderByWithRelationInput[]
+  cursor?: Prisma.RecommendationEventWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RecommendationEventScalarFieldEnum | Prisma.RecommendationEventScalarFieldEnum[]
 }
 
 /**

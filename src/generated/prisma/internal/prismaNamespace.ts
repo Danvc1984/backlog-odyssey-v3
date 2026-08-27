@@ -429,6 +429,7 @@ export const ModelName = {
   RecommendationRun: 'RecommendationRun',
   RecommendationItem: 'RecommendationItem',
   RecommendationFeedback: 'RecommendationFeedback',
+  RecommendationEvent: 'RecommendationEvent',
   WallpaperState: 'WallpaperState',
   SyncRun: 'SyncRun',
   CatalogOperation: 'CatalogOperation'
@@ -447,7 +448,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "account" | "session" | "appSettings" | "steamConnection" | "game" | "unresolvedSteamDlc" | "wishlistImportReview" | "wishlistImportIgnore" | "externalGameId" | "metadataSnapshot" | "enrichmentJob" | "personalTag" | "gameTag" | "collection" | "collectionMembership" | "libraryEntry" | "gameAvailability" | "wishlistEntry" | "wishlistMetadataSnapshot" | "dealOffer" | "itadIdentity" | "priceRefresh" | "wishlistCompatSweep" | "compatibilitySnapshot" | "environmentCompatibility" | "wishlistCompatibilitySnapshot" | "wishlistEnvironmentCompatibility" | "possibleDuplicate" | "recommendationRun" | "recommendationItem" | "recommendationFeedback" | "wallpaperState" | "syncRun" | "catalogOperation"
+    modelProps: "user" | "account" | "session" | "appSettings" | "steamConnection" | "game" | "unresolvedSteamDlc" | "wishlistImportReview" | "wishlistImportIgnore" | "externalGameId" | "metadataSnapshot" | "enrichmentJob" | "personalTag" | "gameTag" | "collection" | "collectionMembership" | "libraryEntry" | "gameAvailability" | "wishlistEntry" | "wishlistMetadataSnapshot" | "dealOffer" | "itadIdentity" | "priceRefresh" | "wishlistCompatSweep" | "compatibilitySnapshot" | "environmentCompatibility" | "wishlistCompatibilitySnapshot" | "wishlistEnvironmentCompatibility" | "possibleDuplicate" | "recommendationRun" | "recommendationItem" | "recommendationFeedback" | "recommendationEvent" | "wallpaperState" | "syncRun" | "catalogOperation"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2819,6 +2820,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    RecommendationEvent: {
+      payload: Prisma.$RecommendationEventPayload<ExtArgs>
+      fields: Prisma.RecommendationEventFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.RecommendationEventFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationEventPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.RecommendationEventFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationEventPayload>
+        }
+        findFirst: {
+          args: Prisma.RecommendationEventFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationEventPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.RecommendationEventFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationEventPayload>
+        }
+        findMany: {
+          args: Prisma.RecommendationEventFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationEventPayload>[]
+        }
+        create: {
+          args: Prisma.RecommendationEventCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationEventPayload>
+        }
+        createMany: {
+          args: Prisma.RecommendationEventCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.RecommendationEventCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationEventPayload>[]
+        }
+        delete: {
+          args: Prisma.RecommendationEventDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationEventPayload>
+        }
+        update: {
+          args: Prisma.RecommendationEventUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationEventPayload>
+        }
+        deleteMany: {
+          args: Prisma.RecommendationEventDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.RecommendationEventUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.RecommendationEventUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationEventPayload>[]
+        }
+        upsert: {
+          args: Prisma.RecommendationEventUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationEventPayload>
+        }
+        aggregate: {
+          args: Prisma.RecommendationEventAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateRecommendationEvent>
+        }
+        groupBy: {
+          args: Prisma.RecommendationEventGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RecommendationEventGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.RecommendationEventCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RecommendationEventCountAggregateOutputType> | number
+        }
+      }
+    }
     WallpaperState: {
       payload: Prisma.$WallpaperStatePayload<ExtArgs>
       fields: Prisma.WallpaperStateFieldRefs
@@ -3520,6 +3595,20 @@ export const RecommendationFeedbackScalarFieldEnum = {
 export type RecommendationFeedbackScalarFieldEnum = (typeof RecommendationFeedbackScalarFieldEnum)[keyof typeof RecommendationFeedbackScalarFieldEnum]
 
 
+export const RecommendationEventScalarFieldEnum = {
+  id: 'id',
+  kind: 'kind',
+  gameId: 'gameId',
+  wishlistEntryId: 'wishlistEntryId',
+  runId: 'runId',
+  reason: 'reason',
+  payload: 'payload',
+  createdAt: 'createdAt'
+} as const
+
+export type RecommendationEventScalarFieldEnum = (typeof RecommendationEventScalarFieldEnum)[keyof typeof RecommendationEventScalarFieldEnum]
+
+
 export const WallpaperStateScalarFieldEnum = {
   id: 'id',
   candidates: 'candidates',
@@ -4000,6 +4089,20 @@ export type ListEnumRecommendationKindFieldRefInput<$PrismaModel> = FieldRefInpu
 
 
 /**
+ * Reference to a field of type 'RecommendationEventKind'
+ */
+export type EnumRecommendationEventKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RecommendationEventKind'>
+
+
+
+/**
+ * Reference to a field of type 'RecommendationEventKind[]'
+ */
+export type ListEnumRecommendationEventKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RecommendationEventKind[]'>
+
+
+
+/**
  * Reference to a field of type 'CatalogOperationType'
  */
 export type EnumCatalogOperationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CatalogOperationType'>
@@ -4209,6 +4312,7 @@ export type GlobalOmitConfig = {
   recommendationRun?: Prisma.RecommendationRunOmit
   recommendationItem?: Prisma.RecommendationItemOmit
   recommendationFeedback?: Prisma.RecommendationFeedbackOmit
+  recommendationEvent?: Prisma.RecommendationEventOmit
   wallpaperState?: Prisma.WallpaperStateOmit
   syncRun?: Prisma.SyncRunOmit
   catalogOperation?: Prisma.CatalogOperationOmit

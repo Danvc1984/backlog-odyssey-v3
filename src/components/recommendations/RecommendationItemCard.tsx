@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { X } from "lucide-react";
 import { dismissRecommendation } from "@/actions/recommendations";
+import { Input } from "@/components/ui/input";
 import { caveatChip, factorChip } from "@/components/recommendations/FactorChips";
 import type { ExplanationCaveat, ExplanationFactor } from "@/lib/recommendations/types";
 
@@ -36,6 +37,7 @@ export interface RecommendationItemCardProps {
   positive: unknown;
   negative: unknown;
   caveats: unknown;
+  runId?: string;
 }
 
 export function RecommendationItemCard({
@@ -46,8 +48,12 @@ export function RecommendationItemCard({
   positive,
   negative,
   caveats,
+  runId,
 }: RecommendationItemCardProps) {
   const [dismissed, setDismissed] = useState(false);
+  const [reasonOpen, setReasonOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   if (dismissed) {
     return null;
@@ -56,11 +62,13 @@ export function RecommendationItemCard({
   const href = target.kind === "PLAY_NEXT" ? `/games/${target.gameId}` : `/wishlist/${target.wishlistEntryId}`;
 
   const dismiss = async () => {
+    setSubmitting(true);
     const result = await dismissRecommendation(
       target.kind === "PLAY_NEXT"
-        ? { gameId: target.gameId, kind: "PLAY_NEXT" }
-        : { wishlistEntryId: target.wishlistEntryId, kind: "BUY" },
+        ? { gameId: target.gameId, kind: "PLAY_NEXT", runId, reason }
+        : { wishlistEntryId: target.wishlistEntryId, kind: "BUY", runId, reason },
     );
+    setSubmitting(false);
     if (!result.success) {
       toast.error(result.error ?? "Failed to dismiss recommendation");
       return;
@@ -85,14 +93,29 @@ export function RecommendationItemCard({
         </div>
       )}
       <div className="mt-3 flex justify-end">
-        <button
-          type="button"
-          onClick={() => void dismiss()}
-          className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <X aria-hidden className="h-3 w-3" />
-          Dismiss
-        </button>
+        {reasonOpen ? (
+          <div className="flex w-full flex-wrap items-center justify-end gap-2">
+            <Input
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              placeholder="Optional reason"
+              maxLength={500}
+              className="h-8 max-w-xs text-xs"
+              aria-label="Dismissal reason"
+            />
+            <button type="button" onClick={() => void dismiss()} disabled={submitting} className="rounded-md border border-border px-2 py-1 text-xs hover:text-foreground">
+              {submitting ? "Saving..." : "Confirm"}
+            </button>
+            <button type="button" onClick={() => { setReasonOpen(false); setReason(""); }} disabled={submitting} className="px-2 py-1 text-xs text-muted-foreground hover:text-foreground">
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button type="button" onClick={() => setReasonOpen(true)} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground">
+            <X aria-hidden className="h-3 w-3" />
+            Dismiss
+          </button>
+        )}
       </div>
     </div>
   );

@@ -206,6 +206,7 @@ export default async function WishlistDetailPage({
           </h2>
           <RecommendationItemCard
             target={{ kind: "BUY", wishlistEntryId: entry.id }}
+            runId={latestBuyRun?.id}
             name={entry.name}
             rank={buyItem.rank}
             score={buyItem.score}

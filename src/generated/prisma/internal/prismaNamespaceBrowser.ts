@@ -83,6 +83,7 @@ export const ModelName = {
   RecommendationRun: 'RecommendationRun',
   RecommendationItem: 'RecommendationItem',
   RecommendationFeedback: 'RecommendationFeedback',
+  RecommendationEvent: 'RecommendationEvent',
   WallpaperState: 'WallpaperState',
   SyncRun: 'SyncRun',
   CatalogOperation: 'CatalogOperation'
@@ -542,6 +543,20 @@ export const RecommendationFeedbackScalarFieldEnum = {
 } as const
 
 export type RecommendationFeedbackScalarFieldEnum = (typeof RecommendationFeedbackScalarFieldEnum)[keyof typeof RecommendationFeedbackScalarFieldEnum]
+
+
+export const RecommendationEventScalarFieldEnum = {
+  id: 'id',
+  kind: 'kind',
+  gameId: 'gameId',
+  wishlistEntryId: 'wishlistEntryId',
+  runId: 'runId',
+  reason: 'reason',
+  payload: 'payload',
+  createdAt: 'createdAt'
+} as const
+
+export type RecommendationEventScalarFieldEnum = (typeof RecommendationEventScalarFieldEnum)[keyof typeof RecommendationEventScalarFieldEnum]
 
 
 export const WallpaperStateScalarFieldEnum = {

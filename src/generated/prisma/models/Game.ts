@@ -221,6 +221,7 @@ export type GameWhereInput = {
   duplicatesA?: Prisma.PossibleDuplicateListRelationFilter
   duplicatesB?: Prisma.PossibleDuplicateListRelationFilter
   recommendationItems?: Prisma.RecommendationItemListRelationFilter
+  recommendationEvents?: Prisma.RecommendationEventListRelationFilter
 }
 
 export type GameOrderByWithRelationInput = {
@@ -247,6 +248,7 @@ export type GameOrderByWithRelationInput = {
   duplicatesA?: Prisma.PossibleDuplicateOrderByRelationAggregateInput
   duplicatesB?: Prisma.PossibleDuplicateOrderByRelationAggregateInput
   recommendationItems?: Prisma.RecommendationItemOrderByRelationAggregateInput
+  recommendationEvents?: Prisma.RecommendationEventOrderByRelationAggregateInput
 }
 
 export type GameWhereUniqueInput = Prisma.AtLeast<{
@@ -276,6 +278,7 @@ export type GameWhereUniqueInput = Prisma.AtLeast<{
   duplicatesA?: Prisma.PossibleDuplicateListRelationFilter
   duplicatesB?: Prisma.PossibleDuplicateListRelationFilter
   recommendationItems?: Prisma.RecommendationItemListRelationFilter
+  recommendationEvents?: Prisma.RecommendationEventListRelationFilter
 }, "id">
 
 export type GameOrderByWithAggregationInput = {
@@ -329,6 +332,7 @@ export type GameCreateInput = {
   duplicatesA?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventCreateNestedManyWithoutGameInput
 }
 
 export type GameUncheckedCreateInput = {
@@ -354,6 +358,7 @@ export type GameUncheckedCreateInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemUncheckedCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutGameInput
 }
 
 export type GameUpdateInput = {
@@ -379,6 +384,7 @@ export type GameUpdateInput = {
   duplicatesA?: Prisma.PossibleDuplicateUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUpdateManyWithoutGameNestedInput
 }
 
 export type GameUncheckedUpdateInput = {
@@ -404,6 +410,7 @@ export type GameUncheckedUpdateInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUncheckedUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedUpdateManyWithoutGameNestedInput
 }
 
 export type GameCreateManyInput = {
@@ -743,6 +750,22 @@ export type GameUpdateOneWithoutRecommendationItemsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.GameUpdateToOneWithWhereWithoutRecommendationItemsInput, Prisma.GameUpdateWithoutRecommendationItemsInput>, Prisma.GameUncheckedUpdateWithoutRecommendationItemsInput>
 }
 
+export type GameCreateNestedOneWithoutRecommendationEventsInput = {
+  create?: Prisma.XOR<Prisma.GameCreateWithoutRecommendationEventsInput, Prisma.GameUncheckedCreateWithoutRecommendationEventsInput>
+  connectOrCreate?: Prisma.GameCreateOrConnectWithoutRecommendationEventsInput
+  connect?: Prisma.GameWhereUniqueInput
+}
+
+export type GameUpdateOneWithoutRecommendationEventsNestedInput = {
+  create?: Prisma.XOR<Prisma.GameCreateWithoutRecommendationEventsInput, Prisma.GameUncheckedCreateWithoutRecommendationEventsInput>
+  connectOrCreate?: Prisma.GameCreateOrConnectWithoutRecommendationEventsInput
+  upsert?: Prisma.GameUpsertWithoutRecommendationEventsInput
+  disconnect?: Prisma.GameWhereInput | boolean
+  delete?: Prisma.GameWhereInput | boolean
+  connect?: Prisma.GameWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.GameUpdateToOneWithWhereWithoutRecommendationEventsInput, Prisma.GameUpdateWithoutRecommendationEventsInput>, Prisma.GameUncheckedUpdateWithoutRecommendationEventsInput>
+}
+
 export type GameCreateWithoutDlcsInput = {
   id?: string
   type?: $Enums.GameType
@@ -765,6 +788,7 @@ export type GameCreateWithoutDlcsInput = {
   duplicatesA?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventCreateNestedManyWithoutGameInput
 }
 
 export type GameUncheckedCreateWithoutDlcsInput = {
@@ -789,6 +813,7 @@ export type GameUncheckedCreateWithoutDlcsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemUncheckedCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutGameInput
 }
 
 export type GameCreateOrConnectWithoutDlcsInput = {
@@ -818,6 +843,7 @@ export type GameCreateWithoutBaseGameInput = {
   duplicatesA?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventCreateNestedManyWithoutGameInput
 }
 
 export type GameUncheckedCreateWithoutBaseGameInput = {
@@ -842,6 +868,7 @@ export type GameUncheckedCreateWithoutBaseGameInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemUncheckedCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutGameInput
 }
 
 export type GameCreateOrConnectWithoutBaseGameInput = {
@@ -887,6 +914,7 @@ export type GameUpdateWithoutDlcsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUpdateManyWithoutGameNestedInput
 }
 
 export type GameUncheckedUpdateWithoutDlcsInput = {
@@ -911,6 +939,7 @@ export type GameUncheckedUpdateWithoutDlcsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUncheckedUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedUpdateManyWithoutGameNestedInput
 }
 
 export type GameUpsertWithWhereUniqueWithoutBaseGameInput = {
@@ -965,6 +994,7 @@ export type GameCreateWithoutExternalIdsInput = {
   duplicatesA?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventCreateNestedManyWithoutGameInput
 }
 
 export type GameUncheckedCreateWithoutExternalIdsInput = {
@@ -989,6 +1019,7 @@ export type GameUncheckedCreateWithoutExternalIdsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemUncheckedCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutGameInput
 }
 
 export type GameCreateOrConnectWithoutExternalIdsInput = {
@@ -1029,6 +1060,7 @@ export type GameUpdateWithoutExternalIdsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUpdateManyWithoutGameNestedInput
 }
 
 export type GameUncheckedUpdateWithoutExternalIdsInput = {
@@ -1053,6 +1085,7 @@ export type GameUncheckedUpdateWithoutExternalIdsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUncheckedUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedUpdateManyWithoutGameNestedInput
 }
 
 export type GameCreateWithoutMetadataSnapshotsInput = {
@@ -1077,6 +1110,7 @@ export type GameCreateWithoutMetadataSnapshotsInput = {
   duplicatesA?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventCreateNestedManyWithoutGameInput
 }
 
 export type GameUncheckedCreateWithoutMetadataSnapshotsInput = {
@@ -1101,6 +1135,7 @@ export type GameUncheckedCreateWithoutMetadataSnapshotsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemUncheckedCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutGameInput
 }
 
 export type GameCreateOrConnectWithoutMetadataSnapshotsInput = {
@@ -1141,6 +1176,7 @@ export type GameUpdateWithoutMetadataSnapshotsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUpdateManyWithoutGameNestedInput
 }
 
 export type GameUncheckedUpdateWithoutMetadataSnapshotsInput = {
@@ -1165,6 +1201,7 @@ export type GameUncheckedUpdateWithoutMetadataSnapshotsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUncheckedUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedUpdateManyWithoutGameNestedInput
 }
 
 export type GameCreateWithoutEnrichmentJobsInput = {
@@ -1189,6 +1226,7 @@ export type GameCreateWithoutEnrichmentJobsInput = {
   duplicatesA?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventCreateNestedManyWithoutGameInput
 }
 
 export type GameUncheckedCreateWithoutEnrichmentJobsInput = {
@@ -1213,6 +1251,7 @@ export type GameUncheckedCreateWithoutEnrichmentJobsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemUncheckedCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutGameInput
 }
 
 export type GameCreateOrConnectWithoutEnrichmentJobsInput = {
@@ -1253,6 +1292,7 @@ export type GameUpdateWithoutEnrichmentJobsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUpdateManyWithoutGameNestedInput
 }
 
 export type GameUncheckedUpdateWithoutEnrichmentJobsInput = {
@@ -1277,6 +1317,7 @@ export type GameUncheckedUpdateWithoutEnrichmentJobsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUncheckedUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedUpdateManyWithoutGameNestedInput
 }
 
 export type GameCreateWithoutTagsInput = {
@@ -1301,6 +1342,7 @@ export type GameCreateWithoutTagsInput = {
   duplicatesA?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventCreateNestedManyWithoutGameInput
 }
 
 export type GameUncheckedCreateWithoutTagsInput = {
@@ -1325,6 +1367,7 @@ export type GameUncheckedCreateWithoutTagsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemUncheckedCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutGameInput
 }
 
 export type GameCreateOrConnectWithoutTagsInput = {
@@ -1365,6 +1408,7 @@ export type GameUpdateWithoutTagsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUpdateManyWithoutGameNestedInput
 }
 
 export type GameUncheckedUpdateWithoutTagsInput = {
@@ -1389,6 +1433,7 @@ export type GameUncheckedUpdateWithoutTagsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUncheckedUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedUpdateManyWithoutGameNestedInput
 }
 
 export type GameCreateWithoutCollectionsInput = {
@@ -1413,6 +1458,7 @@ export type GameCreateWithoutCollectionsInput = {
   duplicatesA?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventCreateNestedManyWithoutGameInput
 }
 
 export type GameUncheckedCreateWithoutCollectionsInput = {
@@ -1437,6 +1483,7 @@ export type GameUncheckedCreateWithoutCollectionsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemUncheckedCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutGameInput
 }
 
 export type GameCreateOrConnectWithoutCollectionsInput = {
@@ -1477,6 +1524,7 @@ export type GameUpdateWithoutCollectionsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUpdateManyWithoutGameNestedInput
 }
 
 export type GameUncheckedUpdateWithoutCollectionsInput = {
@@ -1501,6 +1549,7 @@ export type GameUncheckedUpdateWithoutCollectionsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUncheckedUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedUpdateManyWithoutGameNestedInput
 }
 
 export type GameCreateWithoutLibraryEntryInput = {
@@ -1525,6 +1574,7 @@ export type GameCreateWithoutLibraryEntryInput = {
   duplicatesA?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventCreateNestedManyWithoutGameInput
 }
 
 export type GameUncheckedCreateWithoutLibraryEntryInput = {
@@ -1549,6 +1599,7 @@ export type GameUncheckedCreateWithoutLibraryEntryInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemUncheckedCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutGameInput
 }
 
 export type GameCreateOrConnectWithoutLibraryEntryInput = {
@@ -1589,6 +1640,7 @@ export type GameUpdateWithoutLibraryEntryInput = {
   duplicatesA?: Prisma.PossibleDuplicateUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUpdateManyWithoutGameNestedInput
 }
 
 export type GameUncheckedUpdateWithoutLibraryEntryInput = {
@@ -1613,6 +1665,7 @@ export type GameUncheckedUpdateWithoutLibraryEntryInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUncheckedUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedUpdateManyWithoutGameNestedInput
 }
 
 export type GameCreateWithoutAvailabilityInput = {
@@ -1637,6 +1690,7 @@ export type GameCreateWithoutAvailabilityInput = {
   duplicatesA?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventCreateNestedManyWithoutGameInput
 }
 
 export type GameUncheckedCreateWithoutAvailabilityInput = {
@@ -1661,6 +1715,7 @@ export type GameUncheckedCreateWithoutAvailabilityInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemUncheckedCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutGameInput
 }
 
 export type GameCreateOrConnectWithoutAvailabilityInput = {
@@ -1701,6 +1756,7 @@ export type GameUpdateWithoutAvailabilityInput = {
   duplicatesA?: Prisma.PossibleDuplicateUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUpdateManyWithoutGameNestedInput
 }
 
 export type GameUncheckedUpdateWithoutAvailabilityInput = {
@@ -1725,6 +1781,7 @@ export type GameUncheckedUpdateWithoutAvailabilityInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUncheckedUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedUpdateManyWithoutGameNestedInput
 }
 
 export type GameCreateWithoutWishlistDlcsInput = {
@@ -1749,6 +1806,7 @@ export type GameCreateWithoutWishlistDlcsInput = {
   duplicatesA?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventCreateNestedManyWithoutGameInput
 }
 
 export type GameUncheckedCreateWithoutWishlistDlcsInput = {
@@ -1773,6 +1831,7 @@ export type GameUncheckedCreateWithoutWishlistDlcsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemUncheckedCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutGameInput
 }
 
 export type GameCreateOrConnectWithoutWishlistDlcsInput = {
@@ -1813,6 +1872,7 @@ export type GameUpdateWithoutWishlistDlcsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUpdateManyWithoutGameNestedInput
 }
 
 export type GameUncheckedUpdateWithoutWishlistDlcsInput = {
@@ -1837,6 +1897,7 @@ export type GameUncheckedUpdateWithoutWishlistDlcsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUncheckedUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedUpdateManyWithoutGameNestedInput
 }
 
 export type GameCreateWithoutCompatSnapshotsInput = {
@@ -1861,6 +1922,7 @@ export type GameCreateWithoutCompatSnapshotsInput = {
   duplicatesA?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventCreateNestedManyWithoutGameInput
 }
 
 export type GameUncheckedCreateWithoutCompatSnapshotsInput = {
@@ -1885,6 +1947,7 @@ export type GameUncheckedCreateWithoutCompatSnapshotsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemUncheckedCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutGameInput
 }
 
 export type GameCreateOrConnectWithoutCompatSnapshotsInput = {
@@ -1925,6 +1988,7 @@ export type GameUpdateWithoutCompatSnapshotsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUpdateManyWithoutGameNestedInput
 }
 
 export type GameUncheckedUpdateWithoutCompatSnapshotsInput = {
@@ -1949,6 +2013,7 @@ export type GameUncheckedUpdateWithoutCompatSnapshotsInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUncheckedUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedUpdateManyWithoutGameNestedInput
 }
 
 export type GameCreateWithoutEnvCompatInput = {
@@ -1973,6 +2038,7 @@ export type GameCreateWithoutEnvCompatInput = {
   duplicatesA?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventCreateNestedManyWithoutGameInput
 }
 
 export type GameUncheckedCreateWithoutEnvCompatInput = {
@@ -1997,6 +2063,7 @@ export type GameUncheckedCreateWithoutEnvCompatInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemUncheckedCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutGameInput
 }
 
 export type GameCreateOrConnectWithoutEnvCompatInput = {
@@ -2037,6 +2104,7 @@ export type GameUpdateWithoutEnvCompatInput = {
   duplicatesA?: Prisma.PossibleDuplicateUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUpdateManyWithoutGameNestedInput
 }
 
 export type GameUncheckedUpdateWithoutEnvCompatInput = {
@@ -2061,6 +2129,7 @@ export type GameUncheckedUpdateWithoutEnvCompatInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUncheckedUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedUpdateManyWithoutGameNestedInput
 }
 
 export type GameCreateWithoutDuplicatesAInput = {
@@ -2085,6 +2154,7 @@ export type GameCreateWithoutDuplicatesAInput = {
   envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
   duplicatesB?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventCreateNestedManyWithoutGameInput
 }
 
 export type GameUncheckedCreateWithoutDuplicatesAInput = {
@@ -2109,6 +2179,7 @@ export type GameUncheckedCreateWithoutDuplicatesAInput = {
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameBInput
   recommendationItems?: Prisma.RecommendationItemUncheckedCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutGameInput
 }
 
 export type GameCreateOrConnectWithoutDuplicatesAInput = {
@@ -2138,6 +2209,7 @@ export type GameCreateWithoutDuplicatesBInput = {
   envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
   duplicatesA?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameAInput
   recommendationItems?: Prisma.RecommendationItemCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventCreateNestedManyWithoutGameInput
 }
 
 export type GameUncheckedCreateWithoutDuplicatesBInput = {
@@ -2162,6 +2234,7 @@ export type GameUncheckedCreateWithoutDuplicatesBInput = {
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
   duplicatesA?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameAInput
   recommendationItems?: Prisma.RecommendationItemUncheckedCreateNestedManyWithoutGameInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutGameInput
 }
 
 export type GameCreateOrConnectWithoutDuplicatesBInput = {
@@ -2202,6 +2275,7 @@ export type GameUpdateWithoutDuplicatesAInput = {
   envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
   duplicatesB?: Prisma.PossibleDuplicateUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUpdateManyWithoutGameNestedInput
 }
 
 export type GameUncheckedUpdateWithoutDuplicatesAInput = {
@@ -2226,6 +2300,7 @@ export type GameUncheckedUpdateWithoutDuplicatesAInput = {
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUncheckedUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedUpdateManyWithoutGameNestedInput
 }
 
 export type GameUpsertWithoutDuplicatesBInput = {
@@ -2261,6 +2336,7 @@ export type GameUpdateWithoutDuplicatesBInput = {
   envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
   duplicatesA?: Prisma.PossibleDuplicateUpdateManyWithoutGameANestedInput
   recommendationItems?: Prisma.RecommendationItemUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUpdateManyWithoutGameNestedInput
 }
 
 export type GameUncheckedUpdateWithoutDuplicatesBInput = {
@@ -2285,6 +2361,7 @@ export type GameUncheckedUpdateWithoutDuplicatesBInput = {
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
   duplicatesA?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameANestedInput
   recommendationItems?: Prisma.RecommendationItemUncheckedUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedUpdateManyWithoutGameNestedInput
 }
 
 export type GameCreateWithoutRecommendationItemsInput = {
@@ -2309,6 +2386,7 @@ export type GameCreateWithoutRecommendationItemsInput = {
   envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
   duplicatesA?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameBInput
+  recommendationEvents?: Prisma.RecommendationEventCreateNestedManyWithoutGameInput
 }
 
 export type GameUncheckedCreateWithoutRecommendationItemsInput = {
@@ -2333,6 +2411,7 @@ export type GameUncheckedCreateWithoutRecommendationItemsInput = {
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
   duplicatesA?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameAInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameBInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutGameInput
 }
 
 export type GameCreateOrConnectWithoutRecommendationItemsInput = {
@@ -2373,6 +2452,7 @@ export type GameUpdateWithoutRecommendationItemsInput = {
   envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
   duplicatesA?: Prisma.PossibleDuplicateUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUpdateManyWithoutGameBNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUpdateManyWithoutGameNestedInput
 }
 
 export type GameUncheckedUpdateWithoutRecommendationItemsInput = {
@@ -2397,6 +2477,123 @@ export type GameUncheckedUpdateWithoutRecommendationItemsInput = {
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
   duplicatesA?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameBNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedUpdateManyWithoutGameNestedInput
+}
+
+export type GameCreateWithoutRecommendationEventsInput = {
+  id?: string
+  type?: $Enums.GameType
+  origin: $Enums.Origin
+  name: string
+  importAt?: Date | string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  baseGame?: Prisma.GameCreateNestedOneWithoutDlcsInput
+  dlcs?: Prisma.GameCreateNestedManyWithoutBaseGameInput
+  externalIds?: Prisma.ExternalGameIdCreateNestedManyWithoutGameInput
+  metadataSnapshots?: Prisma.MetadataSnapshotCreateNestedManyWithoutGameInput
+  enrichmentJobs?: Prisma.EnrichmentJobCreateNestedManyWithoutGameInput
+  libraryEntry?: Prisma.LibraryEntryCreateNestedOneWithoutGameInput
+  availability?: Prisma.GameAvailabilityCreateNestedManyWithoutGameInput
+  wishlistDlcs?: Prisma.WishlistEntryCreateNestedManyWithoutBaseGameInput
+  collections?: Prisma.CollectionMembershipCreateNestedManyWithoutGameInput
+  tags?: Prisma.GameTagCreateNestedManyWithoutGameInput
+  compatSnapshots?: Prisma.CompatibilitySnapshotCreateNestedManyWithoutGameInput
+  envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
+  duplicatesA?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameAInput
+  duplicatesB?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameBInput
+  recommendationItems?: Prisma.RecommendationItemCreateNestedManyWithoutGameInput
+}
+
+export type GameUncheckedCreateWithoutRecommendationEventsInput = {
+  id?: string
+  type?: $Enums.GameType
+  origin: $Enums.Origin
+  name: string
+  baseGameId?: string | null
+  importAt?: Date | string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  dlcs?: Prisma.GameUncheckedCreateNestedManyWithoutBaseGameInput
+  externalIds?: Prisma.ExternalGameIdUncheckedCreateNestedManyWithoutGameInput
+  metadataSnapshots?: Prisma.MetadataSnapshotUncheckedCreateNestedManyWithoutGameInput
+  enrichmentJobs?: Prisma.EnrichmentJobUncheckedCreateNestedManyWithoutGameInput
+  libraryEntry?: Prisma.LibraryEntryUncheckedCreateNestedOneWithoutGameInput
+  availability?: Prisma.GameAvailabilityUncheckedCreateNestedManyWithoutGameInput
+  wishlistDlcs?: Prisma.WishlistEntryUncheckedCreateNestedManyWithoutBaseGameInput
+  collections?: Prisma.CollectionMembershipUncheckedCreateNestedManyWithoutGameInput
+  tags?: Prisma.GameTagUncheckedCreateNestedManyWithoutGameInput
+  compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedCreateNestedManyWithoutGameInput
+  envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
+  duplicatesA?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameAInput
+  duplicatesB?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameBInput
+  recommendationItems?: Prisma.RecommendationItemUncheckedCreateNestedManyWithoutGameInput
+}
+
+export type GameCreateOrConnectWithoutRecommendationEventsInput = {
+  where: Prisma.GameWhereUniqueInput
+  create: Prisma.XOR<Prisma.GameCreateWithoutRecommendationEventsInput, Prisma.GameUncheckedCreateWithoutRecommendationEventsInput>
+}
+
+export type GameUpsertWithoutRecommendationEventsInput = {
+  update: Prisma.XOR<Prisma.GameUpdateWithoutRecommendationEventsInput, Prisma.GameUncheckedUpdateWithoutRecommendationEventsInput>
+  create: Prisma.XOR<Prisma.GameCreateWithoutRecommendationEventsInput, Prisma.GameUncheckedCreateWithoutRecommendationEventsInput>
+  where?: Prisma.GameWhereInput
+}
+
+export type GameUpdateToOneWithWhereWithoutRecommendationEventsInput = {
+  where?: Prisma.GameWhereInput
+  data: Prisma.XOR<Prisma.GameUpdateWithoutRecommendationEventsInput, Prisma.GameUncheckedUpdateWithoutRecommendationEventsInput>
+}
+
+export type GameUpdateWithoutRecommendationEventsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumGameTypeFieldUpdateOperationsInput | $Enums.GameType
+  origin?: Prisma.EnumOriginFieldUpdateOperationsInput | $Enums.Origin
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  importAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  baseGame?: Prisma.GameUpdateOneWithoutDlcsNestedInput
+  dlcs?: Prisma.GameUpdateManyWithoutBaseGameNestedInput
+  externalIds?: Prisma.ExternalGameIdUpdateManyWithoutGameNestedInput
+  metadataSnapshots?: Prisma.MetadataSnapshotUpdateManyWithoutGameNestedInput
+  enrichmentJobs?: Prisma.EnrichmentJobUpdateManyWithoutGameNestedInput
+  libraryEntry?: Prisma.LibraryEntryUpdateOneWithoutGameNestedInput
+  availability?: Prisma.GameAvailabilityUpdateManyWithoutGameNestedInput
+  wishlistDlcs?: Prisma.WishlistEntryUpdateManyWithoutBaseGameNestedInput
+  collections?: Prisma.CollectionMembershipUpdateManyWithoutGameNestedInput
+  tags?: Prisma.GameTagUpdateManyWithoutGameNestedInput
+  compatSnapshots?: Prisma.CompatibilitySnapshotUpdateManyWithoutGameNestedInput
+  envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
+  duplicatesA?: Prisma.PossibleDuplicateUpdateManyWithoutGameANestedInput
+  duplicatesB?: Prisma.PossibleDuplicateUpdateManyWithoutGameBNestedInput
+  recommendationItems?: Prisma.RecommendationItemUpdateManyWithoutGameNestedInput
+}
+
+export type GameUncheckedUpdateWithoutRecommendationEventsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumGameTypeFieldUpdateOperationsInput | $Enums.GameType
+  origin?: Prisma.EnumOriginFieldUpdateOperationsInput | $Enums.Origin
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  baseGameId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  dlcs?: Prisma.GameUncheckedUpdateManyWithoutBaseGameNestedInput
+  externalIds?: Prisma.ExternalGameIdUncheckedUpdateManyWithoutGameNestedInput
+  metadataSnapshots?: Prisma.MetadataSnapshotUncheckedUpdateManyWithoutGameNestedInput
+  enrichmentJobs?: Prisma.EnrichmentJobUncheckedUpdateManyWithoutGameNestedInput
+  libraryEntry?: Prisma.LibraryEntryUncheckedUpdateOneWithoutGameNestedInput
+  availability?: Prisma.GameAvailabilityUncheckedUpdateManyWithoutGameNestedInput
+  wishlistDlcs?: Prisma.WishlistEntryUncheckedUpdateManyWithoutBaseGameNestedInput
+  collections?: Prisma.CollectionMembershipUncheckedUpdateManyWithoutGameNestedInput
+  tags?: Prisma.GameTagUncheckedUpdateManyWithoutGameNestedInput
+  compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedUpdateManyWithoutGameNestedInput
+  envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
+  duplicatesA?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameANestedInput
+  duplicatesB?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameBNestedInput
+  recommendationItems?: Prisma.RecommendationItemUncheckedUpdateManyWithoutGameNestedInput
 }
 
 export type GameCreateManyBaseGameInput = {
@@ -2431,6 +2628,7 @@ export type GameUpdateWithoutBaseGameInput = {
   duplicatesA?: Prisma.PossibleDuplicateUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUpdateManyWithoutGameNestedInput
 }
 
 export type GameUncheckedUpdateWithoutBaseGameInput = {
@@ -2455,6 +2653,7 @@ export type GameUncheckedUpdateWithoutBaseGameInput = {
   duplicatesA?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameANestedInput
   duplicatesB?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameBNestedInput
   recommendationItems?: Prisma.RecommendationItemUncheckedUpdateManyWithoutGameNestedInput
+  recommendationEvents?: Prisma.RecommendationEventUncheckedUpdateManyWithoutGameNestedInput
 }
 
 export type GameUncheckedUpdateManyWithoutBaseGameInput = {
@@ -2486,6 +2685,7 @@ export type GameCountOutputType = {
   duplicatesA: number
   duplicatesB: number
   recommendationItems: number
+  recommendationEvents: number
 }
 
 export type GameCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2502,6 +2702,7 @@ export type GameCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   duplicatesA?: boolean | GameCountOutputTypeCountDuplicatesAArgs
   duplicatesB?: boolean | GameCountOutputTypeCountDuplicatesBArgs
   recommendationItems?: boolean | GameCountOutputTypeCountRecommendationItemsArgs
+  recommendationEvents?: boolean | GameCountOutputTypeCountRecommendationEventsArgs
 }
 
 /**
@@ -2605,6 +2806,13 @@ export type GameCountOutputTypeCountRecommendationItemsArgs<ExtArgs extends runt
   where?: Prisma.RecommendationItemWhereInput
 }
 
+/**
+ * GameCountOutputType without action
+ */
+export type GameCountOutputTypeCountRecommendationEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RecommendationEventWhereInput
+}
+
 
 export type GameSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -2630,6 +2838,7 @@ export type GameSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   duplicatesA?: boolean | Prisma.Game$duplicatesAArgs<ExtArgs>
   duplicatesB?: boolean | Prisma.Game$duplicatesBArgs<ExtArgs>
   recommendationItems?: boolean | Prisma.Game$recommendationItemsArgs<ExtArgs>
+  recommendationEvents?: boolean | Prisma.Game$recommendationEventsArgs<ExtArgs>
   _count?: boolean | Prisma.GameCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["game"]>
 
@@ -2685,6 +2894,7 @@ export type GameInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   duplicatesA?: boolean | Prisma.Game$duplicatesAArgs<ExtArgs>
   duplicatesB?: boolean | Prisma.Game$duplicatesBArgs<ExtArgs>
   recommendationItems?: boolean | Prisma.Game$recommendationItemsArgs<ExtArgs>
+  recommendationEvents?: boolean | Prisma.Game$recommendationEventsArgs<ExtArgs>
   _count?: boolean | Prisma.GameCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type GameIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2712,6 +2922,7 @@ export type $GamePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     duplicatesA: Prisma.$PossibleDuplicatePayload<ExtArgs>[]
     duplicatesB: Prisma.$PossibleDuplicatePayload<ExtArgs>[]
     recommendationItems: Prisma.$RecommendationItemPayload<ExtArgs>[]
+    recommendationEvents: Prisma.$RecommendationEventPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -3131,6 +3342,7 @@ export interface Prisma__GameClient<T, Null = never, ExtArgs extends runtime.Typ
   duplicatesA<T extends Prisma.Game$duplicatesAArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Game$duplicatesAArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PossibleDuplicatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   duplicatesB<T extends Prisma.Game$duplicatesBArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Game$duplicatesBArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PossibleDuplicatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   recommendationItems<T extends Prisma.Game$recommendationItemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Game$recommendationItemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RecommendationItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  recommendationEvents<T extends Prisma.Game$recommendationEventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Game$recommendationEventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RecommendationEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3916,6 +4128,30 @@ export type Game$recommendationItemsArgs<ExtArgs extends runtime.Types.Extension
   take?: number
   skip?: number
   distinct?: Prisma.RecommendationItemScalarFieldEnum | Prisma.RecommendationItemScalarFieldEnum[]
+}
+
+/**
+ * Game.recommendationEvents
+ */
+export type Game$recommendationEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RecommendationEvent
+   */
+  select?: Prisma.RecommendationEventSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the RecommendationEvent
+   */
+  omit?: Prisma.RecommendationEventOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RecommendationEventInclude<ExtArgs> | null
+  where?: Prisma.RecommendationEventWhereInput
+  orderBy?: Prisma.RecommendationEventOrderByWithRelationInput | Prisma.RecommendationEventOrderByWithRelationInput[]
+  cursor?: Prisma.RecommendationEventWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RecommendationEventScalarFieldEnum | Prisma.RecommendationEventScalarFieldEnum[]
 }
 
 /**

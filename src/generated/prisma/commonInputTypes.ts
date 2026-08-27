@@ -786,6 +786,23 @@ export type FloatWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedFloatFilter<$PrismaModel>
 }
 
+export type EnumRecommendationEventKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.RecommendationEventKind | Prisma.EnumRecommendationEventKindFieldRefInput<$PrismaModel>
+  in?: $Enums.RecommendationEventKind[] | Prisma.ListEnumRecommendationEventKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.RecommendationEventKind[] | Prisma.ListEnumRecommendationEventKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumRecommendationEventKindFilter<$PrismaModel> | $Enums.RecommendationEventKind
+}
+
+export type EnumRecommendationEventKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.RecommendationEventKind | Prisma.EnumRecommendationEventKindFieldRefInput<$PrismaModel>
+  in?: $Enums.RecommendationEventKind[] | Prisma.ListEnumRecommendationEventKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.RecommendationEventKind[] | Prisma.ListEnumRecommendationEventKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumRecommendationEventKindWithAggregatesFilter<$PrismaModel> | $Enums.RecommendationEventKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumRecommendationEventKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumRecommendationEventKindFilter<$PrismaModel>
+}
+
 export type EnumCatalogOperationTypeFilter<$PrismaModel = never> = {
   equals?: $Enums.CatalogOperationType | Prisma.EnumCatalogOperationTypeFieldRefInput<$PrismaModel>
   in?: $Enums.CatalogOperationType[] | Prisma.ListEnumCatalogOperationTypeFieldRefInput<$PrismaModel>
@@ -1527,6 +1544,23 @@ export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
   _sum?: Prisma.NestedFloatFilter<$PrismaModel>
   _min?: Prisma.NestedFloatFilter<$PrismaModel>
   _max?: Prisma.NestedFloatFilter<$PrismaModel>
+}
+
+export type NestedEnumRecommendationEventKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.RecommendationEventKind | Prisma.EnumRecommendationEventKindFieldRefInput<$PrismaModel>
+  in?: $Enums.RecommendationEventKind[] | Prisma.ListEnumRecommendationEventKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.RecommendationEventKind[] | Prisma.ListEnumRecommendationEventKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumRecommendationEventKindFilter<$PrismaModel> | $Enums.RecommendationEventKind
+}
+
+export type NestedEnumRecommendationEventKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.RecommendationEventKind | Prisma.EnumRecommendationEventKindFieldRefInput<$PrismaModel>
+  in?: $Enums.RecommendationEventKind[] | Prisma.ListEnumRecommendationEventKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.RecommendationEventKind[] | Prisma.ListEnumRecommendationEventKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumRecommendationEventKindWithAggregatesFilter<$PrismaModel> | $Enums.RecommendationEventKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumRecommendationEventKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumRecommendationEventKindFilter<$PrismaModel>
 }
 
 export type NestedEnumCatalogOperationTypeFilter<$PrismaModel = never> = {

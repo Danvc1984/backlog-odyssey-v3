@@ -137,6 +137,19 @@ export const RecommendationKind = {
 export type RecommendationKind = (typeof RecommendationKind)[keyof typeof RecommendationKind]
 
 
+export const RecommendationEventKind = {
+  EXPOSURE: 'EXPOSURE',
+  ROTATION: 'ROTATION',
+  TASTE_SETUP_ANSWER: 'TASTE_SETUP_ANSWER',
+  START: 'START',
+  COMPLETION: 'COMPLETION',
+  ABANDONMENT: 'ABANDONMENT',
+  DISMISSAL: 'DISMISSAL'
+} as const
+
+export type RecommendationEventKind = (typeof RecommendationEventKind)[keyof typeof RecommendationEventKind]
+
+
 export const SyncStatus = {
   RUNNING: 'RUNNING',
   SUCCESS: 'SUCCESS',

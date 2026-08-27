@@ -3,6 +3,7 @@ import { SteamConnectionCard } from "@/components/steam/SteamConnectionCard";
 import { UnresolvedDlcReviewCard } from "@/components/steam/UnresolvedDlcReviewCard";
 import { CompatibilitySweepPanel } from "@/components/games/CompatibilitySweepPanel";
 import { getLatestCompatBatchStatus } from "@/lib/compat-batch-runner";
+import { RestartRecommendationsSection } from "@/components/recommendations/RestartRecommendationsSection";
 
 export default async function SettingsPage() {
   const [steamConnection, unresolvedDlcs, baseGames, latestCompatBatch] = await Promise.all([
@@ -36,6 +37,7 @@ export default async function SettingsPage() {
       </section>
 
       <UnresolvedDlcReviewCard items={unresolvedDlcs} baseGames={baseGames} />
+      <RestartRecommendationsSection />
     </div>
   );
 }

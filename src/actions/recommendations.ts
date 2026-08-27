@@ -24,12 +24,16 @@ import type {
   PlayNextCandidate,
 } from "@/lib/recommendations/types";
 import { RUN_RETENTION_DAYS } from "@/lib/recommendations/types";
+import { logRecommendationEvent } from "@/lib/recommendations/events";
+import { pruneRecommendationEvents } from "@/lib/recommendations/events";
 
 const dismissRecommendationSchema = z
   .object({
     gameId: z.string().trim().min(1).optional(),
     wishlistEntryId: z.string().trim().min(1).optional(),
     kind: z.enum(["PLAY_NEXT", "BUY"]),
+    runId: z.string().trim().min(1).optional(),
+    reason: z.string().trim().max(500).optional(),
   })
   .strict()
   .superRefine((value, ctx) => {
@@ -43,6 +47,18 @@ const dismissRecommendationSchema = z
       });
     }
   });
+
+const recordRunExposureSchema = z.object({
+  runId: z.string().trim().min(1),
+  items: z.array(z.object({
+    gameId: z.string().trim().min(1).optional(),
+    wishlistEntryId: z.string().trim().min(1).optional(),
+  }).strict().superRefine((value, ctx) => {
+    if ([value.gameId, value.wishlistEntryId].filter(Boolean).length !== 1) {
+      ctx.addIssue({ code: "custom", message: "Exactly one target is required" });
+    }
+  })),
+}).strict();
 
 async function loadCandidates(client: Prisma.TransactionClient) {
   return client.game.findMany({
@@ -178,6 +194,7 @@ export async function updateRecommendations() {
       const pruned = await tx.recommendationRun.deleteMany({
         where: { createdAt: { lt: pruneCutoff } },
       });
+      const prunedEvents = await pruneRecommendationEvents(tx, now);
 
       const rows = await loadCandidates(tx);
       const candidates: PlayNextCandidate[] = rows.map((row) => ({
@@ -197,6 +214,7 @@ export async function updateRecommendations() {
       const context = {
         eligible: { playNext: eligible.length, buy: buyEligibleList.length },
         prunedRuns: pruned.count,
+        prunedEvents,
       };
       const contextJson = context as unknown as Prisma.InputJsonValue;
 
@@ -254,6 +272,7 @@ export async function updateRecommendations() {
         buyItems: buyRanked.length,
         buyEligible: buyEligibleList.length,
         prunedRuns: pruned.count,
+        prunedEvents,
       };
     });
 
@@ -283,12 +302,71 @@ export async function dismissRecommendation(input: unknown) {
       },
       select: { id: true },
     });
+    try {
+      await logRecommendationEvent(prisma, {
+        kind: "DISMISSAL",
+        gameId: parsed.data.gameId,
+        wishlistEntryId: parsed.data.wishlistEntryId,
+        runId: parsed.data.runId,
+        reason: parsed.data.reason || undefined,
+      });
+    } catch {
+      // Event telemetry must not make a successful dismissal fail.
+    }
     return { success: true as const, data: { id: row.id }, error: null };
   } catch (err) {
     return {
       success: false as const,
       data: null,
       error: err instanceof Error ? err.message : "Failed to dismiss recommendation",
+    };
+  }
+}
+
+export async function recordRunExposure(input: unknown) {
+  try {
+    await requireUser();
+    const parsed = recordRunExposureSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false as const, data: null, error: "Invalid input" };
+    }
+    if (parsed.data.items.length === 0) {
+      return { success: true as const, data: { count: 0 }, error: null };
+    }
+
+    const result = await prisma.recommendationEvent.createMany({
+      data: parsed.data.items.map((item) => ({
+        runId: parsed.data.runId,
+        kind: "EXPOSURE" as const,
+        gameId: item.gameId ?? null,
+        wishlistEntryId: item.wishlistEntryId ?? null,
+      })),
+    });
+    return { success: true as const, data: { count: result.count }, error: null };
+  } catch (err) {
+    return {
+      success: false as const,
+      data: null,
+      error: err instanceof Error ? err.message : "Failed to record exposure",
+    };
+  }
+}
+
+export async function restartRecommendations() {
+  try {
+    await requireUser();
+    const counts = await prisma.$transaction(async (tx) => {
+      const events = await tx.recommendationEvent.deleteMany({});
+      const feedback = await tx.recommendationFeedback.deleteMany({});
+      const runs = await tx.recommendationRun.deleteMany({});
+      return { recommendationEvent: events.count, recommendationFeedback: feedback.count, recommendationRun: runs.count };
+    });
+    return { success: true as const, data: counts, error: null };
+  } catch (err) {
+    return {
+      success: false as const,
+      data: null,
+      error: err instanceof Error ? err.message : "Failed to restart recommendations",
     };
   }
 }

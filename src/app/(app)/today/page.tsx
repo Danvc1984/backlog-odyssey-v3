@@ -5,6 +5,7 @@ import {
   UpdateRecommendationsButton,
 } from "@/components/recommendations/UpdateRecommendationsButton";
 import { prisma } from "@/lib/prisma";
+import { RunExposureTracker } from "@/components/recommendations/RunExposureTracker";
 
 export default async function TodayPage() {
   const latestPlayNextRun = await prisma.recommendationRun.findFirst({
@@ -69,6 +70,7 @@ export default async function TodayPage() {
                 <RecommendationItemCard
                   key={item.id}
                   target={{ kind: "PLAY_NEXT", gameId: item.gameId }}
+                  runId={latestPlayNextRun?.id}
                   name={item.game?.name ?? "Unknown game"}
                   rank={item.rank}
                   score={item.score}
@@ -81,6 +83,19 @@ export default async function TodayPage() {
           </div>
         )}
       </section>
+
+      {latestPlayNextRun && (
+        <RunExposureTracker
+          runId={latestPlayNextRun.id}
+          items={items.flatMap((item) => item.gameId ? [{ gameId: item.gameId }] : [])}
+        />
+      )}
+      {latestBuyRun && (
+        <RunExposureTracker
+          runId={latestBuyRun.id}
+          items={buyItems.flatMap((item) => item.wishlistEntryId ? [{ wishlistEntryId: item.wishlistEntryId }] : [])}
+        />
+      )}
 
       <section>
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
@@ -100,6 +115,7 @@ export default async function TodayPage() {
                 <RecommendationItemCard
                   key={item.id}
                   target={{ kind: "BUY", wishlistEntryId: item.wishlistEntryId }}
+                  runId={latestBuyRun?.id}
                   name={item.wishlistEntry?.name ?? "Unknown game"}
                   rank={item.rank}
                   score={item.score}

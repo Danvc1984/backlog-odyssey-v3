@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
+import { logRecommendationEvent, playStateTransitionKind } from "@/lib/recommendations/events";
 
 const updatePersonalFieldsSchema = z.object({
   priority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH"]).optional(),
@@ -173,6 +174,13 @@ export async function updatePlayState(
     }
 
     const data = parsed.data;
+    const current = await prisma.libraryEntry.findUnique({
+      where: { gameId },
+      select: { playState: true },
+    });
+    if (!current) {
+      throw new Error("Library entry not found");
+    }
 
     const updateData = {
       ...(data.playState !== undefined && { playState: data.playState }),
@@ -195,6 +203,7 @@ export async function updatePlayState(
           data: updateData,
         });
       });
+      await logPlayStateEvent(current.playState, data.playState, gameId);
       return { success: true as const, data: entry, error: null };
     }
 
@@ -202,6 +211,7 @@ export async function updatePlayState(
       where: { gameId },
       data: updateData,
     });
+    await logPlayStateEvent(current.playState, data.playState, gameId);
     return { success: true as const, data: entry, error: null };
   } catch (err) {
     return {
@@ -209,6 +219,21 @@ export async function updatePlayState(
       data: null,
       error: err instanceof Error ? err.message : "Failed to update play state",
     };
+  }
+}
+
+async function logPlayStateEvent(
+  previous: "NOT_STARTED" | "IN_PROGRESS" | "PLAYED_BEFORE" | "ABANDONED",
+  next: "NOT_STARTED" | "IN_PROGRESS" | "PLAYED_BEFORE" | "ABANDONED" | undefined,
+  gameId: string,
+) {
+  if (next === undefined) return;
+  const kind = playStateTransitionKind(previous, next);
+  if (!kind) return;
+  try {
+    await logRecommendationEvent(prisma, { kind, gameId });
+  } catch {
+    // Event telemetry must not make a successful play-state update fail.
   }
 }
 

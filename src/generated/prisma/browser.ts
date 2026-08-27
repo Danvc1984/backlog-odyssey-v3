@@ -178,6 +178,11 @@ export type RecommendationItem = Prisma.RecommendationItemModel
  */
 export type RecommendationFeedback = Prisma.RecommendationFeedbackModel
 /**
+ * Model RecommendationEvent
+ *
+ */
+export type RecommendationEvent = Prisma.RecommendationEventModel
+/**
  * Model WallpaperState
  * 
  */

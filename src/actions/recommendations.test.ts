@@ -15,12 +15,19 @@ vi.mock("@/lib/protondb-api", () => ({
     };
   }),
 }));
+vi.mock("@/lib/recommendations/events", () => ({
+  logRecommendationEvent: vi.fn(),
+  pruneRecommendationEvents: vi.fn().mockResolvedValue(0),
+}));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { RUN_RETENTION_DAYS } from "@/lib/recommendations/types";
+import { logRecommendationEvent } from "@/lib/recommendations/events";
 import {
   dismissRecommendation,
+  recordRunExposure,
+  restartRecommendations,
   updateRecommendations,
 } from "./recommendations";
 
@@ -30,11 +37,16 @@ const runDeleteMany = vi.fn();
 const gameFindMany = vi.fn();
 const wishlistFindMany = vi.fn();
 const feedbackCreate = vi.fn();
+const eventCreate = vi.fn();
+const eventCreateMany = vi.fn();
+const eventDeleteMany = vi.fn();
+const feedbackDeleteMany = vi.fn();
 
 function txFactory() {
   return {
     recommendationRun: { create: runCreate, deleteMany: runDeleteMany },
-    recommendationFeedback: { create: feedbackCreate },
+    recommendationFeedback: { create: feedbackCreate, deleteMany: feedbackDeleteMany },
+    recommendationEvent: { create: eventCreate, createMany: eventCreateMany, deleteMany: eventDeleteMany },
     game: { findMany: gameFindMany },
     wishlistEntry: { findMany: wishlistFindMany },
   };
@@ -49,11 +61,15 @@ beforeEach(() => {
   const prismaMock = prisma as unknown as Record<string, unknown>;
   prismaMock.$transaction = transaction;
   prismaMock.recommendationFeedback = { create: feedbackCreate };
+  prismaMock.recommendationEvent = { create: eventCreate, createMany: eventCreateMany, deleteMany: eventDeleteMany };
   runDeleteMany.mockResolvedValue({ count: 2 });
   runCreate.mockImplementation(async ({ data }: { data: { kind: string } }) => ({
     id: data.kind === "PLAY_NEXT" ? "run-play" : "run-buy",
   }));
   feedbackCreate.mockResolvedValue({ id: "feedback-1" });
+  eventCreateMany.mockResolvedValue({ count: 0 });
+  eventDeleteMany.mockResolvedValue({ count: 0 });
+  feedbackDeleteMany.mockResolvedValue({ count: 0 });
   gameFindMany.mockResolvedValue([]);
   wishlistFindMany.mockResolvedValue([]);
 });
@@ -225,6 +241,7 @@ describe("updateRecommendations", () => {
       expect(call[0].data.context).toEqual({
         eligible: { playNext: 1, buy: 0 },
         prunedRuns: 2,
+        prunedEvents: 0,
       });
       if (call[0].data.kind === "BUY") {
         expect(call[0].data.items?.create).toEqual([]);
@@ -331,6 +348,40 @@ describe("dismissRecommendation", () => {
     );
   });
 
+  it("logs a dismissal event with its reason and run", async () => {
+    const result = await dismissRecommendation({
+      gameId: "game-1",
+      kind: "PLAY_NEXT",
+      runId: "run-1",
+      reason: "Already playing something else",
+    });
+
+    expect(result.success).toBe(true);
+    expect(logRecommendationEvent).toHaveBeenCalledWith(prisma, {
+      kind: "DISMISSAL",
+      gameId: "game-1",
+      wishlistEntryId: undefined,
+      runId: "run-1",
+      reason: "Already playing something else",
+    });
+  });
+
+  it("keeps the dismissal successful when event logging fails", async () => {
+    vi.mocked(logRecommendationEvent).mockRejectedValueOnce(new Error("event unavailable"));
+
+    const result = await dismissRecommendation({ gameId: "game-1", kind: "PLAY_NEXT" });
+
+    expect(result).toEqual({ success: true, data: { id: "feedback-1" }, error: null });
+  });
+
+  it("trims reasons and rejects reasons over 500 characters", async () => {
+    await dismissRecommendation({ gameId: "game-1", kind: "PLAY_NEXT", reason: "  Not now  " });
+    expect(logRecommendationEvent).toHaveBeenCalledWith(prisma, expect.objectContaining({ reason: "Not now" }));
+
+    const invalid = await dismissRecommendation({ gameId: "game-1", kind: "PLAY_NEXT", reason: "x".repeat(501) });
+    expect(invalid.success).toBe(false);
+  });
+
   it("rejects input without exactly one target", async () => {
     const none = await dismissRecommendation({ kind: "PLAY_NEXT" });
     const both = await dismissRecommendation({
@@ -360,5 +411,61 @@ describe("dismissRecommendation", () => {
 
     expect(result).toEqual({ success: false, data: null, error: "Unauthorized" });
     expect(feedbackCreate).not.toHaveBeenCalled();
+  });
+});
+
+describe("recordRunExposure", () => {
+  it("creates one exposure event per valid item", async () => {
+    eventCreateMany.mockResolvedValue({ count: 2 });
+
+    const result = await recordRunExposure({
+      runId: "run-1",
+      items: [{ gameId: "game-1" }, { wishlistEntryId: "wish-1" }],
+    });
+
+    expect(result).toEqual({ success: true, data: { count: 2 }, error: null });
+    expect(eventCreateMany).toHaveBeenCalledWith({
+      data: [
+        { runId: "run-1", kind: "EXPOSURE", gameId: "game-1", wishlistEntryId: null },
+        { runId: "run-1", kind: "EXPOSURE", gameId: null, wishlistEntryId: "wish-1" },
+      ],
+    });
+  });
+
+  it("treats an empty item list as a no-op and rejects malformed targets", async () => {
+    const empty = await recordRunExposure({ runId: "run-1", items: [] });
+    const invalid = await recordRunExposure({ runId: "run-1", items: [{ gameId: "game-1", wishlistEntryId: "wish-1" }] });
+
+    expect(empty).toEqual({ success: true, data: { count: 0 }, error: null });
+    expect(invalid.success).toBe(false);
+    expect(eventCreateMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("restartRecommendations", () => {
+  it("deletes recommendation-owned tables and returns counts", async () => {
+    const tx = txFactory();
+    tx.recommendationEvent.deleteMany.mockResolvedValue({ count: 4 });
+    tx.recommendationFeedback.deleteMany.mockResolvedValue({ count: 2 });
+    tx.recommendationRun.deleteMany.mockResolvedValue({ count: 3 });
+    transaction.mockImplementationOnce(async (callback: (client: typeof tx) => unknown) => callback(tx));
+
+    const result = await restartRecommendations();
+
+    expect(result).toEqual({
+      success: true,
+      data: { recommendationEvent: 4, recommendationFeedback: 2, recommendationRun: 3 },
+      error: null,
+    });
+    expect(tx.recommendationEvent.deleteMany).toHaveBeenCalledWith({});
+    expect(tx.recommendationFeedback.deleteMany).toHaveBeenCalledWith({});
+    expect(tx.recommendationRun.deleteMany).toHaveBeenCalledWith({});
+  });
+
+  it("succeeds with zero counts when no recommendation data exists", async () => {
+    runDeleteMany.mockResolvedValueOnce({ count: 0 });
+    const result = await restartRecommendations();
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual({ recommendationEvent: 0, recommendationFeedback: 0, recommendationRun: 0 });
   });
 });
