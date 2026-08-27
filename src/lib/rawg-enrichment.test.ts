@@ -10,8 +10,9 @@ import {
   resolveWishlistStoreLink,
   toRawgMetadataPayload,
   toWishlistMetadataPayload,
+  deriveSequelRelationship,
 } from "./rawg-enrichment";
-import type { RawgGameDetails, RawgMatchResult } from "./rawg-types";
+import type { RawgGameDetails, RawgMatchResult, RawgSeriesEntry } from "./rawg-types";
 
 const fetchedAt = new Date("2026-08-19T18:30:00.000Z");
 
@@ -35,6 +36,8 @@ const game: RawgGameDetails = {
   rawgUpdatedAt: "2026-08-19T00:00:00Z",
   rawgUrl: "https://rawg.io/games/portal-2",
   stores: [],
+  esrbRating: null,
+  seriesGames: [],
 };
 
 const matched: RawgMatchResult = {
@@ -78,7 +81,7 @@ describe("RAWG metadata persistence", () => {
 
   it("maps normalized RAWG fields into the versioned payload", () => {
     expect(toRawgMetadataPayload(game, fetchedAt)).toEqual({
-      schemaVersion: 1,
+      schemaVersion: 2,
       rawgId: 123,
       rawgSlug: "portal-2",
       title: "Portal 2",
@@ -100,6 +103,8 @@ describe("RAWG metadata persistence", () => {
         sourceUrl: "https://rawg.io/games/portal-2",
         fetchedAt: "2026-08-19T18:30:00.000Z",
       },
+      esrbRating: null,
+      seriesGames: [],
     });
   });
 
@@ -140,7 +145,7 @@ describe("RAWG metadata persistence", () => {
         provider: "RAWG",
         sourceUrl: "https://rawg.io/games/portal-2",
         fetchedAt,
-        payload: expect.objectContaining({ schemaVersion: 1, rawgId: 123 }),
+        payload: expect.objectContaining({ schemaVersion: 2, rawgId: 123 }),
       }),
     });
   });
@@ -250,5 +255,32 @@ describe("wishlist store-link extension", () => {
 
     const catalogPayload = toRawgMetadataPayload(game, fetchedAt) as unknown as Record<string, unknown>;
     expect(catalogPayload).not.toHaveProperty("storeLink");
+  });
+});
+
+describe("sequel derivation", () => {
+  const series: RawgSeriesEntry[] = [
+    { rawgId: 3, name: "Bridge Constructor Portal", slug: "bridge-constructor-portal", released: "2017-12-20" },
+    { rawgId: 1, name: "Portal", slug: "portal", released: "2007-10-09" },
+    { rawgId: 123, name: "Portal 2", slug: "portal-2", released: "2011-04-18" },
+    { rawgId: 6, name: "Same-day release", slug: "same-day", released: "2011-04-18" },
+    { rawgId: 2, name: "Portal Stories: Mel", slug: "portal-stories-mel", released: "2015-06-30" },
+    { rawgId: 4, name: "Undated entry", slug: null, released: null },
+    { rawgId: 5, name: "Unparseable date", slug: null, released: "not-a-date" },
+  ];
+
+  it("keeps only strictly later releases, oldest first, excluding the current game", () => {
+    expect(deriveSequelRelationship({ rawgId: 123, releaseDate: "2011-04-18" }, series)).toEqual([
+      { rawgId: 2, name: "Portal Stories: Mel", slug: "portal-stories-mel", released: "2015-06-30" },
+      { rawgId: 3, name: "Bridge Constructor Portal", slug: "bridge-constructor-portal", released: "2017-12-20" },
+    ]);
+  });
+
+  it("returns empty when the current game has no release date", () => {
+    expect(deriveSequelRelationship({ rawgId: 123, releaseDate: null }, series)).toEqual([]);
+  });
+
+  it("returns empty when the current release date cannot be parsed", () => {
+    expect(deriveSequelRelationship({ rawgId: 123, releaseDate: "garbage" }, series)).toEqual([]);
   });
 });

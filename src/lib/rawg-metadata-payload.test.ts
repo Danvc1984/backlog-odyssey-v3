@@ -27,8 +27,19 @@ const validPayload = {
 };
 
 describe("parseRawgMetadataPayload", () => {
-  it("passes through a payload with title and genres", () => {
+  it("passes through a version 1 payload with title and genres", () => {
     expect(parseRawgMetadataPayload(validPayload)).toEqual(validPayload);
+  });
+
+  it("passes through a version 2 payload with the new evidence fields", () => {
+    const v2Payload = {
+      ...validPayload,
+      schemaVersion: 2 as const,
+      esrbRating: { name: "Teen", slug: "teen" },
+      seriesGames: [{ rawgId: 1, name: "Portal", slug: "portal", released: "2007-10-09" }],
+    };
+
+    expect(parseRawgMetadataPayload(v2Payload)).toEqual(v2Payload);
   });
 
   it("rejects non-object payloads", () => {

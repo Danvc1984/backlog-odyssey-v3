@@ -38,6 +38,11 @@ The checked state and exact ordering come from `blueprint/build-plan.md`.
    persistent state, retries, and progress.
 8c. **Catalog-wide enrichment** - Batch enqueue, progress, and partial failure.
 8d. **Post-import enrichment** - Queue each newly imported Steam game safely.
+8e. **RAWG payload maturity and series evidence** - ESRB rating and the RAWG
+game-series list captured into a version 2 metadata payload with
+backward-compatible parsing; backfill through the existing catalog-wide
+enrichment action; shown in the shared RAWG metadata section on game and
+wishlist detail.
 9. **DLC model and unresolved Steam queue** - Required base-game ownership,
    explicit deletion/cascade behavior, and manual review queue.
 10a. **Local wishlist, RAWG, and acquisition** - Independent wishes, owned-base
@@ -286,6 +291,12 @@ feature's implementation.
   only as a non-authoritative Wishlist-header chip backed by a stored last-run
   summary. Import is idempotent by Steam App ID and ends in a persistent result
   panel (created, linked, queued reviews, ignored, enrichment).
+- RAWG metadata payload version 2 adds `esrbRating` and a `seriesGames` list
+  fetched from the RAWG game-series endpoint. Parsing stays backward-compatible
+  with version 1 snapshots, and version 1 rows upgrade the next time their game
+  is enriched. Series evidence enables a "confident sequel" derivation (same
+  series, strictly later release date) for the recommender's reserved SERIES
+  dimension; ESRB enables the MATURITY dimension.
 - Manual entries and Steam imports save first; provider failures never roll back
   local data or remove the last valid provider snapshot.
 - `11c-b` adds the wishlist detail page (`/wishlist/[id]`) with full RAWG

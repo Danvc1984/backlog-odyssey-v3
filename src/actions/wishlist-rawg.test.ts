@@ -65,6 +65,8 @@ const rawgGame = {
     { storeSlug: "steam", storeName: "Steam", url: "https://store.steampowered.com/app/620/Portal_2/" },
     { storeSlug: "gog", storeName: "GOG", url: "https://www.gog.com/game/portal_2" },
   ],
+  esrbRating: null,
+  seriesGames: [],
 };
 
 beforeEach(() => {

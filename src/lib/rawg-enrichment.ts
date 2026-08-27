@@ -11,6 +11,7 @@ import {
   type RawgMatchResult,
   type RawgMetadataPayload,
   type RawgPersistenceResult,
+  type RawgSeriesEntry,
   type RawgStoreEntry,
   type RawgWishlistMetadataPayload,
   type WishlistStoreLink,
@@ -54,10 +55,35 @@ export function toRawgMetadataPayload(
       sourceUrl: game.rawgUrl,
       fetchedAt: fetchedAt.toISOString(),
     },
+    esrbRating: game.esrbRating,
+    seriesGames: game.seriesGames,
   };
 }
 
 const STEAM_STORE_SLUG = "steam";
+
+export function deriveSequelRelationship(
+  current: { rawgId: number; releaseDate: string | null },
+  series: readonly RawgSeriesEntry[],
+): RawgSeriesEntry[] {
+  if (current.releaseDate === null) {
+    return [];
+  }
+  const currentReleased = new Date(current.releaseDate).getTime();
+  if (Number.isNaN(currentReleased)) {
+    return [];
+  }
+
+  return series
+    .filter((entry): entry is RawgSeriesEntry & { released: string } => {
+      if (entry.rawgId === current.rawgId || entry.released === null) {
+        return false;
+      }
+      const released = new Date(entry.released).getTime();
+      return !Number.isNaN(released) && released > currentReleased;
+    })
+    .sort((a, b) => new Date(a.released).getTime() - new Date(b.released).getTime());
+}
 
 export function hasRawgSteamStore(stores: RawgStoreEntry[]): boolean {
   return stores.some((entry) => entry.storeSlug === STEAM_STORE_SLUG);

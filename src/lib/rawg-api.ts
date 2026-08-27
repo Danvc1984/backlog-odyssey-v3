@@ -1,18 +1,21 @@
 import "server-only";
 
 import type {
+  RawgEsrbRating,
   RawgGameDetails,
   RawgMatchRequest,
   RawgMatchResult,
   RawgNamedValue,
   RawgProviderError,
   RawgSearchCandidate,
+  RawgSeriesEntry,
   RawgStoreEntry,
 } from "./rawg-types";
 
 const RAWG_API_BASE_URL = "https://api.rawg.io/api";
 const RAWG_WEB_BASE_URL = "https://rawg.io/games";
 export const RAWG_SEARCH_PAGE_SIZE = 5;
+const RAWG_SERIES_PAGE_CAP = 20;
 const RAWG_REQUEST_TIMEOUT_MS = 10_000;
 
 interface RawgHttpResponse {
@@ -45,6 +48,7 @@ interface RawgApiGame {
   alternative_names?: unknown;
   updated?: unknown;
   stores?: unknown;
+  esrb_rating?: unknown;
 }
 
 interface RawgApiSearchResponse {
@@ -123,6 +127,40 @@ function parseAlternativeNames(value: unknown): string[] | null {
   return names;
 }
 
+function parseEsrbRating(value: unknown): RawgEsrbRating | null {
+  if (!isRecord(value) || typeof value.name !== "string" || value.name.trim().length === 0) {
+    return null;
+  }
+  return { name: value.name, slug: nullableString(value.slug) };
+}
+
+function parseSeriesGames(value: unknown): RawgSeriesEntry[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const entries: RawgSeriesEntry[] = [];
+  for (const item of value) {
+    if (
+      !isRecord(item) ||
+      !isPositiveInteger(item.id) ||
+      typeof item.name !== "string" ||
+      item.name.trim().length === 0
+    ) {
+      continue;
+    }
+
+    entries.push({
+      rawgId: item.id,
+      name: item.name,
+      slug: nullableString(item.slug),
+      released: nullableString(item.released),
+    });
+  }
+
+  return entries.slice(0, RAWG_SERIES_PAGE_CAP);
+}
+
 function parseGame(value: unknown): RawgGameDetails | null {
   if (!isRecord(value)) {
     return null;
@@ -163,6 +201,8 @@ function parseGame(value: unknown): RawgGameDetails | null {
     rawgUpdatedAt: nullableString(game.updated),
     rawgUrl: `${RAWG_WEB_BASE_URL}/${encodeURIComponent(game.slug)}`,
     stores: parseStores(game.stores),
+    esrbRating: parseEsrbRating(game.esrb_rating),
+    seriesGames: [],
   };
 }
 
@@ -256,6 +296,31 @@ async function requestJson(
   return { response, payload };
 }
 
+async function fetchGameSeries(
+  id: number,
+  apiKey: string,
+  fetchFn: typeof fetch,
+): Promise<RawgSeriesEntry[]> {
+  try {
+    const url = `${RAWG_API_BASE_URL}/games/${encodeURIComponent(String(id))}/game-series?key=${encodeURIComponent(apiKey)}`;
+    const result = await requestJson(url, fetchFn);
+    if ("error" in result || !result.response.ok) {
+      return [];
+    }
+
+    const results = isRecord(result.payload)
+      ? (result.payload as RawgApiSearchResponse).results
+      : null;
+    if (!Array.isArray(results)) {
+      return [];
+    }
+
+    return parseSeriesGames(results);
+  } catch {
+    return [];
+  }
+}
+
 async function fetchGame(
   id: number,
   apiKey: string,
@@ -275,7 +340,12 @@ async function fetchGame(
   }
 
   const game = parseGame(result.payload);
-  return game ?? providerError("MALFORMED_RESPONSE", "RAWG returned an invalid game response", result.response.status);
+  if (!game) {
+    return providerError("MALFORMED_RESPONSE", "RAWG returned an invalid game response", result.response.status);
+  }
+
+  const seriesGames = await fetchGameSeries(game.id, apiKey, fetchFn);
+  return { ...game, seriesGames };
 }
 
 async function searchGames(

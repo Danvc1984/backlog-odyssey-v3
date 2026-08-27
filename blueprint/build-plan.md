@@ -38,6 +38,13 @@
     library action to enqueue eligible games and report batch outcomes
   - [x] 8d. **Post-import enrichment** - enqueue every newly imported Steam game
     without rolling back or duplicating the import
+  - [x] 8e. **RAWG payload maturity and series evidence** - capture ESRB
+    rating from the existing details call into a version 2 metadata payload
+    with backward-compatible parsing and unchanged attribution; capture the
+    RAWG game-series list as series evidence for later sequel derivation;
+    backfill via the existing catalog-wide enrichment action; ESRB rating and
+    series names shown in the shared RAWG metadata section on game and
+    wishlist detail
 
 ## DLC and wishlist
 

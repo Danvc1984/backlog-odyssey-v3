@@ -80,7 +80,7 @@ describe("matchRawgGame", () => {
       matchRawgGame({ title: "Different title" }, { fetchFn: fetchMock }),
     ).resolves.toMatchObject({ outcome: "MATCHED", game: { id: 456 } });
 
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
     const requestUrl = new URL(fetchMock.mock.calls[0][0] as string);
     expect(requestUrl.pathname).toBe("/api/games");
     expect(requestUrl.searchParams.get("search")).toBe("different title");
@@ -119,7 +119,7 @@ describe("matchRawgGame", () => {
       ),
     ).resolves.toMatchObject({ outcome: "MATCHED", matchMethod: "MANUAL_RAWG_SEARCH" });
 
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(new URL(fetchMock.mock.calls[0][0] as string).pathname).toBe("/api/games/123");
   });
 
@@ -238,6 +238,89 @@ describe("matchRawgGame", () => {
     await expect(
       matchRawgGame({ title: "Portal 2", selectedRawgId: 123 }, { fetchFn: fetchMock }),
     ).resolves.toMatchObject({ outcome: "MATCHED", matchMethod: "MANUAL_RAWG_SEARCH" });
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("parses the ESRB rating and series entries, skipping junk series rows", async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ ...detail, esrb_rating: { id: 5, name: "Mature", slug: "mature" } }),
+          { status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            results: [
+              { id: 1, slug: "portal", name: "Portal", released: "2007-10-09" },
+              "junk",
+              { id: "bad", name: "No numeric id" },
+              { id: 2, name: "   " },
+              { id: 3 },
+            ],
+          }),
+          { status: 200 },
+        ),
+      );
+
+    await expect(
+      matchRawgGame({ title: "Portal 2", selectedRawgId: 123 }, { fetchFn: fetchMock }),
+    ).resolves.toMatchObject({
+      outcome: "MATCHED",
+      game: {
+        esrbRating: { name: "Mature", slug: "mature" },
+        seriesGames: [{ rawgId: 1, name: "Portal", slug: "portal", released: "2007-10-09" }],
+      },
+    });
+
+    expect(new URL(fetchMock.mock.calls[1][0] as string).pathname).toBe("/api/games/123/game-series");
+  });
+
+  it.each([
+    ["absent", detail],
+    ["null", { ...detail, esrb_rating: null }],
+    ["malformed", { ...detail, esrb_rating: { name: 42, slug: "junk" } }],
+  ])("keeps the ESRB rating null and the match intact when the rating is %s", async (_label, payload) => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify(payload), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ results: [] }), { status: 200 }));
+
+    await expect(
+      matchRawgGame({ title: "Portal 2", selectedRawgId: 123 }, { fetchFn: fetchMock }),
+    ).resolves.toMatchObject({ outcome: "MATCHED", game: { esrbRating: null, seriesGames: [] } });
+  });
+
+  it("caps the series list at 20 entries", async () => {
+    const many = Array.from({ length: 25 }, (_, index) => ({
+      id: index + 1,
+      slug: `game-${index + 1}`,
+      name: `Game ${index + 1}`,
+      released: null,
+    }));
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify(detail), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ results: many }), { status: 200 }));
+
+    const result = await matchRawgGame({ title: "Portal 2", selectedRawgId: 123 }, { fetchFn: fetchMock });
+    expect(result).toMatchObject({ outcome: "MATCHED" });
+    expect((result as { game: { seriesGames: unknown[] } }).game.seriesGames).toHaveLength(20);
+  });
+
+  it.each([
+    ["a network failure", () => Promise.reject(new Error("offline"))],
+    ["a rate limit", () => Promise.resolve(new Response("rate limited", { status: 429 }))],
+    [
+      "a malformed payload",
+      () => Promise.resolve(new Response(JSON.stringify({ results: "not-an-array" }), { status: 200 })),
+    ],
+  ])("keeps details usable when the series call hits %s", async (_label, seriesResponse) => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify(detail), { status: 200 }))
+      .mockImplementationOnce(seriesResponse);
+
+    await expect(
+      matchRawgGame({ title: "Portal 2", selectedRawgId: 123 }, { fetchFn: fetchMock }),
+    ).resolves.toMatchObject({ outcome: "MATCHED", game: { id: 123, seriesGames: [] } });
   });
 });

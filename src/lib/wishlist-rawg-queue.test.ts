@@ -30,6 +30,8 @@ const rawgGame = {
   rawgUpdatedAt: null,
   rawgUrl: "https://rawg.io/games/portal-2",
   stores: [],
+  esrbRating: null,
+  seriesGames: [],
 };
 
 beforeEach(() => {

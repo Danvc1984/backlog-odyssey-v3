@@ -97,8 +97,10 @@ export function MetadataSection({
               label="Playtime"
               value={payload.playtimeHours === null ? null : `${payload.playtimeHours} hours`}
             />
+            <Field label="ESRB" value={payload.esrbRating?.name ?? null} />
             <Values label="Genres" values={payload.genres} />
             <Values label="Tags" values={payload.tags} />
+            <Values label="Series" values={(payload.seriesGames ?? []).map((game) => game.name)} />
             <Values label="Developers" values={payload.developers} />
             <Values label="Publishers" values={payload.publishers} />
             <Values label="Alternative names" values={payload.alternativeNames} />
