@@ -4,9 +4,10 @@ import { UnresolvedDlcReviewCard } from "@/components/steam/UnresolvedDlcReviewC
 import { CompatibilitySweepPanel } from "@/components/games/CompatibilitySweepPanel";
 import { getLatestCompatBatchStatus } from "@/lib/compat-batch-runner";
 import { RestartRecommendationsSection } from "@/components/recommendations/RestartRecommendationsSection";
+import { RecommendationProfileSection } from "@/components/recommendations/RecommendationProfileSection";
 
 export default async function SettingsPage() {
-  const [steamConnection, unresolvedDlcs, baseGames, latestCompatBatch] = await Promise.all([
+  const [steamConnection, unresolvedDlcs, baseGames, latestCompatBatch, profile, preferences] = await Promise.all([
     prisma.steamConnection.findUnique({ where: { id: 1 } }),
     prisma.unresolvedSteamDlc.findMany({
       select: { id: true, steamAppId: true, name: true, steamBaseAppId: true, source: true, status: true },
@@ -18,6 +19,8 @@ export default async function SettingsPage() {
       orderBy: { name: "asc" },
     }),
     getLatestCompatBatchStatus(),
+    prisma.recommendationProfile.findUnique({ where: { id: 1 }, select: { payload: true, rebuiltAt: true } }),
+    prisma.recommendationPreference.findMany({ orderBy: [{ dimension: "asc" }, { value: "asc" }] }),
   ]);
 
   return (
@@ -37,6 +40,7 @@ export default async function SettingsPage() {
       </section>
 
       <UnresolvedDlcReviewCard items={unresolvedDlcs} baseGames={baseGames} />
+      <RecommendationProfileSection profile={profile} preferences={preferences} />
       <RestartRecommendationsSection />
     </div>
   );

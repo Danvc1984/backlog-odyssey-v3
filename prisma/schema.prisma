@@ -112,6 +112,24 @@ enum RecommendationEventKind {
   DISMISSAL
 }
 
+enum RecommendationDimension {
+  GENRE
+  TAG
+  EXPERIENCE
+  DURATION
+  PUBLISHER
+  ERA
+  SERIES
+  ENVIRONMENT
+  MATURITY
+}
+
+enum RecommendationPreferenceAttitude {
+  PREFER
+  NEUTRAL
+  AVOID
+}
+
 enum SyncStatus {
   RUNNING
   SUCCESS
@@ -694,6 +712,25 @@ model RecommendationEvent {
   @@index([gameId, kind])
   @@index([wishlistEntryId, kind])
   @@index([runId])
+}
+
+model RecommendationProfile {
+  id        Int      @id @default(1)
+  version   Int      @default(1)
+  payload   Json
+  rebuiltAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RecommendationPreference {
+  id        String                            @id @default(cuid())
+  dimension RecommendationDimension
+  value     String
+  attitude  RecommendationPreferenceAttitude
+  createdAt DateTime                          @default(now())
+  updatedAt DateTime                          @updatedAt
+
+  @@unique([dimension, value])
 }
 
 // ---------------------------------------------------------------------------

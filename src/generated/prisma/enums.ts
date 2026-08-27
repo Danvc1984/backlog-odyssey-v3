@@ -150,6 +150,30 @@ export const RecommendationEventKind = {
 export type RecommendationEventKind = (typeof RecommendationEventKind)[keyof typeof RecommendationEventKind]
 
 
+export const RecommendationDimension = {
+  GENRE: 'GENRE',
+  TAG: 'TAG',
+  EXPERIENCE: 'EXPERIENCE',
+  DURATION: 'DURATION',
+  PUBLISHER: 'PUBLISHER',
+  ERA: 'ERA',
+  SERIES: 'SERIES',
+  ENVIRONMENT: 'ENVIRONMENT',
+  MATURITY: 'MATURITY'
+} as const
+
+export type RecommendationDimension = (typeof RecommendationDimension)[keyof typeof RecommendationDimension]
+
+
+export const RecommendationPreferenceAttitude = {
+  PREFER: 'PREFER',
+  NEUTRAL: 'NEUTRAL',
+  AVOID: 'AVOID'
+} as const
+
+export type RecommendationPreferenceAttitude = (typeof RecommendationPreferenceAttitude)[keyof typeof RecommendationPreferenceAttitude]
+
+
 export const SyncStatus = {
   RUNNING: 'RUNNING',
   SUCCESS: 'SUCCESS',

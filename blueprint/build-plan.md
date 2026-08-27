@@ -154,7 +154,7 @@
     `Update recommendations` action creating both runs with rolling 12-month
     pruning, Today display with in-run dismissal, and header actions on
     Library and Wishlist
-  - [ ] 12b. **Buy recommendations** - explainable wishlist purchase picks
+  - [x] 12b. **Buy recommendations** - explainable wishlist purchase picks
     from fresh offers and personal intent
     - [x] 12b-a. **Buy recommendation engine** - wishlist eligibility
       (base games and owned-base DLC wishes, ROM exclusion), fresh-discount
@@ -187,7 +187,7 @@
       time-bounded retention by event kind (90 days / 12 months / 24 months),
       and `Restart recommendations` removing all recommendation-owned records
       while preserving catalog and provider data
-    - [ ] 12c-c. **Derived profile and preference overrides** - rebuildable
+    - [x] 12c-c. **Derived profile and preference overrides** - rebuildable
       `RecommendationProfile` aggregate with recency decay, `PREFER`/
       `NEUTRAL`/`AVOID` `RecommendationPreference` overrides, and a Settings
       section showing the learned profile, its evidence, and the controls

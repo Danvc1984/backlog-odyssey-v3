@@ -803,6 +803,40 @@ export type EnumRecommendationEventKindWithAggregatesFilter<$PrismaModel = never
   _max?: Prisma.NestedEnumRecommendationEventKindFilter<$PrismaModel>
 }
 
+export type EnumRecommendationDimensionFilter<$PrismaModel = never> = {
+  equals?: $Enums.RecommendationDimension | Prisma.EnumRecommendationDimensionFieldRefInput<$PrismaModel>
+  in?: $Enums.RecommendationDimension[] | Prisma.ListEnumRecommendationDimensionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.RecommendationDimension[] | Prisma.ListEnumRecommendationDimensionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumRecommendationDimensionFilter<$PrismaModel> | $Enums.RecommendationDimension
+}
+
+export type EnumRecommendationPreferenceAttitudeFilter<$PrismaModel = never> = {
+  equals?: $Enums.RecommendationPreferenceAttitude | Prisma.EnumRecommendationPreferenceAttitudeFieldRefInput<$PrismaModel>
+  in?: $Enums.RecommendationPreferenceAttitude[] | Prisma.ListEnumRecommendationPreferenceAttitudeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.RecommendationPreferenceAttitude[] | Prisma.ListEnumRecommendationPreferenceAttitudeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumRecommendationPreferenceAttitudeFilter<$PrismaModel> | $Enums.RecommendationPreferenceAttitude
+}
+
+export type EnumRecommendationDimensionWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.RecommendationDimension | Prisma.EnumRecommendationDimensionFieldRefInput<$PrismaModel>
+  in?: $Enums.RecommendationDimension[] | Prisma.ListEnumRecommendationDimensionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.RecommendationDimension[] | Prisma.ListEnumRecommendationDimensionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumRecommendationDimensionWithAggregatesFilter<$PrismaModel> | $Enums.RecommendationDimension
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumRecommendationDimensionFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumRecommendationDimensionFilter<$PrismaModel>
+}
+
+export type EnumRecommendationPreferenceAttitudeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.RecommendationPreferenceAttitude | Prisma.EnumRecommendationPreferenceAttitudeFieldRefInput<$PrismaModel>
+  in?: $Enums.RecommendationPreferenceAttitude[] | Prisma.ListEnumRecommendationPreferenceAttitudeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.RecommendationPreferenceAttitude[] | Prisma.ListEnumRecommendationPreferenceAttitudeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumRecommendationPreferenceAttitudeWithAggregatesFilter<$PrismaModel> | $Enums.RecommendationPreferenceAttitude
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumRecommendationPreferenceAttitudeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumRecommendationPreferenceAttitudeFilter<$PrismaModel>
+}
+
 export type EnumCatalogOperationTypeFilter<$PrismaModel = never> = {
   equals?: $Enums.CatalogOperationType | Prisma.EnumCatalogOperationTypeFieldRefInput<$PrismaModel>
   in?: $Enums.CatalogOperationType[] | Prisma.ListEnumCatalogOperationTypeFieldRefInput<$PrismaModel>
@@ -1561,6 +1595,40 @@ export type NestedEnumRecommendationEventKindWithAggregatesFilter<$PrismaModel =
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumRecommendationEventKindFilter<$PrismaModel>
   _max?: Prisma.NestedEnumRecommendationEventKindFilter<$PrismaModel>
+}
+
+export type NestedEnumRecommendationDimensionFilter<$PrismaModel = never> = {
+  equals?: $Enums.RecommendationDimension | Prisma.EnumRecommendationDimensionFieldRefInput<$PrismaModel>
+  in?: $Enums.RecommendationDimension[] | Prisma.ListEnumRecommendationDimensionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.RecommendationDimension[] | Prisma.ListEnumRecommendationDimensionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumRecommendationDimensionFilter<$PrismaModel> | $Enums.RecommendationDimension
+}
+
+export type NestedEnumRecommendationPreferenceAttitudeFilter<$PrismaModel = never> = {
+  equals?: $Enums.RecommendationPreferenceAttitude | Prisma.EnumRecommendationPreferenceAttitudeFieldRefInput<$PrismaModel>
+  in?: $Enums.RecommendationPreferenceAttitude[] | Prisma.ListEnumRecommendationPreferenceAttitudeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.RecommendationPreferenceAttitude[] | Prisma.ListEnumRecommendationPreferenceAttitudeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumRecommendationPreferenceAttitudeFilter<$PrismaModel> | $Enums.RecommendationPreferenceAttitude
+}
+
+export type NestedEnumRecommendationDimensionWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.RecommendationDimension | Prisma.EnumRecommendationDimensionFieldRefInput<$PrismaModel>
+  in?: $Enums.RecommendationDimension[] | Prisma.ListEnumRecommendationDimensionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.RecommendationDimension[] | Prisma.ListEnumRecommendationDimensionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumRecommendationDimensionWithAggregatesFilter<$PrismaModel> | $Enums.RecommendationDimension
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumRecommendationDimensionFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumRecommendationDimensionFilter<$PrismaModel>
+}
+
+export type NestedEnumRecommendationPreferenceAttitudeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.RecommendationPreferenceAttitude | Prisma.EnumRecommendationPreferenceAttitudeFieldRefInput<$PrismaModel>
+  in?: $Enums.RecommendationPreferenceAttitude[] | Prisma.ListEnumRecommendationPreferenceAttitudeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.RecommendationPreferenceAttitude[] | Prisma.ListEnumRecommendationPreferenceAttitudeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumRecommendationPreferenceAttitudeWithAggregatesFilter<$PrismaModel> | $Enums.RecommendationPreferenceAttitude
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumRecommendationPreferenceAttitudeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumRecommendationPreferenceAttitudeFilter<$PrismaModel>
 }
 
 export type NestedEnumCatalogOperationTypeFilter<$PrismaModel = never> = {

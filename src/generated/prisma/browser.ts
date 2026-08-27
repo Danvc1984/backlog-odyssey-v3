@@ -179,9 +179,19 @@ export type RecommendationItem = Prisma.RecommendationItemModel
 export type RecommendationFeedback = Prisma.RecommendationFeedbackModel
 /**
  * Model RecommendationEvent
- *
+ * 
  */
 export type RecommendationEvent = Prisma.RecommendationEventModel
+/**
+ * Model RecommendationProfile
+ * 
+ */
+export type RecommendationProfile = Prisma.RecommendationProfileModel
+/**
+ * Model RecommendationPreference
+ * 
+ */
+export type RecommendationPreference = Prisma.RecommendationPreferenceModel
 /**
  * Model WallpaperState
  * 

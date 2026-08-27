@@ -26,6 +26,7 @@ import type {
 import { RUN_RETENTION_DAYS } from "@/lib/recommendations/types";
 import { logRecommendationEvent } from "@/lib/recommendations/events";
 import { pruneRecommendationEvents } from "@/lib/recommendations/events";
+import { rebuildRecommendationProfile } from "@/lib/recommendations/profile";
 
 const dismissRecommendationSchema = z
   .object({
@@ -59,6 +60,14 @@ const recordRunExposureSchema = z.object({
     }
   })),
 }).strict();
+
+const recommendationPreferenceSchema = z.object({
+  dimension: z.enum(["GENRE", "TAG", "EXPERIENCE", "DURATION", "PUBLISHER", "ERA", "SERIES", "ENVIRONMENT", "MATURITY"]),
+  value: z.string().trim().min(1),
+  attitude: z.enum(["PREFER", "NEUTRAL", "AVOID"]),
+}).strict();
+
+const recommendationPreferenceIdSchema = z.object({ id: z.string().trim().min(1) }).strict();
 
 async function loadCandidates(client: Prisma.TransactionClient) {
   return client.game.findMany({
@@ -195,6 +204,7 @@ export async function updateRecommendations() {
         where: { createdAt: { lt: pruneCutoff } },
       });
       const prunedEvents = await pruneRecommendationEvents(tx, now);
+      const profile = await rebuildRecommendationProfile(tx, now);
 
       const rows = await loadCandidates(tx);
       const candidates: PlayNextCandidate[] = rows.map((row) => ({
@@ -215,6 +225,7 @@ export async function updateRecommendations() {
         eligible: { playNext: eligible.length, buy: buyEligibleList.length },
         prunedRuns: pruned.count,
         prunedEvents,
+        profile: { rebuiltAt: now.toISOString(), eventsConsidered: profile.evidence.eventsConsidered },
       };
       const contextJson = context as unknown as Prisma.InputJsonValue;
 
@@ -273,6 +284,7 @@ export async function updateRecommendations() {
         buyEligible: buyEligibleList.length,
         prunedRuns: pruned.count,
         prunedEvents,
+        profile: { rebuiltAt: now.toISOString(), eventsConsidered: profile.evidence.eventsConsidered },
       };
     });
 
@@ -352,6 +364,45 @@ export async function recordRunExposure(input: unknown) {
   }
 }
 
+export async function setRecommendationPreference(input: unknown) {
+  try {
+    await requireUser();
+    const parsed = recommendationPreferenceSchema.safeParse(input);
+    if (!parsed.success) return { success: false as const, data: null, error: "Invalid input" };
+    const row = await prisma.recommendationPreference.upsert({
+      where: { dimension_value: { dimension: parsed.data.dimension, value: parsed.data.value } },
+      create: parsed.data,
+      update: { attitude: parsed.data.attitude },
+    });
+    return { success: true as const, data: row, error: null };
+  } catch (err) {
+    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to set preference" };
+  }
+}
+
+export async function removeRecommendationPreference(input: unknown) {
+  try {
+    await requireUser();
+    const parsed = recommendationPreferenceIdSchema.safeParse(input);
+    if (!parsed.success) return { success: false as const, data: null, error: "Invalid input" };
+    await prisma.recommendationPreference.deleteMany({ where: { id: parsed.data.id } });
+    return { success: true as const, data: { id: parsed.data.id }, error: null };
+  } catch (err) {
+    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to remove preference" };
+  }
+}
+
+export async function rebuildRecommendationProfileAction() {
+  try {
+    await requireUser();
+    const rebuiltAt = new Date();
+    const payload = await rebuildRecommendationProfile(prisma as unknown as Prisma.TransactionClient, rebuiltAt);
+    return { success: true as const, data: { payload, rebuiltAt }, error: null };
+  } catch (err) {
+    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to rebuild recommendation profile" };
+  }
+}
+
 export async function restartRecommendations() {
   try {
     await requireUser();
@@ -359,7 +410,15 @@ export async function restartRecommendations() {
       const events = await tx.recommendationEvent.deleteMany({});
       const feedback = await tx.recommendationFeedback.deleteMany({});
       const runs = await tx.recommendationRun.deleteMany({});
-      return { recommendationEvent: events.count, recommendationFeedback: feedback.count, recommendationRun: runs.count };
+      const profile = await tx.recommendationProfile.deleteMany({});
+      const preferences = await tx.recommendationPreference.deleteMany({});
+      return {
+        recommendationEvent: events.count,
+        recommendationFeedback: feedback.count,
+        recommendationRun: runs.count,
+        recommendationProfile: profile.count,
+        recommendationPreference: preferences.count,
+      };
     });
     return { success: true as const, data: counts, error: null };
   } catch (err) {

@@ -18,15 +18,15 @@ export function RestartRecommendationsSection() {
       return;
     }
     setConfirming(false);
-    toast.success("Recommendations restarted", {
-      description: `${result.data.recommendationRun} runs, ${result.data.recommendationEvent} events, and ${result.data.recommendationFeedback} dismissals removed.`,
+      toast.success("Recommendations restarted", {
+      description: `${result.data.recommendationRun} runs, ${result.data.recommendationEvent} events, ${result.data.recommendationFeedback} dismissals, ${result.data.recommendationProfile} learned profiles, and ${result.data.recommendationPreference} preferences removed.`,
     });
   };
 
   return (
     <section className="mt-6 rounded-lg border border-border p-4">
       <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Recommendations</h2>
-      <p className="mt-2 text-sm text-muted-foreground">Remove recommendation runs, dismissals, and event history. Your games, wishlist, offers, and provider data stay unchanged.</p>
+      <p className="mt-2 text-sm text-muted-foreground">Remove recommendation runs, dismissals, event history, learned profile, and preferences. Your games, wishlist, offers, and provider data stay unchanged.</p>
       {confirming ? (
         <div className="mt-4 flex flex-wrap gap-2">
           <Button type="button" variant="destructive" onClick={() => void restart()} disabled={running}>{running ? "Restarting..." : "Confirm restart"}</Button>

@@ -458,5 +458,5 @@ workflow services, notifications, multi-user support, and offline/PWA behavior.
 - Wallhaven anonymous SFW rate limits and keyword-set defaults confirm during
   the feature 15 spec.
 
-Run `/feature` for the next unchecked item, currently `12b`. Run `/prototype`
+Run `/feature` for the next unchecked item, currently `12c-d`. Run `/prototype`
 before feature 14 to lock the visual look against `blueprint/reference/`.

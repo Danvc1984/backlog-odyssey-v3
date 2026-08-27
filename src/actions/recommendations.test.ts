@@ -19,15 +19,25 @@ vi.mock("@/lib/recommendations/events", () => ({
   logRecommendationEvent: vi.fn(),
   pruneRecommendationEvents: vi.fn().mockResolvedValue(0),
 }));
+vi.mock("@/lib/recommendations/profile", () => ({
+  rebuildRecommendationProfile: vi.fn().mockResolvedValue({
+    windowEnd: "2026-01-01T00:00:00.000Z",
+    evidence: { eventsConsidered: 0 },
+  }),
+}));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { RUN_RETENTION_DAYS } from "@/lib/recommendations/types";
 import { logRecommendationEvent } from "@/lib/recommendations/events";
+import { rebuildRecommendationProfile } from "@/lib/recommendations/profile";
 import {
   dismissRecommendation,
   recordRunExposure,
   restartRecommendations,
+  setRecommendationPreference,
+  removeRecommendationPreference,
+  rebuildRecommendationProfileAction,
   updateRecommendations,
 } from "./recommendations";
 
@@ -41,12 +51,17 @@ const eventCreate = vi.fn();
 const eventCreateMany = vi.fn();
 const eventDeleteMany = vi.fn();
 const feedbackDeleteMany = vi.fn();
+const preferenceUpsert = vi.fn();
+const preferenceDeleteMany = vi.fn();
+const profileDeleteMany = vi.fn();
 
 function txFactory() {
   return {
     recommendationRun: { create: runCreate, deleteMany: runDeleteMany },
     recommendationFeedback: { create: feedbackCreate, deleteMany: feedbackDeleteMany },
     recommendationEvent: { create: eventCreate, createMany: eventCreateMany, deleteMany: eventDeleteMany },
+    recommendationProfile: { upsert: vi.fn(), deleteMany: profileDeleteMany },
+    recommendationPreference: { upsert: preferenceUpsert, deleteMany: preferenceDeleteMany },
     game: { findMany: gameFindMany },
     wishlistEntry: { findMany: wishlistFindMany },
   };
@@ -62,6 +77,7 @@ beforeEach(() => {
   prismaMock.$transaction = transaction;
   prismaMock.recommendationFeedback = { create: feedbackCreate };
   prismaMock.recommendationEvent = { create: eventCreate, createMany: eventCreateMany, deleteMany: eventDeleteMany };
+  prismaMock.recommendationPreference = { upsert: preferenceUpsert, deleteMany: preferenceDeleteMany };
   runDeleteMany.mockResolvedValue({ count: 2 });
   runCreate.mockImplementation(async ({ data }: { data: { kind: string } }) => ({
     id: data.kind === "PLAY_NEXT" ? "run-play" : "run-buy",
@@ -69,9 +85,33 @@ beforeEach(() => {
   feedbackCreate.mockResolvedValue({ id: "feedback-1" });
   eventCreateMany.mockResolvedValue({ count: 0 });
   eventDeleteMany.mockResolvedValue({ count: 0 });
+  vi.mocked(rebuildRecommendationProfile).mockResolvedValue({
+    windowEnd: "2026-01-01T00:00:00.000Z",
+    evidence: { eventsConsidered: 0 },
+  } as never);
   feedbackDeleteMany.mockResolvedValue({ count: 0 });
+  preferenceUpsert.mockResolvedValue({ id: "pref-1" });
+  preferenceDeleteMany.mockResolvedValue({ count: 0 });
+  profileDeleteMany.mockResolvedValue({ count: 0 });
   gameFindMany.mockResolvedValue([]);
   wishlistFindMany.mockResolvedValue([]);
+});
+
+describe("recommendation preferences", () => {
+  it("validates and upserts a preference", async () => {
+    const result = await setRecommendationPreference({ dimension: "GENRE", value: " RPG ", attitude: "PREFER" });
+    expect(result.success).toBe(true);
+    expect(preferenceUpsert).toHaveBeenCalledWith(expect.objectContaining({
+      where: { dimension_value: { dimension: "GENRE", value: "RPG" } },
+      update: { attitude: "PREFER" },
+    }));
+  });
+
+  it("rejects invalid input and removes idempotently", async () => {
+    expect((await setRecommendationPreference({ dimension: "NOPE" })).success).toBe(false);
+    expect(await removeRecommendationPreference({ id: "pref-1" })).toMatchObject({ success: true });
+    expect(await rebuildRecommendationProfileAction()).toMatchObject({ success: true });
+  });
 });
 
 interface CandidateRowShape {
@@ -242,12 +282,14 @@ describe("updateRecommendations", () => {
         eligible: { playNext: 1, buy: 0 },
         prunedRuns: 2,
         prunedEvents: 0,
+        profile: expect.objectContaining({ eventsConsidered: 0 }),
       });
       if (call[0].data.kind === "BUY") {
         expect(call[0].data.items?.create).toEqual([]);
       }
     }
     expect(result.data).toMatchObject({ buyItems: 0, buyEligible: 0 });
+    expect(rebuildRecommendationProfile).toHaveBeenCalledTimes(1);
   });
 
   it("persists BUY items with ranks, scores, factors, and caveats from persisted offers", async () => {
@@ -448,24 +490,28 @@ describe("restartRecommendations", () => {
     tx.recommendationEvent.deleteMany.mockResolvedValue({ count: 4 });
     tx.recommendationFeedback.deleteMany.mockResolvedValue({ count: 2 });
     tx.recommendationRun.deleteMany.mockResolvedValue({ count: 3 });
+    tx.recommendationProfile.deleteMany.mockResolvedValue({ count: 1 });
+    tx.recommendationPreference.deleteMany.mockResolvedValue({ count: 2 });
     transaction.mockImplementationOnce(async (callback: (client: typeof tx) => unknown) => callback(tx));
 
     const result = await restartRecommendations();
 
     expect(result).toEqual({
       success: true,
-      data: { recommendationEvent: 4, recommendationFeedback: 2, recommendationRun: 3 },
+      data: { recommendationEvent: 4, recommendationFeedback: 2, recommendationRun: 3, recommendationProfile: 1, recommendationPreference: 2 },
       error: null,
     });
     expect(tx.recommendationEvent.deleteMany).toHaveBeenCalledWith({});
     expect(tx.recommendationFeedback.deleteMany).toHaveBeenCalledWith({});
     expect(tx.recommendationRun.deleteMany).toHaveBeenCalledWith({});
+    expect(tx.recommendationProfile.deleteMany).toHaveBeenCalledWith({});
+    expect(tx.recommendationPreference.deleteMany).toHaveBeenCalledWith({});
   });
 
   it("succeeds with zero counts when no recommendation data exists", async () => {
     runDeleteMany.mockResolvedValueOnce({ count: 0 });
     const result = await restartRecommendations();
     expect(result.success).toBe(true);
-    expect(result.data).toEqual({ recommendationEvent: 0, recommendationFeedback: 0, recommendationRun: 0 });
+    expect(result.data).toEqual({ recommendationEvent: 0, recommendationFeedback: 0, recommendationRun: 0, recommendationProfile: 0, recommendationPreference: 0 });
   });
 });

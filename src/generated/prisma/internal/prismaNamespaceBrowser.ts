@@ -84,6 +84,8 @@ export const ModelName = {
   RecommendationItem: 'RecommendationItem',
   RecommendationFeedback: 'RecommendationFeedback',
   RecommendationEvent: 'RecommendationEvent',
+  RecommendationProfile: 'RecommendationProfile',
+  RecommendationPreference: 'RecommendationPreference',
   WallpaperState: 'WallpaperState',
   SyncRun: 'SyncRun',
   CatalogOperation: 'CatalogOperation'
@@ -557,6 +559,29 @@ export const RecommendationEventScalarFieldEnum = {
 } as const
 
 export type RecommendationEventScalarFieldEnum = (typeof RecommendationEventScalarFieldEnum)[keyof typeof RecommendationEventScalarFieldEnum]
+
+
+export const RecommendationProfileScalarFieldEnum = {
+  id: 'id',
+  version: 'version',
+  payload: 'payload',
+  rebuiltAt: 'rebuiltAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type RecommendationProfileScalarFieldEnum = (typeof RecommendationProfileScalarFieldEnum)[keyof typeof RecommendationProfileScalarFieldEnum]
+
+
+export const RecommendationPreferenceScalarFieldEnum = {
+  id: 'id',
+  dimension: 'dimension',
+  value: 'value',
+  attitude: 'attitude',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type RecommendationPreferenceScalarFieldEnum = (typeof RecommendationPreferenceScalarFieldEnum)[keyof typeof RecommendationPreferenceScalarFieldEnum]
 
 
 export const WallpaperStateScalarFieldEnum = {
