@@ -77,17 +77,27 @@ export interface RankedPlayNextItem extends ScoredPlayNextCandidate {
   rank: number;
 }
 
-export function rankPlayNextCandidates(
+export function compareRankedPlay(
+  left: { score: number; name: string },
+  right: { score: number; name: string },
+): number {
+  if (right.score !== left.score) return right.score - left.score;
+  return left.name.toLowerCase().localeCompare(right.name.toLowerCase());
+}
+
+export function rankAllPlayNextCandidates(
   candidates: readonly PlayNextCandidate[],
 ): RankedPlayNextItem[] {
   const scored = candidates
     .filter(isEligibleForPlayNext)
     .map(scorePlayNextCandidate)
-    .sort((left, right) => {
-      if (right.score !== left.score) return right.score - left.score;
-      return left.name.toLowerCase().localeCompare(right.name.toLowerCase());
-    })
-    .slice(0, PLAY_NEXT_LIMIT);
+    .sort(compareRankedPlay);
 
   return scored.map((item, index) => ({ ...item, rank: index + 1 }));
+}
+
+export function rankPlayNextCandidates(
+  candidates: readonly PlayNextCandidate[],
+): RankedPlayNextItem[] {
+  return rankAllPlayNextCandidates(candidates).slice(0, PLAY_NEXT_LIMIT);
 }

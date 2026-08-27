@@ -191,7 +191,7 @@
       `RecommendationProfile` aggregate with recency decay, `PREFER`/
       `NEUTRAL`/`AVOID` `RecommendationPreference` overrides, and a Settings
       section showing the learned profile, its evidence, and the controls
-    - [ ] 12c-d. **Adaptive re-ranking engine** - re-ranking over the
+    - [x] 12c-d. **Adaptive re-ranking engine** - re-ranking over the
       deterministic baseline from profile, preference overrides, metadata,
       Steam activity, environment, compatibility, quality, publisher, era,
       duration, genre/tag, and series with uncertainty safeguards, plus

@@ -203,7 +203,26 @@ export interface RankedBuyItem {
   rank: number;
 }
 
-export function rankBuyCandidates(
+export interface BuyTiebreakView {
+  historicalLowGap: number | null;
+  updatedAt: Date;
+  id: string;
+}
+
+export function compareBuyTiebreak(left: BuyTiebreakView, right: BuyTiebreakView): number {
+  const leftGap = left.historicalLowGap;
+  const rightGap = right.historicalLowGap;
+  if (leftGap != null && rightGap == null) return -1;
+  if (leftGap == null && rightGap != null) return 1;
+  if (leftGap != null && rightGap != null && leftGap !== rightGap) {
+    return leftGap - rightGap;
+  }
+  const byUpdated = right.updatedAt.getTime() - left.updatedAt.getTime();
+  if (byUpdated !== 0) return byUpdated;
+  return left.id.localeCompare(right.id);
+}
+
+export function rankAllBuyCandidates(
   candidates: readonly BuyCandidate[],
   now: Date,
 ): RankedBuyItem[] {
@@ -214,19 +233,11 @@ export function rankBuyCandidates(
       if (right.scored.score !== left.scored.score) {
         return right.scored.score - left.scored.score;
       }
-      const leftGap = left.scored.historicalLowGap;
-      const rightGap = right.scored.historicalLowGap;
-      if (leftGap != null && rightGap == null) return -1;
-      if (leftGap == null && rightGap != null) return 1;
-      if (leftGap != null && rightGap != null && leftGap !== rightGap) {
-        return leftGap - rightGap;
-      }
-      const byUpdated =
-        right.candidate.updatedAt.getTime() - left.candidate.updatedAt.getTime();
-      if (byUpdated !== 0) return byUpdated;
-      return left.candidate.id.localeCompare(right.candidate.id);
-    })
-    .slice(0, BUY_LIMIT);
+      return compareBuyTiebreak(
+        { historicalLowGap: left.scored.historicalLowGap, updatedAt: left.candidate.updatedAt, id: left.candidate.id },
+        { historicalLowGap: right.scored.historicalLowGap, updatedAt: right.candidate.updatedAt, id: right.candidate.id },
+      );
+    });
 
   return withIdentity.map(({ scored }, index) => ({
     id: scored.id,
@@ -238,4 +249,11 @@ export function rankBuyCandidates(
     targetHit: scored.targetHit,
     rank: index + 1,
   }));
+}
+
+export function rankBuyCandidates(
+  candidates: readonly BuyCandidate[],
+  now: Date,
+): RankedBuyItem[] {
+  return rankAllBuyCandidates(candidates, now).slice(0, BUY_LIMIT);
 }

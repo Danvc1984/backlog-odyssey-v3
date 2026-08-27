@@ -4,6 +4,7 @@ import {
 import {
   UpdateRecommendationsButton,
 } from "@/components/recommendations/UpdateRecommendationsButton";
+import { ColdStartNote } from "@/components/recommendations/ColdStartNote";
 import { prisma } from "@/lib/prisma";
 import { RunExposureTracker } from "@/components/recommendations/RunExposureTracker";
 
@@ -32,6 +33,8 @@ export default async function TodayPage() {
 
   const items = latestPlayNextRun?.items ?? [];
   const buyItems = latestBuyRun?.items ?? [];
+  const playContext = latestPlayNextRun?.context as { rerank?: { mode?: string } } | null | undefined;
+  const coldStart = playContext?.rerank?.mode === "COLD_START";
 
   return (
     <div className="space-y-8">
@@ -60,6 +63,7 @@ export default async function TodayPage() {
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
           Play next
         </h2>
+        {latestPlayNextRun && <ColdStartNote visible={coldStart} />}
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">No eligible games right now.</p>
         ) : (

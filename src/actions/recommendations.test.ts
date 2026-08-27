@@ -19,12 +19,19 @@ vi.mock("@/lib/recommendations/events", () => ({
   logRecommendationEvent: vi.fn(),
   pruneRecommendationEvents: vi.fn().mockResolvedValue(0),
 }));
-vi.mock("@/lib/recommendations/profile", () => ({
-  rebuildRecommendationProfile: vi.fn().mockResolvedValue({
-    windowEnd: "2026-01-01T00:00:00.000Z",
-    evidence: { eventsConsidered: 0 },
-  }),
-}));
+vi.mock("@/lib/recommendations/profile", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/recommendations/profile")>();
+  return {
+    ...actual,
+    rebuildRecommendationProfile: vi.fn().mockResolvedValue({
+      windowEnd: "2026-01-01T00:00:00.000Z",
+      evidence: { eventsConsidered: 0 },
+      dimensions: {
+        GENRE: {}, TAG: {}, EXPERIENCE: {}, DURATION: {}, PUBLISHER: {}, ERA: {}, SERIES: {}, ENVIRONMENT: {}, MATURITY: {},
+      },
+    }),
+  };
+});
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
@@ -53,7 +60,20 @@ const eventDeleteMany = vi.fn();
 const feedbackDeleteMany = vi.fn();
 const preferenceUpsert = vi.fn();
 const preferenceDeleteMany = vi.fn();
+const preferenceFindMany = vi.fn();
 const profileDeleteMany = vi.fn();
+
+const EMPTY_DIMENSIONS = {
+  GENRE: {},
+  TAG: {},
+  EXPERIENCE: {},
+  DURATION: {},
+  PUBLISHER: {},
+  ERA: {},
+  SERIES: {},
+  ENVIRONMENT: {},
+  MATURITY: {},
+};
 
 function txFactory() {
   return {
@@ -61,7 +81,7 @@ function txFactory() {
     recommendationFeedback: { create: feedbackCreate, deleteMany: feedbackDeleteMany },
     recommendationEvent: { create: eventCreate, createMany: eventCreateMany, deleteMany: eventDeleteMany },
     recommendationProfile: { upsert: vi.fn(), deleteMany: profileDeleteMany },
-    recommendationPreference: { upsert: preferenceUpsert, deleteMany: preferenceDeleteMany },
+    recommendationPreference: { upsert: preferenceUpsert, deleteMany: preferenceDeleteMany, findMany: preferenceFindMany },
     game: { findMany: gameFindMany },
     wishlistEntry: { findMany: wishlistFindMany },
   };
@@ -88,10 +108,12 @@ beforeEach(() => {
   vi.mocked(rebuildRecommendationProfile).mockResolvedValue({
     windowEnd: "2026-01-01T00:00:00.000Z",
     evidence: { eventsConsidered: 0 },
+    dimensions: EMPTY_DIMENSIONS,
   } as never);
   feedbackDeleteMany.mockResolvedValue({ count: 0 });
   preferenceUpsert.mockResolvedValue({ id: "pref-1" });
   preferenceDeleteMany.mockResolvedValue({ count: 0 });
+  preferenceFindMany.mockResolvedValue([]);
   profileDeleteMany.mockResolvedValue({ count: 0 });
   gameFindMany.mockResolvedValue([]);
   wishlistFindMany.mockResolvedValue([]);
@@ -126,10 +148,14 @@ interface CandidateRowShape {
     replayCandidate: boolean;
     hidden: boolean;
     isMainGame: boolean;
+    gameExperience?: "PC_GAMING" | "MULTIPLAYER_COOP" | "COUCH_GAMING" | "ON_THE_GO" | null;
+    preferredEnvironment?: "BAZZITE" | "STEAM_DECK" | "WINDOWS" | null;
   };
   externalIds: { externalId: string }[];
-  availability: { source: "STEAM" | "OTHER_PLATFORM" | "ROM" }[];
+  availability: { source: "STEAM" | "OTHER_PLATFORM" | "ROM"; steamLastPlayed?: Date | null }[];
   compatSnapshots: { provider: string; result: unknown; fetchedAt: Date }[];
+  metadataSnapshots: { payload: unknown }[];
+  envCompat: { environment: "BAZZITE" | "STEAM_DECK" | "WINDOWS"; status: "READY" | "READY_WITH_TINKERING" | "FALLBACK_RECOMMENDED" | "REQUIRED" | "UNKNOWN" }[];
 }
 
 function libraryEntry(
@@ -155,6 +181,8 @@ function baseRow(): CandidateRowShape {
     libraryEntry: libraryEntry(),
     externalIds: [{ externalId: "620" }],
     availability: [{ source: "STEAM" }],
+    metadataSnapshots: [],
+    envCompat: [],
     compatSnapshots: [
       {
         provider: "PROTONDB",
@@ -269,7 +297,10 @@ describe("updateRecommendations", () => {
       { factor: "interest", label: "Interest 5", points: 50 },
       { factor: "compat_bazzite", label: "Runs well on Bazzite", points: 0 },
     ]);
-    expect(items[0].caveats).toEqual([{ factor: "anticheat", label: "Anti-cheat blocks Linux" }]);
+    expect(items[0].caveats).toEqual([
+      { factor: "anticheat", label: "Anti-cheat blocks Linux" },
+      { factor: "limited_basis", label: "Cold start: limited history, showing a varied mix" },
+    ]);
   });
 
   it("writes the locked context JSON with buy counts and empty-BUY fallback", async () => {
@@ -283,6 +314,7 @@ describe("updateRecommendations", () => {
         prunedRuns: 2,
         prunedEvents: 0,
         profile: expect.objectContaining({ eventsConsidered: 0 }),
+        rerank: { mode: "COLD_START", applied: { taste: 0, steam: 0, environment: 0, quality: 0 } },
       });
       if (call[0].data.kind === "BUY") {
         expect(call[0].data.items?.create).toEqual([]);
@@ -513,5 +545,211 @@ describe("restartRecommendations", () => {
     const result = await restartRecommendations();
     expect(result.success).toBe(true);
     expect(result.data).toEqual({ recommendationEvent: 0, recommendationFeedback: 0, recommendationRun: 0, recommendationProfile: 0, recommendationPreference: 0 });
+  });
+});
+
+describe("updateRecommendations re-ranking", () => {
+  it("re-ranks a tied pool by taste and quality and records the rerank context", async () => {
+    vi.mocked(rebuildRecommendationProfile).mockResolvedValue({
+      windowEnd: "2026-01-01T00:00:00.000Z",
+      evidence: { eventsConsidered: 5 },
+      dimensions: { ...EMPTY_DIMENSIONS, GENRE: { RPG: { weight: 9, support: 4, lastAt: "2026-01-01T00:00:00.000Z" } } },
+    } as never);
+
+    gameFindMany.mockResolvedValue([
+      {
+        ...baseRow(),
+        id: "game-aaa",
+        name: "Aaa",
+        libraryEntry: libraryEntry({ interest: 4 }),
+        metadataSnapshots: [{ payload: { title: "Aaa", genres: ["Puzzle"] } }],
+      },
+      {
+        ...baseRow(),
+        id: "game-zzz",
+        name: "Zzz",
+        libraryEntry: libraryEntry({ interest: 4 }),
+        metadataSnapshots: [{ payload: { title: "Zzz", genres: ["RPG"], metacriticScore: 95 } }],
+      },
+    ]);
+
+    const result = await updateRecommendations();
+
+    expect(result.success).toBe(true);
+    const playNextCall = runCreate.mock.calls.find(
+      (call) => (call[0] as { data: { kind: string } }).data.kind === "PLAY_NEXT",
+    )!;
+    const items = playNextCall[0].data.items.create;
+    expect(items.map((item: { gameId: string }) => item.gameId)).toEqual(["game-zzz", "game-aaa"]);
+    expect(items[0].score).toBe(45);
+    expect(items[0].positive).toEqual(expect.arrayContaining([
+      { factor: "taste_profile", label: "RPG affinity", points: 3 },
+      { factor: "quality", label: "Metacritic 95", points: 2 },
+    ]));
+    expect(playNextCall[0].data.context).toMatchObject({
+      rerank: { mode: "RERANKED", applied: { taste: 1, steam: 0, environment: 0, quality: 1 } },
+    });
+  });
+
+  it("supplements a cold-start pool with steam recency but no taste or quality", async () => {
+    gameFindMany.mockResolvedValue([
+      {
+        ...baseRow(),
+        libraryEntry: libraryEntry({ interest: 2, playState: "ABANDONED", replayCandidate: true, preferredEnvironment: "BAZZITE" }),
+        availability: [{ source: "STEAM", steamLastPlayed: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }],
+        metadataSnapshots: [{ payload: { title: "Portal 2", genres: ["Puzzle"], metacriticScore: 95 } }],
+        envCompat: [{ environment: "BAZZITE", status: "READY" }],
+      },
+    ]);
+
+    const result = await updateRecommendations();
+
+    expect(result.success).toBe(true);
+    const playNextCall = runCreate.mock.calls.find(
+      (call) => (call[0] as { data: { kind: string } }).data.kind === "PLAY_NEXT",
+    )!;
+    const items = playNextCall[0].data.items.create;
+    expect(items[0].score).toBe(20 + 2 + 2);
+    expect(items[0].positive).toEqual(expect.arrayContaining([
+      { factor: "steam_recent", label: "Played recently on Steam", points: 2 },
+      { factor: "environment_fit", label: "Ready on your setup", points: 2 },
+    ]));
+    expect(items[0].caveats).toContainEqual({
+      factor: "limited_basis",
+      label: "Cold start: limited history, showing a varied mix",
+    });
+    expect(playNextCall[0].data.context).toMatchObject({
+      rerank: { mode: "COLD_START", applied: { taste: 0, steam: 1, environment: 1, quality: 0 } },
+    });
+  });
+});
+
+describe("updateRecommendations buy re-ranking", () => {
+  it("re-ranks buy items by taste and quality, keeping the tiebreak chain for equal adjusted scores", async () => {
+    vi.mocked(rebuildRecommendationProfile).mockResolvedValue({
+      windowEnd: "2026-01-01T00:00:00.000Z",
+      evidence: { eventsConsidered: 5 },
+      dimensions: { ...EMPTY_DIMENSIONS, GENRE: { RPG: { weight: 9, support: 4, lastAt: "2026-01-01T00:00:00.000Z" } } },
+    } as never);
+
+    wishlistFindMany.mockResolvedValue([
+      {
+        ...buyRow(),
+        id: "wish-rpg",
+        name: "RPG Wish",
+        interest: 4,
+        metadataSnapshot: { payload: { title: "RPG Wish", genres: ["RPG"], metacriticScore: 95 } },
+      },
+      {
+        ...buyRow(),
+        id: "wish-plain",
+        name: "Plain Wish",
+        interest: 4,
+        updatedAt: new Date("2026-08-25T00:00:00.000Z"),
+        metadataSnapshot: { payload: { title: "Plain Wish", genres: ["Puzzle"] } },
+      },
+    ]);
+    gameFindMany
+      .mockImplementationOnce(() => Promise.resolve([]))
+      .mockImplementationOnce(() => Promise.resolve([]));
+
+    const result = await updateRecommendations();
+
+    expect(result.success).toBe(true);
+    const buyCall = runCreate.mock.calls.find(
+      (call) => (call[0] as { data: { kind: string } }).data.kind === "BUY",
+    )!;
+    const items = buyCall[0].data.items.create;
+    expect(items.map((item: { wishlistEntryId: string }) => item.wishlistEntryId)).toEqual(["wish-rpg", "wish-plain"]);
+    expect(items[0].score).toBe(45);
+    expect(items[0].positive).toEqual(expect.arrayContaining([
+      { factor: "taste_profile", label: "RPG affinity", points: 3 },
+      { factor: "quality", label: "Metacritic 95", points: 2 },
+    ]));
+    expect(buyCall[0].data.context).toMatchObject({
+      rerank: { mode: "RERANKED", applied: { taste: 1, steam: 0, environment: 0, quality: 1 } },
+    });
+  });
+
+  it("preserves the updatedAt tiebreak for equal adjusted scores under re-ranking", async () => {
+    vi.mocked(rebuildRecommendationProfile).mockResolvedValue({
+      windowEnd: "2026-01-01T00:00:00.000Z",
+      evidence: { eventsConsidered: 5 },
+      dimensions: { ...EMPTY_DIMENSIONS, GENRE: { RPG: { weight: 9, support: 4, lastAt: "2026-01-01T00:00:00.000Z" } } },
+    } as never);
+
+    wishlistFindMany.mockResolvedValue([
+      {
+        ...buyRow(),
+        id: "wish-old",
+        interest: 4,
+        updatedAt: new Date("2026-08-01T00:00:00.000Z"),
+        metadataSnapshot: { payload: { title: "Old", genres: ["Puzzle"] } },
+      },
+      {
+        ...buyRow(),
+        id: "wish-new",
+        interest: 4,
+        updatedAt: new Date("2026-08-20T00:00:00.000Z"),
+        metadataSnapshot: { payload: { title: "New", genres: ["Puzzle"] } },
+      },
+    ]);
+    gameFindMany
+      .mockImplementationOnce(() => Promise.resolve([]))
+      .mockImplementationOnce(() => Promise.resolve([]));
+
+    const result = await updateRecommendations();
+
+    expect(result.success).toBe(true);
+    const buyCall = runCreate.mock.calls.find(
+      (call) => (call[0] as { data: { kind: string } }).data.kind === "BUY",
+    )!;
+    const items = buyCall[0].data.items.create;
+    expect(items.map((item: { wishlistEntryId: string }) => item.wishlistEntryId)).toEqual(["wish-new", "wish-old"]);
+    expect(buyCall[0].data.context).toMatchObject({ rerank: { mode: "RERANKED", applied: { taste: 0, quality: 0 } } });
+  });
+
+  it("resolves DLC taste through the DLC wish's own snapshot", async () => {
+    vi.mocked(rebuildRecommendationProfile).mockResolvedValue({
+      windowEnd: "2026-01-01T00:00:00.000Z",
+      evidence: { eventsConsidered: 5 },
+      dimensions: { ...EMPTY_DIMENSIONS, GENRE: { RPG: { weight: 9, support: 4, lastAt: "2026-01-01T00:00:00.000Z" } } },
+    } as never);
+
+    wishlistFindMany.mockResolvedValue([
+      {
+        ...buyRow(),
+        id: "wish-2",
+        name: "Expansion",
+        type: "DLC" as const,
+        baseGameId: "game-1",
+        interest: null,
+        targetPriceMxn: "350.00",
+        updatedAt: new Date("2026-08-21T00:00:00.000Z"),
+        metadataSnapshot: { payload: { title: "Expansion", genres: ["RPG"] } },
+        offers: [buyOffer()],
+      },
+    ]);
+    gameFindMany
+      .mockImplementationOnce(() => Promise.resolve([]))
+      .mockImplementationOnce(() =>
+        Promise.resolve([
+          {
+            id: "game-1",
+            availability: [{ source: "STEAM" }],
+            libraryEntry: { rating: 5, playState: "PLAYED_BEFORE", replayCandidate: false },
+          },
+        ]),
+      );
+
+    const result = await updateRecommendations();
+
+    expect(result.success).toBe(true);
+    const buyCall = runCreate.mock.calls.find(
+      (call) => (call[0] as { data: { kind: string } }).data.kind === "BUY",
+    )!;
+    const items = buyCall[0].data.items.create;
+    expect(items[0].score).toBe(8 + 6 + 3);
+    expect(items[0].positive).toContainEqual({ factor: "taste_profile", label: "RPG affinity", points: 3 });
   });
 });

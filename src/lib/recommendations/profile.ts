@@ -91,47 +91,47 @@ interface ProfileEvent {
   } | null;
 }
 
-type DimensionValues = Partial<Record<RecommendationDimension, string[]>>;
+export type CandidateDimensionValues = Partial<Record<RecommendationDimension, string[]>>;
 
-function metadataValues(payload: unknown): DimensionValues {
+export interface CandidatePersonalFields {
+  gameExperience: string | null;
+  preferredEnvironment: string | null;
+}
+
+export function resolveCandidateDimensionValues(
+  payload: unknown,
+  personal: CandidatePersonalFields,
+): CandidateDimensionValues {
+  const values: CandidateDimensionValues = {};
   const parsed = parseRawgMetadataPayload(payload);
-  if (!parsed) return {};
-  return {
-    GENRE: parsed.genres,
-    TAG: parsed.tags,
-    PUBLISHER: parsed.publishers.slice(0, 1),
-    ERA: parsed.releaseDate ? [eraBucket(parsed.releaseDate)].filter((value): value is string => value !== null) : [],
-    MATURITY: parsed.esrbRating?.name ? [parsed.esrbRating.name] : [],
-    SERIES: (parsed.seriesGames ?? []).map((entry) => entry.name),
-    DURATION: durationBand(parsed.playtimeHours) ? [durationBand(parsed.playtimeHours)!] : [],
-  };
-}
-
-function mergeValues(base: DimensionValues, extra: DimensionValues): DimensionValues {
-  for (const [dimension, values] of Object.entries(extra) as [RecommendationDimension, string[]][]) {
-    base[dimension] = [...(base[dimension] ?? []), ...values.filter(Boolean)];
+  if (parsed) {
+    values.GENRE = (parsed.genres ?? []).filter(Boolean);
+    values.TAG = (parsed.tags ?? []).filter(Boolean);
+    values.PUBLISHER = (parsed.publishers ?? []).slice(0, 1).filter(Boolean);
+    const era = parsed.releaseDate ? eraBucket(parsed.releaseDate) : null;
+    if (era) values.ERA = [era];
+    const maturity = parsed.esrbRating?.name ?? null;
+    if (maturity) values.MATURITY = [maturity];
+    const series = (parsed.seriesGames ?? []).map((entry) => entry.name).filter(Boolean);
+    if (series.length > 0) values.SERIES = series;
+    const duration = durationBand(parsed.playtimeHours);
+    if (duration) values.DURATION = [duration];
   }
-  return base;
+  if (personal.gameExperience) values.EXPERIENCE = [personal.gameExperience];
+  if (personal.preferredEnvironment) values.ENVIRONMENT = [personal.preferredEnvironment];
+  return values;
 }
 
-function eventValues(event: ProfileEvent): DimensionValues | null {
+function eventValues(event: ProfileEvent): CandidateDimensionValues | null {
   const source = event.gameId ? event.game : event.wishlistEntry;
   if (!source) return null;
-  const values = event.game
-    ? mergeValues({}, metadataValues(event.game.metadataSnapshots[0]?.payload))
-    : mergeValues({}, metadataValues(event.wishlistEntry?.metadataSnapshot?.payload));
-  const entry = event.game?.libraryEntry;
-  const experience = event.game?.libraryEntry?.gameExperience ?? event.wishlistEntry?.gameExperience;
-  if (experience) values.EXPERIENCE = [experience];
-  if (entry?.preferredEnvironment) values.ENVIRONMENT = [entry.preferredEnvironment];
-  const answer = typeof event.payload === "object" && event.payload !== null
-    ? (event.payload as { answer?: unknown }).answer
-    : null;
-  if (event.kind === "TASTE_SETUP_ANSWER" && typeof answer === "string") {
-    const weight = tasteSetupWeight(answer);
-    return weight === 0 ? values : values;
-  }
-  return values;
+  return resolveCandidateDimensionValues(
+    event.game ? event.game.metadataSnapshots[0]?.payload : event.wishlistEntry?.metadataSnapshot?.payload,
+    {
+      gameExperience: event.game?.libraryEntry?.gameExperience ?? event.wishlistEntry?.gameExperience ?? null,
+      preferredEnvironment: event.game?.libraryEntry?.preferredEnvironment ?? null,
+    },
+  );
 }
 
 export async function rebuildRecommendationProfile(

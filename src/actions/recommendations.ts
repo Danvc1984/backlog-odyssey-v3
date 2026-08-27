@@ -7,16 +7,25 @@ import { parseAntiCheatEvidence } from "@/lib/compat-evidence";
 import { prisma } from "@/lib/prisma";
 import { parseProtonDbSummary } from "@/lib/protondb-api";
 import { buildCompatContext } from "@/lib/recommendations/compat-context";
+import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
 import {
   isEligibleForBuy,
-  rankBuyCandidates,
+  rankAllBuyCandidates,
   type BuyCandidate,
   type BuyOffer,
 } from "@/lib/recommendations/buy";
 import {
   isEligibleForPlayNext,
-  rankPlayNextCandidates,
+  rankAllPlayNextCandidates,
 } from "@/lib/recommendations/play-next";
+import {
+  rerankBuyCandidates,
+  rerankPlayCandidates,
+  type RerankBuyInput,
+  type RerankPlayInput,
+  type TastePreference,
+} from "@/lib/recommendations/rerank";
+import { resolveCandidateDimensionValues } from "@/lib/recommendations/profile";
 import type {
   CompatEvidenceInput,
   ExplanationCaveat,
@@ -85,13 +94,22 @@ async function loadCandidates(client: Prisma.TransactionClient) {
           replayCandidate: true,
           hidden: true,
           isMainGame: true,
+          gameExperience: true,
+          preferredEnvironment: true,
         },
       },
       externalIds: { select: { externalId: true } },
-      availability: { select: { source: true } },
+      availability: { select: { source: true, steamPlaytimeTotal: true, steamLastPlayed: true } },
       compatSnapshots: {
         select: { provider: true, result: true, fetchedAt: true },
       },
+      metadataSnapshots: {
+        where: { provider: "RAWG" },
+        orderBy: { fetchedAt: "desc" },
+        take: 1,
+        select: { payload: true },
+      },
+      envCompat: { select: { environment: true, status: true } },
     },
   });
 }
@@ -136,6 +154,8 @@ async function loadBuyCandidates(client: Prisma.TransactionClient) {
       targetPriceMxn: true,
       updatedAt: true,
       baseGameId: true,
+      gameExperience: true,
+      metadataSnapshot: { select: { payload: true } },
       offers: {
         select: {
           price: true,
@@ -152,7 +172,7 @@ async function loadBuyCandidates(client: Prisma.TransactionClient) {
   });
 
   if (entries.length === 0) {
-    return [];
+    return { candidates: [] as BuyCandidate[], wishViews: new Map<string, { payload: unknown; gameExperience: string | null }>() };
   }
 
   const baseGameIds = [
@@ -178,19 +198,27 @@ async function loadBuyCandidates(client: Prisma.TransactionClient) {
   });
   const baseById = new Map(baseGames.map((base) => [base.id, base]));
 
-  return entries.map((entry): BuyCandidate => ({
-    id: entry.id,
-    name: entry.name,
-    updatedAt: entry.updatedAt,
-    type: entry.type,
-    interest: entry.interest,
-    targetPriceMxn: entry.targetPriceMxn,
-    offers: entry.offers as BuyOffer[],
-    baseGame:
-      entry.type === "DLC" && entry.baseGameId && baseById.has(entry.baseGameId)
-        ? (baseById.get(entry.baseGameId) ?? null)
-        : null,
-  }));
+  return {
+    candidates: entries.map((entry): BuyCandidate => ({
+      id: entry.id,
+      name: entry.name,
+      updatedAt: entry.updatedAt,
+      type: entry.type,
+      interest: entry.interest,
+      targetPriceMxn: entry.targetPriceMxn,
+      offers: entry.offers as BuyOffer[],
+      baseGame:
+        entry.type === "DLC" && entry.baseGameId && baseById.has(entry.baseGameId)
+          ? (baseById.get(entry.baseGameId) ?? null)
+          : null,
+    })),
+    wishViews: new Map(
+      entries.map((entry) => [
+        entry.id,
+        { payload: entry.metadataSnapshot?.payload ?? null, gameExperience: entry.gameExperience ?? null },
+      ]),
+    ),
+  };
 }
 
 export async function updateRecommendations() {
@@ -214,12 +242,76 @@ export async function updateRecommendations() {
         libraryEntry: row.libraryEntry,
       }));
       const eligible = candidates.filter(isEligibleForPlayNext);
-      const ranked = rankPlayNextCandidates(candidates);
+      const baselinePool = rankAllPlayNextCandidates(candidates);
       const evidenceById = new Map(rows.map((row) => [row.id, compatEvidenceFor(row)]));
+      const rowById = new Map(rows.map((row) => [row.id, row]));
+      const preferences = (await tx.recommendationPreference.findMany()) as TastePreference[];
 
-      const buyCandidates = await loadBuyCandidates(tx);
+      const rerankInputs: RerankPlayInput[] = baselinePool.map((item) => {
+        const row = rowById.get(item.id)!;
+        const payload = row.metadataSnapshots[0]?.payload;
+        const parsedPayload = parseRawgMetadataPayload(payload);
+        const dimensionValues = resolveCandidateDimensionValues(payload, {
+          gameExperience: row.libraryEntry?.gameExperience ?? null,
+          preferredEnvironment: row.libraryEntry?.preferredEnvironment ?? null,
+        });
+        const steamRow = row.availability.find(
+          (availability) => availability.source === "STEAM" && availability.steamLastPlayed !== null,
+        );
+        const envRow = row.libraryEntry?.preferredEnvironment
+          ? row.envCompat.find((entry) => entry.environment === row.libraryEntry?.preferredEnvironment)
+          : undefined;
+        return {
+          id: item.id,
+          name: item.name,
+          baselineScore: item.score,
+          positive: item.positive,
+          negative: item.negative,
+          dimensionValues,
+          steam: {
+            playState: row.libraryEntry?.playState ?? null,
+            replayCandidate: row.libraryEntry?.replayCandidate ?? false,
+            steamLastPlayed: steamRow?.steamLastPlayed ?? null,
+          },
+          envStatus: envRow?.status ?? null,
+          quality: {
+            metacriticScore: parsedPayload?.metacriticScore ?? null,
+            rating: parsedPayload?.rating ?? null,
+          },
+        };
+      });
+      const playRerank = rerankPlayCandidates(rerankInputs, profile, preferences, now);
+
+      const { candidates: buyCandidates, wishViews } = await loadBuyCandidates(tx);
       const buyEligibleList = buyCandidates.filter(isEligibleForBuy);
-      const buyRanked = rankBuyCandidates(buyCandidates, now);
+      const buyBaselinePool = rankAllBuyCandidates(buyCandidates, now);
+      const buyCandidateById = new Map(buyCandidates.map((candidate) => [candidate.id, candidate]));
+      const buyRerankInputs: RerankBuyInput[] = buyBaselinePool.map((item) => {
+        const view = wishViews.get(item.id);
+        const payload = view?.payload ?? null;
+        const parsedPayload = parseRawgMetadataPayload(payload);
+        return {
+          id: item.id,
+          baselineScore: item.score,
+          positive: item.positive,
+          negative: item.negative,
+          caveats: item.caveats,
+          dimensionValues: resolveCandidateDimensionValues(payload, {
+            gameExperience: view?.gameExperience ?? null,
+            preferredEnvironment: null,
+          }),
+          quality: {
+            metacriticScore: parsedPayload?.metacriticScore ?? null,
+            rating: parsedPayload?.rating ?? null,
+          },
+          tiebreak: {
+            historicalLowGap: item.historicalLowGap,
+            updatedAt: buyCandidateById.get(item.id)?.updatedAt ?? now,
+            id: item.id,
+          },
+        };
+      });
+      const buyRerank = rerankBuyCandidates(buyRerankInputs, profile, preferences);
 
       const context = {
         eligible: { playNext: eligible.length, buy: buyEligibleList.length },
@@ -227,14 +319,15 @@ export async function updateRecommendations() {
         prunedEvents,
         profile: { rebuiltAt: now.toISOString(), eventsConsidered: profile.evidence.eventsConsidered },
       };
-      const contextJson = context as unknown as Prisma.InputJsonValue;
+      const playContextJson = { ...context, rerank: playRerank.context } as unknown as Prisma.InputJsonValue;
+      const buyContextJson = { ...context, rerank: buyRerank.context } as unknown as Prisma.InputJsonValue;
 
       const playNextRun = await tx.recommendationRun.create({
         data: {
           kind: "PLAY_NEXT",
-          context: contextJson,
+          context: playContextJson,
           items: {
-            create: ranked.map((item) => {
+            create: playRerank.items.map((item, index) => {
               const evidence = evidenceById.get(item.id)!;
               const verdict = buildCompatContext(evidence, now);
               const positive: ExplanationFactor[] = [
@@ -242,10 +335,10 @@ export async function updateRecommendations() {
                 ...verdict.positives,
               ];
               const negative: ExplanationFactor[] = [...item.negative];
-              const caveats: ExplanationCaveat[] = [...verdict.caveats];
+              const caveats: ExplanationCaveat[] = [...verdict.caveats, ...item.caveats];
               return {
                 gameId: item.id,
-                rank: item.rank,
+                rank: index + 1,
                 score: item.score,
                 positive: positive as unknown as Prisma.InputJsonValue,
                 negative: negative as unknown as Prisma.InputJsonValue,
@@ -260,11 +353,11 @@ export async function updateRecommendations() {
       const buyRun = await tx.recommendationRun.create({
         data: {
           kind: "BUY",
-          context: contextJson,
+          context: buyContextJson,
           items: {
-            create: buyRanked.map((item) => ({
+            create: buyRerank.items.map((item, index) => ({
               wishlistEntryId: item.id,
-              rank: item.rank,
+              rank: index + 1,
               score: item.score,
               positive: item.positive as unknown as Prisma.InputJsonValue,
               negative: item.negative as unknown as Prisma.InputJsonValue,
@@ -278,9 +371,9 @@ export async function updateRecommendations() {
       return {
         playNextRunId: playNextRun.id,
         buyRunId: buyRun.id,
-        playNextItems: ranked.length,
+        playNextItems: playRerank.items.length,
         playNextEligible: eligible.length,
-        buyItems: buyRanked.length,
+        buyItems: buyRerank.items.length,
         buyEligible: buyEligibleList.length,
         prunedRuns: pruned.count,
         prunedEvents,

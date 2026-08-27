@@ -24,7 +24,47 @@ export type ExplanationFactorKey =
   | "no_pricing"
   | "stale_offer"
   | "keyshop"
-  | "compat_base_game";
+  | "compat_base_game"
+  | "taste_profile"
+  | "preference"
+  | "steam_recent"
+  | "environment_fit"
+  | "quality"
+  | "limited_basis";
+
+export const RERANK_TASTE_CLAMP = 3;
+export const RERANK_TASTE_TOTAL_CAP = 12;
+export const RERANK_SUPPORT_FULL_STRENGTH = 2;
+export const RERANK_PREFER_POINTS = 4;
+export const RERANK_AVOID_POINTS = -6;
+export const STEAM_RECENCY_WINDOW_DAYS = 180;
+export const STEAM_ACTIVITY_POINTS = 2;
+export const QUALITY_METACRITIC_HIGH = 85;
+export const QUALITY_METACRITIC_LOW = 55;
+export const QUALITY_RATING_HIGH = 4.5;
+export const QUALITY_CLAMP = 3;
+export const COLD_START_MIN_EVENTS = 5;
+
+export const RERANK_ENVIRONMENT_POINTS: Record<string, number> = {
+  READY: 2,
+  READY_WITH_TINKERING: 1,
+  FALLBACK_RECOMMENDED: -2,
+  REQUIRED: -3,
+};
+
+export type RerankMode = "RERANKED" | "COLD_START";
+
+export interface RerankAppliedFactors {
+  taste: number;
+  steam: number;
+  environment: number;
+  quality: number;
+}
+
+export interface RerankRunContext {
+  mode: RerankMode;
+  applied: RerankAppliedFactors;
+}
 
 export interface ExplanationFactor {
   factor: ExplanationFactorKey;

@@ -5,6 +5,7 @@ import {
   eraBucket,
   EVENT_SIGNAL_WEIGHTS,
   profileDimensionKeys,
+  resolveCandidateDimensionValues,
   tasteSetupWeight,
 } from "./profile";
 
@@ -47,5 +48,70 @@ describe("recommendation profile math", () => {
     expect(profileDimensionKeys()).toEqual([
       "GENRE", "TAG", "EXPERIENCE", "DURATION", "PUBLISHER", "ERA", "SERIES", "ENVIRONMENT", "MATURITY",
     ]);
+  });
+});
+
+describe("candidate dimension resolution", () => {
+  const v2Payload = {
+    title: "Portal 2",
+    genres: ["Puzzle", ""],
+    tags: ["Singleplayer"],
+    publishers: ["Valve", "Aperture"],
+    releaseDate: "2011-04-18",
+    playtimeHours: 9,
+    esrbRating: { name: "Everyone 10+", slug: "everyone-10-plus" },
+    seriesGames: [
+      { rawgId: 1, name: "Portal", slug: "portal", released: "2007-10-09" },
+      { rawgId: 2, name: "", slug: null, released: null },
+    ],
+  };
+
+  it("resolves metadata, maturity, series, and personal fields from a v2 payload", () => {
+    expect(
+      resolveCandidateDimensionValues(v2Payload, {
+        gameExperience: "PLAYED",
+        preferredEnvironment: "READY",
+      }),
+    ).toEqual({
+      GENRE: ["Puzzle"],
+      TAG: ["Singleplayer"],
+      PUBLISHER: ["Valve"],
+      ERA: ["Y2005_2014"],
+      DURATION: ["MEDIUM"],
+      MATURITY: ["Everyone 10+"],
+      SERIES: ["Portal"],
+      EXPERIENCE: ["PLAYED"],
+      ENVIRONMENT: ["READY"],
+    });
+  });
+
+  it("contributes no maturity or series values from a v1 payload", () => {
+    const v1Payload = {
+      title: "Portal 2",
+      genres: ["Puzzle"],
+      tags: [],
+      publishers: ["Valve"],
+      releaseDate: "2011-04-18",
+      playtimeHours: 9,
+    };
+
+    expect(
+      resolveCandidateDimensionValues(v1Payload, { gameExperience: null, preferredEnvironment: null }),
+    ).toEqual({
+      GENRE: ["Puzzle"],
+      TAG: [],
+      PUBLISHER: ["Valve"],
+      ERA: ["Y2005_2014"],
+      DURATION: ["MEDIUM"],
+    });
+  });
+
+  it("keeps personal fields verbatim when the payload is unusable", () => {
+    expect(
+      resolveCandidateDimensionValues(null, {
+        gameExperience: "REPLAYING",
+        preferredEnvironment: null,
+      }),
+    ).toEqual({ EXPERIENCE: ["REPLAYING"] });
   });
 });
