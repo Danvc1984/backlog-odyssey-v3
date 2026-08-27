@@ -742,6 +742,21 @@ model RecommendationPreference {
   @@unique([dimension, value])
 }
 
+model RecommendationTuneState {
+  id        Int      @id @default(1)
+  playTune  Json?
+  buyTune   Json?
+  updatedAt DateTime @updatedAt
+}
+
+model RecommendationPreset {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  tune      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 // ---------------------------------------------------------------------------
 // Theme and operations
 // ---------------------------------------------------------------------------

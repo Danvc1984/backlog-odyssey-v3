@@ -43,7 +43,9 @@ registration, and collaboration are outside the MVP.
   evidence presented separately when a wish has a confirmed Steam App ID.
 - Deterministic explainable play-next and buy recommendations with DLC affinity weighting.
 - Recommendation runs with temporary dismissal and persistent calibration signals.
-- Today dashboard with recent Steam activity and wishlist offers.
+- Today dashboard with active-backlog progress, data-coverage prompts, daily-cached
+  recent Steam activity (including unimported titles), latest explicit recommendations,
+  wishlist offers, and provider-operation status.
 - Global visual foundation, design tokens, and comprehensive full-app UI review.
 - Optional Wallhaven background.
 - Per-game detail themes based on RAWG metadata.
@@ -580,28 +582,47 @@ empty state, and is reachable from the Library and Wishlist headers.
 
 ## 12. Today Dashboard
 
-The dashboard is primarily a read-only composition view. It does not silently
-run syncs or provider refreshes.
+The dashboard is the post-login front door and primarily a local composition
+view. It recalculates local summaries when it loads. It never silently runs a
+full Steam sync, imports games, or refreshes RAWG, pricing, or compatibility.
 
 It displays:
 
 - Main game.
 - Games in progress.
-- Three latest play-next recommendations.
-- Three latest buy recommendations.
-- The last five games recently played according to Steam sync data.
-- Last-played date and accumulated playtime.
-- The three best current offers among wishlist entries.
-- Offer discount percentage, final MXN price, store, source, and freshness.
-- Links to wishlist details and then to the external seller page.
-- Provider freshness, background-operation progress/failures, and manual refresh
-  or retry actions.
+- Active-backlog progress as
+  `PLAYED_BEFORE / (NOT_STARTED + IN_PROGRESS + PLAYED_BEFORE)`. `ABANDONED`
+  games appear separately and are excluded from the denominator.
+- Two independent, actionable coverage counts:
+  - catalog base games without a RAWG metadata snapshot;
+  - visible catalog games with an incomplete recommendation profile.
+- A recommendation profile is incomplete when `interest` is absent, or when
+  interest is present but none of priority other than `NONE`, preferred
+  environment, or game experience/intention is present. Hidden games are
+  excluded. Rating and the default play state do not satisfy this signal.
+- Clickable coverage counts open accessible dialogs with up to ten affected
+  game titles linking to their game details. The dialog can expand into a
+  paginated list for additional games.
+- Three latest play-next recommendations and three latest buy recommendations;
+  these remain the latest explicitly generated runs.
+- Up to five games recently played on Steam, showing last-played date and
+  accumulated playtime. Recent activity may include games not yet imported into
+  the catalog; those entries visibly suggest the existing manual library sync
+  and never create or link catalog records automatically.
+- Recent Steam activity refreshes at most once per 24 hours when Today loads,
+  through a narrow activity query and a separately persisted cache. A fresh
+  empty response displays "no recent Steam activity"; a failed refresh retains
+  the last usable cache and reports freshness/error only in the activity
+  section, not as a global sync operation.
+- The three best current offers among wishlist entries, sorted primarily by
+  discount percentage, then by price or target-price status.
+- Offer discount percentage, final MXN price, store, source, freshness, links
+  to wishlist details, and then to the external seller page.
+- Provider freshness plus background-operation progress/failures and their
+  existing manual refresh or retry actions.
 
-The three wishlist offers are sorted primarily by discount percentage, with price
-or target-price status used as a tie-breaker.
-
-Successful sign-in redirects to `/today`; the dashboard is the app's front
-door.
+Dashboard layout, visual hierarchy, theming, and charts are deliberately
+deferred to the feature-14 prototype and visual-foundation work.
 
 ## 13. Visual Personalization and UI Tidy-up
 

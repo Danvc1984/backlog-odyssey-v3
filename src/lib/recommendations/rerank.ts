@@ -288,6 +288,7 @@ export interface RerankPlayInput {
   baselineScore: number;
   positive: ExplanationFactor[];
   negative: ExplanationFactor[];
+  caveats?: ExplanationCaveat[];
   dimensionValues: CandidateDimensionValues;
   steam: SteamActivityInput;
   envStatus: CompatibilityStatus | null;
@@ -321,7 +322,7 @@ export function rerankPlayCandidates(
     let score = candidate.baselineScore + (steamFactor?.points ?? 0) + (envFactor?.points ?? 0);
     const positive = [...candidate.positive];
     const negative = [...candidate.negative];
-    const caveats: ExplanationCaveat[] = [];
+    const caveats: ExplanationCaveat[] = [...(candidate.caveats ?? [])];
     if (steamFactor) positive.push(steamFactor);
     if (envFactor) {
       if (envFactor.points >= 0) positive.push(envFactor);

@@ -28,13 +28,16 @@ import {
 } from "@/lib/recommendations/rerank";
 import { assignBuyRoles, assignPlayRoles } from "@/lib/recommendations/roles";
 import { resolveCandidateDimensionValues } from "@/lib/recommendations/profile";
+import { countTuneMatches, matchTuneCriteria, type TuneCandidateInput } from "@/lib/recommendations/tune";
 import type {
   CompatEvidenceInput,
   ExplanationCaveat,
   ExplanationFactor,
   PlayNextCandidate,
   RotatableCandidate,
+  TuneContext,
 } from "@/lib/recommendations/types";
+import { tuneContextSchema } from "@/lib/recommendations/types";
 import { EXPOSURE_COOLDOWN_DAYS, RUN_RETENTION_DAYS } from "@/lib/recommendations/types";
 import { logRecommendationEvent } from "@/lib/recommendations/events";
 import { pruneRecommendationEvents } from "@/lib/recommendations/events";
@@ -82,6 +85,19 @@ const recommendationPreferenceSchema = z.object({
 }).strict();
 
 const recommendationPreferenceIdSchema = z.object({ id: z.string().trim().min(1) }).strict();
+
+const tuneEngineSchema = z.enum(["PLAY_NEXT", "BUY"]);
+const tuneStateInputSchema = z.object({
+  engine: tuneEngineSchema,
+  tune: tuneContextSchema,
+}).strict();
+const tuneEngineInputSchema = z.object({ engine: tuneEngineSchema }).strict();
+const recommendationPresetInputSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  tune: tuneContextSchema,
+}).strict();
+const recommendationPresetIdSchema = z.object({ id: z.string().trim().min(1) }).strict();
+const recommendationPresetLoadSchema = z.object({ id: z.string().trim().min(1), engine: tuneEngineSchema }).strict();
 
 const rotateRecommendationRoleSchema = z.object({
   runId: z.string().trim().min(1),
@@ -247,6 +263,54 @@ interface SnapshotSource {
 
 type BatchEntry = string | RotatableCandidate;
 
+function parseStoredTune(value: unknown): TuneContext | null {
+  const parsed = tuneContextSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
+}
+
+function tuneInput(payload: unknown, experience: string | null): TuneCandidateInput {
+  const parsed = parseRawgMetadataPayload(payload);
+  return parsed
+    ? {
+        rawgId: parsed.rawgId,
+        experience,
+        playtimeHours: parsed.playtimeHours,
+        releaseDate: parsed.releaseDate,
+        genres: parsed.genres,
+        tags: parsed.tags,
+        esrbRating: parsed.esrbRating,
+        seriesGames: parsed.seriesGames,
+      }
+    : { experience };
+}
+
+function applyTune<T extends { id: string; score: number; positive: ExplanationFactor[]; negative: ExplanationFactor[]; caveats?: ExplanationCaveat[] }>(
+  pool: T[],
+  tune: TuneContext | null,
+  inputs: ReadonlyMap<string, TuneCandidateInput>,
+  displayCount: number,
+): T[] {
+  if (!tune) return pool;
+  const matches = pool.map((item) => matchTuneCriteria(tune, inputs.get(item.id) ?? {}));
+  const thinPool = countTuneMatches(tune, pool.map((item) => inputs.get(item.id) ?? {}), displayCount).thinPool;
+  return pool.map((item, index) => {
+    const match = matches[index];
+    const positive = [...item.positive];
+    const caveats = [...(item.caveats ?? [])];
+    if (match.points > 0) {
+      positive.push({ factor: "tune_match", label: `Tuned for ${match.criteria.join(", ")}`, points: match.points });
+    } else if (thinPool) {
+      caveats.push({ factor: "tune_thin_pool", label: `Only ${matches.filter((entry) => entry.points > 0).length} candidates match your tune` });
+    }
+    return {
+      ...item,
+      score: item.score + match.points,
+      positive,
+      caveats,
+    };
+  }).sort((left, right) => right.score - left.score);
+}
+
 function candidateId(entry: BatchEntry): string {
   return typeof entry === "string" ? entry : entry.id;
 }
@@ -288,6 +352,12 @@ export async function updateRecommendations() {
       });
       const prunedEvents = await pruneRecommendationEvents(tx, now);
       const profile = await rebuildRecommendationProfile(tx, now);
+      const tuneState = await tx.recommendationTuneState.findUnique({
+        where: { id: 1 },
+        select: { playTune: true, buyTune: true },
+      });
+      const playTune = parseStoredTune(tuneState?.playTune);
+      const buyTune = parseStoredTune(tuneState?.buyTune);
 
       const rows = await loadCandidates(tx);
       const candidates: PlayNextCandidate[] = rows.map((row) => ({
@@ -301,8 +371,14 @@ export async function updateRecommendations() {
       const evidenceById = new Map(rows.map((row) => [row.id, compatEvidenceFor(row)]));
       const rowById = new Map(rows.map((row) => [row.id, row]));
       const preferences = (await tx.recommendationPreference.findMany()) as TastePreference[];
+      const playTuneInputs = new Map(rows.map((row) => [
+        row.id,
+        tuneInput(row.metadataSnapshots[0]?.payload, row.libraryEntry?.gameExperience ?? null),
+      ]));
+      const playPool = baselinePool.map((item) => ({ ...item, caveats: [] as ExplanationCaveat[] }));
+      const tunedPlayPool = applyTune(playPool, playTune, playTuneInputs, 4);
 
-      const rerankInputs: RerankPlayInput[] = baselinePool.map((item) => {
+      const rerankInputs: RerankPlayInput[] = tunedPlayPool.map((item) => {
         const row = rowById.get(item.id)!;
         const payload = row.metadataSnapshots[0]?.payload;
         const parsedPayload = parseRawgMetadataPayload(payload);
@@ -322,6 +398,7 @@ export async function updateRecommendations() {
           baselineScore: item.score,
           positive: item.positive,
           negative: item.negative,
+          caveats: item.caveats,
           dimensionValues,
           steam: {
             playState: row.libraryEntry?.playState ?? null,
@@ -358,7 +435,11 @@ export async function updateRecommendations() {
       const buyEligibleList = buyCandidates.filter(isEligibleForBuy);
       const buyBaselinePool = rankAllBuyCandidates(buyCandidates, now);
       const buyCandidateById = new Map(buyCandidates.map((candidate) => [candidate.id, candidate]));
-      const buyRerankInputs: RerankBuyInput[] = buyBaselinePool.map((item) => {
+      const buyTuneInputs = new Map(
+        [...wishViews.entries()].map(([id, view]) => [id, tuneInput(view.payload, view.gameExperience)]),
+      );
+      const tunedBuyPool = applyTune(buyBaselinePool, buyTune, buyTuneInputs, 3);
+      const buyRerankInputs: RerankBuyInput[] = tunedBuyPool.map((item) => {
         const view = wishViews.get(item.id);
         const payload = view?.payload ?? null;
         const parsedPayload = parseRawgMetadataPayload(payload);
@@ -406,6 +487,7 @@ export async function updateRecommendations() {
         prunedRuns: pruned.count,
         prunedEvents,
         profile: { rebuiltAt: now.toISOString(), eventsConsidered: profile.evidence.eventsConsidered },
+        tune: { play: playTune, buy: null, thinPool: Boolean(playTune && countTuneMatches(playTune, tunedPlayPool.map((item) => playTuneInputs.get(item.id) ?? {}), 4).thinPool) },
       };
       const playContextJson = {
         ...context,
@@ -414,6 +496,7 @@ export async function updateRecommendations() {
       } as unknown as Prisma.InputJsonValue;
       const buyContextJson = {
         ...context,
+        tune: { play: playTune, buy: buyTune, thinPool: Boolean(buyTune && countTuneMatches(buyTune, tunedBuyPool.map((item) => buyTuneInputs.get(item.id) ?? {}), 3).thinPool) },
         rerank: buyRerank.context,
         roles: { batches: toSnapshotBatches(buyRoles.batches, buyPoolById), saturation: buyRoles.saturation },
       } as unknown as Prisma.InputJsonValue;
@@ -771,6 +854,126 @@ export async function setRecommendationPreference(input: unknown) {
   }
 }
 
+function tuneStateField(engine: "PLAY_NEXT" | "BUY"): "playTune" | "buyTune" {
+  return engine === "PLAY_NEXT" ? "playTune" : "buyTune";
+}
+
+export async function saveTuneState(input: unknown) {
+  try {
+    await requireUser();
+    const parsed = tuneStateInputSchema.safeParse(input);
+    if (!parsed.success) return { success: false as const, data: null, error: "Invalid input" };
+    const field = tuneStateField(parsed.data.engine);
+    const tune = parsed.data.tune as unknown as Prisma.InputJsonValue;
+    const state = await prisma.recommendationTuneState.upsert({
+      where: { id: 1 },
+      create: { id: 1, [field]: tune },
+      update: { [field]: tune },
+    });
+    return { success: true as const, data: state, error: null };
+  } catch (err) {
+    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to save tune" };
+  }
+}
+
+export async function clearTuneState(input: unknown) {
+  try {
+    await requireUser();
+    const parsed = tuneEngineInputSchema.safeParse(input);
+    if (!parsed.success) return { success: false as const, data: null, error: "Invalid input" };
+    const field = tuneStateField(parsed.data.engine);
+    const state = await prisma.recommendationTuneState.upsert({
+      where: { id: 1 },
+      create: { id: 1, [field]: null },
+      update: { [field]: null },
+    });
+    return { success: true as const, data: state, error: null };
+  } catch (err) {
+    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to clear tune" };
+  }
+}
+
+export async function saveRecommendationPreset(input: unknown) {
+  try {
+    await requireUser();
+    const parsed = recommendationPresetInputSchema.safeParse(input);
+    if (!parsed.success) return { success: false as const, data: null, error: "Invalid input" };
+    const preset = await prisma.recommendationPreset.upsert({
+      where: { name: parsed.data.name },
+      create: { name: parsed.data.name, tune: parsed.data.tune as unknown as Prisma.InputJsonValue },
+      update: { tune: parsed.data.tune as unknown as Prisma.InputJsonValue },
+    });
+    return { success: true as const, data: preset, error: null };
+  } catch (err) {
+    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to save preset" };
+  }
+}
+
+export async function listRecommendationPresets() {
+  try {
+    await requireUser();
+    const presets = await prisma.recommendationPreset.findMany({ orderBy: { name: "asc" } });
+    return { success: true as const, data: presets, error: null };
+  } catch (err) {
+    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to list presets" };
+  }
+}
+
+export async function deleteRecommendationPreset(input: unknown) {
+  try {
+    await requireUser();
+    const parsed = recommendationPresetIdSchema.safeParse(input);
+    if (!parsed.success) return { success: false as const, data: null, error: "Invalid input" };
+    await prisma.recommendationPreset.deleteMany({ where: { id: parsed.data.id } });
+    return { success: true as const, data: { id: parsed.data.id }, error: null };
+  } catch (err) {
+    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to delete preset" };
+  }
+}
+
+export async function loadRecommendationPreset(input: unknown) {
+  try {
+    await requireUser();
+    const parsed = recommendationPresetLoadSchema.safeParse(input);
+    if (!parsed.success) return { success: false as const, data: null, error: "Invalid input" };
+    const preset = await prisma.recommendationPreset.findUnique({ where: { id: parsed.data.id } });
+    if (!preset) return { success: false as const, data: null, error: "Preset not found" };
+    const tune = tuneContextSchema.safeParse(preset.tune);
+    if (!tune.success) return { success: false as const, data: null, error: "Preset contains an invalid tune" };
+    const field = tuneStateField(parsed.data.engine);
+    const state = await prisma.recommendationTuneState.upsert({
+      where: { id: 1 },
+      create: { id: 1, [field]: tune.data as unknown as Prisma.InputJsonValue },
+      update: { [field]: tune.data as unknown as Prisma.InputJsonValue },
+    });
+    return { success: true as const, data: state, error: null };
+  } catch (err) {
+    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to load preset" };
+  }
+}
+
+export async function listKnownGenreTagValues() {
+  try {
+    await requireUser();
+    const [games, wishlistEntries] = await Promise.all([
+      prisma.game.findMany({
+        select: { metadataSnapshots: { where: { provider: "RAWG" }, orderBy: { fetchedAt: "desc" }, take: 1, select: { payload: true } } },
+      }),
+      prisma.wishlistEntry.findMany({ select: { metadataSnapshot: { select: { payload: true } } } }),
+    ]);
+    const genres = new Set<string>();
+    const tags = new Set<string>();
+    for (const payload of [...games.flatMap((game) => game.metadataSnapshots.map((snapshot) => snapshot.payload)), ...wishlistEntries.map((entry) => entry.metadataSnapshot?.payload)]) {
+      const parsed = parseRawgMetadataPayload(payload);
+      for (const genre of parsed?.genres ?? []) if (genre) genres.add(genre);
+      for (const tag of parsed?.tags ?? []) if (tag) tags.add(tag);
+    }
+    return { success: true as const, data: { genres: [...genres].sort(), tags: [...tags].sort() }, error: null };
+  } catch (err) {
+    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to list known values" };
+  }
+}
+
 export async function removeRecommendationPreference(input: unknown) {
   try {
     await requireUser();
@@ -803,12 +1006,16 @@ export async function restartRecommendations() {
       const runs = await tx.recommendationRun.deleteMany({});
       const profile = await tx.recommendationProfile.deleteMany({});
       const preferences = await tx.recommendationPreference.deleteMany({});
+      const presets = await tx.recommendationPreset.deleteMany({});
+      const tuneState = await tx.recommendationTuneState.deleteMany({});
       return {
         recommendationEvent: events.count,
         recommendationFeedback: feedback.count,
         recommendationRun: runs.count,
         recommendationProfile: profile.count,
         recommendationPreference: preferences.count,
+        recommendationPreset: presets.count,
+        recommendationTuneState: tuneState.count,
       };
     });
     return { success: true as const, data: counts, error: null };

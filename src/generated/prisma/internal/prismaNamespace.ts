@@ -432,6 +432,8 @@ export const ModelName = {
   RecommendationEvent: 'RecommendationEvent',
   RecommendationProfile: 'RecommendationProfile',
   RecommendationPreference: 'RecommendationPreference',
+  RecommendationTuneState: 'RecommendationTuneState',
+  RecommendationPreset: 'RecommendationPreset',
   WallpaperState: 'WallpaperState',
   SyncRun: 'SyncRun',
   CatalogOperation: 'CatalogOperation'
@@ -450,7 +452,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "account" | "session" | "appSettings" | "steamConnection" | "game" | "unresolvedSteamDlc" | "wishlistImportReview" | "wishlistImportIgnore" | "externalGameId" | "metadataSnapshot" | "enrichmentJob" | "personalTag" | "gameTag" | "collection" | "collectionMembership" | "libraryEntry" | "gameAvailability" | "wishlistEntry" | "wishlistMetadataSnapshot" | "dealOffer" | "itadIdentity" | "priceRefresh" | "wishlistCompatSweep" | "compatibilitySnapshot" | "environmentCompatibility" | "wishlistCompatibilitySnapshot" | "wishlistEnvironmentCompatibility" | "possibleDuplicate" | "recommendationRun" | "recommendationItem" | "recommendationFeedback" | "recommendationEvent" | "recommendationProfile" | "recommendationPreference" | "wallpaperState" | "syncRun" | "catalogOperation"
+    modelProps: "user" | "account" | "session" | "appSettings" | "steamConnection" | "game" | "unresolvedSteamDlc" | "wishlistImportReview" | "wishlistImportIgnore" | "externalGameId" | "metadataSnapshot" | "enrichmentJob" | "personalTag" | "gameTag" | "collection" | "collectionMembership" | "libraryEntry" | "gameAvailability" | "wishlistEntry" | "wishlistMetadataSnapshot" | "dealOffer" | "itadIdentity" | "priceRefresh" | "wishlistCompatSweep" | "compatibilitySnapshot" | "environmentCompatibility" | "wishlistCompatibilitySnapshot" | "wishlistEnvironmentCompatibility" | "possibleDuplicate" | "recommendationRun" | "recommendationItem" | "recommendationFeedback" | "recommendationEvent" | "recommendationProfile" | "recommendationPreference" | "recommendationTuneState" | "recommendationPreset" | "wallpaperState" | "syncRun" | "catalogOperation"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -3044,6 +3046,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    RecommendationTuneState: {
+      payload: Prisma.$RecommendationTuneStatePayload<ExtArgs>
+      fields: Prisma.RecommendationTuneStateFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.RecommendationTuneStateFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationTuneStatePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.RecommendationTuneStateFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationTuneStatePayload>
+        }
+        findFirst: {
+          args: Prisma.RecommendationTuneStateFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationTuneStatePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.RecommendationTuneStateFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationTuneStatePayload>
+        }
+        findMany: {
+          args: Prisma.RecommendationTuneStateFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationTuneStatePayload>[]
+        }
+        create: {
+          args: Prisma.RecommendationTuneStateCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationTuneStatePayload>
+        }
+        createMany: {
+          args: Prisma.RecommendationTuneStateCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.RecommendationTuneStateCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationTuneStatePayload>[]
+        }
+        delete: {
+          args: Prisma.RecommendationTuneStateDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationTuneStatePayload>
+        }
+        update: {
+          args: Prisma.RecommendationTuneStateUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationTuneStatePayload>
+        }
+        deleteMany: {
+          args: Prisma.RecommendationTuneStateDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.RecommendationTuneStateUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.RecommendationTuneStateUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationTuneStatePayload>[]
+        }
+        upsert: {
+          args: Prisma.RecommendationTuneStateUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationTuneStatePayload>
+        }
+        aggregate: {
+          args: Prisma.RecommendationTuneStateAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateRecommendationTuneState>
+        }
+        groupBy: {
+          args: Prisma.RecommendationTuneStateGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RecommendationTuneStateGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.RecommendationTuneStateCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RecommendationTuneStateCountAggregateOutputType> | number
+        }
+      }
+    }
+    RecommendationPreset: {
+      payload: Prisma.$RecommendationPresetPayload<ExtArgs>
+      fields: Prisma.RecommendationPresetFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.RecommendationPresetFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationPresetPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.RecommendationPresetFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationPresetPayload>
+        }
+        findFirst: {
+          args: Prisma.RecommendationPresetFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationPresetPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.RecommendationPresetFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationPresetPayload>
+        }
+        findMany: {
+          args: Prisma.RecommendationPresetFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationPresetPayload>[]
+        }
+        create: {
+          args: Prisma.RecommendationPresetCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationPresetPayload>
+        }
+        createMany: {
+          args: Prisma.RecommendationPresetCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.RecommendationPresetCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationPresetPayload>[]
+        }
+        delete: {
+          args: Prisma.RecommendationPresetDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationPresetPayload>
+        }
+        update: {
+          args: Prisma.RecommendationPresetUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationPresetPayload>
+        }
+        deleteMany: {
+          args: Prisma.RecommendationPresetDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.RecommendationPresetUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.RecommendationPresetUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationPresetPayload>[]
+        }
+        upsert: {
+          args: Prisma.RecommendationPresetUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecommendationPresetPayload>
+        }
+        aggregate: {
+          args: Prisma.RecommendationPresetAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateRecommendationPreset>
+        }
+        groupBy: {
+          args: Prisma.RecommendationPresetGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RecommendationPresetGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.RecommendationPresetCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RecommendationPresetCountAggregateOutputType> | number
+        }
+      }
+    }
     WallpaperState: {
       payload: Prisma.$WallpaperStatePayload<ExtArgs>
       fields: Prisma.WallpaperStateFieldRefs
@@ -3781,6 +3931,27 @@ export const RecommendationPreferenceScalarFieldEnum = {
 } as const
 
 export type RecommendationPreferenceScalarFieldEnum = (typeof RecommendationPreferenceScalarFieldEnum)[keyof typeof RecommendationPreferenceScalarFieldEnum]
+
+
+export const RecommendationTuneStateScalarFieldEnum = {
+  id: 'id',
+  playTune: 'playTune',
+  buyTune: 'buyTune',
+  updatedAt: 'updatedAt'
+} as const
+
+export type RecommendationTuneStateScalarFieldEnum = (typeof RecommendationTuneStateScalarFieldEnum)[keyof typeof RecommendationTuneStateScalarFieldEnum]
+
+
+export const RecommendationPresetScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  tune: 'tune',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type RecommendationPresetScalarFieldEnum = (typeof RecommendationPresetScalarFieldEnum)[keyof typeof RecommendationPresetScalarFieldEnum]
 
 
 export const WallpaperStateScalarFieldEnum = {
@@ -4531,6 +4702,8 @@ export type GlobalOmitConfig = {
   recommendationEvent?: Prisma.RecommendationEventOmit
   recommendationProfile?: Prisma.RecommendationProfileOmit
   recommendationPreference?: Prisma.RecommendationPreferenceOmit
+  recommendationTuneState?: Prisma.RecommendationTuneStateOmit
+  recommendationPreset?: Prisma.RecommendationPresetOmit
   wallpaperState?: Prisma.WallpaperStateOmit
   syncRun?: Prisma.SyncRunOmit
   catalogOperation?: Prisma.CatalogOperationOmit

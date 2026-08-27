@@ -8,6 +8,9 @@ import {
 import { ColdStartNote } from "@/components/recommendations/ColdStartNote";
 import { prisma } from "@/lib/prisma";
 import { RunExposureTracker } from "@/components/recommendations/RunExposureTracker";
+import { TuneThisRunPanel } from "@/components/recommendations/TuneThisRunPanel";
+import { listKnownGenreTagValues, listRecommendationPresets } from "@/actions/recommendations";
+import { tuneContextSchema, type TuneContext } from "@/lib/recommendations/types";
 
 const PLAY_ROLE_GROUPS = [
   { label: "Best fit", roles: ["BEST_FIT_1", "BEST_FIT_2"] },
@@ -22,6 +25,11 @@ const BUY_ROLE_GROUPS = [
 
 function hasRole(roles: readonly string[], role: string | null): boolean {
   return role !== null && roles.includes(role);
+}
+
+function storedTune(value: unknown): TuneContext | null {
+  const parsed = tuneContextSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
 }
 
 export default async function TodayPage() {
@@ -46,10 +54,16 @@ export default async function TodayPage() {
       },
     },
   });
+  const tuneState = await prisma.recommendationTuneState.findUnique({ where: { id: 1 }, select: { playTune: true, buyTune: true } });
+  const knownValuesResult = await listKnownGenreTagValues();
+  const knownValues = knownValuesResult.success ? knownValuesResult.data : { genres: [], tags: [] };
+  const presetsResult = await listRecommendationPresets();
+  const presets = presetsResult.success ? presetsResult.data.map((preset) => ({ id: preset.id, name: preset.name })) : [];
+  const playContext = latestPlayNextRun?.context as { rerank?: { mode?: string }; tune?: { thinPool?: boolean } } | null | undefined;
+  const buyContext = latestBuyRun?.context as { tune?: { thinPool?: boolean } } | null | undefined;
 
   const items = latestPlayNextRun?.items ?? [];
   const buyItems = latestBuyRun?.items ?? [];
-  const playContext = latestPlayNextRun?.context as { rerank?: { mode?: string } } | null | undefined;
   const coldStart = playContext?.rerank?.mode === "COLD_START";
   const hasPlayRoles = items.some((item) => item.role !== null);
   const hasBuyRoles = buyItems.some((item) => item.role !== null);
@@ -81,6 +95,7 @@ export default async function TodayPage() {
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
           Play next
         </h2>
+        <TuneThisRunPanel engine="PLAY_NEXT" initialTune={storedTune(tuneState?.playTune)} knownValues={knownValues} thinPool={playContext?.tune?.thinPool === true} presets={presets} />
         {latestPlayNextRun && <ColdStartNote visible={coldStart} />}
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">No eligible games right now.</p>
@@ -152,6 +167,7 @@ export default async function TodayPage() {
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
           Buy
         </h2>
+        <TuneThisRunPanel engine="BUY" initialTune={storedTune(tuneState?.buyTune)} knownValues={knownValues} thinPool={buyContext?.tune?.thinPool === true} presets={presets} />
         {!latestBuyRun ? (
           <p className="text-sm text-muted-foreground">
             No buy recommendations yet. Update recommendations to score your wishlist.

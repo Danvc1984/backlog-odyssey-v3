@@ -105,9 +105,19 @@ wishlist detail.
    saturation.
 12d. **Calibration from dismissal counters** - Adjusted interest from per-target
    dismissals and detail-page explanations.
-13. **Today dashboard** - Post-login landing composing main/in-progress games,
-   latest recommendations, Steam activity, offers sorted by discount,
-   freshness, links, and operation status.
+13. **Today dashboard** - Functional post-login composition without a feature-13
+   visual redesign: active-backlog progress, catalog coverage, the latest
+   explicit recommendations, daily-cached recent Steam activity, offers,
+   freshness, and operation status.
+13a. **Dashboard data health and recent Steam activity** - Active-backlog
+   progress excluding abandoned games; separate RAWG-metadata and
+   recommendation-profile coverage counts; persisted 24-hour recent Steam
+   activity including unimported titles and an explicit manual-sync suggestion,
+   with fresh-empty and stale-on-error states.
+13b. **Today composition and coverage dialogs** - Existing main/in-progress,
+   recommendation, offer, provider, and operation data plus accessible,
+   paginated dialogs for affected game titles. Visual hierarchy remains feature
+   14.
 14. **Global visual foundation and full-app UI review** - Prototype-validated
    dark-first theme with dual-accent semantic tokens, accessible contrast,
    responsive navigation, polish, reduced-data/motion, and fallbacks.
@@ -148,6 +158,11 @@ feature's implementation.
   `reducedData`, `steamDailySyncEnabled`, `itadDailyRefresh`.
 - `SteamConnection` - singleton: `steamId64` (unique), `state`, `lastSyncAt`,
   `counts` (JSON).
+- `SteamRecentActivityCache` `(planned, 13a)` - singleton cache for the narrow
+  recent-activity query: recent Steam entries (app ID, title, last-played time,
+  and accumulated playtime), successful refresh time, last attempt, and the
+  latest safe failure detail. It may reference no catalog game; it never imports
+  or mutates catalog records. Today refreshes it at most once every 24 hours.
 - `SyncRun` - provider-operation timing: `provider` (enum), `status` (enum
   `RUNNING`/`SUCCESS`/`FAILED`/`PARTIAL`), `startedAt`, `finishedAt`, `counts`,
   `diagnostics`.
@@ -228,7 +243,8 @@ feature's implementation.
   optional tuning and qualified candidate batches.
 - `RecommendationItem` - `runId`, nullable `gameId` or nullable
   `wishlistEntryId` (exactly one target enforced in code), `rank`, `score`,
-  `positive`, `negative`, `caveats` (JSON factor payloads).
+  `positive`, `negative`, `caveats` (JSON factor payloads), and optional role
+  (`BEST_FIT_1`/`BEST_FIT_2`/`OUT_OF_THE_BOX`/`CHANGE_OF_PACE`/`DEAL`).
 - `RecommendationFeedback` - nullable `gameId` or nullable `wishlistEntryId`,
   `kind` (`PLAY_NEXT`/`BUY`), `createdAt`; one row per dismissal and indexed by
   target plus kind.
@@ -380,9 +396,16 @@ feature's implementation.
 ## UI and routes
 
 - `/` - sign-in landing and Google access gate.
-- `/today` - post-login front door with main/in-progress games, adaptive
-  play-next and buy roles, Tune-this-run presets, `Show another`, Steam
-  activity, offers, freshness, and operation progress.
+- `/today` - post-login front door with main/in-progress games, active-backlog
+  progress, two actionable catalog-coverage counts, adaptive play-next and buy
+  roles, Tune-this-run presets, `Show another`, daily-cached Steam activity,
+  offers, freshness, and operation progress. The coverage dialogs show ten
+  linked games before expandable pagination. A visible base game is profile
+  incomplete when interest is absent, or when interest is present but all of
+  non-`NONE` priority, preferred environment, and game experience are absent;
+  hidden games, rating, and the default play state do not count. Steam may show
+  unimported recent titles and suggests manual library sync without importing
+  them automatically.
 - `/library` - searchable catalog, filters, manual creation, duplicate review, and
   catalog-wide metadata action.
 - `/wishlist` - independent wishes, RAWG action, identity suggestions, global
@@ -458,5 +481,5 @@ workflow services, notifications, multi-user support, and offline/PWA behavior.
 - Wallhaven anonymous SFW rate limits and keyword-set defaults confirm during
   the feature 15 spec.
 
-Run `/feature` for the next unchecked item, currently `12c-e`. Run `/prototype`
+Run `/feature` for the next unchecked item, currently `12c-e-b`. Run `/prototype`
 before feature 14 to lock the visual look against `blueprint/reference/`.

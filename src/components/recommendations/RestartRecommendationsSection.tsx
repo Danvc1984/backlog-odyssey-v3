@@ -26,7 +26,7 @@ export function RestartRecommendationsSection() {
   return (
     <section className="mt-6 rounded-lg border border-border p-4">
       <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Recommendations</h2>
-      <p className="mt-2 text-sm text-muted-foreground">Remove recommendation runs, dismissals, event history, learned profile, and preferences. Your games, wishlist, offers, and provider data stay unchanged.</p>
+      <p className="mt-2 text-sm text-muted-foreground">Remove recommendation runs, dismissals, event history, learned profile, preferences, tune state, and presets. Your games, wishlist, offers, and provider data stay unchanged.</p>
       {confirming ? (
         <div className="mt-4 flex flex-wrap gap-2">
           <Button type="button" variant="destructive" onClick={() => void restart()} disabled={running}>{running ? "Restarting..." : "Confirm restart"}</Button>

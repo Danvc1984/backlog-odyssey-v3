@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("server-only", () => ({}));
 vi.mock("@/lib/auth-guard", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 vi.mock("@/actions/game-detail", () => ({ updatePlayState: vi.fn() }));
@@ -50,6 +51,13 @@ import {
   updateRecommendations,
   rotateRecommendationRole,
   startPlayingFromRecommendation,
+  saveTuneState,
+  clearTuneState,
+  saveRecommendationPreset,
+  listRecommendationPresets,
+  deleteRecommendationPreset,
+  listKnownGenreTagValues,
+  loadRecommendationPreset,
 } from "./recommendations";
 
 const transaction = vi.fn();
@@ -74,6 +82,14 @@ const preferenceUpsert = vi.fn();
 const preferenceDeleteMany = vi.fn();
 const preferenceFindMany = vi.fn();
 const profileDeleteMany = vi.fn();
+const presetDeleteMany = vi.fn();
+const tuneStateDeleteMany = vi.fn();
+const tuneStateFindUnique = vi.fn();
+const tuneStateUpsert = vi.fn();
+const presetUpsert = vi.fn();
+const presetFindMany = vi.fn();
+const presetFindUnique = vi.fn();
+const presetDeleteManyDirect = vi.fn();
 
 let recentExposureEvents: Array<{ gameId: string | null; wishlistEntryId: string | null; createdAt: Date }> = [];
 
@@ -96,6 +112,8 @@ function txFactory() {
     recommendationEvent: { create: eventCreate, createMany: eventCreateMany, deleteMany: eventDeleteMany },
     recommendationProfile: { upsert: vi.fn(), deleteMany: profileDeleteMany },
     recommendationPreference: { upsert: preferenceUpsert, deleteMany: preferenceDeleteMany, findMany: preferenceFindMany },
+    recommendationPreset: { deleteMany: presetDeleteMany },
+    recommendationTuneState: { deleteMany: tuneStateDeleteMany, findUnique: tuneStateFindUnique },
     game: { findMany: gameFindMany },
     wishlistEntry: { findMany: wishlistFindMany },
   };
@@ -113,6 +131,8 @@ transaction.mockImplementation(async (callback: (tx: ReturnType<typeof txFactory
     prismaMock.recommendationEvent = { create: eventCreate, createMany: eventCreateMany, deleteMany: eventDeleteMany, findMany: eventFindMany };
     prismaMock.recommendationPreference = { upsert: preferenceUpsert, deleteMany: preferenceDeleteMany };
     prismaMock.recommendationRun = { create: runCreate, update: runUpdate, findUnique: runFindUnique, deleteMany: runDeleteMany };
+    prismaMock.recommendationTuneState = { upsert: tuneStateUpsert };
+    prismaMock.recommendationPreset = { upsert: presetUpsert, findMany: presetFindMany, findUnique: presetFindUnique, deleteMany: presetDeleteManyDirect };
     prismaMock.recommendationItem = { findFirst: itemFindFirst, updateMany: itemUpdateMany };
     prismaMock.libraryEntry = { findFirst: libraryFindFirst };
     prismaMock.game = { findMany: gameFindMany, findUnique: gameFindUnique };
@@ -147,6 +167,14 @@ transaction.mockImplementation(async (callback: (tx: ReturnType<typeof txFactory
   preferenceDeleteMany.mockResolvedValue({ count: 0 });
   preferenceFindMany.mockResolvedValue([]);
   profileDeleteMany.mockResolvedValue({ count: 0 });
+  presetDeleteMany.mockResolvedValue({ count: 0 });
+  tuneStateDeleteMany.mockResolvedValue({ count: 0 });
+  tuneStateFindUnique.mockResolvedValue(null);
+  tuneStateUpsert.mockResolvedValue({ id: 1 });
+  presetUpsert.mockResolvedValue({ id: "preset-1" });
+  presetFindMany.mockResolvedValue([]);
+  presetFindUnique.mockResolvedValue(null);
+  presetDeleteManyDirect.mockResolvedValue({ count: 1 });
   gameFindMany.mockResolvedValue([]);
   wishlistFindMany.mockResolvedValue([]);
   recentExposureEvents = [];
@@ -169,6 +197,65 @@ describe("recommendation preferences", () => {
     expect((await setRecommendationPreference({ dimension: "NOPE" })).success).toBe(false);
     expect(await removeRecommendationPreference({ id: "pref-1" })).toMatchObject({ success: true });
     expect(await rebuildRecommendationProfileAction()).toMatchObject({ success: true });
+  });
+});
+
+describe("recommendation tune and preset actions", () => {
+  const tune = {
+    experience: "COUCH_GAMING" as const,
+    length: null,
+    genres: ["Puzzle"],
+    tags: ["Co-op"],
+    sequelPosture: null,
+    era: null,
+    maturity: null,
+  };
+
+  it("saves and clears tune state per engine", async () => {
+    await saveTuneState({ engine: "PLAY_NEXT", tune });
+    expect(tuneStateUpsert).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 1 },
+      update: { playTune: tune },
+    }));
+    await clearTuneState({ engine: "BUY" });
+    expect(tuneStateUpsert).toHaveBeenLastCalledWith(expect.objectContaining({
+      where: { id: 1 },
+      update: { buyTune: null },
+    }));
+  });
+
+  it("upserts, lists, and deletes presets and rejects invalid inputs", async () => {
+    await saveRecommendationPreset({ name: "  Couch nights ", tune });
+    expect(presetUpsert).toHaveBeenCalledWith(expect.objectContaining({
+      where: { name: "Couch nights" },
+      update: { tune },
+    }));
+    expect(await listRecommendationPresets()).toMatchObject({ success: true, data: [] });
+    expect(await deleteRecommendationPreset({ id: "preset-1" })).toMatchObject({ success: true });
+    expect((await saveTuneState({ engine: "PLAY_NEXT", tune: { ...tune, unknown: true } })).success).toBe(false);
+    expect((await saveRecommendationPreset({ name: "", tune })).success).toBe(false);
+  });
+
+  it("loads a valid preset into the selected engine", async () => {
+    presetFindUnique.mockResolvedValue({ id: "preset-1", tune });
+    await expect(loadRecommendationPreset({ id: "preset-1", engine: "BUY" })).resolves.toMatchObject({ success: true });
+    expect(tuneStateUpsert).toHaveBeenCalledWith(expect.objectContaining({ update: { buyTune: tune } }));
+  });
+
+  it("returns distinct sorted RAWG genre and tag values from catalog and wishlist", async () => {
+    gameFindMany.mockResolvedValue([
+      { metadataSnapshots: [{ payload: { title: "A", genres: ["RPG", "Puzzle"], tags: ["Story"] } }] },
+      { metadataSnapshots: [{ payload: { title: "B", genres: ["RPG"], tags: ["Co-op"] } }] },
+    ]);
+    wishlistFindMany.mockResolvedValue([
+      { metadataSnapshot: { payload: { title: "C", genres: ["Action"], tags: ["Story"] } } },
+    ]);
+
+    await expect(listKnownGenreTagValues()).resolves.toEqual({
+      success: true,
+      data: { genres: ["Action", "Puzzle", "RPG"], tags: ["Co-op", "Story"] },
+      error: null,
+    });
   });
 });
 
@@ -292,6 +379,47 @@ describe("updateRecommendations", () => {
 
     expect(result).toEqual({ success: false, data: null, error: "Unauthorized" });
     expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it("applies tune points before cold-start selection and records the tune context", async () => {
+    tuneStateFindUnique.mockResolvedValue({
+      playTune: { experience: null, length: null, genres: ["RPG"], tags: [], sequelPosture: null, era: null, maturity: null },
+      buyTune: null,
+    });
+    gameFindMany.mockResolvedValue([
+      { ...baseRow(), id: "game-aaa", name: "Aaa", metadataSnapshots: [{ payload: { title: "Aaa", genres: ["Puzzle"] } }] },
+      { ...baseRow(), id: "game-zzz", name: "Zzz", metadataSnapshots: [{ payload: { title: "Zzz", genres: ["RPG"] } }] },
+    ]);
+
+    const result = await updateRecommendations();
+
+    expect(result.success).toBe(true);
+    const playCall = runCreate.mock.calls.find(
+      (call) => (call[0] as { data: { kind: string } }).data.kind === "PLAY_NEXT",
+    )!;
+    const items = (playCall[0] as {
+      data: {
+        items: {
+          create: Array<{
+            game: { connect: { id: string } };
+            score: number;
+            positive: Array<{ factor: string; points: number }>;
+            caveats: Array<{ factor: string; label: string }>;
+          }>;
+        };
+      };
+    }).data.items.create;
+    expect(items[0].game.connect.id).toBe("game-zzz");
+    expect(items[0].positive).toContainEqual(expect.objectContaining({ factor: "tune_match", points: 5 }));
+    expect(items.find((item) => item.game.connect.id === "game-aaa")?.caveats).toContainEqual({
+      factor: "tune_thin_pool",
+      label: "Only 1 candidates match your tune",
+    });
+    expect((playCall[0] as { data: { context: { tune: unknown } } }).data.context.tune).toEqual({
+      play: { experience: null, length: null, genres: ["RPG"], tags: [], sequelPosture: null, era: null, maturity: null },
+      buy: null,
+      thinPool: true,
+    });
   });
 
   it("creates both runs in one transaction with four cold-start play items and full explanations", async () => {
@@ -695,13 +823,15 @@ describe("restartRecommendations", () => {
     tx.recommendationRun.deleteMany.mockResolvedValue({ count: 3 });
     tx.recommendationProfile.deleteMany.mockResolvedValue({ count: 1 });
     tx.recommendationPreference.deleteMany.mockResolvedValue({ count: 2 });
+    tx.recommendationPreset.deleteMany.mockResolvedValue({ count: 5 });
+    tx.recommendationTuneState.deleteMany.mockResolvedValue({ count: 1 });
     transaction.mockImplementationOnce(async (callback: (client: typeof tx) => unknown) => callback(tx));
 
     const result = await restartRecommendations();
 
     expect(result).toEqual({
       success: true,
-      data: { recommendationEvent: 4, recommendationFeedback: 2, recommendationRun: 3, recommendationProfile: 1, recommendationPreference: 2 },
+      data: { recommendationEvent: 4, recommendationFeedback: 2, recommendationRun: 3, recommendationProfile: 1, recommendationPreference: 2, recommendationPreset: 5, recommendationTuneState: 1 },
       error: null,
     });
     expect(tx.recommendationEvent.deleteMany).toHaveBeenCalledWith({});
@@ -709,13 +839,15 @@ describe("restartRecommendations", () => {
     expect(tx.recommendationRun.deleteMany).toHaveBeenCalledWith({});
     expect(tx.recommendationProfile.deleteMany).toHaveBeenCalledWith({});
     expect(tx.recommendationPreference.deleteMany).toHaveBeenCalledWith({});
+    expect(tx.recommendationPreset.deleteMany).toHaveBeenCalledWith({});
+    expect(tx.recommendationTuneState.deleteMany).toHaveBeenCalledWith({});
   });
 
   it("succeeds with zero counts when no recommendation data exists", async () => {
     runDeleteMany.mockResolvedValueOnce({ count: 0 });
     const result = await restartRecommendations();
     expect(result.success).toBe(true);
-    expect(result.data).toEqual({ recommendationEvent: 0, recommendationFeedback: 0, recommendationRun: 0, recommendationProfile: 0, recommendationPreference: 0 });
+    expect(result.data).toEqual({ recommendationEvent: 0, recommendationFeedback: 0, recommendationRun: 0, recommendationProfile: 0, recommendationPreference: 0, recommendationPreset: 0, recommendationTuneState: 0 });
   });
 });
 

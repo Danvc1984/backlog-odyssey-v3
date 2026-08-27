@@ -218,7 +218,7 @@
       posture, era, casual/mature) with named `RecommendationPreset` reuse,
       and optional post-import taste setup from five or six swappable owned
       games with `PLAYED_BEFORE` and Interest seed actions
-      - [ ] 12c-f-a. **Tune-this-run and presets** - a persisted per-engine
+      - [x] 12c-f-a. **Tune-this-run and presets** - a persisted per-engine
         tune context (experience, length, genres/tags, sequel posture, era,
         casual/mature) weighting the candidate pool before the baseline with
         thin-pool explanations, named `RecommendationPreset` save/load/delete,
@@ -232,10 +232,23 @@
     per-target dismissal counters applied in both engines (floor 0, counters
     never pruned), and calibration explanations on game and wishlist detail
 
-- [ ] 13. **Today dashboard** - post-login landing composing main game,
-  in-progress games, latest three play-next and buy results, recent Steam
-  activity/playtime, three best offers sorted by discount, provider
-  freshness, background-operation progress, and external links
+- [ ] 13. **Today dashboard** - post-login functional dashboard without a
+  feature-13 visual redesign. It composes main/in-progress games, latest three
+  explicit play-next and buy results, three best discount-sorted wishlist
+  offers, provider freshness, operation status, active-backlog progress, and
+  actionable catalog coverage.
+  - [ ] 13a. **Dashboard data health and recent Steam activity** - active
+    backlog progress excluding abandoned games; separate RAWG-metadata and
+    recommendation-profile completeness counts; a persisted 24-hour recent
+    Steam activity cache populated by a narrow query when Today loads;
+    imported and unimported recent titles, explicit manual-sync suggestion for
+    the latter, fresh-empty and stale-on-error states; no full sync or
+    automatic catalog mutation.
+  - [ ] 13b. **Today composition and coverage dialogs** - functional Today
+    composition of existing main/in-progress, recommendation, offer, provider,
+    and operation data; accessible click-open coverage dialogs with ten linked
+    game titles, expandable pagination, and clear local/provider freshness
+    states. Visual hierarchy and redesign remain feature 14.
 
 ## Personalization and operations
 

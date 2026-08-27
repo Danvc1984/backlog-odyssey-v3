@@ -1,4 +1,5 @@
-import type { CompatibilityStatus, GameType, PlayState, Priority } from "@/generated/prisma/client";
+import type { CompatibilityStatus, GameExperience, GameType, PlayState, Priority } from "@/generated/prisma/client";
+import { z } from "zod";
 import type { AwayStatus } from "@/lib/away-api";
 
 export const RUN_RETENTION_DAYS = 365;
@@ -31,7 +32,9 @@ export type ExplanationFactorKey =
   | "environment_fit"
   | "quality"
   | "limited_basis"
-  | "role_fallback";
+  | "role_fallback"
+  | "tune_match"
+  | "tune_thin_pool";
 
 export const RERANK_TASTE_CLAMP = 3;
 export const RERANK_TASTE_TOTAL_CAP = 12;
@@ -45,6 +48,29 @@ export const QUALITY_METACRITIC_LOW = 55;
 export const QUALITY_RATING_HIGH = 4.5;
 export const QUALITY_CLAMP = 3;
 export const COLD_START_MIN_EVENTS = 5;
+
+export const TUNE_MATCH_POINTS = 5;
+export const TUNE_TOTAL_CAP = 10;
+
+export interface TuneContext {
+  experience: GameExperience | null;
+  length: "SHORT" | "MEDIUM" | "LONG" | "VERY_LONG" | null;
+  genres: string[];
+  tags: string[];
+  sequelPosture: "SEQUEL" | "STANDALONE" | null;
+  era: "PRE_2005" | "Y2005_2014" | "Y2015_2019" | "Y2020_PLUS" | null;
+  maturity: "CASUAL" | "MATURE" | null;
+}
+
+export const tuneContextSchema = z.object({
+  experience: z.enum(["PC_GAMING", "MULTIPLAYER_COOP", "COUCH_GAMING", "ON_THE_GO"]).nullable(),
+  length: z.enum(["SHORT", "MEDIUM", "LONG", "VERY_LONG"]).nullable(),
+  genres: z.array(z.string().trim().min(1)).max(100),
+  tags: z.array(z.string().trim().min(1)).max(100),
+  sequelPosture: z.enum(["SEQUEL", "STANDALONE"]).nullable(),
+  era: z.enum(["PRE_2005", "Y2005_2014", "Y2015_2019", "Y2020_PLUS"]).nullable(),
+  maturity: z.enum(["CASUAL", "MATURE"]).nullable(),
+}).strict();
 
 export const RERANK_ENVIRONMENT_POINTS: Record<string, number> = {
   READY: 2,
