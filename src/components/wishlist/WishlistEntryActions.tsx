@@ -19,7 +19,7 @@ import { EditWishlistDialog } from "./EditWishlistDialog";
 import { AcquireWishlistDialog } from "./AcquireWishlistDialog";
 
 interface WishlistEntryActionsProps {
-  entry: { id: string; name: string; type: string; baseGameId: string | null; interest: number | null };
+  entry: { id: string; name: string; type: string; baseGameId: string | null; interest: number | null; gameExperience: string | null };
   baseGames: { id: string; name: string }[];
 }
 

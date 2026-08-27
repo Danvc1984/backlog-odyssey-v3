@@ -121,6 +121,7 @@ describe("wishlist CRUD", () => {
       id: "wish-1",
       name: " New name ",
       interest: 4,
+      gameExperience: "COUCH_GAMING",
       notes: "Later",
       steamAppId: "123",
     });
@@ -131,11 +132,37 @@ describe("wishlist CRUD", () => {
       data: {
         name: "New name",
         interest: 4,
+        gameExperience: "COUCH_GAMING",
         notes: "Later",
         steamAppId: "123",
         steamAppIdProvenance: "USER",
       },
     }));
+  });
+
+  it("sets, clears, and omits game experience without accepting invalid values", async () => {
+    const set = await updateWishlistEntry({ id: "wish-1", gameExperience: "ON_THE_GO" });
+    const cleared = await updateWishlistEntry({ id: "wish-1", gameExperience: null });
+    const omitted = await updateWishlistEntry({ id: "wish-1", name: "Renamed" });
+    const invalid = await updateWishlistEntry({
+      id: "wish-1",
+      gameExperience: "DESKTOP",
+    });
+
+    expect(set.success).toBe(true);
+    expect(cleared.success).toBe(true);
+    expect(omitted.success).toBe(true);
+    expect(invalid.success).toBe(false);
+    expect(mockUpdate).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      data: { gameExperience: "ON_THE_GO" },
+    }));
+    expect(mockUpdate).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      data: { gameExperience: null },
+    }));
+    expect(mockUpdate).toHaveBeenNthCalledWith(3, expect.objectContaining({
+      data: { name: "Renamed" },
+    }));
+    expect(mockUpdate).toHaveBeenCalledTimes(3);
   });
 
   it("allows a DLC to change to another base-game parent", async () => {

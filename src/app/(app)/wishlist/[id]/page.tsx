@@ -14,6 +14,7 @@ import { buildEntryOfferView } from "@/lib/offer-selection";
 import { getWishlistCompatibilityEligibility } from "@/lib/wishlist-compatibility";
 import { parseAntiCheatEvidence } from "@/lib/compat-evidence";
 import { parseProtonDbSummary } from "@/lib/protondb-api";
+import { GAME_EXPERIENCE_LABELS } from "@/lib/personal-field-help";
 
 export default async function WishlistDetailPage({
   params,
@@ -30,6 +31,7 @@ export default async function WishlistDetailPage({
         type: true,
         baseGameId: true,
         interest: true,
+        gameExperience: true,
         notes: true,
         steamAppId: true,
         steamAppIdProvenance: true,
@@ -163,11 +165,18 @@ export default async function WishlistDetailPage({
               type: entry.type,
               baseGameId: entry.baseGameId,
               interest: entry.interest,
+              gameExperience: entry.gameExperience,
             }}
             baseGames={baseGames}
           />
         </div>
       </div>
+
+      {entry.gameExperience && (
+        <p className="text-sm text-muted-foreground">
+          Game experience: {GAME_EXPERIENCE_LABELS[entry.gameExperience as keyof typeof GAME_EXPERIENCE_LABELS] ?? entry.gameExperience}
+        </p>
+      )}
 
       <WishlistIdentity
         entryId={entry.id}

@@ -20,9 +20,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { RawgSearchCandidate } from "@/lib/rawg-types";
+import { GAME_EXPERIENCE_LABELS, PERSONAL_FIELD_HELP } from "@/lib/personal-field-help";
 
 interface EditWishlistDialogProps {
-  entry: { id: string; name: string; type: string; baseGameId: string | null; interest: number | null };
+  entry: { id: string; name: string; type: string; baseGameId: string | null; interest: number | null; gameExperience: string | null };
   baseGames: { id: string; name: string }[];
 }
 
@@ -32,6 +33,7 @@ export function EditWishlistDialog({ entry, baseGames }: EditWishlistDialogProps
   const [name, setName] = useState(entry.name);
   const [interest, setInterest] = useState(String(entry.interest ?? 5));
   const [baseGameId, setBaseGameId] = useState(entry.baseGameId ?? "");
+  const [gameExperience, setGameExperience] = useState(entry.gameExperience ?? "");
   const [candidates, setCandidates] = useState<RawgSearchCandidate[]>([]);
   const [selectedRawgId, setSelectedRawgId] = useState<number | null>(null);
   const [rawgPage, setRawgPage] = useState(1);
@@ -79,6 +81,7 @@ export function EditWishlistDialog({ entry, baseGames }: EditWishlistDialogProps
       id: entry.id,
       name,
       interest: Number(interest),
+      gameExperience: gameExperience === "" ? null : gameExperience as keyof typeof GAME_EXPERIENCE_LABELS,
       ...(entry.type === "DLC" && { baseGameId }),
     });
     setSubmitting(false);
@@ -162,10 +165,24 @@ export function EditWishlistDialog({ entry, baseGames }: EditWishlistDialogProps
           )}
           <div className="grid gap-2">
             <Label htmlFor={`edit-wishlist-interest-${entry.id}`}>Interest</Label>
+            <p className="text-xs text-muted-foreground">{PERSONAL_FIELD_HELP.interest}</p>
             <Select value={interest} onValueChange={setInterest}>
               <SelectTrigger id={`edit-wishlist-interest-${entry.id}`} aria-label="Wishlist interest"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {[5, 4, 3, 2, 1].map((value) => <SelectItem key={value} value={String(value)}>{value} star{value === 1 ? "" : "s"}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor={`edit-wishlist-experience-${entry.id}`}>Game experience</Label>
+            <p className="text-xs text-muted-foreground">{PERSONAL_FIELD_HELP.gameExperience}</p>
+            <Select value={gameExperience} onValueChange={setGameExperience}>
+              <SelectTrigger id={`edit-wishlist-experience-${entry.id}`}><SelectValue placeholder="Not set" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Not set</SelectItem>
+                {Object.entries(GAME_EXPERIENCE_LABELS).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

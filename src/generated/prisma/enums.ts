@@ -73,6 +73,16 @@ export const Environment = {
 export type Environment = (typeof Environment)[keyof typeof Environment]
 
 
+export const GameExperience = {
+  PC_GAMING: 'PC_GAMING',
+  MULTIPLAYER_COOP: 'MULTIPLAYER_COOP',
+  COUCH_GAMING: 'COUCH_GAMING',
+  ON_THE_GO: 'ON_THE_GO'
+} as const
+
+export type GameExperience = (typeof GameExperience)[keyof typeof GameExperience]
+
+
 export const CompatibilityStatus = {
   READY: 'READY',
   READY_WITH_TINKERING: 'READY_WITH_TINKERING',

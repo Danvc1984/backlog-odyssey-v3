@@ -45,6 +45,7 @@ export type LibraryEntryMinAggregateOutputType = {
   interest: number | null
   rating: number | null
   preferredEnvironment: $Enums.Environment | null
+  gameExperience: $Enums.GameExperience | null
   compatOverrideStatus: $Enums.CompatibilityStatus | null
   compatOverrideReason: string | null
   playSoon: boolean | null
@@ -64,6 +65,7 @@ export type LibraryEntryMaxAggregateOutputType = {
   interest: number | null
   rating: number | null
   preferredEnvironment: $Enums.Environment | null
+  gameExperience: $Enums.GameExperience | null
   compatOverrideStatus: $Enums.CompatibilityStatus | null
   compatOverrideReason: string | null
   playSoon: boolean | null
@@ -83,6 +85,7 @@ export type LibraryEntryCountAggregateOutputType = {
   interest: number
   rating: number
   preferredEnvironment: number
+  gameExperience: number
   compatOverrideStatus: number
   compatOverrideReason: number
   playSoon: number
@@ -114,6 +117,7 @@ export type LibraryEntryMinAggregateInputType = {
   interest?: true
   rating?: true
   preferredEnvironment?: true
+  gameExperience?: true
   compatOverrideStatus?: true
   compatOverrideReason?: true
   playSoon?: true
@@ -133,6 +137,7 @@ export type LibraryEntryMaxAggregateInputType = {
   interest?: true
   rating?: true
   preferredEnvironment?: true
+  gameExperience?: true
   compatOverrideStatus?: true
   compatOverrideReason?: true
   playSoon?: true
@@ -152,6 +157,7 @@ export type LibraryEntryCountAggregateInputType = {
   interest?: true
   rating?: true
   preferredEnvironment?: true
+  gameExperience?: true
   compatOverrideStatus?: true
   compatOverrideReason?: true
   playSoon?: true
@@ -258,6 +264,7 @@ export type LibraryEntryGroupByOutputType = {
   interest: number | null
   rating: number | null
   preferredEnvironment: $Enums.Environment | null
+  gameExperience: $Enums.GameExperience | null
   compatOverrideStatus: $Enums.CompatibilityStatus | null
   compatOverrideReason: string | null
   playSoon: boolean
@@ -300,6 +307,7 @@ export type LibraryEntryWhereInput = {
   interest?: Prisma.IntNullableFilter<"LibraryEntry"> | number | null
   rating?: Prisma.IntNullableFilter<"LibraryEntry"> | number | null
   preferredEnvironment?: Prisma.EnumEnvironmentNullableFilter<"LibraryEntry"> | $Enums.Environment | null
+  gameExperience?: Prisma.EnumGameExperienceNullableFilter<"LibraryEntry"> | $Enums.GameExperience | null
   compatOverrideStatus?: Prisma.EnumCompatibilityStatusNullableFilter<"LibraryEntry"> | $Enums.CompatibilityStatus | null
   compatOverrideReason?: Prisma.StringNullableFilter<"LibraryEntry"> | string | null
   playSoon?: Prisma.BoolFilter<"LibraryEntry"> | boolean
@@ -320,6 +328,7 @@ export type LibraryEntryOrderByWithRelationInput = {
   interest?: Prisma.SortOrderInput | Prisma.SortOrder
   rating?: Prisma.SortOrderInput | Prisma.SortOrder
   preferredEnvironment?: Prisma.SortOrderInput | Prisma.SortOrder
+  gameExperience?: Prisma.SortOrderInput | Prisma.SortOrder
   compatOverrideStatus?: Prisma.SortOrderInput | Prisma.SortOrder
   compatOverrideReason?: Prisma.SortOrderInput | Prisma.SortOrder
   playSoon?: Prisma.SortOrder
@@ -343,6 +352,7 @@ export type LibraryEntryWhereUniqueInput = Prisma.AtLeast<{
   interest?: Prisma.IntNullableFilter<"LibraryEntry"> | number | null
   rating?: Prisma.IntNullableFilter<"LibraryEntry"> | number | null
   preferredEnvironment?: Prisma.EnumEnvironmentNullableFilter<"LibraryEntry"> | $Enums.Environment | null
+  gameExperience?: Prisma.EnumGameExperienceNullableFilter<"LibraryEntry"> | $Enums.GameExperience | null
   compatOverrideStatus?: Prisma.EnumCompatibilityStatusNullableFilter<"LibraryEntry"> | $Enums.CompatibilityStatus | null
   compatOverrideReason?: Prisma.StringNullableFilter<"LibraryEntry"> | string | null
   playSoon?: Prisma.BoolFilter<"LibraryEntry"> | boolean
@@ -363,6 +373,7 @@ export type LibraryEntryOrderByWithAggregationInput = {
   interest?: Prisma.SortOrderInput | Prisma.SortOrder
   rating?: Prisma.SortOrderInput | Prisma.SortOrder
   preferredEnvironment?: Prisma.SortOrderInput | Prisma.SortOrder
+  gameExperience?: Prisma.SortOrderInput | Prisma.SortOrder
   compatOverrideStatus?: Prisma.SortOrderInput | Prisma.SortOrder
   compatOverrideReason?: Prisma.SortOrderInput | Prisma.SortOrder
   playSoon?: Prisma.SortOrder
@@ -390,6 +401,7 @@ export type LibraryEntryScalarWhereWithAggregatesInput = {
   interest?: Prisma.IntNullableWithAggregatesFilter<"LibraryEntry"> | number | null
   rating?: Prisma.IntNullableWithAggregatesFilter<"LibraryEntry"> | number | null
   preferredEnvironment?: Prisma.EnumEnvironmentNullableWithAggregatesFilter<"LibraryEntry"> | $Enums.Environment | null
+  gameExperience?: Prisma.EnumGameExperienceNullableWithAggregatesFilter<"LibraryEntry"> | $Enums.GameExperience | null
   compatOverrideStatus?: Prisma.EnumCompatibilityStatusNullableWithAggregatesFilter<"LibraryEntry"> | $Enums.CompatibilityStatus | null
   compatOverrideReason?: Prisma.StringNullableWithAggregatesFilter<"LibraryEntry"> | string | null
   playSoon?: Prisma.BoolWithAggregatesFilter<"LibraryEntry"> | boolean
@@ -408,6 +420,7 @@ export type LibraryEntryCreateInput = {
   interest?: number | null
   rating?: number | null
   preferredEnvironment?: $Enums.Environment | null
+  gameExperience?: $Enums.GameExperience | null
   compatOverrideStatus?: $Enums.CompatibilityStatus | null
   compatOverrideReason?: string | null
   playSoon?: boolean
@@ -428,6 +441,7 @@ export type LibraryEntryUncheckedCreateInput = {
   interest?: number | null
   rating?: number | null
   preferredEnvironment?: $Enums.Environment | null
+  gameExperience?: $Enums.GameExperience | null
   compatOverrideStatus?: $Enums.CompatibilityStatus | null
   compatOverrideReason?: string | null
   playSoon?: boolean
@@ -446,6 +460,7 @@ export type LibraryEntryUpdateInput = {
   interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   preferredEnvironment?: Prisma.NullableEnumEnvironmentFieldUpdateOperationsInput | $Enums.Environment | null
+  gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   compatOverrideStatus?: Prisma.NullableEnumCompatibilityStatusFieldUpdateOperationsInput | $Enums.CompatibilityStatus | null
   compatOverrideReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   playSoon?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -466,6 +481,7 @@ export type LibraryEntryUncheckedUpdateInput = {
   interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   preferredEnvironment?: Prisma.NullableEnumEnvironmentFieldUpdateOperationsInput | $Enums.Environment | null
+  gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   compatOverrideStatus?: Prisma.NullableEnumCompatibilityStatusFieldUpdateOperationsInput | $Enums.CompatibilityStatus | null
   compatOverrideReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   playSoon?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -485,6 +501,7 @@ export type LibraryEntryCreateManyInput = {
   interest?: number | null
   rating?: number | null
   preferredEnvironment?: $Enums.Environment | null
+  gameExperience?: $Enums.GameExperience | null
   compatOverrideStatus?: $Enums.CompatibilityStatus | null
   compatOverrideReason?: string | null
   playSoon?: boolean
@@ -503,6 +520,7 @@ export type LibraryEntryUpdateManyMutationInput = {
   interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   preferredEnvironment?: Prisma.NullableEnumEnvironmentFieldUpdateOperationsInput | $Enums.Environment | null
+  gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   compatOverrideStatus?: Prisma.NullableEnumCompatibilityStatusFieldUpdateOperationsInput | $Enums.CompatibilityStatus | null
   compatOverrideReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   playSoon?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -522,6 +540,7 @@ export type LibraryEntryUncheckedUpdateManyInput = {
   interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   preferredEnvironment?: Prisma.NullableEnumEnvironmentFieldUpdateOperationsInput | $Enums.Environment | null
+  gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   compatOverrideStatus?: Prisma.NullableEnumCompatibilityStatusFieldUpdateOperationsInput | $Enums.CompatibilityStatus | null
   compatOverrideReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   playSoon?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -546,6 +565,7 @@ export type LibraryEntryCountOrderByAggregateInput = {
   interest?: Prisma.SortOrder
   rating?: Prisma.SortOrder
   preferredEnvironment?: Prisma.SortOrder
+  gameExperience?: Prisma.SortOrder
   compatOverrideStatus?: Prisma.SortOrder
   compatOverrideReason?: Prisma.SortOrder
   playSoon?: Prisma.SortOrder
@@ -570,6 +590,7 @@ export type LibraryEntryMaxOrderByAggregateInput = {
   interest?: Prisma.SortOrder
   rating?: Prisma.SortOrder
   preferredEnvironment?: Prisma.SortOrder
+  gameExperience?: Prisma.SortOrder
   compatOverrideStatus?: Prisma.SortOrder
   compatOverrideReason?: Prisma.SortOrder
   playSoon?: Prisma.SortOrder
@@ -589,6 +610,7 @@ export type LibraryEntryMinOrderByAggregateInput = {
   interest?: Prisma.SortOrder
   rating?: Prisma.SortOrder
   preferredEnvironment?: Prisma.SortOrder
+  gameExperience?: Prisma.SortOrder
   compatOverrideStatus?: Prisma.SortOrder
   compatOverrideReason?: Prisma.SortOrder
   playSoon?: Prisma.SortOrder
@@ -648,6 +670,10 @@ export type NullableEnumEnvironmentFieldUpdateOperationsInput = {
   set?: $Enums.Environment | null
 }
 
+export type NullableEnumGameExperienceFieldUpdateOperationsInput = {
+  set?: $Enums.GameExperience | null
+}
+
 export type NullableEnumCompatibilityStatusFieldUpdateOperationsInput = {
   set?: $Enums.CompatibilityStatus | null
 }
@@ -660,6 +686,7 @@ export type LibraryEntryCreateWithoutGameInput = {
   interest?: number | null
   rating?: number | null
   preferredEnvironment?: $Enums.Environment | null
+  gameExperience?: $Enums.GameExperience | null
   compatOverrideStatus?: $Enums.CompatibilityStatus | null
   compatOverrideReason?: string | null
   playSoon?: boolean
@@ -678,6 +705,7 @@ export type LibraryEntryUncheckedCreateWithoutGameInput = {
   interest?: number | null
   rating?: number | null
   preferredEnvironment?: $Enums.Environment | null
+  gameExperience?: $Enums.GameExperience | null
   compatOverrideStatus?: $Enums.CompatibilityStatus | null
   compatOverrideReason?: string | null
   playSoon?: boolean
@@ -712,6 +740,7 @@ export type LibraryEntryUpdateWithoutGameInput = {
   interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   preferredEnvironment?: Prisma.NullableEnumEnvironmentFieldUpdateOperationsInput | $Enums.Environment | null
+  gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   compatOverrideStatus?: Prisma.NullableEnumCompatibilityStatusFieldUpdateOperationsInput | $Enums.CompatibilityStatus | null
   compatOverrideReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   playSoon?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -730,6 +759,7 @@ export type LibraryEntryUncheckedUpdateWithoutGameInput = {
   interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   preferredEnvironment?: Prisma.NullableEnumEnvironmentFieldUpdateOperationsInput | $Enums.Environment | null
+  gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   compatOverrideStatus?: Prisma.NullableEnumCompatibilityStatusFieldUpdateOperationsInput | $Enums.CompatibilityStatus | null
   compatOverrideReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   playSoon?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -751,6 +781,7 @@ export type LibraryEntrySelect<ExtArgs extends runtime.Types.Extensions.Internal
   interest?: boolean
   rating?: boolean
   preferredEnvironment?: boolean
+  gameExperience?: boolean
   compatOverrideStatus?: boolean
   compatOverrideReason?: boolean
   playSoon?: boolean
@@ -771,6 +802,7 @@ export type LibraryEntrySelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   interest?: boolean
   rating?: boolean
   preferredEnvironment?: boolean
+  gameExperience?: boolean
   compatOverrideStatus?: boolean
   compatOverrideReason?: boolean
   playSoon?: boolean
@@ -791,6 +823,7 @@ export type LibraryEntrySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   interest?: boolean
   rating?: boolean
   preferredEnvironment?: boolean
+  gameExperience?: boolean
   compatOverrideStatus?: boolean
   compatOverrideReason?: boolean
   playSoon?: boolean
@@ -811,6 +844,7 @@ export type LibraryEntrySelectScalar = {
   interest?: boolean
   rating?: boolean
   preferredEnvironment?: boolean
+  gameExperience?: boolean
   compatOverrideStatus?: boolean
   compatOverrideReason?: boolean
   playSoon?: boolean
@@ -821,7 +855,7 @@ export type LibraryEntrySelectScalar = {
   updatedAt?: boolean
 }
 
-export type LibraryEntryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "gameId" | "playState" | "isMainGame" | "priority" | "interest" | "rating" | "preferredEnvironment" | "compatOverrideStatus" | "compatOverrideReason" | "playSoon" | "replayCandidate" | "hidden" | "notes" | "createdAt" | "updatedAt", ExtArgs["result"]["libraryEntry"]>
+export type LibraryEntryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "gameId" | "playState" | "isMainGame" | "priority" | "interest" | "rating" | "preferredEnvironment" | "gameExperience" | "compatOverrideStatus" | "compatOverrideReason" | "playSoon" | "replayCandidate" | "hidden" | "notes" | "createdAt" | "updatedAt", ExtArgs["result"]["libraryEntry"]>
 export type LibraryEntryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   game?: boolean | Prisma.GameDefaultArgs<ExtArgs>
 }
@@ -846,6 +880,7 @@ export type $LibraryEntryPayload<ExtArgs extends runtime.Types.Extensions.Intern
     interest: number | null
     rating: number | null
     preferredEnvironment: $Enums.Environment | null
+    gameExperience: $Enums.GameExperience | null
     compatOverrideStatus: $Enums.CompatibilityStatus | null
     compatOverrideReason: string | null
     playSoon: boolean
@@ -1286,6 +1321,7 @@ export interface LibraryEntryFieldRefs {
   readonly interest: Prisma.FieldRef<"LibraryEntry", 'Int'>
   readonly rating: Prisma.FieldRef<"LibraryEntry", 'Int'>
   readonly preferredEnvironment: Prisma.FieldRef<"LibraryEntry", 'Environment'>
+  readonly gameExperience: Prisma.FieldRef<"LibraryEntry", 'GameExperience'>
   readonly compatOverrideStatus: Prisma.FieldRef<"LibraryEntry", 'CompatibilityStatus'>
   readonly compatOverrideReason: Prisma.FieldRef<"LibraryEntry", 'String'>
   readonly playSoon: Prisma.FieldRef<"LibraryEntry", 'Boolean'>

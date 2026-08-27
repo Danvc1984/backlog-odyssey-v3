@@ -495,6 +495,13 @@ export type EnumEnvironmentNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumEnvironmentNullableFilter<$PrismaModel> | $Enums.Environment | null
 }
 
+export type EnumGameExperienceNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.GameExperience | Prisma.EnumGameExperienceFieldRefInput<$PrismaModel> | null
+  in?: $Enums.GameExperience[] | Prisma.ListEnumGameExperienceFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.GameExperience[] | Prisma.ListEnumGameExperienceFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumGameExperienceNullableFilter<$PrismaModel> | $Enums.GameExperience | null
+}
+
 export type EnumCompatibilityStatusNullableFilter<$PrismaModel = never> = {
   equals?: $Enums.CompatibilityStatus | Prisma.EnumCompatibilityStatusFieldRefInput<$PrismaModel> | null
   in?: $Enums.CompatibilityStatus[] | Prisma.ListEnumCompatibilityStatusFieldRefInput<$PrismaModel> | null
@@ -530,6 +537,16 @@ export type EnumEnvironmentNullableWithAggregatesFilter<$PrismaModel = never> = 
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumEnvironmentNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumEnvironmentNullableFilter<$PrismaModel>
+}
+
+export type EnumGameExperienceNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.GameExperience | Prisma.EnumGameExperienceFieldRefInput<$PrismaModel> | null
+  in?: $Enums.GameExperience[] | Prisma.ListEnumGameExperienceFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.GameExperience[] | Prisma.ListEnumGameExperienceFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumGameExperienceNullableWithAggregatesFilter<$PrismaModel> | $Enums.GameExperience | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumGameExperienceNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumGameExperienceNullableFilter<$PrismaModel>
 }
 
 export type EnumCompatibilityStatusNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -1243,6 +1260,13 @@ export type NestedEnumEnvironmentNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumEnvironmentNullableFilter<$PrismaModel> | $Enums.Environment | null
 }
 
+export type NestedEnumGameExperienceNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.GameExperience | Prisma.EnumGameExperienceFieldRefInput<$PrismaModel> | null
+  in?: $Enums.GameExperience[] | Prisma.ListEnumGameExperienceFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.GameExperience[] | Prisma.ListEnumGameExperienceFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumGameExperienceNullableFilter<$PrismaModel> | $Enums.GameExperience | null
+}
+
 export type NestedEnumCompatibilityStatusNullableFilter<$PrismaModel = never> = {
   equals?: $Enums.CompatibilityStatus | Prisma.EnumCompatibilityStatusFieldRefInput<$PrismaModel> | null
   in?: $Enums.CompatibilityStatus[] | Prisma.ListEnumCompatibilityStatusFieldRefInput<$PrismaModel> | null
@@ -1278,6 +1302,16 @@ export type NestedEnumEnvironmentNullableWithAggregatesFilter<$PrismaModel = nev
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumEnvironmentNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumEnvironmentNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumGameExperienceNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.GameExperience | Prisma.EnumGameExperienceFieldRefInput<$PrismaModel> | null
+  in?: $Enums.GameExperience[] | Prisma.ListEnumGameExperienceFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.GameExperience[] | Prisma.ListEnumGameExperienceFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumGameExperienceNullableWithAggregatesFilter<$PrismaModel> | $Enums.GameExperience | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumGameExperienceNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumGameExperienceNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumCompatibilityStatusNullableWithAggregatesFilter<$PrismaModel = never> = {

@@ -312,6 +312,7 @@ export default async function GameDetailPage({
                   interest: game.libraryEntry.interest,
                   rating: game.libraryEntry.rating,
                   preferredEnvironment: game.libraryEntry.preferredEnvironment,
+                  gameExperience: game.libraryEntry.gameExperience,
                   notes: game.libraryEntry.notes,
                 }
               : null

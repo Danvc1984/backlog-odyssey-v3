@@ -13,12 +13,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { updatePersonalFields } from "@/actions/game-detail";
+import { PERSONAL_FIELD_HELP } from "@/lib/personal-field-help";
 
 type LibraryEntryData = {
   priority: string | null;
   interest: number | null;
   rating: number | null;
   preferredEnvironment: string | null;
+  gameExperience: string | null;
   notes: string | null;
 };
 
@@ -33,6 +35,13 @@ const ENV_OPTIONS = [
   { value: "BAZZITE", label: "Bazzite" },
   { value: "STEAM_DECK", label: "Steam Deck" },
   { value: "WINDOWS", label: "Windows" },
+];
+
+const EXPERIENCE_OPTIONS = [
+  { value: "PC_GAMING", label: "PC gaming" },
+  { value: "MULTIPLAYER_COOP", label: "Multiplayer & co-op" },
+  { value: "COUCH_GAMING", label: "Couch gaming" },
+  { value: "ON_THE_GO", label: "On the go" },
 ];
 
 export function PersonalFieldsForm({
@@ -51,6 +60,9 @@ export function PersonalFieldsForm({
   const [rating, setRating] = useState(libraryEntry?.rating?.toString() ?? "");
   const [preferredEnvironment, setPreferredEnvironment] = useState(
     libraryEntry?.preferredEnvironment ?? "",
+  );
+  const [gameExperience, setGameExperience] = useState(
+    libraryEntry?.gameExperience ?? "",
   );
   const [notes, setNotes] = useState(libraryEntry?.notes ?? "");
 
@@ -71,6 +83,11 @@ export function PersonalFieldsForm({
         preferredEnvironment === ""
           ? null
           : (preferredEnvironment as "BAZZITE" | "STEAM_DECK" | "WINDOWS"),
+      gameExperience: gameExperience === "" ? null : gameExperience as
+        | "PC_GAMING"
+        | "MULTIPLAYER_COOP"
+        | "COUCH_GAMING"
+        | "ON_THE_GO",
       notes: notes === "" ? null : notes,
     });
 
@@ -87,6 +104,7 @@ export function PersonalFieldsForm({
     <form onSubmit={handleSubmit} className="grid gap-4">
       <div className="grid gap-2">
         <Label htmlFor="priority">Priority</Label>
+        <p className="text-xs text-muted-foreground">{PERSONAL_FIELD_HELP.priority}</p>
         <Select value={priority} onValueChange={setPriority}>
           <SelectTrigger id="priority" className="w-full">
             <SelectValue />
@@ -105,6 +123,7 @@ export function PersonalFieldsForm({
         <Label htmlFor="interest">
           Interest <span className="text-muted-foreground">(1-5)</span>
         </Label>
+        <p className="text-xs text-muted-foreground">{PERSONAL_FIELD_HELP.interest}</p>
         <Input
           id="interest"
           type="number"
@@ -120,6 +139,7 @@ export function PersonalFieldsForm({
         <Label htmlFor="rating">
           Rating <span className="text-muted-foreground">(1-10)</span>
         </Label>
+        <p className="text-xs text-muted-foreground">{PERSONAL_FIELD_HELP.rating}</p>
         <Input
           id="rating"
           type="number"
@@ -133,6 +153,7 @@ export function PersonalFieldsForm({
 
       <div className="grid gap-2">
         <Label htmlFor="env">Preferred environment</Label>
+        <p className="text-xs text-muted-foreground">{PERSONAL_FIELD_HELP.preferredEnvironment}</p>
         <Select
           value={preferredEnvironment}
           onValueChange={setPreferredEnvironment}
@@ -152,7 +173,26 @@ export function PersonalFieldsForm({
       </div>
 
       <div className="grid gap-2">
+        <Label htmlFor="game-experience">Game experience</Label>
+        <p className="text-xs text-muted-foreground">{PERSONAL_FIELD_HELP.gameExperience}</p>
+        <Select value={gameExperience} onValueChange={setGameExperience}>
+          <SelectTrigger id="game-experience" className="w-full">
+            <SelectValue placeholder="Not set" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Not set</SelectItem>
+            {EXPERIENCE_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="grid gap-2">
         <Label htmlFor="notes">Notes</Label>
+        <p className="text-xs text-muted-foreground">{PERSONAL_FIELD_HELP.notes}</p>
         <textarea
           id="notes"
           value={notes}

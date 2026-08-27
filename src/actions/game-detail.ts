@@ -12,6 +12,10 @@ const updatePersonalFieldsSchema = z.object({
     .enum(["BAZZITE", "STEAM_DECK", "WINDOWS"])
     .optional()
     .nullable(),
+  gameExperience: z
+    .enum(["PC_GAMING", "MULTIPLAYER_COOP", "COUCH_GAMING", "ON_THE_GO"])
+    .optional()
+    .nullable(),
   notes: z.string().optional().nullable(),
 });
 
@@ -40,6 +44,7 @@ export async function updatePersonalFields(
         ...(data.preferredEnvironment !== undefined && {
           preferredEnvironment: data.preferredEnvironment,
         }),
+        ...(data.gameExperience !== undefined && { gameExperience: data.gameExperience }),
         ...(data.notes !== undefined && { notes: data.notes }),
       },
     });

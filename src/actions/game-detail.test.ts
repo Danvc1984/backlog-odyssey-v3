@@ -147,6 +147,7 @@ describe("updatePersonalFields", () => {
       interest: 4,
       rating: 8,
       preferredEnvironment: "BAZZITE",
+      gameExperience: "PC_GAMING",
       notes: "Great game",
     });
 
@@ -157,6 +158,7 @@ describe("updatePersonalFields", () => {
         interest: 4,
         rating: 8,
         preferredEnvironment: "BAZZITE",
+        gameExperience: "PC_GAMING",
         notes: "Great game",
       },
     });
@@ -178,6 +180,35 @@ describe("updatePersonalFields", () => {
       where: { gameId: "game-1" },
       data: { interest: null },
     });
+  });
+
+  it("sets and clears game experience while omitted leaves it untouched", async () => {
+    await updatePersonalFields("game-1", { gameExperience: "MULTIPLAYER_COOP" });
+    expect(mockUpdate).toHaveBeenLastCalledWith({
+      where: { gameId: "game-1" },
+      data: { gameExperience: "MULTIPLAYER_COOP" },
+    });
+
+    await updatePersonalFields("game-1", { gameExperience: null });
+    expect(mockUpdate).toHaveBeenLastCalledWith({
+      where: { gameId: "game-1" },
+      data: { gameExperience: null },
+    });
+
+    await updatePersonalFields("game-1", { priority: "LOW" });
+    expect(mockUpdate).toHaveBeenLastCalledWith({
+      where: { gameId: "game-1" },
+      data: { priority: "LOW" },
+    });
+  });
+
+  it("rejects an invalid game experience", async () => {
+    const result = await updatePersonalFields("game-1", {
+      gameExperience: "DESKTOP" as never,
+    });
+
+    expect(result.success).toBe(false);
+    expect(mockUpdate).not.toHaveBeenCalled();
   });
 
   it("rejects interest out of range (0)", async () => {

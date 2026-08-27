@@ -169,6 +169,37 @@
     candidate batches, Show another exposure cooldowns, and fresh-deal
     saturation mode (20% plus three 80%+ eligible offers) without letting
     discounts alone decide
+    - [x] 12c-a. **Game experience field and field help** - `GameExperience`
+      enum (`PC_GAMING`/`MULTIPLAYER_COOP`/`COUCH_GAMING`/`ON_THE_GO`) as a
+      nullable personal field on `LibraryEntry` and `WishlistEntry`, editable
+      on game detail and wishlist edit, read-only on wishlist detail, and
+      concise visible field help on the personal-field surfaces
+    - [ ] 12c-b. **Recommendation events, retention, and reset** - append-only
+      `RecommendationEvent` log (exposure, rotation, taste-setup answers,
+      starts, completions, abandonment, dismissals, optional reasons),
+      time-bounded retention by event kind (90 days / 12 months / 24 months),
+      and `Restart recommendations` removing all recommendation-owned records
+      while preserving catalog and provider data
+    - [ ] 12c-c. **Derived profile and preference overrides** - rebuildable
+      `RecommendationProfile` aggregate with recency decay, `PREFER`/
+      `NEUTRAL`/`AVOID` `RecommendationPreference` overrides, and a Settings
+      section showing the learned profile, its evidence, and the controls
+    - [ ] 12c-d. **Adaptive re-ranking engine** - re-ranking over the
+      deterministic baseline from profile, preference overrides, metadata,
+      Steam activity, environment, compatibility, quality, publisher, era,
+      duration, genre/tag, and series with uncertainty safeguards, plus
+      cold-start diversification labeled by its limited basis
+    - [ ] 12c-e. **Roles, batches, rotation, and deal saturation** - four play
+      roles (two best fit, out-of-the-box, change-of-pace) and three buy roles
+      (two best fit plus one deal; one best fit plus two deals under fresh-deal
+      saturation), qualified candidate batches retained in run context,
+      `Show another` rotation with exposure cooldowns, and the explicit
+      Start-playing action with main-game handling
+    - [ ] 12c-f. **Tune-this-run, presets, and taste setup** - opt-in
+      Tune-this-run soft preferences (experience, length, genres/tags, sequel
+      posture, era, casual/mature) with named `RecommendationPreset` reuse,
+      and optional post-import taste setup from five or six swappable owned
+      games with `PLAYED_BEFORE` and Interest seed actions
   - [ ] 12d. **Calibration from dismissal counters** - adjusted interest from
     per-target dismissal counters applied in both engines (floor 0, counters
     never pruned), and calibration explanations on game and wishlist detail

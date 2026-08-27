@@ -3300,6 +3300,7 @@ export const LibraryEntryScalarFieldEnum = {
   interest: 'interest',
   rating: 'rating',
   preferredEnvironment: 'preferredEnvironment',
+  gameExperience: 'gameExperience',
   compatOverrideStatus: 'compatOverrideStatus',
   compatOverrideReason: 'compatOverrideReason',
   playSoon: 'playSoon',
@@ -3333,6 +3334,7 @@ export const WishlistEntryScalarFieldEnum = {
   type: 'type',
   baseGameId: 'baseGameId',
   interest: 'interest',
+  gameExperience: 'gameExperience',
   targetPriceMxn: 'targetPriceMxn',
   notes: 'notes',
   steamAppId: 'steamAppId',
@@ -3858,6 +3860,20 @@ export type ListEnumEnvironmentFieldRefInput<$PrismaModel> = FieldRefInputType<$
 
 
 /**
+ * Reference to a field of type 'GameExperience'
+ */
+export type EnumGameExperienceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'GameExperience'>
+
+
+
+/**
+ * Reference to a field of type 'GameExperience[]'
+ */
+export type ListEnumGameExperienceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'GameExperience[]'>
+
+
+
+/**
  * Reference to a field of type 'CompatibilityStatus'
  */
 export type EnumCompatibilityStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CompatibilityStatus'>
@@ -4258,4 +4274,3 @@ export type PrismaAction =
  * `PrismaClient` proxy available in interactive transactions.
  */
 export type TransactionClient = Omit<DefaultPrismaClient, runtime.ITXClientDenyList>
-

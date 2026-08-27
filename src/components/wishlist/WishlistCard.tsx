@@ -15,6 +15,7 @@ interface WishlistCardProps {
     type: string;
     baseGameId: string | null;
     interest: number | null;
+    gameExperience: string | null;
     notes: string | null;
     offerView: WishlistOffersView;
     steamAppId: string | null;

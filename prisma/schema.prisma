@@ -59,6 +59,13 @@ enum Environment {
   WINDOWS
 }
 
+enum GameExperience {
+  PC_GAMING
+  MULTIPLAYER_COOP
+  COUCH_GAMING
+  ON_THE_GO
+}
+
 enum CompatibilityStatus {
   READY
   READY_WITH_TINKERING
@@ -404,6 +411,7 @@ model LibraryEntry {
   interest             Int?
   rating               Int?
   preferredEnvironment Environment?
+  gameExperience       GameExperience?
   compatOverrideStatus CompatibilityStatus?
   compatOverrideReason String?
   playSoon             Boolean              @default(false)
@@ -440,6 +448,7 @@ model WishlistEntry {
   type                 GameType @default(BASE_GAME)
   baseGameId           String?
   interest             Int?
+  gameExperience       GameExperience?
   targetPriceMxn       Decimal? @db.Decimal(10, 2)
   notes                String?
   steamAppId           String?

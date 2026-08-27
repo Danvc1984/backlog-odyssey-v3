@@ -36,26 +36,24 @@ export default async function WishlistPage({
     prisma.wishlistEntry.findMany({
       where: wishlistWhere({ type, interest: interestFilter, query }),
       orderBy: [{ interest: "desc" }, { updatedAt: "desc" }],
-      include: {
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        baseGameId: true,
+        interest: true,
+        gameExperience: true,
+        notes: true,
+        steamAppId: true,
+        steamAppIdProvenance: true,
+        targetPriceMxn: true,
         offers: {
           orderBy: [{ price: { sort: "asc", nulls: "last" } }],
         },
-        // Keep editable local fields in the card so its client actions remain self-contained.
         baseGame: {
-          select: {
-            id: true,
-            name: true,
-            metadataSnapshots: {
-              where: { provider: "RAWG" },
-              orderBy: { fetchedAt: "desc" },
-              take: 1,
-              select: { payload: true, sourceUrl: true, fetchedAt: true },
-            },
-          },
+          select: { id: true, name: true, metadataSnapshots: { where: { provider: "RAWG" }, orderBy: { fetchedAt: "desc" }, take: 1, select: { payload: true, sourceUrl: true, fetchedAt: true } } },
         },
-        metadataSnapshot: {
-          select: { payload: true, sourceUrl: true, fetchedAt: true },
-        },
+        metadataSnapshot: { select: { payload: true, sourceUrl: true, fetchedAt: true } },
       },
     }),
     prisma.game.findMany({

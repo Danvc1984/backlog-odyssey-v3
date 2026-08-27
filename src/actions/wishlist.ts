@@ -26,6 +26,10 @@ const updateWishlistEntrySchema = z
     id: z.string().trim().min(1),
     name: z.string().trim().min(1, "Name is required").optional(),
     interest: interestSchema.optional().nullable(),
+    gameExperience: z
+      .enum(["PC_GAMING", "MULTIPLAYER_COOP", "COUCH_GAMING", "ON_THE_GO"])
+      .optional()
+      .nullable(),
     notes: z.string().optional().nullable(),
     steamAppId: z.string().trim().min(1).optional().nullable(),
     baseGameId: z.string().trim().min(1).optional(),
