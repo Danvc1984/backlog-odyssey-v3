@@ -8,6 +8,7 @@ import { getOrCreateUnspecifiedSource } from "@/lib/sources/store";
 const createGameSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
   availabilitySource: z.enum(["STEAM", "OTHER_PLATFORM", "ROM"]),
+  alternativeSourceId: z.string().trim().min(1).optional(),
   displayName: z.string().trim().optional(),
 });
 
@@ -25,9 +26,19 @@ export async function createGame(input: CreateGameInput) {
 
     const game = await prisma.$transaction(async (tx) => {
       const alternativeSourceId =
-        availabilitySource === "OTHER_PLATFORM"
-          ? (await getOrCreateUnspecifiedSource(tx)).id
+        availabilitySource === "OTHER_PLATFORM" && parsed.data.alternativeSourceId
+          ? parsed.data.alternativeSourceId
+          : availabilitySource === "OTHER_PLATFORM"
+            ? (await getOrCreateUnspecifiedSource(tx)).id
           : null;
+      if (availabilitySource === "OTHER_PLATFORM" && parsed.data.alternativeSourceId) {
+        const source = await tx.alternativeSource.findUnique({
+          where: { id: parsed.data.alternativeSourceId },
+          select: { id: true, archivedAt: true },
+        });
+        if (!source) throw new Error("Alternative source not found");
+        if (source.archivedAt) throw new Error("This source is archived and cannot be selected");
+      }
       const created = await tx.game.create({
         data: {
           type: "BASE_GAME",

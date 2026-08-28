@@ -87,7 +87,7 @@ describe("getSystemCollectionGames", () => {
       include: {
         game: {
           include: {
-            availability: true,
+            availability: { include: { alternativeSource: true } },
           },
         },
       },

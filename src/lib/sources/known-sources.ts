@@ -9,6 +9,8 @@ export const UNSPECIFIED_OTHER_SOURCE_NAME = "Unspecified other source";
 
 export const FALLBACK_SOURCE_ICON = "Box";
 
+export type AvailabilitySource = "STEAM" | "OTHER_PLATFORM" | "ROM";
+
 export const KNOWN_SOURCES: readonly KnownSource[] = [
   {
     key: "EPIC_GAMES_STORE",
@@ -99,4 +101,46 @@ export function resolveSourcePresentation(name: string): {
     label: trimmed || UNSPECIFIED_OTHER_SOURCE_NAME,
     iconName: FALLBACK_SOURCE_ICON,
   };
+}
+
+export function availabilitySourcePresentation(
+  source: AvailabilitySource,
+  alternativeSourceName: string | null,
+): { label: string; iconName: string } {
+  if (source === "STEAM") {
+    return { label: "Steam", iconName: "MonitorPlay" };
+  }
+  if (source === "ROM") {
+    return { label: "ROM", iconName: "Disc3" };
+  }
+  if (alternativeSourceName === null) {
+    return { label: "Other platform", iconName: FALLBACK_SOURCE_ICON };
+  }
+  return resolveSourcePresentation(alternativeSourceName);
+}
+
+export function suggestSources(
+  query: string,
+  savedSources: readonly { name: string }[],
+): { known: KnownSource[]; matchesSaved: boolean } {
+  const normalizedQuery = normalizeSourceName(query);
+  const savedKnownKeys = new Set(
+    savedSources
+      .map((source) => matchKnownSource(source.name)?.key)
+      .filter((key): key is string => key !== undefined),
+  );
+  const queryKnown = matchKnownSource(query);
+  const matchesSaved = normalizedQuery !== "" && savedSources.some((source) =>
+    normalizeSourceName(source.name) === normalizedQuery ||
+    (queryKnown !== null && matchKnownSource(source.name)?.key === queryKnown.key),
+  );
+  const known = KNOWN_SOURCES.filter((source) => {
+    if (savedKnownKeys.has(source.key)) return false;
+    if (!normalizedQuery) return true;
+    return [source.label, ...source.aliases].some((value) =>
+      normalizeSourceName(value).includes(normalizedQuery),
+    );
+  });
+
+  return { known, matchesSaved };
 }

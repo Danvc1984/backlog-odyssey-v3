@@ -3,6 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import { Input } from "@/components/ui/input";
+import { SourceIcon } from "@/components/sources/SourceIcon";
 import {
   Select,
   SelectContent,
@@ -16,7 +17,7 @@ import {
 const SOURCE_OPTIONS = [
   { value: "ALL", label: "All sources" },
   { value: "STEAM", label: "Steam" },
-  { value: "OTHER_PLATFORM", label: "Other platform" },
+  { value: "OTHER_PLATFORM", label: "All alternatives" },
   { value: "ROM", label: "ROM" },
 ];
 
@@ -43,8 +44,10 @@ export type FilterCollection = {
 
 export function LibraryFilters({
   collections,
+  alternativeSources,
 }: {
   collections: FilterCollection[];
+  alternativeSources: { id: string; name: string; iconName: string }[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -68,9 +71,24 @@ export function LibraryFilters({
   const state = searchParams.get("state") ?? "ALL";
   const sort = searchParams.get("sort") ?? "newest";
   const collection = searchParams.get("collection") ?? "ALL";
+  const alternativeSource = searchParams.get("alt");
 
   const systemCollections = collections.filter((c) => c.isSystem);
   const manualCollections = collections.filter((c) => !c.isSystem);
+
+  const updateSource = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("alt");
+    if (value.startsWith("alt:")) {
+      params.delete("source");
+      params.set("alt", value.slice(4));
+    } else if (!value || value === "ALL") {
+      params.delete("source");
+    } else {
+      params.set("source", value);
+    }
+    router.replace(`${pathname}?${params.toString()}`);
+  };
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -80,7 +98,10 @@ export function LibraryFilters({
         placeholder="Search games..."
         className="w-56"
       />
-      <Select value={source} onValueChange={(v) => update("source", v)}>
+      <Select
+        value={alternativeSource ? `alt:${alternativeSource}` : source}
+        onValueChange={updateSource}
+      >
         <SelectTrigger>
           <SelectValue />
         </SelectTrigger>
@@ -90,6 +111,19 @@ export function LibraryFilters({
               {o.label}
             </SelectItem>
           ))}
+          {alternativeSources.length > 0 && (
+            <SelectGroup>
+              <SelectLabel>Alternative sources</SelectLabel>
+              {alternativeSources.map((alternative) => (
+                <SelectItem key={alternative.id} value={`alt:${alternative.id}`}>
+                  <span className="flex items-center gap-2">
+                    <SourceIcon iconName={alternative.iconName} />
+                    {alternative.name}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          )}
         </SelectContent>
       </Select>
       <Select value={state} onValueChange={(v) => update("state", v)}>

@@ -77,6 +77,30 @@ describe("createGame", () => {
     );
   });
 
+  it("uses the selected alternative source id", async () => {
+    mockAltFind.mockResolvedValue({ id: "source-1", archivedAt: null });
+
+    await createGame({
+      name: "Control",
+      availabilitySource: "OTHER_PLATFORM",
+      alternativeSourceId: "source-1",
+    });
+
+    expect(mockAltFind).toHaveBeenCalledWith({
+      where: { id: "source-1" },
+      select: { id: true, archivedAt: true },
+    });
+    expect(tx.game.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          availability: expect.objectContaining({
+            create: expect.objectContaining({ alternativeSourceId: "source-1" }),
+          }),
+        }),
+      }),
+    );
+  });
+
   it("builds or reuses the unspecified source for OTHER_PLATFORM rows", async () => {
     await createGame({
       name: "Skyrim",

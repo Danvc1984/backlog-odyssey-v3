@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Fragment } from "react";
 import { prisma } from "@/lib/prisma";
 import { Star, Clock, RotateCcw, EyeOff } from "lucide-react";
 import { CreateGameDialog } from "@/components/games/CreateGameDialog";
@@ -11,12 +12,8 @@ import {
   getSystemCollectionDefinition,
   getSystemCollections,
 } from "@/lib/system-collections";
-
-const SOURCE_LABELS: Record<string, string> = {
-  STEAM: "Steam",
-  OTHER_PLATFORM: "Other platform",
-  ROM: "ROM",
-};
+import { availabilitySourcePresentation } from "@/lib/sources/known-sources";
+import { SourceIcon } from "@/components/sources/SourceIcon";
 
 const PLAY_STATE_LABELS: Record<string, string> = {
   NOT_STARTED: "Not started",
@@ -34,6 +31,7 @@ const FLAG_INDICATORS = [
 interface LibrarySearchParams {
   q?: string;
   source?: string;
+  alt?: string;
   state?: string;
   sort?: string;
   collection?: string;
@@ -45,7 +43,7 @@ export default async function LibraryPage({
 }: {
   searchParams: Promise<LibrarySearchParams>;
 }) {
-  const { q = "", source, state, sort = "newest", collection, duplicates } =
+  const { q = "", source, alt, state, sort = "newest", collection, duplicates } =
     await searchParams;
 
   if (duplicates === "true") {
@@ -79,11 +77,15 @@ export default async function LibraryPage({
     );
   }
 
-  const sourceFilter =
-    source && source !== "ALL"
+  const sourceFilter = !alt && source && source !== "ALL"
       ? ["STEAM", "OTHER_PLATFORM", "ROM"].includes(source)
         ? (source as "STEAM" | "OTHER_PLATFORM" | "ROM")
         : undefined
+      : undefined;
+  const availabilityFilter = alt
+    ? { some: { source: "OTHER_PLATFORM" as const, alternativeSourceId: alt } }
+    : sourceFilter
+      ? { some: { source: sourceFilter } }
       : undefined;
   const stateFilter =
     state && state !== "ALL"
@@ -94,7 +96,7 @@ export default async function LibraryPage({
         : undefined
       : undefined;
 
-  const [manualCollections, systemCollections, latestRawgBatch, pendingUnresolvedDlc] = await Promise.all([
+  const [manualCollections, systemCollections, latestRawgBatch, pendingUnresolvedDlc, alternativeSources] = await Promise.all([
     prisma.collection.findMany({
       where: { isSystem: false },
       orderBy: { name: "asc" },
@@ -103,6 +105,11 @@ export default async function LibraryPage({
     getSystemCollections(),
     getLatestRawgBatchStatus(),
     prisma.unresolvedSteamDlc.count({ where: { status: "PENDING" } }),
+    prisma.alternativeSource.findMany({
+      where: { archivedAt: null },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
   ]);
 
   const systemDef =
@@ -133,9 +140,7 @@ export default async function LibraryPage({
         name: q
           ? { contains: q, mode: "insensitive" }
           : undefined,
-        availability: sourceFilter
-          ? { some: { source: sourceFilter } }
-          : undefined,
+        availability: availabilityFilter,
       },
       playState: stateFilter ?? undefined,
       ...collectionWhere,
@@ -143,7 +148,7 @@ export default async function LibraryPage({
     include: {
         game: {
           include: {
-            availability: true,
+            availability: { include: { alternativeSource: true } },
             baseGame: {
               select: { id: true, name: true },
             },
@@ -184,7 +189,10 @@ export default async function LibraryPage({
             Review duplicates
           </Link>
           <UpdateRecommendationsButton />
-          <CreateGameDialog />
+          <CreateGameDialog alternativeSources={alternativeSources.map((alternative) => ({
+            ...alternative,
+            iconName: availabilitySourcePresentation("OTHER_PLATFORM", alternative.name).iconName,
+          }))} />
         </div>
       </div>
 
@@ -202,6 +210,10 @@ export default async function LibraryPage({
               isSystem: false,
             })),
           ]}
+          alternativeSources={alternativeSources.map((alternative) => ({
+            ...alternative,
+            iconName: availabilitySourcePresentation("OTHER_PLATFORM", alternative.name).iconName,
+          }))}
         />
       </div>
 
@@ -213,7 +225,7 @@ export default async function LibraryPage({
         <div className="mt-16 flex flex-col items-center gap-2 text-center">
           <p className="text-lg font-medium">No games found</p>
           <p className="text-sm text-muted-foreground">
-            {q || source || state
+            {q || source || alt || state
               ? "Try adjusting your search or filters."
               : "Add your first game to get started."}
           </p>
@@ -263,9 +275,23 @@ export default async function LibraryPage({
                   </td>
                   <td className="px-4 py-3">{entry.game.type}</td>
                   <td className="px-4 py-3">
-                    {entry.game.availability
-                      .map((a) => SOURCE_LABELS[a.source] ?? a.source)
-                      .join(", ") || "-"}
+                    {entry.game.availability.length === 0
+                      ? "-"
+                      : entry.game.availability.map((a, index) => {
+                          const presentation = availabilitySourcePresentation(
+                            a.source,
+                            a.alternativeSource?.name ?? null,
+                          );
+                          return (
+                            <Fragment key={a.id}>
+                              {index > 0 && ", "}
+                              <span className="inline-flex items-center gap-1">
+                                <SourceIcon iconName={presentation.iconName} />
+                                {presentation.label}
+                              </span>
+                            </Fragment>
+                          );
+                        })}
                   </td>
                   <td className="px-4 py-3">
                     {PLAY_STATE_LABELS[entry.playState] ?? entry.playState}

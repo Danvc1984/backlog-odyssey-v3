@@ -6,7 +6,7 @@ import { TagsSection } from "@/components/games/TagsSection";
 import { CollectionsSection } from "@/components/games/CollectionsSection";
 import { DuplicateWarning } from "@/components/games/DuplicateWarning";
 import { DeleteGameDialog } from "@/components/games/DeleteGameDialog";
-import { AvailabilityRowForm } from "@/components/games/AvailabilityRowForm";
+import { AvailabilityEditor } from "@/components/games/AvailabilityEditor";
 import { GameNameForm } from "@/components/games/GameNameForm";
 import { MetadataSection } from "@/components/games/MetadataSection";
 import { RawgEnrichmentPanel } from "@/components/games/RawgEnrichmentPanel";
@@ -40,7 +40,7 @@ export default async function GameDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [game, manualCollections, possibleDuplicate, latestPlayNextRun, playDismissalCount] = await Promise.all([
+  const [game, manualCollections, possibleDuplicate, latestPlayNextRun, playDismissalCount, savedSources] = await Promise.all([
     prisma.game.findUnique({
       where: { id },
       include: {
@@ -113,6 +113,10 @@ export default async function GameDetailPage({
     }),
     prisma.recommendationFeedback.count({
       where: { gameId: id, kind: "PLAY_NEXT" },
+    }),
+    prisma.alternativeSource.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, archivedAt: true },
     }),
   ]);
 
@@ -257,21 +261,13 @@ export default async function GameDetailPage({
             <CatalogSteamIdentityForm gameId={game.id} gameName={game.name} />
           </div>
         )}
-        {game.availability.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No availability records.</p>
-        ) : (
-          <div className="grid gap-3">
-            {game.availability.map((a) => (
-              <div key={a.id} className="rounded-lg border border-border">
-                <AvailabilityRowForm
-                  availabilityId={a.id}
-                  source={a.source}
-                  displayName={a.displayName}
-                />
-              </div>
-            ))}
-          </div>
-        )}
+        <div className="rounded-lg border border-border">
+          <AvailabilityEditor
+            gameId={game.id}
+            rows={game.availability}
+            savedSources={savedSources}
+          />
+        </div>
       </section>
 
       {recommendationItem && (

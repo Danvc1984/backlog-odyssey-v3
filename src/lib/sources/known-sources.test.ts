@@ -3,9 +3,11 @@ import {
   FALLBACK_SOURCE_ICON,
   KNOWN_SOURCES,
   UNSPECIFIED_OTHER_SOURCE_NAME,
+  availabilitySourcePresentation,
   matchKnownSource,
   normalizeSourceName,
   resolveSourcePresentation,
+  suggestSources,
 } from "./known-sources";
 
 describe("normalizeSourceName", () => {
@@ -75,5 +77,62 @@ describe("resolveSourcePresentation", () => {
       label: UNSPECIFIED_OTHER_SOURCE_NAME,
       iconName: FALLBACK_SOURCE_ICON,
     });
+  });
+});
+
+describe("availabilitySourcePresentation", () => {
+  it("uses fixed presentations for Steam and ROM", () => {
+    expect(availabilitySourcePresentation("STEAM", null)).toEqual({
+      label: "Steam",
+      iconName: "MonitorPlay",
+    });
+    expect(availabilitySourcePresentation("ROM", null)).toEqual({
+      label: "ROM",
+      iconName: "Disc3",
+    });
+  });
+
+  it("resolves alternative sources through their saved name", () => {
+    expect(availabilitySourcePresentation("OTHER_PLATFORM", "EGS")).toEqual({
+      label: "Epic Games Store",
+      iconName: "Sparkles",
+    });
+    expect(
+      availabilitySourcePresentation("OTHER_PLATFORM", "  My Custom Store  "),
+    ).toEqual({
+      label: "My Custom Store",
+      iconName: FALLBACK_SOURCE_ICON,
+    });
+  });
+
+  it("uses the generic Other platform fallback when no name is available", () => {
+    expect(availabilitySourcePresentation("OTHER_PLATFORM", null)).toEqual({
+      label: "Other platform",
+      iconName: FALLBACK_SOURCE_ICON,
+    });
+  });
+});
+
+describe("suggestSources", () => {
+  it("matches aliases and returns the canonical known source", () => {
+    expect(suggestSources("EGS", []).known).toEqual([
+      expect.objectContaining({ key: "EPIC_GAMES_STORE", label: "Epic Games Store" }),
+    ]);
+  });
+
+  it("detects a saved source through its canonical label or alias", () => {
+    expect(suggestSources("EGS", [{ name: "Epic Games Store" }])).toEqual({
+      known: [],
+      matchesSaved: true,
+    });
+    expect(suggestSources("Epic Games Store", [{ name: "EGS" }]).matchesSaved).toBe(true);
+  });
+
+  it("returns every unsaved known source for an empty query", () => {
+    const result = suggestSources("", [{ name: "GOG" }]);
+
+    expect(result.matchesSaved).toBe(false);
+    expect(result.known.map((source) => source.key)).not.toContain("GOG");
+    expect(result.known).toHaveLength(KNOWN_SOURCES.length - 1);
   });
 });

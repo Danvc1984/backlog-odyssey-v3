@@ -1,4 +1,5 @@
-# Nothing in progress
+# Current feature
 
-There is no active feature, fix, or rollback. Use `/feature`, `/fix`, or
-`/rollback` to start the next piece of work.
+Nothing is currently in progress.
+
+Run `/feature`, `/fix`, or `/rollback` to start work.

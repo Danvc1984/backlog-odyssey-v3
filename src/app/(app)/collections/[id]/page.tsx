@@ -8,16 +8,13 @@ import {
   isSystemCollectionId,
 } from "@/lib/system-collections";
 import { CollectionDetailActions } from "@/components/games/CollectionDetailActions";
+import { Fragment } from "react";
+import { availabilitySourcePresentation } from "@/lib/sources/known-sources";
+import { SourceIcon } from "@/components/sources/SourceIcon";
 
 const TYPE_LABELS: Record<string, string> = {
   BASE_GAME: "Base game",
   DLC: "DLC",
-};
-
-const SOURCE_LABELS: Record<string, string> = {
-  STEAM: "Steam",
-  OTHER_PLATFORM: "Other platform",
-  ROM: "ROM",
 };
 
 const PLAY_STATE_LABELS: Record<string, string> = {
@@ -32,7 +29,11 @@ interface GameRow {
     id: string;
     name: string;
     type: string;
-    availability: { source: string }[];
+    availability: {
+      id: string;
+      source: "STEAM" | "OTHER_PLATFORM" | "ROM";
+      alternativeSource: { name: string } | null;
+    }[];
   };
   playState: string;
 }
@@ -74,7 +75,7 @@ export default async function CollectionDetailPage({
           include: {
             game: {
               include: {
-                availability: true,
+                availability: { include: { alternativeSource: true } },
                 libraryEntry: true,
               },
             },
@@ -159,9 +160,23 @@ export default async function CollectionDetailPage({
                     {TYPE_LABELS[row.game.type] ?? row.game.type}
                   </td>
                   <td className="px-4 py-3">
-                    {row.game.availability
-                      .map((a) => SOURCE_LABELS[a.source] ?? a.source)
-                      .join(", ") || "-"}
+                    {row.game.availability.length === 0
+                      ? "-"
+                      : row.game.availability.map((a, index) => {
+                          const presentation = availabilitySourcePresentation(
+                            a.source,
+                            a.alternativeSource?.name ?? null,
+                          );
+                          return (
+                            <Fragment key={a.id}>
+                              {index > 0 && ", "}
+                              <span className="inline-flex items-center gap-1">
+                                <SourceIcon iconName={presentation.iconName} />
+                                {presentation.label}
+                              </span>
+                            </Fragment>
+                          );
+                        })}
                   </td>
                   <td className="px-4 py-3">
                     {PLAY_STATE_LABELS[row.playState] ?? row.playState}

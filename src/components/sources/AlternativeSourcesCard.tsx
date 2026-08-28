@@ -2,20 +2,28 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { icons, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import {
   createAlternativeSource,
+  deleteAlternativeSource,
   renameAlternativeSource,
   setAlternativeSourceArchived,
 } from "@/actions/sources";
 import {
-  FALLBACK_SOURCE_ICON,
   KNOWN_SOURCES,
   resolveSourcePresentation,
 } from "@/lib/sources/known-sources";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SourceIcon } from "@/components/sources/SourceIcon";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export interface AlternativeSourceListRow {
   id: string;
@@ -29,19 +37,13 @@ interface AlternativeSourcesCardProps {
   sources: AlternativeSourceListRow[];
 }
 
-const iconMap = icons as Record<string, LucideIcon>;
-
-function SourceIcon({ iconName }: { iconName: string }) {
-  const Icon = iconMap[iconName] ?? iconMap[FALLBACK_SOURCE_ICON];
-  return <Icon aria-hidden className="size-4 shrink-0 text-muted-foreground" />;
-}
-
 export function AlternativeSourcesCard({ sources }: AlternativeSourcesCardProps) {
   const router = useRouter();
   const [createName, setCreateName] = useState("");
   const [busy, setBusy] = useState(false);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [removing, setRemoving] = useState<AlternativeSourceListRow | null>(null);
 
   const missingKnownSources = KNOWN_SOURCES.filter(
     (known) => !sources.some((source) => source.knownKey === known.key),
@@ -108,6 +110,23 @@ export function AlternativeSourcesCard({ sources }: AlternativeSourcesCardProps)
         return;
       }
       toast.success(archived ? "Source archived" : "Source restored");
+      router.refresh();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const removeSource = async () => {
+    if (!removing || busy) return;
+    setBusy(true);
+    try {
+      const result = await deleteAlternativeSource(removing.id);
+      if (!result.success) {
+        toast.error(result.error ?? "Failed to remove source");
+        return;
+      }
+      toast.success(`Source "${removing.name}" removed`);
+      setRemoving(null);
       router.refresh();
     } finally {
       setBusy(false);
@@ -230,6 +249,11 @@ export function AlternativeSourcesCard({ sources }: AlternativeSourcesCardProps)
                       Rename
                     </Button>
                   )}
+                  {source._count.availability === 0 && (
+                    <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={() => setRemoving(source)}>
+                      Remove
+                    </Button>
+                  )}
                   <Button type="button" size="sm" variant={archived ? "ghost" : "outline"} disabled={busy} onClick={() => void toggleArchived(source)}>
                     {archived ? "Restore" : "Archive"}
                   </Button>
@@ -239,6 +263,24 @@ export function AlternativeSourcesCard({ sources }: AlternativeSourcesCardProps)
           })}
         </ul>
       )}
+      <Dialog open={removing !== null} onOpenChange={(open) => !open && setRemoving(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove alternative source?</DialogTitle>
+            <DialogDescription>
+              This permanently removes &quot;{removing?.name}&quot;. It can only be removed because it has no associated games.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setRemoving(null)} disabled={busy}>
+              Cancel
+            </Button>
+            <Button type="button" variant="destructive" onClick={() => void removeSource()} disabled={busy}>
+              {busy ? "Removing..." : "Remove source"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

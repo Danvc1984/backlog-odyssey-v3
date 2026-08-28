@@ -88,7 +88,7 @@ export async function getSystemCollectionGames(id: string) {
     include: {
       game: {
         include: {
-          availability: true,
+          availability: { include: { alternativeSource: true } },
         },
       },
     },

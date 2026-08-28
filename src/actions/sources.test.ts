@@ -8,6 +8,7 @@ import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import {
   createAlternativeSource,
+  deleteAlternativeSource,
   renameAlternativeSource,
   setAlternativeSourceArchived,
 } from "./sources";
@@ -15,6 +16,8 @@ import {
 const mockAltFind = vi.fn();
 const mockAltCreate = vi.fn();
 const mockAltUpdate = vi.fn();
+const mockAltDelete = vi.fn();
+const mockAvailabilityCount = vi.fn();
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -23,10 +26,16 @@ beforeEach(() => {
     findUnique: mockAltFind,
     create: mockAltCreate,
     update: mockAltUpdate,
+    delete: mockAltDelete,
+  };
+  (prisma as unknown as { gameAvailability: unknown }).gameAvailability = {
+    count: mockAvailabilityCount,
   };
   mockAltFind.mockResolvedValue(null);
   mockAltCreate.mockResolvedValue({ id: "new-source" });
   mockAltUpdate.mockResolvedValue({ id: "src-1" });
+  mockAltDelete.mockResolvedValue({ id: "src-1" });
+  mockAvailabilityCount.mockResolvedValue(0);
 });
 
 describe("createAlternativeSource", () => {
@@ -242,5 +251,46 @@ describe("setAlternativeSourceArchived", () => {
     });
     expect(invalid.success).toBe(false);
     expect(mockAltUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe("deleteAlternativeSource", () => {
+  it("removes an unused source", async () => {
+    mockAltFind.mockResolvedValue({ id: "src-1" });
+    const result = await deleteAlternativeSource("src-1");
+
+    expect(result).toEqual({
+      success: true,
+      data: { id: "src-1" },
+      error: null,
+    });
+    expect(mockAvailabilityCount).toHaveBeenCalledWith({
+      where: { alternativeSourceId: "src-1" },
+    });
+    expect(mockAltDelete).toHaveBeenCalledWith({ where: { id: "src-1" } });
+  });
+
+  it("rejects a source that is in use", async () => {
+    mockAltFind.mockResolvedValue({ id: "src-1" });
+    mockAvailabilityCount.mockResolvedValue(1);
+
+    const result = await deleteAlternativeSource("src-1");
+
+    expect(result).toEqual({
+      success: false,
+      data: null,
+      error: "Source is in use and cannot be removed",
+    });
+    expect(mockAltDelete).not.toHaveBeenCalled();
+  });
+
+  it("rejects a missing or invalid source", async () => {
+    mockAltFind.mockResolvedValueOnce(null);
+    const missing = await deleteAlternativeSource("missing");
+    const invalid = await deleteAlternativeSource("   ");
+
+    expect(missing.error).toBe("Source not found");
+    expect(invalid.error).toBe("Invalid input");
+    expect(mockAltDelete).not.toHaveBeenCalled();
   });
 });

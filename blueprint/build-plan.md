@@ -243,7 +243,7 @@
       suggestions, aliases, and icon metadata; multi-source availability
       integrity; conservative migration of existing `OTHER_PLATFORM` rows to
       `Unspecified other source`; rename/archive without destructive deletion
-    - [ ] 12e-b. **Source selection, details, and Library browsing** -
+    - [x] 12e-b. **Source selection, details, and Library browsing** -
       checkbox-based Steam/ROM/alternative-source selection with type-ahead
       create-or-reuse; icon-decorated game-detail source values; individually
       filterable saved alternative sources in Library; accessible fallback-icon

@@ -34,6 +34,8 @@ export type SetAlternativeSourceArchivedInput = z.infer<
   typeof setAlternativeSourceArchivedSchema
 >;
 
+const alternativeSourceIdSchema = z.string().trim().min(1);
+
 function friendlyError(err: unknown, fallback: string) {
   if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
     return "A source with that name already exists";
@@ -165,6 +167,51 @@ export async function setAlternativeSourceArchived(
       data: null,
       error:
         err instanceof Error ? err.message : "Failed to update source archive state",
+    };
+  }
+}
+
+export async function deleteAlternativeSource(id: string) {
+  try {
+    await requireUser();
+    const parsed = alternativeSourceIdSchema.safeParse(id);
+    if (!parsed.success) {
+      return { success: false as const, data: null, error: "Invalid input" };
+    }
+
+    const source = await prisma.alternativeSource.findUnique({
+      where: { id: parsed.data },
+      select: { id: true },
+    });
+    if (!source) {
+      return { success: false as const, data: null, error: "Source not found" };
+    }
+
+    const availabilityCount = await prisma.gameAvailability.count({
+      where: { alternativeSourceId: parsed.data },
+    });
+    if (availabilityCount > 0) {
+      return {
+        success: false as const,
+        data: null,
+        error: "Source is in use and cannot be removed",
+      };
+    }
+
+    await prisma.alternativeSource.delete({ where: { id: parsed.data } });
+    return { success: true as const, data: { id: parsed.data }, error: null };
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2003") {
+      return {
+        success: false as const,
+        data: null,
+        error: "Source is in use and cannot be removed",
+      };
+    }
+    return {
+      success: false as const,
+      data: null,
+      error: err instanceof Error ? err.message : "Failed to remove source",
     };
   }
 }

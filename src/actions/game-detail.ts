@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { logRecommendationEvent, playStateTransitionKind } from "@/lib/recommendations/events";
@@ -124,7 +125,7 @@ export async function updateGameAvailability(
     const result = await prisma.$transaction(async (tx) => {
       const availability = await tx.gameAvailability.findUnique({
         where: { id: availabilityId },
-        select: { id: true, gameId: true, source: true },
+        select: { id: true, gameId: true, source: true, alternativeSourceId: true },
       });
       if (!availability) {
         return { error: "Availability not found" };
@@ -133,7 +134,9 @@ export async function updateGameAvailability(
       const newSource = parsed.data.source ?? availability.source;
       const alternativeSourceId =
         newSource === "OTHER_PLATFORM"
-          ? (await getOrCreateUnspecifiedSource(tx)).id
+          ? availability.source === "OTHER_PLATFORM"
+            ? availability.alternativeSourceId
+            : (await getOrCreateUnspecifiedSource(tx)).id
           : null;
 
       if (newSource !== availability.source) {
@@ -187,6 +190,165 @@ export async function updateGameAvailability(
         err instanceof Error
           ? err.message
           : "Failed to update availability",
+    };
+  }
+}
+
+const addGameAvailabilitySchema = z
+  .discriminatedUnion("source", [
+    z.object({ source: z.literal("STEAM") }).strict(),
+    z.object({ source: z.literal("ROM") }).strict(),
+    z
+      .object({
+        source: z.literal("OTHER_PLATFORM"),
+        alternativeSourceId: z.string().trim().min(1),
+      })
+      .strict(),
+  ]);
+
+export type AddGameAvailabilityInput = z.infer<
+  typeof addGameAvailabilitySchema
+>;
+
+function availabilityConflictError(err: unknown): string | null {
+  if (
+    err instanceof Prisma.PrismaClientKnownRequestError &&
+    err.code === "P2002"
+  ) {
+    return "This game already has that availability source";
+  }
+  return null;
+}
+
+export async function addGameAvailability(
+  gameId: string,
+  input: AddGameAvailabilityInput,
+) {
+  try {
+    await requireUser();
+    const parsed = addGameAvailabilitySchema.safeParse(input);
+    if (!parsed.success || typeof gameId !== "string" || gameId.trim() === "") {
+      return { success: false as const, data: null, error: "Invalid input" };
+    }
+
+    const game = await prisma.game.findUnique({
+      where: { id: gameId },
+      select: { id: true },
+    });
+    if (!game) {
+      return { success: false as const, data: null, error: "Game not found" };
+    }
+
+    const { source } = parsed.data;
+    const alternativeSourceId =
+      source === "OTHER_PLATFORM" ? parsed.data.alternativeSourceId : null;
+    const duplicate = await prisma.gameAvailability.findFirst({
+      where:
+        source === "OTHER_PLATFORM"
+          ? { gameId, source, alternativeSourceId }
+          : { gameId, source },
+    });
+    if (duplicate) {
+      return {
+        success: false as const,
+        data: null,
+        error:
+          source === "STEAM"
+            ? "This game already has a Steam source"
+            : source === "ROM"
+              ? "This game already has a ROM source"
+              : "This game already has that store source",
+      };
+    }
+
+    if (source === "OTHER_PLATFORM") {
+      const alternativeSource = await prisma.alternativeSource.findUnique({
+        where: { id: parsed.data.alternativeSourceId },
+        select: { id: true, archivedAt: true },
+      });
+      if (!alternativeSource) {
+        return {
+          success: false as const,
+          data: null,
+          error: "Alternative source not found",
+        };
+      }
+      if (alternativeSource.archivedAt) {
+        return {
+          success: false as const,
+          data: null,
+          error: "This source is archived and cannot be selected",
+        };
+      }
+    }
+
+    const availability = await prisma.gameAvailability.create({
+      data: { gameId, source, alternativeSourceId },
+    });
+    return { success: true as const, data: availability, error: null };
+  } catch (err) {
+    return {
+      success: false as const,
+      data: null,
+      error:
+        availabilityConflictError(err) ??
+        (err instanceof Error ? err.message : "Failed to add availability"),
+    };
+  }
+}
+
+export async function removeGameAvailability(availabilityId: string) {
+  try {
+    await requireUser();
+    if (
+      typeof availabilityId !== "string" ||
+      availabilityId.trim() === ""
+    ) {
+      return { success: false as const, data: null, error: "Invalid input" };
+    }
+
+    const availability = await prisma.gameAvailability.findUnique({
+      where: { id: availabilityId },
+      select: {
+        id: true,
+        source: true,
+        steamAppId: true,
+        steamPlaytimeTotal: true,
+        steamLastPlayed: true,
+      },
+    });
+    if (!availability) {
+      return {
+        success: false as const,
+        data: null,
+        error: "Availability not found",
+      };
+    }
+    if (
+      availability.source === "STEAM" &&
+      (availability.steamAppId !== null ||
+        availability.steamPlaytimeTotal !== null ||
+        availability.steamLastPlayed !== null)
+    ) {
+      return {
+        success: false as const,
+        data: null,
+        error: "Steam statistics are synchronized",
+      };
+    }
+
+    await prisma.gameAvailability.delete({ where: { id: availabilityId } });
+    return {
+      success: true as const,
+      data: { id: availabilityId },
+      error: null,
+    };
+  } catch (err) {
+    return {
+      success: false as const,
+      data: null,
+      error:
+        err instanceof Error ? err.message : "Failed to remove availability",
     };
   }
 }

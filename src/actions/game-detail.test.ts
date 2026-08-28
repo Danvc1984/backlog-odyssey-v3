@@ -23,7 +23,141 @@ import {
   updatePlayState,
   updateGameName,
   updateGameAvailability,
+  addGameAvailability,
+  removeGameAvailability,
 } from "./game-detail";
+
+describe("game availability actions", () => {
+  const findGame = vi.fn();
+  const findDuplicate = vi.fn();
+  const findSource = vi.fn();
+  const createAvailability = vi.fn();
+  const findAvailability = vi.fn();
+  const deleteAvailability = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    (prisma as unknown as {
+      game: { findUnique: typeof findGame };
+      gameAvailability: {
+        findFirst: typeof findDuplicate;
+        create: typeof createAvailability;
+        findUnique: typeof findAvailability;
+        delete: typeof deleteAvailability;
+      };
+      alternativeSource: { findUnique: typeof findSource };
+    }).game = { findUnique: findGame };
+    (prisma as unknown as { gameAvailability: Record<string, unknown> }).gameAvailability = {
+      findFirst: findDuplicate,
+      create: createAvailability,
+      findUnique: findAvailability,
+      delete: deleteAvailability,
+    };
+    (prisma as unknown as { alternativeSource: { findUnique: typeof findSource } }).alternativeSource = {
+      findUnique: findSource,
+    };
+    findGame.mockResolvedValue({ id: "game-1" });
+    findDuplicate.mockResolvedValue(null);
+    findSource.mockResolvedValue({ id: "source-1", archivedAt: null });
+    createAvailability.mockResolvedValue({ id: "availability-1" });
+    findAvailability.mockResolvedValue({
+      id: "availability-1",
+      source: "ROM",
+      steamAppId: null,
+      steamPlaytimeTotal: null,
+      steamLastPlayed: null,
+    });
+    deleteAvailability.mockResolvedValue({ id: "availability-1" });
+  });
+
+  it.each([
+    ["STEAM", { source: "STEAM" }, { gameId: "game-1", source: "STEAM", alternativeSourceId: null }],
+    ["ROM", { source: "ROM" }, { gameId: "game-1", source: "ROM", alternativeSourceId: null }],
+    [
+      "alternative",
+      { source: "OTHER_PLATFORM", alternativeSourceId: "source-1" },
+      { gameId: "game-1", source: "OTHER_PLATFORM", alternativeSourceId: "source-1" },
+    ],
+  ])("adds a %s availability row", async (_label, input, data) => {
+    const result = await addGameAvailability("game-1", input as never);
+
+    expect(result.success).toBe(true);
+    expect(createAvailability).toHaveBeenCalledWith({ data });
+  });
+
+  it.each([
+    ["STEAM", { source: "STEAM" }, "This game already has a Steam source"],
+    ["ROM", { source: "ROM" }, "This game already has a ROM source"],
+    [
+      "alternative",
+      { source: "OTHER_PLATFORM", alternativeSourceId: "source-1" },
+      "This game already has that store source",
+    ],
+  ])("rejects a duplicate %s row", async (_label, input, error) => {
+    findDuplicate.mockResolvedValue({ id: "existing" });
+
+    const result = await addGameAvailability("game-1", input as never);
+
+    expect(result).toEqual({ success: false, data: null, error });
+    expect(createAvailability).not.toHaveBeenCalled();
+  });
+
+  it("rejects a missing or archived alternative source", async () => {
+    findSource.mockResolvedValueOnce(null);
+    const missing = await addGameAvailability("game-1", {
+      source: "OTHER_PLATFORM",
+      alternativeSourceId: "missing",
+    });
+    findSource.mockResolvedValueOnce({ id: "source-1", archivedAt: new Date() });
+    const archived = await addGameAvailability("game-1", {
+      source: "OTHER_PLATFORM",
+      alternativeSourceId: "source-1",
+    });
+
+    expect(missing.error).toBe("Alternative source not found");
+    expect(archived.error).toBe("This source is archived and cannot be selected");
+    expect(createAvailability).not.toHaveBeenCalled();
+  });
+
+  it("protects Steam rows with synchronized statistics", async () => {
+    findAvailability.mockResolvedValue({
+      id: "availability-1",
+      source: "STEAM",
+      steamAppId: "730",
+      steamPlaytimeTotal: null,
+      steamLastPlayed: null,
+    });
+
+    const result = await removeGameAvailability("availability-1");
+
+    expect(result).toEqual({
+      success: false,
+      data: null,
+      error: "Steam statistics are synchronized",
+    });
+    expect(deleteAvailability).not.toHaveBeenCalled();
+  });
+
+  it.each(["ROM", "OTHER_PLATFORM"])("removes a %s row", async (source) => {
+    findAvailability.mockResolvedValue({
+      id: "availability-1",
+      source,
+      steamAppId: null,
+      steamPlaytimeTotal: null,
+      steamLastPlayed: null,
+    });
+
+    const result = await removeGameAvailability("availability-1");
+
+    expect(result).toEqual({
+      success: true,
+      data: { id: "availability-1" },
+      error: null,
+    });
+    expect(deleteAvailability).toHaveBeenCalledWith({ where: { id: "availability-1" } });
+  });
+});
 
 describe("updateGameName", () => {
   const mockUpdate = vi.fn();
@@ -98,6 +232,7 @@ describe("updateGameAvailability", () => {
       id: "availability-1",
       gameId: "game-1",
       source: "OTHER_PLATFORM",
+      alternativeSourceId: "source-1",
     });
     mockFindMany.mockResolvedValue([]);
     mockUpdate.mockResolvedValue({ id: "availability-1" });
@@ -196,11 +331,12 @@ describe("updateGameAvailability", () => {
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 
-  it("allows an unchanged source without a duplicate check", async () => {
+  it("preserves the selected alternative source when only renaming the row", async () => {
     mockFindUnique.mockResolvedValue({
       id: "availability-1",
       gameId: "game-1",
       source: "OTHER_PLATFORM",
+      alternativeSourceId: "source-1",
     });
 
     const result = await updateGameAvailability("availability-1", {
@@ -211,7 +347,7 @@ describe("updateGameAvailability", () => {
     expect(mockFindMany).not.toHaveBeenCalled();
     expect(mockUpdate).toHaveBeenCalledWith({
       where: { id: "availability-1" },
-      data: { displayName: "Renamed", alternativeSourceId: "unsource-1" },
+      data: { displayName: "Renamed", alternativeSourceId: "source-1" },
     });
   });
 
