@@ -213,7 +213,7 @@
         item replacement, exposure cooldowns excluding recently shown
         candidates, and the explicit Start-playing action with main-game
         handling
-    - [ ] 12c-f. **Tune-this-run, presets, and taste setup** - opt-in
+    - [x] 12c-f. **Tune-this-run, presets, and taste setup** - opt-in
       Tune-this-run soft preferences (experience, length, genres/tags, sequel
       posture, era, casual/mature) with named `RecommendationPreset` reuse,
       and optional post-import taste setup from five or six swappable owned
@@ -223,14 +223,17 @@
         casual/mature) weighting the candidate pool before the baseline with
         thin-pool explanations, named `RecommendationPreset` save/load/delete,
         tune panels on Today, and reset coverage
-      - [ ] 12c-f-b. **Taste setup** - optional post-import flow picking five
+      - [x] 12c-f-b. **Taste setup** - optional post-import flow picking five
         or six swappable owned games with `PLAYED_BEFORE` and Interest seed
         actions, one personal Game experience field and preferred environment
         on seed-picked games, and `TASTE_SETUP_ANSWER` events feeding the
         profile
-  - [ ] 12d. **Calibration from dismissal counters** - adjusted interest from
-    per-target dismissal counters applied in both engines (floor 0, counters
-    never pruned), and calibration explanations on game and wishlist detail
+  - [ ] 12d. **Calibration from dismissal counters and true refresh on
+    update recommendations** - adjusted interest from per-target
+    dismissal counters applied in both engines (floor 0, counters derived
+    from durable feedback rows and never pruned), calibration explanations
+    on game and wishlist detail, and new runs rotating in fresh games by
+    excluding recently exposed candidates with a thin-pool fallback
 
 - [ ] 13. **Today dashboard** - post-login functional dashboard without a
   feature-13 visual redesign. It composes main/in-progress games, latest three

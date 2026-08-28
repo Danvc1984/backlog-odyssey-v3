@@ -9,8 +9,10 @@ import { ColdStartNote } from "@/components/recommendations/ColdStartNote";
 import { prisma } from "@/lib/prisma";
 import { RunExposureTracker } from "@/components/recommendations/RunExposureTracker";
 import { TuneThisRunPanel } from "@/components/recommendations/TuneThisRunPanel";
+import { TasteSetupPanel } from "@/components/recommendations/TasteSetupPanel";
 import { listKnownGenreTagValues, listRecommendationPresets } from "@/actions/recommendations";
 import { tuneContextSchema, type TuneContext } from "@/lib/recommendations/types";
+import { loadPickableTasteSetupGames, selectInitialTasteSetupPicks, shouldShowTasteSetup } from "@/lib/recommendations/taste-setup";
 
 const PLAY_ROLE_GROUPS = [
   { label: "Best fit", roles: ["BEST_FIT_1", "BEST_FIT_2"] },
@@ -59,6 +61,10 @@ export default async function TodayPage() {
   const knownValues = knownValuesResult.success ? knownValuesResult.data : { genres: [], tags: [] };
   const presetsResult = await listRecommendationPresets();
   const presets = presetsResult.success ? presetsResult.data.map((preset) => ({ id: preset.id, name: preset.name })) : [];
+  const tasteGames = await loadPickableTasteSetupGames(prisma);
+  const tasteEventCount = await prisma.recommendationEvent.count({ where: { kind: "TASTE_SETUP_ANSWER" } });
+  const initialTastePicks = selectInitialTasteSetupPicks(tasteGames);
+  const showTasteSetup = shouldShowTasteSetup(tasteEventCount, tasteGames.length);
   const playContext = latestPlayNextRun?.context as { rerank?: { mode?: string }; tune?: { thinPool?: boolean } } | null | undefined;
   const buyContext = latestBuyRun?.context as { tune?: { thinPool?: boolean } } | null | undefined;
 
@@ -79,6 +85,13 @@ export default async function TodayPage() {
         </div>
         <UpdateRecommendationsButton />
       </div>
+
+      {showTasteSetup && (
+        <TasteSetupPanel
+          games={tasteGames.map((game) => ({ id: game.id, name: game.name }))}
+          initialPicks={initialTastePicks.map((pick) => ({ id: pick.id, name: pick.name }))}
+        />
+      )}
 
       {!latestPlayNextRun && (
         <div className="rounded-lg border border-border p-8 text-center">
