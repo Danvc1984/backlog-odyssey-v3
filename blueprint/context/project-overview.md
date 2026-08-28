@@ -13,7 +13,9 @@ The MVP serves one authorized Google account using a Bazzite desktop, Steam Deck
 and Windows fallback. Prices and display use Mexico and UTC-6. Public
 registration, roles, collaboration, multi-user behavior, notifications,
 webhooks, offline/PWA behavior, automatic purchasing, and automatic Steam sync
-are outside the MVP.
+are outside the MVP. Automatic full-library imports from non-Steam stores,
+including Epic Games Store, are also outside the MVP unless a supported
+account-library API becomes available.
 
 ## Build order
 
@@ -105,6 +107,19 @@ wishlist detail.
    saturation.
 12d. **Calibration from dismissal counters** - Adjusted interest from per-target
    dismissals and detail-page explanations.
+12e. **Source-aware availability and recommendation semantics** - Reusable
+   alternative-store sources, source selection and filtering with icons, soft
+   play-next source tuning, and retained hidden-game play history.
+12e-a. **Reusable alternative-source model and migration** - Normalized,
+   archive-safe alternative sources; known-source suggestions and icons;
+   multi-source integrity; and conservative legacy `OTHER_PLATFORM` migration.
+12e-b. **Source selection, details, and Library browsing** - Checkbox source
+   selection, type-ahead creation/reuse, icon-decorated detail values, and
+   individual Library filters.
+12e-c. **Source-tuned play-next and retained hidden history** - Inclusive
+   source boosts in the existing tune/preset model, visible explanations,
+   hidden-state evidence retention, and explained replay-candidate second
+   chances for Out of the Box.
 13. **Today dashboard** - Functional post-login composition without a feature-13
    visual redesign: active-backlog progress, catalog coverage, the latest
    explicit recommendations, daily-cached recent Steam activity, offers,
@@ -180,8 +195,20 @@ feature's implementation.
 - `ExternalGameId` - `namespaceId`, `namespace`, `externalId`, `matchMethod`
   (`EXACT_STEAM_APP_ID`/`MANUAL_RAWG_SEARCH`/`MANUAL_ITAD_LOOKUP`/`INFERRED`),
   `gameId`. Unique on `[namespace, externalId]`.
+- `AlternativeSource` `(planned, 12e-a)` - single-user reusable alternative
+  store: `name`, normalized unique name, optional code-owned known-source key,
+  and archive state. Known keys resolve canonical labels, aliases, and icons;
+  custom sources use a fallback icon. Archive prevents new selection/tuning but
+  retains existing associations and historical presentation. Referenced sources
+  are not destructively deleted. The initial known-source registry is Epic Games
+  Store, GOG, EA app, Ubisoft Connect, Battle.net, Xbox/Microsoft Store,
+  itch.io, Amazon Games, Humble Bundle, and Rockstar Games Launcher.
 - `GameAvailability` - `gameId`, `source` (`STEAM`/`OTHER_PLATFORM`/`ROM`),
-  `displayName`, `steamAppId`, `steamPlaytimeTotal`, `steamLastPlayed`.
+  optional `alternativeSourceId` required for `OTHER_PLATFORM`, per-game
+  `displayName`, `steamAppId`, `steamPlaytimeTotal`, and `steamLastPlayed`.
+  A game supports multiple rows but never duplicate built-in or alternative
+  sources. Existing `OTHER_PLATFORM` rows migrate without inference to the
+  reusable `Unspecified other source`.
 - `LibraryEntry` - `gameId` (unique), `playState` (`NOT_STARTED`/`IN_PROGRESS`/
   `PLAYED_BEFORE`/`ABANDONED`), `isMainGame`, `priority`
   (`NONE`/`LOW`/`MEDIUM`/`HIGH`), `interest`, `rating`, `preferredEnvironment`
@@ -239,8 +266,8 @@ feature's implementation.
   `PriceRefresh`: single RUNNING row for overlap protection, `status`,
   `requestedAt`, `finishedAt`, `counts` (JSON).
 - `RecommendationRun` - `kind` (`PLAY_NEXT`/`BUY`), `context` (JSON),
-  `createdAt`. Indexed on `[kind, createdAt]`; 12c extends `context` to retain
-  optional tuning and qualified candidate batches.
+  `createdAt`. Indexed on `[kind, createdAt]`; context retains optional tuning,
+  qualified candidate batches, and planned source-match explanation snapshots.
 - `RecommendationItem` - `runId`, nullable `gameId` or nullable
   `wishlistEntryId` (exactly one target enforced in code), `rank`, `score`,
   `positive`, `negative`, `caveats` (JSON factor payloads), and optional role
@@ -257,9 +284,12 @@ feature's implementation.
 - `RecommendationPreference` `(planned, 12c)` - explicit `PREFER`/`NEUTRAL`/
   `AVOID` override for a genre, tag, experience, duration band, publisher, era,
   series, environment, or maturity dimension.
-- `RecommendationPreset` `(planned, 12c)` - named optional Tune-this-run
-  context. A recommender reset removes all recommendation-owned records but
-  preserves the catalog and provider snapshots.
+- `RecommendationTuneState` - singleton stored `playTune` and `buyTune` JSON
+  contexts, plus `updatedAt`.
+- `RecommendationPreset` - named optional Tune-this-run context. 12e extends
+  the play context with built-in source choices, an all-alternative-source
+  choice, and selected `AlternativeSource` IDs. A recommender reset removes all
+  recommendation-owned records but preserves the catalog and provider snapshots.
 
 ### Organization and theme
 
@@ -356,7 +386,8 @@ feature's implementation.
 
 - `play-next` eligibility: base games, not hidden, not the main game, state
   `NOT_STARTED` or replay-flagged `PLAYED_BEFORE`/`ABANDONED`. `IN_PROGRESS`
-  appears separately on the dashboard; DLC never enters play-next.
+  appears separately on the dashboard; DLC never enters play-next. Hidden is a
+  displayed-candidate exclusion only, not deletion of profile evidence.
 - `buy` eligibility: wishlist base games and DLC wishes with an owned base game.
   Unpriced entries stay eligible on interest alone with an explicit "no pricing
   yet" warning. ROMs are excluded from purchase recommendations.
@@ -374,13 +405,20 @@ feature's implementation.
   alphabetical tiebreak decides a displayed recommendation.
 - `Update recommendations` runs immediately. Optional `Tune this run` applies
   soft preferences for experience, length, genres/tags, sequel posture, era,
-  and mature/casual context; presets reuse that context. Relaxed constraints are
-  explained when the qualified pool is thin.
+  mature/casual context, and play-next sources; presets reuse that context.
+  Source tuning can prefer Steam, ROMs, any alternative source, or selected
+  alternatives. It is a modest, inclusive boost: a multi-source game matches
+  every selected source, and non-matching eligible games remain in the pool.
+  It never affects buy recommendations, seller ranking, or price comparison.
+  Matching cards show the source icon and explanation. Hard constraints may
+  relax with a thin-pool explanation; source tuning is already soft.
 - Play output has two best-fit roles, one qualified out-of-the-box role, and one
   change-of-pace role. Buy output normally has two best-fit roles and one deal
   role; when three or more fresh 80%+ offers comprise at least 20% of eligible
   wishes, it instead has one best-fit and two deal roles. Deal roles always meet
-  fit and quality floors.
+  fit and quality floors. An unhidden abandoned replay candidate is only a
+  low-priority, explained Out-of-the-Box second chance when stronger fit,
+  compatibility, and tune signals do not select another candidate.
 - Runs persist context and qualified batches. `Show another` rotates within a
   role without starting a run; exposure yields only a short cooldown, never a
   negative signal. Starting a catalog recommendation sets `IN_PROGRESS` and
@@ -388,6 +426,11 @@ feature's implementation.
 - Cold-start mode diversifies imported metadata and labels its limited basis.
   Optional taste setup shows five or six swappable owned games: played marks
   `PLAYED_BEFORE`; like sets Interest `5/5` unless a personal value exists.
+- Explicit `PLAYED_BEFORE` and `ABANDONED` transitions remain completion and
+  abandonment profile evidence when a game is hidden. Existing event weights
+  and recency decay stay unchanged: a recorded start followed by abandonment
+  may balance to neutral, while direct abandonment remains negative. Neither
+  case makes a hidden game eligible.
 - A visible profile exposes semantic Prefer/Neutral/Avoid controls and full
   recommender reset. Exposures expire after 90 days; runs, starts, dismissals,
   and reasons after 12 months; played, completed, abandoned, and taste-setup
@@ -399,15 +442,17 @@ feature's implementation.
 - `/today` - post-login front door with main/in-progress games, active-backlog
   progress, two actionable catalog-coverage counts, adaptive play-next and buy
   roles, Tune-this-run presets, `Show another`, daily-cached Steam activity,
-  offers, freshness, and operation progress. The coverage dialogs show ten
+  offers, freshness, and operation progress. Tune-this-run includes source
+  preferences and matching-source explanations. The coverage dialogs show ten
   linked games before expandable pagination. A visible base game is profile
   incomplete when interest is absent, or when interest is present but all of
   non-`NONE` priority, preferred environment, and game experience are absent;
   hidden games, rating, and the default play state do not count. Steam may show
   unimported recent titles and suggests manual library sync without importing
   them automatically.
-- `/library` - searchable catalog, filters, manual creation, duplicate review, and
-  catalog-wide metadata action.
+- `/library` - searchable catalog, source filters for Steam, ROM, all
+  alternatives, and individual saved alternative sources; manual creation,
+  duplicate review, and catalog-wide metadata action.
 - `/wishlist` - independent wishes, RAWG action, identity suggestions, global
   price refresh, alternatives, opportunity badges, Steam wishlist import, review
   queues, and acquisition.
@@ -415,9 +460,10 @@ feature's implementation.
   RAWG metadata, identity and provenance, offers and target price, notes,
   interest, edit/acquire/delete, a read-only compatibility block, compatibility
   refresh, and fill-only RAWG enrichment.
-- `/games/[id]` - personal fields and help, Game experience, availability,
-  metadata, attribution, compatibility (with manual Steam AppID entry), DLC,
-  duplicate warning, recommendation explanation, and RAWG loading.
+- `/games/[id]` - personal fields and help, Game experience, multi-source
+  availability with accessible icon-decorated chips, metadata, attribution,
+  compatibility (with manual Steam AppID entry), DLC, duplicate warning,
+  recommendation explanation, and RAWG loading.
 - `/settings` - sessions, provider controls, recommendation profile/preferences
   and reset, visual/accessibility settings, Wallhaven, queue status,
   wishlist-import diagnostics, and JSON export.
@@ -458,6 +504,8 @@ There is no monetization in v1: the private app is source-available under the
 PolyForm Noncommercial License 1.0.0 with no ads, subscriptions, or analytics.
 Future possibilities include encrypted backups, richer providers, managed
 workflow services, notifications, multi-user support, and offline/PWA behavior.
+Automatic non-Steam-library imports remain deferred until a provider offers a
+supported account-library API.
 
 ## Open questions and plan gaps
 
@@ -469,10 +517,6 @@ workflow services, notifications, multi-user support, and offline/PWA behavior.
   `build-plan.md` records that live RAWG store URLs were empty and the current
   suggestion resolves through Steam `storesearch`. Reconcile that source-plan
   wording before a later plan edit.
-- `project-plan.md` phases dismissal events out after 12 months, while
-  `build-plan.md` 12d still says calibration counters are never pruned. Decide
-  whether calibration derives only from retained events or stores a separate
-  durable aggregate before 12d is specified.
 - The wishlist compat sweep (11d) may be added to Settings' manual provider
   controls in feature 17, alongside the catalog global sweep.
 - Exact Vercel/Supabase production scheduler configuration remains a deployment
@@ -481,5 +525,5 @@ workflow services, notifications, multi-user support, and offline/PWA behavior.
 - Wallhaven anonymous SFW rate limits and keyword-set defaults confirm during
   the feature 15 spec.
 
-Run `/feature` for the next unchecked item, currently `12c-e-b`. Run `/prototype`
+Run `/feature 12e-a` for the next unchecked item. Run `/prototype`
 before feature 14 to lock the visual look against `blueprint/reference/`.

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/auth-guard", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
+vi.mock("server-only", () => ({}));
 vi.mock("@/lib/wishlist-compatibility-runner", () => ({
   silentlyRefreshWishlistCompatibility: vi.fn(),
 }));
@@ -17,6 +18,8 @@ const mockMetadataCreate = vi.fn();
 const mockExternalCreate = vi.fn();
 const mockWishlistDelete = vi.fn();
 const mockLibraryUpsert = vi.fn();
+const mockAltFind = vi.fn();
+const mockAltCreate = vi.fn();
 const transaction = vi.fn();
 
 beforeEach(() => {
@@ -35,6 +38,10 @@ beforeEach(() => {
       game: { create: mockGameCreate },
       metadataSnapshot: { create: mockMetadataCreate },
       libraryEntry: { upsert: mockLibraryUpsert },
+      alternativeSource: {
+        findUnique: mockAltFind,
+        create: mockAltCreate,
+      },
     }),
   );
   (prisma as unknown as { $transaction: typeof transaction }).$transaction = transaction;
@@ -44,6 +51,8 @@ beforeEach(() => {
   mockExternalCreate.mockResolvedValue({ id: "external-new" });
   mockWishlistDelete.mockResolvedValue({ id: "wish-1" });
   mockLibraryUpsert.mockResolvedValue({ id: "library-parent" });
+  mockAltFind.mockResolvedValue(null);
+  mockAltCreate.mockResolvedValue({ id: "unsource-1" });
 });
 
 describe("acquireWishlistBaseGame", () => {
@@ -68,6 +77,9 @@ describe("acquireWishlistBaseGame", () => {
     });
 
     expect(result.success).toBe(true);
+    expect(mockAltFind).toHaveBeenCalledWith({
+      where: { normalizedName: "unspecified other source" },
+    });
     expect(mockGameCreate).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         type: "BASE_GAME",
@@ -76,6 +88,7 @@ describe("acquireWishlistBaseGame", () => {
           create: expect.objectContaining({
             source: "OTHER_PLATFORM",
             displayName: "Portal 2 (GOG)",
+            alternativeSourceId: "unsource-1",
             steamAppId: "620",
           }),
         }),
@@ -88,6 +101,35 @@ describe("acquireWishlistBaseGame", () => {
       data: expect.objectContaining({ namespace: "RAWG_GAME", externalId: "123" }),
     }));
     expect(mockWishlistDelete).toHaveBeenCalledWith({ where: { id: "wish-1" } });
+  });
+
+  it("acquires a base game on STEAM with a null alternative source id", async () => {
+    mockFindUniqueWishlist.mockResolvedValue({
+      id: "wish-1",
+      name: "Hades",
+      type: "BASE_GAME",
+      steamAppId: "1145360",
+      metadataSnapshot: null,
+    });
+
+    const result = await acquireWishlistBaseGame({
+      wishlistEntryId: "wish-1",
+      source: "STEAM",
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockAltFind).not.toHaveBeenCalled();
+    expect(mockGameCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        availability: expect.objectContaining({
+          create: expect.objectContaining({
+            source: "STEAM",
+            alternativeSourceId: null,
+            steamAppId: "1145360",
+          }),
+        }),
+      }),
+    }));
   });
 
   it("rejects acquisition when the RAWG identity is already in the catalog", async () => {
@@ -175,5 +217,32 @@ describe("acquireWishlistDlc", () => {
       create: { gameId: "base-1", playSoon: true },
       update: { playSoon: true },
     });
+  });
+
+  it("attaches the unspecified source on the DLC OTHER_PLATFORM default", async () => {
+    mockFindUniqueWishlist.mockResolvedValue({
+      id: "wish-1",
+      name: "DLC",
+      type: "DLC",
+      baseGame: { id: "base-1", type: "BASE_GAME" },
+    });
+
+    const result = await acquireWishlistDlc({ wishlistEntryId: "wish-1" });
+
+    expect(result.success).toBe(true);
+    expect(mockAltFind).toHaveBeenCalledWith({
+      where: { normalizedName: "unspecified other source" },
+    });
+    expect(mockGameCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        type: "DLC",
+        availability: expect.objectContaining({
+          create: expect.objectContaining({
+            source: "OTHER_PLATFORM",
+            alternativeSourceId: "unsource-1",
+          }),
+        }),
+      }),
+    }));
   });
 });

@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
 import { resolveManualSteamAppId } from "@/actions/wishlist-identity";
+import { getOrCreateUnspecifiedSource } from "@/lib/sources/store";
 
 const wishlistTypeSchema = z.enum(["BASE_GAME", "DLC"]);
 const interestSchema = z.number().int().min(1).max(5);
@@ -301,6 +302,10 @@ export async function acquireWishlistBaseGame(input: unknown) {
         }
       }
 
+      const alternativeSourceId =
+        parsed.data.source === "OTHER_PLATFORM"
+          ? (await getOrCreateUnspecifiedSource(tx)).id
+          : null;
       const created = await tx.game.create({
         data: {
           type: "BASE_GAME",
@@ -310,6 +315,7 @@ export async function acquireWishlistBaseGame(input: unknown) {
             create: {
               source: parsed.data.source,
               displayName: parsed.data.displayName ?? null,
+              alternativeSourceId,
               steamAppId: wishlist.steamAppId,
             },
           },
@@ -377,6 +383,10 @@ export async function acquireWishlistDlc(input: unknown) {
         throw new Error("DLC parent must be a base game");
       }
 
+      const alternativeSourceId =
+        parsed.data.source === "OTHER_PLATFORM"
+          ? (await getOrCreateUnspecifiedSource(tx)).id
+          : null;
       const created = await tx.game.create({
         data: {
           type: "DLC",
@@ -386,6 +396,7 @@ export async function acquireWishlistDlc(input: unknown) {
           availability: {
             create: {
               source: parsed.data.source,
+              alternativeSourceId,
               steamAppId: wishlist.steamAppId,
             },
           },

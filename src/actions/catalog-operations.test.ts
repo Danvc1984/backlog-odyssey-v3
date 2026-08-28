@@ -309,8 +309,8 @@ describe("buildMergeProposal", () => {
       origin: "MANUAL",
       dlc: [{ id: "d1", name: "Hades OST" }],
       availability: [
-        { id: "a1", source: "STEAM", steamAppId: "1145360" },
-        { id: "a2", source: "ROM", steamAppId: null },
+        { id: "a1", source: "STEAM", steamAppId: "1145360", alternativeSourceId: null },
+        { id: "a2", source: "ROM", steamAppId: null, alternativeSourceId: null },
       ],
       collections: [{ collectionId: "col-1" }],
       tags: [{ tagId: "tag-1" }],
@@ -322,7 +322,7 @@ describe("buildMergeProposal", () => {
       origin: "STEAM_IMPORT",
       libraryEntry: null,
       availability: [
-        { id: "a3", source: "STEAM", steamAppId: "1145360" },
+        { id: "a3", source: "STEAM", steamAppId: "1145360", alternativeSourceId: null },
       ],
       collections: [{ collectionId: "col-2" }],
       metadataSnapshots: [{ id: "m2", provider: "RAWG" }],

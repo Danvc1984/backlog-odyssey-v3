@@ -203,7 +203,12 @@ export interface MergeSourceGame {
   libraryEntry: MergeSourceLibraryEntry | null;
   externalIds: MergeSourceExternalId[];
   dlc: { id: string; name: string }[];
-  availability: { id: string; source: string; steamAppId: string | null }[];
+  availability: {
+    id: string;
+    source: string;
+    steamAppId: string | null;
+    alternativeSourceId: string | null;
+  }[];
   collections: { collectionId: string }[];
   tags: { tagId: string }[];
   metadataSnapshots: { id: string; provider: string }[];
@@ -386,6 +391,23 @@ function countUnique<T>(rows: T[], key: (row: T) => string): number {
   return new Set(rows.map(key)).size;
 }
 
+type AvailabilityKeyRow = {
+  id: string;
+  source: string;
+  steamAppId: string | null;
+  alternativeSourceId: string | null;
+};
+
+export function availabilityRowKey(row: AvailabilityKeyRow): string | null {
+  if (row.source === "STEAM") return `steam:${row.steamAppId ?? ""}`;
+  if (row.source === "ROM") return "builtin:ROM";
+  if (row.source === "OTHER_PLATFORM" && row.alternativeSourceId) {
+    return `other:${row.alternativeSourceId}`;
+  }
+  if (row.source === "OTHER_PLATFORM") return `other:row:${row.id}`;
+  return null;
+}
+
 export function buildMergeProposal(input: {
   duplicateId: string;
   gameA: MergeSourceGame;
@@ -430,8 +452,7 @@ export function buildMergeProposal(input: {
     relations: {
       availability: countUnique(
         [...gameA.availability, ...gameB.availability],
-        (row) =>
-          row.source === "STEAM" && row.steamAppId ? `steam:${row.steamAppId}` : row.id,
+        (row) => availabilityRowKey(row) ?? row.id,
       ),
       collections: countUnique(
         [...gameA.collections, ...gameB.collections],
@@ -684,6 +705,8 @@ export interface MergeGraphGame {
     gameId: string;
     source: string;
     steamAppId: string | null;
+    alternativeSourceId: string | null;
+    displayName: string | null;
     steamPlaytimeTotal: bigint | null;
     steamLastPlayed: Date | null;
   }[];
@@ -851,26 +874,36 @@ export function planMergeMutations(input: {
   const availabilityMoves: MoveDirective[] = [];
   const availabilityDeletes: MoveDirective[] = [];
   const availabilityMerges: MergeMutationPlan["availabilityMerges"] = [];
-  const steamById = new Map(
+  const survivorAvailabilityByKey = new Map(
     survivor.availability
-      .filter((row) => row.source === "STEAM" && row.steamAppId)
-      .map((row) => [row.steamAppId as string, row]),
+      .map((row) => [availabilityRowKey(row), row] as const)
+      .filter((entry) => entry[0] !== null),
   );
   for (const row of discarded.availability) {
-    const duplicate = row.source === "STEAM" && row.steamAppId ? steamById.get(row.steamAppId) : undefined;
-    if (duplicate) {
+    const key = availabilityRowKey(row);
+    const duplicate = key ? survivorAvailabilityByKey.get(key) : undefined;
+    if (!duplicate) {
+      availabilityMoves.push({ id: row.id, row });
+      pushMove("GameAvailability", row);
+      continue;
+    }
+    if (row.source === "STEAM") {
       availabilityMerges.push({
         rowId: duplicate.id,
         original: { ...duplicate },
         data: maxSteamValues(duplicate, row) as Record<string, unknown>,
       });
-      availabilityDeletes.push({ id: row.id, row });
       pushMove("GameAvailability", duplicate);
-      pushDelete("GameAvailability", row);
-    } else {
-      availabilityMoves.push({ id: row.id, row });
-      pushMove("GameAvailability", row);
+    } else if (!duplicate.displayName && row.displayName) {
+      availabilityMerges.push({
+        rowId: duplicate.id,
+        original: { ...duplicate },
+        data: { displayName: row.displayName },
+      });
+      pushMove("GameAvailability", duplicate);
     }
+    availabilityDeletes.push({ id: row.id, row });
+    pushDelete("GameAvailability", row);
   }
 
   const collectionMoves: JoinMoveDirective[] = [];

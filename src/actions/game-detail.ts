@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { logRecommendationEvent, playStateTransitionKind } from "@/lib/recommendations/events";
+import { getOrCreateUnspecifiedSource } from "@/lib/sources/store";
 
 const updatePersonalFieldsSchema = z.object({
   priority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH"]).optional(),
@@ -120,24 +121,64 @@ export async function updateGameAvailability(
       return { success: false as const, data: null, error: "Invalid input" };
     }
 
-    const availability = await prisma.gameAvailability.findUnique({
-      where: { id: availabilityId },
-      select: { source: true },
-    });
-    if (!availability) {
-      return { success: false as const, data: null, error: "Availability not found" };
-    }
-    const updated = await prisma.gameAvailability.update({
-      where: { id: availabilityId },
-      data: {
-        ...(parsed.data.source !== undefined && { source: parsed.data.source }),
-        ...(parsed.data.displayName !== undefined && {
-          displayName: parsed.data.displayName,
-        }),
-      },
+    const result = await prisma.$transaction(async (tx) => {
+      const availability = await tx.gameAvailability.findUnique({
+        where: { id: availabilityId },
+        select: { id: true, gameId: true, source: true },
+      });
+      if (!availability) {
+        return { error: "Availability not found" };
+      }
+
+      const newSource = parsed.data.source ?? availability.source;
+      const alternativeSourceId =
+        newSource === "OTHER_PLATFORM"
+          ? (await getOrCreateUnspecifiedSource(tx)).id
+          : null;
+
+      if (newSource !== availability.source) {
+        const rows = await tx.gameAvailability.findMany({
+          where: { gameId: availability.gameId },
+          select: { id: true, source: true, alternativeSourceId: true },
+        });
+        const siblings = rows.filter((row) => row.id !== availabilityId);
+        if (newSource !== "OTHER_PLATFORM") {
+          if (siblings.some((row) => row.source === newSource)) {
+            return {
+              error:
+                newSource === "STEAM"
+                  ? "This game already has a Steam source"
+                  : "This game already has a ROM source",
+            };
+          }
+        } else if (
+          siblings.some(
+            (row) =>
+              row.source === "OTHER_PLATFORM" &&
+              row.alternativeSourceId === alternativeSourceId,
+          )
+        ) {
+          return { error: "This game already has that store source" };
+        }
+      }
+
+      const updated = await tx.gameAvailability.update({
+        where: { id: availabilityId },
+        data: {
+          ...(parsed.data.source !== undefined && { source: parsed.data.source }),
+          ...(parsed.data.displayName !== undefined && {
+            displayName: parsed.data.displayName,
+          }),
+          alternativeSourceId,
+        },
+      });
+      return { updated };
     });
 
-    return { success: true as const, data: updated, error: null };
+    if ("error" in result) {
+      return { success: false as const, data: null, error: result.error };
+    }
+    return { success: true as const, data: result.updated, error: null };
   } catch (err) {
     return {
       success: false as const,

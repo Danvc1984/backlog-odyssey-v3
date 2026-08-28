@@ -163,7 +163,7 @@
       persisted BUY runs
     - [x] 12b-b. **Buy recommendation surfaces** - Buy display on Today and
       wishlist detail, explanation/caveat presentation, and in-run dismissal
-  - [ ] 12c. **Adaptive recommendation orchestration** - optional post-import
+  - [x] 12c. **Adaptive recommendation orchestration** - optional post-import
     taste setup from five or six swappable owned games; `PLAYED_BEFORE` and
     Interest seed actions; one personal Game experience / intention field and
     contextual field help across detail, quick-create, and bulk edit; opt-in
@@ -234,6 +234,27 @@
     from durable feedback rows and never pruned), calibration explanations
     on game and wishlist detail, and new runs rotating in fresh games by
     excluding recently exposed candidates with a thin-pool fallback
+  - [ ] 12e. **Source-aware availability and recommendation semantics** -
+    reusable alternative store sources for owned games, icon-aware availability
+    presentation and filtering, soft play-next source tuning, and the clarified
+    separation between hidden candidate eligibility and retained play history
+    - [x] 12e-a. **Reusable alternative-source model and migration** -
+      normalized user-owned alternative-source records; code-owned known-source
+      suggestions, aliases, and icon metadata; multi-source availability
+      integrity; conservative migration of existing `OTHER_PLATFORM` rows to
+      `Unspecified other source`; rename/archive without destructive deletion
+    - [ ] 12e-b. **Source selection, details, and Library browsing** -
+      checkbox-based Steam/ROM/alternative-source selection with type-ahead
+      create-or-reuse; icon-decorated game-detail source values; individually
+      filterable saved alternative sources in Library; accessible fallback-icon
+      treatment for custom sources
+    - [ ] 12e-c. **Source-tuned play-next and retained hidden history** -
+      extend the existing Tune-this-run context and presets with inclusive,
+      modest source boosts and visible source explanations; leave buy/pricing
+      behavior unchanged; retain completion and abandonment events from hidden
+      games as profile evidence while excluding them as candidates; allow
+      unhidden abandoned replay candidates as explained, low-priority
+      Out-of-the-Box second chances
 
 - [ ] 13. **Today dashboard** - post-login functional dashboard without a
   feature-13 visual redesign. It composes main/in-progress games, latest three

@@ -28,6 +28,9 @@ registration, and collaboration are outside the MVP.
 
 - App shell and authentication.
 - Manual catalog and searchable library.
+- Reusable multi-source availability: built-in Steam and ROM sources plus
+  user-created alternative stores, source-aware Library filtering, and soft
+  play-next source tuning.
 - Game detail, play state, personal fields, tags, collections, and availability.
 - Steam account linking, initial import, and independent manual synchronization.
 - Duplicate detection, review, dismiss, merge, delete, and short-lived Undo.
@@ -62,6 +65,8 @@ The following are explicitly outside the MVP:
 - Public registration, roles, social features, and collaboration.
 - Launcher, storefront, ROM catalog, PWA, offline mode, notifications, webhooks,
   or automatic price conversion.
+- Automatic full-library imports from non-Steam stores, including Epic Games
+  Store, unless a supported account-library API becomes available.
 
 ## 4. Catalog and Wishlist Model
 
@@ -91,9 +96,53 @@ single-value for the MVP; unclassified games remain eligible with less
 experience-fit evidence.
 
 Price target and provider offers belong to the later pricing feature, not the
-initial local wishlist feature. Source preference is intentionally excluded:
-when multiple valid offers exist, the app selects the cheapest one while showing
-the alternatives.
+initial local wishlist feature. Store preference remains intentionally excluded
+from price comparison: when multiple valid offers exist, the app selects the
+cheapest valid Mexican offer while showing the alternatives. Play-next source
+preference is separate from seller/offer selection and applies only to owned
+catalog games.
+
+### Catalog availability and reusable sources
+
+Availability answers where the owner can play a catalog game. It is separate
+from immutable `Game.origin`, external identities, compatibility evidence, and
+wishlist offer sellers. A game may have more than one availability, such as
+Steam and Epic Games Store.
+
+Steam and ROM remain built-in availability kinds. An `OTHER_PLATFORM`
+availability must reference one reusable, single-user alternative-source
+record. That record has a user-facing name, normalized unique name, optional
+known-source key, and archive state. It is never a free-text source repeated
+on individual games. Per-game display names remain separate availability
+labels, not source identity.
+
+When creating or editing a game, availability uses checkboxes for Steam, ROM,
+and saved alternative sources. Choosing an alternative source opens a
+type-ahead create/select control. It suggests known sources by canonical name
+and aliases, then creates or reuses the selected source; custom names remain
+allowed.
+
+The built-in known-source catalog is code-owned rather than a database enum so
+custom sources remain possible. Its initial suggestions are Epic Games Store,
+GOG, EA app, Ubisoft Connect, Battle.net, Xbox/Microsoft Store, itch.io,
+Amazon Games, Humble Bundle, and Rockstar Games Launcher. It supplies canonical
+labels, aliases, and icon metadata. Steam, ROM, and known alternatives use
+their designated icons; a custom source uses a neutral fallback icon.
+
+Alternative sources may be renamed or archived. Archiving removes a source from
+new availability selection and new tuning choices, but preserves existing game
+availability, presets, recommendation-run explanations, and historical data.
+A referenced source is not permanently deleted; a later destructive flow would
+first require explicit reassignment.
+
+Existing `OTHER_PLATFORM` rows are migrated conservatively to one reusable
+`Unspecified other source` with the fallback icon. The existing per-game
+display name is retained verbatim, and no store is inferred from it. The owner
+can reclassify each row later.
+
+Game-detail availability values display accessible icon-decorated source chips.
+Library source filtering includes Steam, ROM, all alternative sources, and each
+saved alternative source individually.
 
 When a wishlist item is acquired manually:
 
@@ -458,6 +507,7 @@ factors such as:
 - Play state.
 - Main-game and hidden flags.
 - Priority and declared interest.
+- Availability sources and any active play-next source tune.
 - Game experience / intention, intended environment, and compatibility.
 - RAWG genres, tags, estimated playtime, release era, publisher, sequel
   relationship where confidently known, ESRB context when available, Metacritic,
@@ -476,7 +526,9 @@ factors such as:
 - `play-next`: base games that are not hidden, are not the main game, and are
   either `NOT_STARTED` or replay-flagged `PLAYED_BEFORE`/`ABANDONED`.
   `IN_PROGRESS` games appear separately on the dashboard. DLC never enters
-  play-next.
+  play-next. Hidden is an eligibility rule only: it prevents the game from
+  becoming a displayed candidate, but does not erase explicit played or
+  abandoned history from the recommendation profile.
 - `buy`: all wishlist base games and DLC wishes whose base game is owned.
   Entries without confirmed identity or offers stay eligible on interest
   alone, carrying an explicit "no pricing yet" warning. ROMs are excluded
@@ -490,6 +542,16 @@ factors such as:
   urgency signal for play-next; it never means the user likes a game more.
   Detail, quick-create, and bulk-edit surfaces explain these and other personal
   fields with concise visible helper text.
+- Play-next source tuning is a modest, inclusive boost—not a filter or a
+  launch requirement. It can prefer Steam, ROMs, any alternative source, or
+  selected alternative sources. A multi-source game matches every selected
+  preferred source. Source matching cannot discard Steam or other eligible
+  games merely because the preferred-source pool is small.
+- Source tuning is stored in the existing play tune context and named presets,
+  not as a separate global preference system. Each affected recommendation
+  visibly explains its source boost and shows the matched source icon. Source
+  tuning never affects buy recommendations, wishlist eligibility, seller
+  ranking, or price comparison.
 - Compatibility is a small practical-fit signal for the intended environment,
   not a hard gate. Confirmed fit may boost a recommendation; unknown, stale,
   or poor evidence surfaces caveats and can reduce practical fit, but does not
@@ -509,10 +571,11 @@ factors such as:
 Recommendations are generated explicitly by the user. `Update recommendations`
 works immediately with no form. `Tune this run` is opt-in and may set soft
 preferences for game experience, desired length, genres/tags, sequel posture,
-classic-to-newer era, and casual-to-mature context. A soft preference strongly
-boosts matches and reserves representation when possible, but can relax with a
-visible explanation if the qualified pool is thin. Named presets store these
-optional contexts for reuse.
+classic-to-newer era, casual-to-mature context, and play-next availability
+sources. Named presets store these optional contexts for reuse. Hard
+constraints may relax with a visible explanation when the qualified pool is
+thin; source tuning is already soft and inclusive, so it never needs to relax
+by excluding other sources.
 
 Each run retains its context, explanations, and qualified candidate batches.
 The dashboard initially displays four play-next roles: two best-fit picks, one
@@ -523,6 +586,12 @@ deal-saturation applies - at least three fresh offers discounted 80% or more
 and at least 20% of eligible wishes qualify - Buy instead shows one best-fit and
 two exceptional-deal picks. Deal picks must still clear fit and quality floors;
 a discount never wins by itself.
+
+An unhidden `ABANDONED` game explicitly marked as a replay candidate may be a
+low-priority second-chance consideration for the Out of the Box role only when
+stronger fit, compatibility, and tune signals do not point to another qualified
+candidate. It receives a visible second-chance explanation and never reserves
+or guarantees that role.
 
 Each role offers `Show another`, rotating a different item from its retained
 batch without creating a new run. Showing or rotating an item records a light
@@ -562,6 +631,12 @@ from authoritative catalog fields and replaceable provider snapshots:
 - Append-only recommendation events record meaningful exposure, rotation,
   taste-setup answers, starts, completions, abandonment, dismissals, and
   optional dismissal reasons.
+- Explicit state transitions remain profile evidence even when the game is
+  hidden: `PLAYED_BEFORE` records completion evidence and `ABANDONED` records
+  abandonment evidence. Existing event weights and recency decay remain
+  unchanged. Thus a normal recorded start followed by abandonment may balance
+  to neutral overall, while direct abandonment remains negative; neither state
+  makes a hidden game recommendable.
 - A rebuildable derived profile aggregates preferences for genres, tags,
   experience, length, publisher, era, series, environment, and maturity.
 - User-editable preferences use semantic `Prefer`, `Neutral`, and `Avoid`

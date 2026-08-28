@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@/lib/auth-guard", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
+vi.mock("server-only", () => ({}));
 vi.mock("@/lib/recommendations/events", () => ({
   logRecommendationEvent: vi.fn(),
   playStateTransitionKind: vi.fn((previous: string, next: string) => {
@@ -68,36 +69,65 @@ describe("updateGameName", () => {
 
 describe("updateGameAvailability", () => {
   const mockFindUnique = vi.fn();
+  const mockFindMany = vi.fn();
   const mockUpdate = vi.fn();
+  const mockAltFind = vi.fn();
+  const mockAltCreate = vi.fn();
+  const mockTransaction = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
-    (prisma as unknown as {
-      gameAvailability: {
-        findUnique: typeof mockFindUnique;
-        update: typeof mockUpdate;
-      };
-    }).gameAvailability = { findUnique: mockFindUnique, update: mockUpdate };
-    mockFindUnique.mockResolvedValue({ source: "OTHER_PLATFORM" });
+    (prisma as unknown as { $transaction: typeof mockTransaction }).$transaction =
+      mockTransaction;
+    mockTransaction.mockImplementation(
+      async (fn: (tx: unknown) => unknown) =>
+        fn({
+          gameAvailability: {
+            findUnique: mockFindUnique,
+            findMany: mockFindMany,
+            update: mockUpdate,
+          },
+          alternativeSource: {
+            findUnique: mockAltFind,
+            create: mockAltCreate,
+          },
+        }),
+    );
+    mockFindUnique.mockResolvedValue({
+      id: "availability-1",
+      gameId: "game-1",
+      source: "OTHER_PLATFORM",
+    });
+    mockFindMany.mockResolvedValue([]);
     mockUpdate.mockResolvedValue({ id: "availability-1" });
+    mockAltFind.mockResolvedValue(null);
+    mockAltCreate.mockResolvedValue({ id: "unsource-1" });
   });
 
-  it("updates a manual source and display name", async () => {
+  it("updates source to ROM, clears the alternative source id, and guards the move", async () => {
     const result = await updateGameAvailability("availability-1", {
       source: "ROM",
       displayName: "Local copy",
     });
 
     expect(result.success).toBe(true);
+    expect(mockFindMany).toHaveBeenCalledWith({
+      where: { gameId: "game-1" },
+      select: { id: true, source: true, alternativeSourceId: true },
+    });
     expect(mockUpdate).toHaveBeenCalledWith({
       where: { id: "availability-1" },
-      data: { source: "ROM", displayName: "Local copy" },
+      data: { source: "ROM", displayName: "Local copy", alternativeSourceId: null },
     });
   });
 
-  it("allows Steam source and display-name edits without exposing technical fields", async () => {
-    mockFindUnique.mockResolvedValue({ source: "STEAM" });
+  it("attaches the unspecified source when moving a row onto OTHER_PLATFORM", async () => {
+    mockFindUnique.mockResolvedValue({
+      id: "availability-1",
+      gameId: "game-1",
+      source: "ROM",
+    });
 
     const result = await updateGameAvailability("availability-1", {
       source: "OTHER_PLATFORM",
@@ -105,14 +135,92 @@ describe("updateGameAvailability", () => {
     });
 
     expect(result.success).toBe(true);
+    expect(mockAltFind).toHaveBeenCalledWith({
+      where: { normalizedName: "unspecified other source" },
+    });
     expect(mockUpdate).toHaveBeenCalledWith({
       where: { id: "availability-1" },
-      data: { source: "OTHER_PLATFORM", displayName: "Steam library" },
+      data: {
+        source: "OTHER_PLATFORM",
+        displayName: "Steam library",
+        alternativeSourceId: "unsource-1",
+      },
+    });
+  });
+
+  it("rejects moving onto a Steam source the game already has", async () => {
+    mockFindUnique.mockResolvedValue({
+      id: "availability-1",
+      gameId: "game-1",
+      source: "ROM",
+    });
+    mockFindMany.mockResolvedValue([
+      { id: "availability-2", source: "STEAM", alternativeSourceId: null },
+    ]);
+
+    const result = await updateGameAvailability("availability-1", {
+      source: "STEAM",
+    });
+
+    expect(result).toEqual({
+      success: false,
+      data: null,
+      error: "This game already has a Steam source",
+    });
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a duplicate alternative source for the same store", async () => {
+    mockFindUnique.mockResolvedValue({
+      id: "availability-1",
+      gameId: "game-1",
+      source: "STEAM",
+    });
+    mockFindMany.mockResolvedValue([
+      {
+        id: "availability-2",
+        source: "OTHER_PLATFORM",
+        alternativeSourceId: "unsource-1",
+      },
+    ]);
+
+    const result = await updateGameAvailability("availability-1", {
+      source: "OTHER_PLATFORM",
+    });
+
+    expect(result).toEqual({
+      success: false,
+      data: null,
+      error: "This game already has that store source",
+    });
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("allows an unchanged source without a duplicate check", async () => {
+    mockFindUnique.mockResolvedValue({
+      id: "availability-1",
+      gameId: "game-1",
+      source: "OTHER_PLATFORM",
+    });
+
+    const result = await updateGameAvailability("availability-1", {
+      displayName: "Renamed",
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockFindMany).not.toHaveBeenCalled();
+    expect(mockUpdate).toHaveBeenCalledWith({
+      where: { id: "availability-1" },
+      data: { displayName: "Renamed", alternativeSourceId: "unsource-1" },
     });
   });
 
   it("rejects technical-field payloads", async () => {
-    mockFindUnique.mockResolvedValue({ source: "STEAM" });
+    mockFindUnique.mockResolvedValue({
+      id: "availability-1",
+      gameId: "game-1",
+      source: "STEAM",
+    });
 
     const technicalChange = await updateGameAvailability("availability-1", {
       displayName: "Steam library",

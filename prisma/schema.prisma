@@ -464,18 +464,33 @@ model LibraryEntry {
   @@index([isMainGame])
 }
 
+model AlternativeSource {
+  id             String    @id @default(cuid())
+  name           String
+  normalizedName String    @unique
+  knownKey       String?   @unique
+  archivedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  availability GameAvailability[]
+}
+
 model GameAvailability {
-  id                 String             @id @default(cuid())
-  gameId             String
-  source             AvailabilitySource
-  displayName        String?
-  steamAppId         String?
-  steamPlaytimeTotal BigInt?
-  steamLastPlayed    DateTime?
-  addedAt            DateTime           @default(now())
+  id                   String             @id @default(cuid())
+  gameId               String
+  source               AvailabilitySource
+  alternativeSourceId  String?
+  displayName          String?
+  steamAppId           String?
+  steamPlaytimeTotal   BigInt?
+  steamLastPlayed      DateTime?
+  addedAt              DateTime           @default(now())
 
-  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  game              Game               @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  alternativeSource AlternativeSource? @relation(fields: [alternativeSourceId], references: [id], onDelete: Restrict)
 
+  @@unique([gameId, source, alternativeSourceId])
   @@index([gameId])
 }
 

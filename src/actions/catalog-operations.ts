@@ -47,7 +47,12 @@ function toMergeSourceGame(game: {
   libraryEntry: MergeSourceLibraryEntry | null;
   externalIds: { id: string; namespace: string; externalId: string; gameId: string }[];
   dlcs: { id: string; name: string }[];
-  availability: { id: string; source: string; steamAppId: string | null }[];
+  availability: {
+    id: string;
+    source: string;
+    steamAppId: string | null;
+    alternativeSourceId: string | null;
+  }[];
   collections: { collectionId: string }[];
   tags: { tagId: string }[];
   metadataSnapshots: { id: string; provider: string }[];
@@ -141,7 +146,9 @@ export async function proposeMerge(input: { duplicateId: string }) {
         },
         externalIds: true,
         dlcs: { select: { id: true, name: true } },
-        availability: { select: { id: true, source: true, steamAppId: true } },
+        availability: {
+          select: { id: true, source: true, steamAppId: true, alternativeSourceId: true },
+        },
         collections: { select: { collectionId: true } },
         tags: { select: { tagId: true } },
         metadataSnapshots: { select: { id: true, provider: true } },

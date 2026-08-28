@@ -38,6 +38,7 @@ export type GameAvailabilityMinAggregateOutputType = {
   id: string | null
   gameId: string | null
   source: $Enums.AvailabilitySource | null
+  alternativeSourceId: string | null
   displayName: string | null
   steamAppId: string | null
   steamPlaytimeTotal: bigint | null
@@ -49,6 +50,7 @@ export type GameAvailabilityMaxAggregateOutputType = {
   id: string | null
   gameId: string | null
   source: $Enums.AvailabilitySource | null
+  alternativeSourceId: string | null
   displayName: string | null
   steamAppId: string | null
   steamPlaytimeTotal: bigint | null
@@ -60,6 +62,7 @@ export type GameAvailabilityCountAggregateOutputType = {
   id: number
   gameId: number
   source: number
+  alternativeSourceId: number
   displayName: number
   steamAppId: number
   steamPlaytimeTotal: number
@@ -81,6 +84,7 @@ export type GameAvailabilityMinAggregateInputType = {
   id?: true
   gameId?: true
   source?: true
+  alternativeSourceId?: true
   displayName?: true
   steamAppId?: true
   steamPlaytimeTotal?: true
@@ -92,6 +96,7 @@ export type GameAvailabilityMaxAggregateInputType = {
   id?: true
   gameId?: true
   source?: true
+  alternativeSourceId?: true
   displayName?: true
   steamAppId?: true
   steamPlaytimeTotal?: true
@@ -103,6 +108,7 @@ export type GameAvailabilityCountAggregateInputType = {
   id?: true
   gameId?: true
   source?: true
+  alternativeSourceId?: true
   displayName?: true
   steamAppId?: true
   steamPlaytimeTotal?: true
@@ -201,6 +207,7 @@ export type GameAvailabilityGroupByOutputType = {
   id: string
   gameId: string
   source: $Enums.AvailabilitySource
+  alternativeSourceId: string | null
   displayName: string | null
   steamAppId: string | null
   steamPlaytimeTotal: bigint | null
@@ -235,45 +242,53 @@ export type GameAvailabilityWhereInput = {
   id?: Prisma.StringFilter<"GameAvailability"> | string
   gameId?: Prisma.StringFilter<"GameAvailability"> | string
   source?: Prisma.EnumAvailabilitySourceFilter<"GameAvailability"> | $Enums.AvailabilitySource
+  alternativeSourceId?: Prisma.StringNullableFilter<"GameAvailability"> | string | null
   displayName?: Prisma.StringNullableFilter<"GameAvailability"> | string | null
   steamAppId?: Prisma.StringNullableFilter<"GameAvailability"> | string | null
   steamPlaytimeTotal?: Prisma.BigIntNullableFilter<"GameAvailability"> | bigint | number | null
   steamLastPlayed?: Prisma.DateTimeNullableFilter<"GameAvailability"> | Date | string | null
   addedAt?: Prisma.DateTimeFilter<"GameAvailability"> | Date | string
   game?: Prisma.XOR<Prisma.GameScalarRelationFilter, Prisma.GameWhereInput>
+  alternativeSource?: Prisma.XOR<Prisma.AlternativeSourceNullableScalarRelationFilter, Prisma.AlternativeSourceWhereInput> | null
 }
 
 export type GameAvailabilityOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   gameId?: Prisma.SortOrder
   source?: Prisma.SortOrder
+  alternativeSourceId?: Prisma.SortOrderInput | Prisma.SortOrder
   displayName?: Prisma.SortOrderInput | Prisma.SortOrder
   steamAppId?: Prisma.SortOrderInput | Prisma.SortOrder
   steamPlaytimeTotal?: Prisma.SortOrderInput | Prisma.SortOrder
   steamLastPlayed?: Prisma.SortOrderInput | Prisma.SortOrder
   addedAt?: Prisma.SortOrder
   game?: Prisma.GameOrderByWithRelationInput
+  alternativeSource?: Prisma.AlternativeSourceOrderByWithRelationInput
 }
 
 export type GameAvailabilityWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  gameId_source_alternativeSourceId?: Prisma.GameAvailabilityGameIdSourceAlternativeSourceIdCompoundUniqueInput
   AND?: Prisma.GameAvailabilityWhereInput | Prisma.GameAvailabilityWhereInput[]
   OR?: Prisma.GameAvailabilityWhereInput[]
   NOT?: Prisma.GameAvailabilityWhereInput | Prisma.GameAvailabilityWhereInput[]
   gameId?: Prisma.StringFilter<"GameAvailability"> | string
   source?: Prisma.EnumAvailabilitySourceFilter<"GameAvailability"> | $Enums.AvailabilitySource
+  alternativeSourceId?: Prisma.StringNullableFilter<"GameAvailability"> | string | null
   displayName?: Prisma.StringNullableFilter<"GameAvailability"> | string | null
   steamAppId?: Prisma.StringNullableFilter<"GameAvailability"> | string | null
   steamPlaytimeTotal?: Prisma.BigIntNullableFilter<"GameAvailability"> | bigint | number | null
   steamLastPlayed?: Prisma.DateTimeNullableFilter<"GameAvailability"> | Date | string | null
   addedAt?: Prisma.DateTimeFilter<"GameAvailability"> | Date | string
   game?: Prisma.XOR<Prisma.GameScalarRelationFilter, Prisma.GameWhereInput>
-}, "id">
+  alternativeSource?: Prisma.XOR<Prisma.AlternativeSourceNullableScalarRelationFilter, Prisma.AlternativeSourceWhereInput> | null
+}, "id" | "gameId_source_alternativeSourceId">
 
 export type GameAvailabilityOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   gameId?: Prisma.SortOrder
   source?: Prisma.SortOrder
+  alternativeSourceId?: Prisma.SortOrderInput | Prisma.SortOrder
   displayName?: Prisma.SortOrderInput | Prisma.SortOrder
   steamAppId?: Prisma.SortOrderInput | Prisma.SortOrder
   steamPlaytimeTotal?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -293,6 +308,7 @@ export type GameAvailabilityScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"GameAvailability"> | string
   gameId?: Prisma.StringWithAggregatesFilter<"GameAvailability"> | string
   source?: Prisma.EnumAvailabilitySourceWithAggregatesFilter<"GameAvailability"> | $Enums.AvailabilitySource
+  alternativeSourceId?: Prisma.StringNullableWithAggregatesFilter<"GameAvailability"> | string | null
   displayName?: Prisma.StringNullableWithAggregatesFilter<"GameAvailability"> | string | null
   steamAppId?: Prisma.StringNullableWithAggregatesFilter<"GameAvailability"> | string | null
   steamPlaytimeTotal?: Prisma.BigIntNullableWithAggregatesFilter<"GameAvailability"> | bigint | number | null
@@ -309,12 +325,14 @@ export type GameAvailabilityCreateInput = {
   steamLastPlayed?: Date | string | null
   addedAt?: Date | string
   game: Prisma.GameCreateNestedOneWithoutAvailabilityInput
+  alternativeSource?: Prisma.AlternativeSourceCreateNestedOneWithoutAvailabilityInput
 }
 
 export type GameAvailabilityUncheckedCreateInput = {
   id?: string
   gameId: string
   source: $Enums.AvailabilitySource
+  alternativeSourceId?: string | null
   displayName?: string | null
   steamAppId?: string | null
   steamPlaytimeTotal?: bigint | number | null
@@ -331,12 +349,14 @@ export type GameAvailabilityUpdateInput = {
   steamLastPlayed?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   addedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   game?: Prisma.GameUpdateOneRequiredWithoutAvailabilityNestedInput
+  alternativeSource?: Prisma.AlternativeSourceUpdateOneWithoutAvailabilityNestedInput
 }
 
 export type GameAvailabilityUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   gameId?: Prisma.StringFieldUpdateOperationsInput | string
   source?: Prisma.EnumAvailabilitySourceFieldUpdateOperationsInput | $Enums.AvailabilitySource
+  alternativeSourceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamPlaytimeTotal?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
@@ -348,6 +368,7 @@ export type GameAvailabilityCreateManyInput = {
   id?: string
   gameId: string
   source: $Enums.AvailabilitySource
+  alternativeSourceId?: string | null
   displayName?: string | null
   steamAppId?: string | null
   steamPlaytimeTotal?: bigint | number | null
@@ -369,6 +390,7 @@ export type GameAvailabilityUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   gameId?: Prisma.StringFieldUpdateOperationsInput | string
   source?: Prisma.EnumAvailabilitySourceFieldUpdateOperationsInput | $Enums.AvailabilitySource
+  alternativeSourceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamPlaytimeTotal?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
@@ -386,10 +408,17 @@ export type GameAvailabilityOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
+export type GameAvailabilityGameIdSourceAlternativeSourceIdCompoundUniqueInput = {
+  gameId: string
+  source: $Enums.AvailabilitySource
+  alternativeSourceId: string
+}
+
 export type GameAvailabilityCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   gameId?: Prisma.SortOrder
   source?: Prisma.SortOrder
+  alternativeSourceId?: Prisma.SortOrder
   displayName?: Prisma.SortOrder
   steamAppId?: Prisma.SortOrder
   steamPlaytimeTotal?: Prisma.SortOrder
@@ -405,6 +434,7 @@ export type GameAvailabilityMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   gameId?: Prisma.SortOrder
   source?: Prisma.SortOrder
+  alternativeSourceId?: Prisma.SortOrder
   displayName?: Prisma.SortOrder
   steamAppId?: Prisma.SortOrder
   steamPlaytimeTotal?: Prisma.SortOrder
@@ -416,6 +446,7 @@ export type GameAvailabilityMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   gameId?: Prisma.SortOrder
   source?: Prisma.SortOrder
+  alternativeSourceId?: Prisma.SortOrder
   displayName?: Prisma.SortOrder
   steamAppId?: Prisma.SortOrder
   steamPlaytimeTotal?: Prisma.SortOrder
@@ -469,6 +500,48 @@ export type GameAvailabilityUncheckedUpdateManyWithoutGameNestedInput = {
   deleteMany?: Prisma.GameAvailabilityScalarWhereInput | Prisma.GameAvailabilityScalarWhereInput[]
 }
 
+export type GameAvailabilityCreateNestedManyWithoutAlternativeSourceInput = {
+  create?: Prisma.XOR<Prisma.GameAvailabilityCreateWithoutAlternativeSourceInput, Prisma.GameAvailabilityUncheckedCreateWithoutAlternativeSourceInput> | Prisma.GameAvailabilityCreateWithoutAlternativeSourceInput[] | Prisma.GameAvailabilityUncheckedCreateWithoutAlternativeSourceInput[]
+  connectOrCreate?: Prisma.GameAvailabilityCreateOrConnectWithoutAlternativeSourceInput | Prisma.GameAvailabilityCreateOrConnectWithoutAlternativeSourceInput[]
+  createMany?: Prisma.GameAvailabilityCreateManyAlternativeSourceInputEnvelope
+  connect?: Prisma.GameAvailabilityWhereUniqueInput | Prisma.GameAvailabilityWhereUniqueInput[]
+}
+
+export type GameAvailabilityUncheckedCreateNestedManyWithoutAlternativeSourceInput = {
+  create?: Prisma.XOR<Prisma.GameAvailabilityCreateWithoutAlternativeSourceInput, Prisma.GameAvailabilityUncheckedCreateWithoutAlternativeSourceInput> | Prisma.GameAvailabilityCreateWithoutAlternativeSourceInput[] | Prisma.GameAvailabilityUncheckedCreateWithoutAlternativeSourceInput[]
+  connectOrCreate?: Prisma.GameAvailabilityCreateOrConnectWithoutAlternativeSourceInput | Prisma.GameAvailabilityCreateOrConnectWithoutAlternativeSourceInput[]
+  createMany?: Prisma.GameAvailabilityCreateManyAlternativeSourceInputEnvelope
+  connect?: Prisma.GameAvailabilityWhereUniqueInput | Prisma.GameAvailabilityWhereUniqueInput[]
+}
+
+export type GameAvailabilityUpdateManyWithoutAlternativeSourceNestedInput = {
+  create?: Prisma.XOR<Prisma.GameAvailabilityCreateWithoutAlternativeSourceInput, Prisma.GameAvailabilityUncheckedCreateWithoutAlternativeSourceInput> | Prisma.GameAvailabilityCreateWithoutAlternativeSourceInput[] | Prisma.GameAvailabilityUncheckedCreateWithoutAlternativeSourceInput[]
+  connectOrCreate?: Prisma.GameAvailabilityCreateOrConnectWithoutAlternativeSourceInput | Prisma.GameAvailabilityCreateOrConnectWithoutAlternativeSourceInput[]
+  upsert?: Prisma.GameAvailabilityUpsertWithWhereUniqueWithoutAlternativeSourceInput | Prisma.GameAvailabilityUpsertWithWhereUniqueWithoutAlternativeSourceInput[]
+  createMany?: Prisma.GameAvailabilityCreateManyAlternativeSourceInputEnvelope
+  set?: Prisma.GameAvailabilityWhereUniqueInput | Prisma.GameAvailabilityWhereUniqueInput[]
+  disconnect?: Prisma.GameAvailabilityWhereUniqueInput | Prisma.GameAvailabilityWhereUniqueInput[]
+  delete?: Prisma.GameAvailabilityWhereUniqueInput | Prisma.GameAvailabilityWhereUniqueInput[]
+  connect?: Prisma.GameAvailabilityWhereUniqueInput | Prisma.GameAvailabilityWhereUniqueInput[]
+  update?: Prisma.GameAvailabilityUpdateWithWhereUniqueWithoutAlternativeSourceInput | Prisma.GameAvailabilityUpdateWithWhereUniqueWithoutAlternativeSourceInput[]
+  updateMany?: Prisma.GameAvailabilityUpdateManyWithWhereWithoutAlternativeSourceInput | Prisma.GameAvailabilityUpdateManyWithWhereWithoutAlternativeSourceInput[]
+  deleteMany?: Prisma.GameAvailabilityScalarWhereInput | Prisma.GameAvailabilityScalarWhereInput[]
+}
+
+export type GameAvailabilityUncheckedUpdateManyWithoutAlternativeSourceNestedInput = {
+  create?: Prisma.XOR<Prisma.GameAvailabilityCreateWithoutAlternativeSourceInput, Prisma.GameAvailabilityUncheckedCreateWithoutAlternativeSourceInput> | Prisma.GameAvailabilityCreateWithoutAlternativeSourceInput[] | Prisma.GameAvailabilityUncheckedCreateWithoutAlternativeSourceInput[]
+  connectOrCreate?: Prisma.GameAvailabilityCreateOrConnectWithoutAlternativeSourceInput | Prisma.GameAvailabilityCreateOrConnectWithoutAlternativeSourceInput[]
+  upsert?: Prisma.GameAvailabilityUpsertWithWhereUniqueWithoutAlternativeSourceInput | Prisma.GameAvailabilityUpsertWithWhereUniqueWithoutAlternativeSourceInput[]
+  createMany?: Prisma.GameAvailabilityCreateManyAlternativeSourceInputEnvelope
+  set?: Prisma.GameAvailabilityWhereUniqueInput | Prisma.GameAvailabilityWhereUniqueInput[]
+  disconnect?: Prisma.GameAvailabilityWhereUniqueInput | Prisma.GameAvailabilityWhereUniqueInput[]
+  delete?: Prisma.GameAvailabilityWhereUniqueInput | Prisma.GameAvailabilityWhereUniqueInput[]
+  connect?: Prisma.GameAvailabilityWhereUniqueInput | Prisma.GameAvailabilityWhereUniqueInput[]
+  update?: Prisma.GameAvailabilityUpdateWithWhereUniqueWithoutAlternativeSourceInput | Prisma.GameAvailabilityUpdateWithWhereUniqueWithoutAlternativeSourceInput[]
+  updateMany?: Prisma.GameAvailabilityUpdateManyWithWhereWithoutAlternativeSourceInput | Prisma.GameAvailabilityUpdateManyWithWhereWithoutAlternativeSourceInput[]
+  deleteMany?: Prisma.GameAvailabilityScalarWhereInput | Prisma.GameAvailabilityScalarWhereInput[]
+}
+
 export type EnumAvailabilitySourceFieldUpdateOperationsInput = {
   set?: $Enums.AvailabilitySource
 }
@@ -489,11 +562,13 @@ export type GameAvailabilityCreateWithoutGameInput = {
   steamPlaytimeTotal?: bigint | number | null
   steamLastPlayed?: Date | string | null
   addedAt?: Date | string
+  alternativeSource?: Prisma.AlternativeSourceCreateNestedOneWithoutAvailabilityInput
 }
 
 export type GameAvailabilityUncheckedCreateWithoutGameInput = {
   id?: string
   source: $Enums.AvailabilitySource
+  alternativeSourceId?: string | null
   displayName?: string | null
   steamAppId?: string | null
   steamPlaytimeTotal?: bigint | number | null
@@ -534,6 +609,7 @@ export type GameAvailabilityScalarWhereInput = {
   id?: Prisma.StringFilter<"GameAvailability"> | string
   gameId?: Prisma.StringFilter<"GameAvailability"> | string
   source?: Prisma.EnumAvailabilitySourceFilter<"GameAvailability"> | $Enums.AvailabilitySource
+  alternativeSourceId?: Prisma.StringNullableFilter<"GameAvailability"> | string | null
   displayName?: Prisma.StringNullableFilter<"GameAvailability"> | string | null
   steamAppId?: Prisma.StringNullableFilter<"GameAvailability"> | string | null
   steamPlaytimeTotal?: Prisma.BigIntNullableFilter<"GameAvailability"> | bigint | number | null
@@ -541,9 +617,58 @@ export type GameAvailabilityScalarWhereInput = {
   addedAt?: Prisma.DateTimeFilter<"GameAvailability"> | Date | string
 }
 
+export type GameAvailabilityCreateWithoutAlternativeSourceInput = {
+  id?: string
+  source: $Enums.AvailabilitySource
+  displayName?: string | null
+  steamAppId?: string | null
+  steamPlaytimeTotal?: bigint | number | null
+  steamLastPlayed?: Date | string | null
+  addedAt?: Date | string
+  game: Prisma.GameCreateNestedOneWithoutAvailabilityInput
+}
+
+export type GameAvailabilityUncheckedCreateWithoutAlternativeSourceInput = {
+  id?: string
+  gameId: string
+  source: $Enums.AvailabilitySource
+  displayName?: string | null
+  steamAppId?: string | null
+  steamPlaytimeTotal?: bigint | number | null
+  steamLastPlayed?: Date | string | null
+  addedAt?: Date | string
+}
+
+export type GameAvailabilityCreateOrConnectWithoutAlternativeSourceInput = {
+  where: Prisma.GameAvailabilityWhereUniqueInput
+  create: Prisma.XOR<Prisma.GameAvailabilityCreateWithoutAlternativeSourceInput, Prisma.GameAvailabilityUncheckedCreateWithoutAlternativeSourceInput>
+}
+
+export type GameAvailabilityCreateManyAlternativeSourceInputEnvelope = {
+  data: Prisma.GameAvailabilityCreateManyAlternativeSourceInput | Prisma.GameAvailabilityCreateManyAlternativeSourceInput[]
+  skipDuplicates?: boolean
+}
+
+export type GameAvailabilityUpsertWithWhereUniqueWithoutAlternativeSourceInput = {
+  where: Prisma.GameAvailabilityWhereUniqueInput
+  update: Prisma.XOR<Prisma.GameAvailabilityUpdateWithoutAlternativeSourceInput, Prisma.GameAvailabilityUncheckedUpdateWithoutAlternativeSourceInput>
+  create: Prisma.XOR<Prisma.GameAvailabilityCreateWithoutAlternativeSourceInput, Prisma.GameAvailabilityUncheckedCreateWithoutAlternativeSourceInput>
+}
+
+export type GameAvailabilityUpdateWithWhereUniqueWithoutAlternativeSourceInput = {
+  where: Prisma.GameAvailabilityWhereUniqueInput
+  data: Prisma.XOR<Prisma.GameAvailabilityUpdateWithoutAlternativeSourceInput, Prisma.GameAvailabilityUncheckedUpdateWithoutAlternativeSourceInput>
+}
+
+export type GameAvailabilityUpdateManyWithWhereWithoutAlternativeSourceInput = {
+  where: Prisma.GameAvailabilityScalarWhereInput
+  data: Prisma.XOR<Prisma.GameAvailabilityUpdateManyMutationInput, Prisma.GameAvailabilityUncheckedUpdateManyWithoutAlternativeSourceInput>
+}
+
 export type GameAvailabilityCreateManyGameInput = {
   id?: string
   source: $Enums.AvailabilitySource
+  alternativeSourceId?: string | null
   displayName?: string | null
   steamAppId?: string | null
   steamPlaytimeTotal?: bigint | number | null
@@ -559,11 +684,13 @@ export type GameAvailabilityUpdateWithoutGameInput = {
   steamPlaytimeTotal?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   steamLastPlayed?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   addedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  alternativeSource?: Prisma.AlternativeSourceUpdateOneWithoutAvailabilityNestedInput
 }
 
 export type GameAvailabilityUncheckedUpdateWithoutGameInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   source?: Prisma.EnumAvailabilitySourceFieldUpdateOperationsInput | $Enums.AvailabilitySource
+  alternativeSourceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamPlaytimeTotal?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
@@ -573,6 +700,51 @@ export type GameAvailabilityUncheckedUpdateWithoutGameInput = {
 
 export type GameAvailabilityUncheckedUpdateManyWithoutGameInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumAvailabilitySourceFieldUpdateOperationsInput | $Enums.AvailabilitySource
+  alternativeSourceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  steamPlaytimeTotal?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  steamLastPlayed?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  addedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type GameAvailabilityCreateManyAlternativeSourceInput = {
+  id?: string
+  gameId: string
+  source: $Enums.AvailabilitySource
+  displayName?: string | null
+  steamAppId?: string | null
+  steamPlaytimeTotal?: bigint | number | null
+  steamLastPlayed?: Date | string | null
+  addedAt?: Date | string
+}
+
+export type GameAvailabilityUpdateWithoutAlternativeSourceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumAvailabilitySourceFieldUpdateOperationsInput | $Enums.AvailabilitySource
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  steamPlaytimeTotal?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  steamLastPlayed?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  addedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  game?: Prisma.GameUpdateOneRequiredWithoutAvailabilityNestedInput
+}
+
+export type GameAvailabilityUncheckedUpdateWithoutAlternativeSourceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  gameId?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumAvailabilitySourceFieldUpdateOperationsInput | $Enums.AvailabilitySource
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  steamPlaytimeTotal?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  steamLastPlayed?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  addedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type GameAvailabilityUncheckedUpdateManyWithoutAlternativeSourceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  gameId?: Prisma.StringFieldUpdateOperationsInput | string
   source?: Prisma.EnumAvailabilitySourceFieldUpdateOperationsInput | $Enums.AvailabilitySource
   displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -587,42 +759,49 @@ export type GameAvailabilitySelect<ExtArgs extends runtime.Types.Extensions.Inte
   id?: boolean
   gameId?: boolean
   source?: boolean
+  alternativeSourceId?: boolean
   displayName?: boolean
   steamAppId?: boolean
   steamPlaytimeTotal?: boolean
   steamLastPlayed?: boolean
   addedAt?: boolean
   game?: boolean | Prisma.GameDefaultArgs<ExtArgs>
+  alternativeSource?: boolean | Prisma.GameAvailability$alternativeSourceArgs<ExtArgs>
 }, ExtArgs["result"]["gameAvailability"]>
 
 export type GameAvailabilitySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   gameId?: boolean
   source?: boolean
+  alternativeSourceId?: boolean
   displayName?: boolean
   steamAppId?: boolean
   steamPlaytimeTotal?: boolean
   steamLastPlayed?: boolean
   addedAt?: boolean
   game?: boolean | Prisma.GameDefaultArgs<ExtArgs>
+  alternativeSource?: boolean | Prisma.GameAvailability$alternativeSourceArgs<ExtArgs>
 }, ExtArgs["result"]["gameAvailability"]>
 
 export type GameAvailabilitySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   gameId?: boolean
   source?: boolean
+  alternativeSourceId?: boolean
   displayName?: boolean
   steamAppId?: boolean
   steamPlaytimeTotal?: boolean
   steamLastPlayed?: boolean
   addedAt?: boolean
   game?: boolean | Prisma.GameDefaultArgs<ExtArgs>
+  alternativeSource?: boolean | Prisma.GameAvailability$alternativeSourceArgs<ExtArgs>
 }, ExtArgs["result"]["gameAvailability"]>
 
 export type GameAvailabilitySelectScalar = {
   id?: boolean
   gameId?: boolean
   source?: boolean
+  alternativeSourceId?: boolean
   displayName?: boolean
   steamAppId?: boolean
   steamPlaytimeTotal?: boolean
@@ -630,26 +809,31 @@ export type GameAvailabilitySelectScalar = {
   addedAt?: boolean
 }
 
-export type GameAvailabilityOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "gameId" | "source" | "displayName" | "steamAppId" | "steamPlaytimeTotal" | "steamLastPlayed" | "addedAt", ExtArgs["result"]["gameAvailability"]>
+export type GameAvailabilityOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "gameId" | "source" | "alternativeSourceId" | "displayName" | "steamAppId" | "steamPlaytimeTotal" | "steamLastPlayed" | "addedAt", ExtArgs["result"]["gameAvailability"]>
 export type GameAvailabilityInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   game?: boolean | Prisma.GameDefaultArgs<ExtArgs>
+  alternativeSource?: boolean | Prisma.GameAvailability$alternativeSourceArgs<ExtArgs>
 }
 export type GameAvailabilityIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   game?: boolean | Prisma.GameDefaultArgs<ExtArgs>
+  alternativeSource?: boolean | Prisma.GameAvailability$alternativeSourceArgs<ExtArgs>
 }
 export type GameAvailabilityIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   game?: boolean | Prisma.GameDefaultArgs<ExtArgs>
+  alternativeSource?: boolean | Prisma.GameAvailability$alternativeSourceArgs<ExtArgs>
 }
 
 export type $GameAvailabilityPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "GameAvailability"
   objects: {
     game: Prisma.$GamePayload<ExtArgs>
+    alternativeSource: Prisma.$AlternativeSourcePayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     gameId: string
     source: $Enums.AvailabilitySource
+    alternativeSourceId: string | null
     displayName: string | null
     steamAppId: string | null
     steamPlaytimeTotal: bigint | null
@@ -1050,6 +1234,7 @@ readonly fields: GameAvailabilityFieldRefs;
 export interface Prisma__GameAvailabilityClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   game<T extends Prisma.GameDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.GameDefaultArgs<ExtArgs>>): Prisma.Prisma__GameClient<runtime.Types.Result.GetResult<Prisma.$GamePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  alternativeSource<T extends Prisma.GameAvailability$alternativeSourceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.GameAvailability$alternativeSourceArgs<ExtArgs>>): Prisma.Prisma__AlternativeSourceClient<runtime.Types.Result.GetResult<Prisma.$AlternativeSourcePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1082,6 +1267,7 @@ export interface GameAvailabilityFieldRefs {
   readonly id: Prisma.FieldRef<"GameAvailability", 'String'>
   readonly gameId: Prisma.FieldRef<"GameAvailability", 'String'>
   readonly source: Prisma.FieldRef<"GameAvailability", 'AvailabilitySource'>
+  readonly alternativeSourceId: Prisma.FieldRef<"GameAvailability", 'String'>
   readonly displayName: Prisma.FieldRef<"GameAvailability", 'String'>
   readonly steamAppId: Prisma.FieldRef<"GameAvailability", 'String'>
   readonly steamPlaytimeTotal: Prisma.FieldRef<"GameAvailability", 'BigInt'>
@@ -1485,6 +1671,25 @@ export type GameAvailabilityDeleteManyArgs<ExtArgs extends runtime.Types.Extensi
    * Limit how many GameAvailabilities to delete.
    */
   limit?: number
+}
+
+/**
+ * GameAvailability.alternativeSource
+ */
+export type GameAvailability$alternativeSourceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AlternativeSource
+   */
+  select?: Prisma.AlternativeSourceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AlternativeSource
+   */
+  omit?: Prisma.AlternativeSourceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AlternativeSourceInclude<ExtArgs> | null
+  where?: Prisma.AlternativeSourceWhereInput
 }
 
 /**

@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
+import { getOrCreateUnspecifiedSource } from "@/lib/sources/store";
 
 const createGameSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
@@ -23,6 +24,10 @@ export async function createGame(input: CreateGameInput) {
     const { name, availabilitySource, displayName } = parsed.data;
 
     const game = await prisma.$transaction(async (tx) => {
+      const alternativeSourceId =
+        availabilitySource === "OTHER_PLATFORM"
+          ? (await getOrCreateUnspecifiedSource(tx)).id
+          : null;
       const created = await tx.game.create({
         data: {
           type: "BASE_GAME",
@@ -32,6 +37,7 @@ export async function createGame(input: CreateGameInput) {
             create: {
               source: availabilitySource,
               displayName: displayName || null,
+              alternativeSourceId,
             },
           },
           libraryEntry: {

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/auth-guard", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
+vi.mock("server-only", () => ({}));
 vi.mock("@/lib/wishlist-compatibility-runner", () => ({
   silentlyRefreshWishlistCompatibility: vi.fn(),
 }));
