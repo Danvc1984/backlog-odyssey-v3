@@ -16,6 +16,7 @@ import { parseAntiCheatEvidence } from "@/lib/compat-evidence";
 import { parseProtonDbSummary } from "@/lib/protondb-api";
 import { GAME_EXPERIENCE_LABELS } from "@/lib/personal-field-help";
 import { RecommendationRoleLabel } from "@/components/recommendations/RecommendationRoleLabel";
+import { CalibrationNote } from "@/components/recommendations/CalibrationNote";
 
 export default async function WishlistDetailPage({
   params,
@@ -23,7 +24,7 @@ export default async function WishlistDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [entry, baseGames] = await Promise.all([
+  const [entry, baseGames, buyDismissalCount] = await Promise.all([
     prisma.wishlistEntry.findUnique({
       where: { id },
       select: {
@@ -73,6 +74,9 @@ export default async function WishlistDetailPage({
       where: { type: "BASE_GAME" },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
+    }),
+    prisma.recommendationFeedback.count({
+      where: { wishlistEntryId: id, kind: "BUY" },
     }),
   ]);
 
@@ -159,6 +163,7 @@ export default async function WishlistDetailPage({
               ? `${"★".repeat(entry.interest)}${"☆".repeat(5 - entry.interest)}`
               : "No rating"}
           </span>
+          <CalibrationNote interest={entry.interest} dismissalCount={buyDismissalCount} />
           <WishlistEntryActions
             entry={{
               id: entry.id,

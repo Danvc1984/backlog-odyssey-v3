@@ -14,6 +14,7 @@ import { DlcSection } from "@/components/games/DlcSection";
 import { ParentBaseGameBanner } from "@/components/games/ParentBaseGameBanner";
 import { CatalogSteamIdentityForm } from "@/components/games/CatalogSteamIdentityForm";
 import { CompatibilitySection } from "@/components/games/CompatibilitySection";
+import { CalibrationNote } from "@/components/recommendations/CalibrationNote";
 import { caveatChip, factorChip } from "@/components/recommendations/FactorChips";
 import { rawgJobSelect, toRawgEnrichmentJobView } from "@/lib/rawg-job-view";
 import type { ExplanationFactor as ExplanationFactorShape, ExplanationCaveat as ExplanationCaveatShape } from "@/lib/recommendations/types";
@@ -39,7 +40,7 @@ export default async function GameDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [game, manualCollections, possibleDuplicate, latestPlayNextRun] = await Promise.all([
+  const [game, manualCollections, possibleDuplicate, latestPlayNextRun, playDismissalCount] = await Promise.all([
     prisma.game.findUnique({
       where: { id },
       include: {
@@ -109,6 +110,9 @@ export default async function GameDetailPage({
           select: { id: true, rank: true, score: true, positive: true, negative: true, caveats: true },
         },
       },
+    }),
+    prisma.recommendationFeedback.count({
+      where: { gameId: id, kind: "PLAY_NEXT" },
     }),
   ]);
 
@@ -317,6 +321,10 @@ export default async function GameDetailPage({
                 }
               : null
           }
+        />
+        <CalibrationNote
+          interest={game.libraryEntry?.interest ?? null}
+          dismissalCount={playDismissalCount}
         />
       </section>
 

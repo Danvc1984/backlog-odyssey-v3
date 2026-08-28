@@ -42,6 +42,8 @@ import { EXPOSURE_COOLDOWN_DAYS, RUN_RETENTION_DAYS } from "@/lib/recommendation
 import { logRecommendationEvent } from "@/lib/recommendations/events";
 import { pruneRecommendationEvents } from "@/lib/recommendations/events";
 import { rebuildRecommendationProfile } from "@/lib/recommendations/profile";
+import { buildCalibrationFactor, calibratedInterest } from "@/lib/recommendations/calibration";
+import { filterStaleExposures } from "@/lib/recommendations/exposure";
 import { updatePlayState } from "@/actions/game-detail";
 
 const dismissRecommendationSchema = z
@@ -301,6 +303,79 @@ function tuneInput(payload: unknown, experience: string | null): TuneCandidateIn
     : { experience };
 }
 
+type CalibrationKind = "PLAY_NEXT" | "BUY";
+
+function calibrationKey(kind: CalibrationKind, id: string): string {
+  return `${kind}:${id}`;
+}
+
+async function loadDismissalCounts(
+  client: Prisma.TransactionClient,
+  playIds: string[],
+  buyIds: string[],
+): Promise<ReadonlyMap<string, number>> {
+  const clauses = [
+    ...(playIds.length > 0 ? [{ gameId: { in: playIds }, kind: "PLAY_NEXT" as const }] : []),
+    ...(buyIds.length > 0 ? [{ wishlistEntryId: { in: buyIds }, kind: "BUY" as const }] : []),
+  ];
+  if (clauses.length === 0) return new Map();
+  const rows = await client.recommendationFeedback.groupBy({
+    by: ["gameId", "wishlistEntryId", "kind"],
+    where: { OR: clauses },
+    _count: { _all: true },
+  });
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    const id = row.kind === "PLAY_NEXT" ? row.gameId : row.wishlistEntryId;
+    if (id) counts.set(calibrationKey(row.kind, id), row._count._all);
+  }
+  return counts;
+}
+
+async function loadLatestExposures(
+  client: Prisma.TransactionClient,
+  playIds: string[],
+  buyIds: string[],
+): Promise<{ play: ReadonlyMap<string, Date>; buy: ReadonlyMap<string, Date> }> {
+  const clauses = [
+    ...(playIds.length > 0 ? [{ gameId: { in: playIds } }] : []),
+    ...(buyIds.length > 0 ? [{ wishlistEntryId: { in: buyIds } }] : []),
+  ];
+  if (clauses.length === 0) return { play: new Map(), buy: new Map() };
+
+  const rows = await client.recommendationEvent.findMany({
+    where: {
+      kind: { in: ["EXPOSURE", "ROTATION"] },
+      OR: clauses,
+    },
+    select: { gameId: true, wishlistEntryId: true, createdAt: true },
+  });
+  const play = new Map<string, Date>();
+  const buy = new Map<string, Date>();
+  for (const row of rows) {
+    const target = row.gameId ? play : row.wishlistEntryId ? buy : null;
+    const id = row.gameId ?? row.wishlistEntryId;
+    if (!target || !id || (target.get(id)?.getTime() ?? Number.NEGATIVE_INFINITY) >= row.createdAt.getTime()) continue;
+    target.set(id, row.createdAt);
+  }
+  return { play, buy };
+}
+
+function appendCalibration<T extends { id: string; negative: ExplanationFactor[] }>(
+  pool: T[],
+  kind: CalibrationKind,
+  enteredInterest: ReadonlyMap<string, number | null>,
+  dismissalCounts: ReadonlyMap<string, number>,
+): T[] {
+  return pool.map((item) => {
+    const factor = buildCalibrationFactor(
+      enteredInterest.get(item.id) ?? null,
+      dismissalCounts.get(calibrationKey(kind, item.id)) ?? 0,
+    );
+    return factor ? { ...item, negative: [...item.negative, factor] } : item;
+  });
+}
+
 function applyTune<T extends { id: string; score: number; positive: ExplanationFactor[]; negative: ExplanationFactor[]; caveats?: ExplanationCaveat[] }>(
   pool: T[],
   tune: TuneContext | null,
@@ -384,7 +459,39 @@ export async function updateRecommendations() {
         libraryEntry: row.libraryEntry,
       }));
       const eligible = candidates.filter(isEligibleForPlayNext);
-      const baselinePool = rankAllPlayNextCandidates(candidates);
+      const { candidates: buyCandidates, wishViews } = await loadBuyCandidates(tx);
+      const buyEligibleList = buyCandidates.filter(isEligibleForBuy);
+      const buyCandidateById = new Map(buyCandidates.map((candidate) => [candidate.id, candidate]));
+      const playIds = eligible.map((candidate) => candidate.id);
+      const buyIds = buyEligibleList.map((candidate) => candidate.id);
+      const dismissalCounts = await loadDismissalCounts(tx, playIds, buyIds);
+      const latestExposures = await loadLatestExposures(tx, playIds, buyIds);
+      const playExposure = filterStaleExposures(eligible, latestExposures.play, now, 4);
+      const buyExposure = filterStaleExposures(buyEligibleList, latestExposures.buy, now, 3);
+      const playPoolIds = new Set(playExposure.candidates.map((candidate) => candidate.id));
+      const buyPoolIds = new Set(buyExposure.candidates.map((candidate) => candidate.id));
+      const enteredPlayInterest = new Map(candidates.map((candidate) => [
+        candidate.id,
+        candidate.libraryEntry?.interest ?? null,
+      ]));
+      const calibratedCandidates = candidates.map((candidate) => ({
+        ...candidate,
+        libraryEntry: candidate.libraryEntry
+          ? {
+              ...candidate.libraryEntry,
+              interest: calibratedInterest(
+                candidate.libraryEntry.interest,
+                dismissalCounts.get(calibrationKey("PLAY_NEXT", candidate.id)) ?? 0,
+              ),
+            }
+          : null,
+      }));
+      const baselinePool = appendCalibration(
+        rankAllPlayNextCandidates(calibratedCandidates.filter((candidate) => playPoolIds.has(candidate.id))),
+        "PLAY_NEXT",
+        enteredPlayInterest,
+        dismissalCounts,
+      );
       const evidenceById = new Map(rows.map((row) => [row.id, compatEvidenceFor(row)]));
       const rowById = new Map(rows.map((row) => [row.id, row]));
       const preferences = (await tx.recommendationPreference.findMany()) as TastePreference[];
@@ -448,10 +555,24 @@ export async function updateRecommendations() {
         return item ? [{ ...item, caveats: [...item.caveats, ...assignment.caveats], role: assignment.role }] : [];
       });
 
-      const { candidates: buyCandidates, wishViews } = await loadBuyCandidates(tx);
-      const buyEligibleList = buyCandidates.filter(isEligibleForBuy);
-      const buyBaselinePool = rankAllBuyCandidates(buyCandidates, now);
-      const buyCandidateById = new Map(buyCandidates.map((candidate) => [candidate.id, candidate]));
+      const enteredBuyInterest = new Map(buyCandidates.map((candidate) => [candidate.id, candidate.interest]));
+      const calibratedBuyCandidates = buyCandidates.map((candidate) => ({
+        ...candidate,
+        interest: calibratedInterest(
+          candidate.interest,
+          dismissalCounts.get(calibrationKey("BUY", candidate.id)) ?? 0,
+        ),
+      }));
+      const calibratedBuyById = new Map(calibratedBuyCandidates.map((candidate) => [candidate.id, candidate]));
+      const buyBaselinePool = appendCalibration(
+        rankAllBuyCandidates(
+          calibratedBuyCandidates.filter((candidate) => buyPoolIds.has(candidate.id)),
+          now,
+        ),
+        "BUY",
+        enteredBuyInterest,
+        dismissalCounts,
+      );
       const buyTuneInputs = new Map(
         [...wishViews.entries()].map(([id, view]) => [id, tuneInput(view.payload, view.gameExperience)]),
       );
@@ -486,7 +607,7 @@ export async function updateRecommendations() {
       const buyRoles = assignBuyRoles(
         buyRerank.pool.map((item) => ({
           id: item.id,
-          interest: buyCandidateById.get(item.id)?.interest ?? null,
+          interest: calibratedBuyById.get(item.id)?.interest ?? null,
           tastePoints: item.tastePoints,
           isFresh: item.isFresh,
           freshDiscount: item.freshDiscount,
@@ -508,11 +629,13 @@ export async function updateRecommendations() {
       };
       const playContextJson = {
         ...context,
+        staleExcluded: playExposure.staleExcluded,
         rerank: playRerank.context,
         roles: { batches: toSnapshotBatches(playRoles.batches, playPoolById) },
       } as unknown as Prisma.InputJsonValue;
       const buyContextJson = {
         ...context,
+        staleExcluded: buyExposure.staleExcluded,
         tune: { play: playTune, buy: buyTune, thinPool: Boolean(buyTune && countTuneMatches(buyTune, tunedBuyPool.map((item) => buyTuneInputs.get(item.id) ?? {}), 3).thinPool) },
         rerank: buyRerank.context,
         roles: { batches: toSnapshotBatches(buyRoles.batches, buyPoolById), saturation: buyRoles.saturation },

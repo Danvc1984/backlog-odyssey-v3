@@ -228,7 +228,7 @@
         actions, one personal Game experience field and preferred environment
         on seed-picked games, and `TASTE_SETUP_ANSWER` events feeding the
         profile
-  - [ ] 12d. **Calibration from dismissal counters and true refresh on
+  - [x] 12d. **Calibration from dismissal counters and true refresh on
     update recommendations** - adjusted interest from per-target
     dismissal counters applied in both engines (floor 0, counters derived
     from durable feedback rows and never pruned), calibration explanations

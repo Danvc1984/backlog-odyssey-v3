@@ -75,6 +75,7 @@ const libraryFindFirst = vi.fn();
 const gameFindMany = vi.fn();
 const wishlistFindMany = vi.fn();
 const feedbackCreate = vi.fn();
+const feedbackGroupBy = vi.fn();
 const eventCreate = vi.fn();
 const eventCreateMany = vi.fn();
 const eventDeleteMany = vi.fn();
@@ -110,8 +111,8 @@ const EMPTY_DIMENSIONS = {
 function txFactory() {
   return {
     recommendationRun: { create: runCreate, deleteMany: runDeleteMany },
-    recommendationFeedback: { create: feedbackCreate, deleteMany: feedbackDeleteMany },
-    recommendationEvent: { create: eventCreate, createMany: eventCreateMany, deleteMany: eventDeleteMany },
+    recommendationFeedback: { create: feedbackCreate, groupBy: feedbackGroupBy, deleteMany: feedbackDeleteMany },
+    recommendationEvent: { create: eventCreate, createMany: eventCreateMany, deleteMany: eventDeleteMany, findMany: eventFindMany },
     recommendationProfile: { upsert: vi.fn(), deleteMany: profileDeleteMany },
     recommendationPreference: { upsert: preferenceUpsert, deleteMany: preferenceDeleteMany, findMany: preferenceFindMany },
     recommendationPreset: { deleteMany: presetDeleteMany },
@@ -130,7 +131,7 @@ transaction.mockImplementation(async (callback: (tx: ReturnType<typeof txFactory
     );
     const prismaMock = prisma as unknown as Record<string, unknown>;
     prismaMock.$transaction = transaction;
-    prismaMock.recommendationFeedback = { create: feedbackCreate };
+    prismaMock.recommendationFeedback = { create: feedbackCreate, groupBy: feedbackGroupBy };
     prismaMock.recommendationEvent = { create: eventCreate, createMany: eventCreateMany, deleteMany: eventDeleteMany, findMany: eventFindMany };
     prismaMock.recommendationPreference = { upsert: preferenceUpsert, deleteMany: preferenceDeleteMany };
     prismaMock.recommendationRun = { create: runCreate, update: runUpdate, findUnique: runFindUnique, deleteMany: runDeleteMany };
@@ -158,6 +159,7 @@ transaction.mockImplementation(async (callback: (tx: ReturnType<typeof txFactory
     error: null,
   } as never);
   feedbackCreate.mockResolvedValue({ id: "feedback-1" });
+  feedbackGroupBy.mockResolvedValue([]);
   eventCreateMany.mockResolvedValue({ count: 0 });
   eventDeleteMany.mockResolvedValue({ count: 0 });
   vi.mocked(rebuildRecommendationProfile).mockResolvedValue({
@@ -447,8 +449,6 @@ interface BuyRowShape {
   }>;
 }
 
-const NOW = new Date("2026-08-26T12:00:00.000Z");
-
 function buyOffer(overrides: Partial<BuyRowShape["offers"][number]> = {}): BuyRowShape["offers"][number] {
   return {
     price: "299.00",
@@ -457,7 +457,7 @@ function buyOffer(overrides: Partial<BuyRowShape["offers"][number]> = {}): BuyRo
     historicalLow: null,
     sourceHistoricalLow: null,
     expiresAt: null,
-    fetchedAt: new Date(NOW.getTime() - 2 * 60 * 60 * 1000),
+    fetchedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
     itadFlag: null,
     ...overrides,
   };
@@ -526,6 +526,83 @@ describe("updateRecommendations", () => {
       buy: null,
       thinPool: true,
     });
+  });
+
+  it("calibrates play and buy interest from grouped, kind-specific feedback", async () => {
+    gameFindMany.mockResolvedValue([{ ...baseRow(), libraryEntry: libraryEntry({ interest: 5 }) }]);
+    wishlistFindMany.mockResolvedValue([buyRow({ interest: 5 })]);
+    feedbackGroupBy.mockResolvedValue([
+      { kind: "PLAY_NEXT", gameId: "game-1", wishlistEntryId: null, _count: { _all: 3 } },
+      { kind: "BUY", gameId: null, wishlistEntryId: "wish-1", _count: { _all: 6 } },
+    ]);
+
+    const result = await updateRecommendations();
+
+    expect(result.success).toBe(true);
+    const playCall = runCreate.mock.calls.find((call) => (call[0] as { data: { kind: string } }).data.kind === "PLAY_NEXT")!;
+    const buyCall = runCreate.mock.calls.find((call) => (call[0] as { data: { kind: string } }).data.kind === "BUY")!;
+    expect(playCall[0].data.items.create[0]).toMatchObject({ score: 40, negative: [{ factor: "calibration", label: "Dismissed 3 times", points: -10 }] });
+    expect(playCall[0].data.items.create[0].positive).toContainEqual({ factor: "interest", label: "Interest 4", points: 40 });
+    expect(buyCall[0].data.items.create[0]).toMatchObject({ score: 30, negative: [{ factor: "calibration", label: "Dismissed 6 times", points: -20 }] });
+    expect(buyCall[0].data.items.create[0].positive).toContainEqual({ factor: "interest", label: "Interest 3", points: 30 });
+    expect(feedbackGroupBy).toHaveBeenCalledTimes(1);
+  });
+
+  it("clamps calibrated play interest at zero and leaves null buy interest untouched", async () => {
+    gameFindMany.mockResolvedValue([{ ...baseRow(), libraryEntry: libraryEntry({ interest: 2 }) }]);
+    wishlistFindMany.mockResolvedValue([buyRow({ interest: null })]);
+    feedbackGroupBy.mockResolvedValue([
+      { kind: "PLAY_NEXT", gameId: "game-1", wishlistEntryId: null, _count: { _all: 99 } },
+      { kind: "BUY", gameId: null, wishlistEntryId: "wish-1", _count: { _all: 3 } },
+    ]);
+
+    await updateRecommendations();
+
+    const playCall = runCreate.mock.calls.find((call) => (call[0] as { data: { kind: string } }).data.kind === "PLAY_NEXT")!;
+    const buyCall = runCreate.mock.calls.find((call) => (call[0] as { data: { kind: string } }).data.kind === "BUY")!;
+    expect(playCall[0].data.items.create[0].positive).not.toContainEqual(expect.objectContaining({ factor: "interest" }));
+    expect(playCall[0].data.items.create[0].negative).toContainEqual({ factor: "calibration", label: "Dismissed 99 times", points: -20 });
+    expect(buyCall[0].data.items.create[0].positive).not.toContainEqual(expect.objectContaining({ factor: "interest" }));
+    expect(buyCall[0].data.items.create[0].negative).not.toContainEqual(expect.objectContaining({ factor: "calibration" }));
+  });
+
+  it("filters recent exposures from both cold-start pools and records per-run counts", async () => {
+    const rows: CandidateRowShape[] = [];
+    for (let index = 1; index <= 5; index += 1) {
+      rows.push({
+        ...baseRow(),
+        id: `game-${index}`,
+        name: `Game ${index}`,
+        libraryEntry: libraryEntry({ interest: index }),
+      });
+    }
+    gameFindMany
+      .mockResolvedValueOnce(rows)
+      .mockResolvedValueOnce([]);
+    wishlistFindMany.mockResolvedValue([
+      buyRow({ id: "wish-1", interest: 5 }),
+      buyRow({ id: "wish-2", interest: 4 }),
+      buyRow({ id: "wish-3", interest: 3 }),
+      buyRow({ id: "wish-4", interest: 2 }),
+    ]);
+    const recent = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    eventFindMany.mockResolvedValue([
+      { gameId: "game-1", wishlistEntryId: null, createdAt: recent },
+      { gameId: null, wishlistEntryId: "wish-1", createdAt: recent },
+    ]);
+
+    const result = await updateRecommendations();
+
+    expect(result.success).toBe(true);
+    const playCall = runCreate.mock.calls.find((call) => (call[0] as { data: { kind: string } }).data.kind === "PLAY_NEXT")!;
+    const buyCall = runCreate.mock.calls.find((call) => (call[0] as { data: { kind: string } }).data.kind === "BUY")!;
+    expect(playCall[0].data.items.create.map((item: { game: { connect: { id: string } } }) => item.game.connect.id)).not.toContain("game-1");
+    expect(buyCall[0].data.items.create.map((item: { wishlistEntry: { connect: { id: string } } }) => item.wishlistEntry.connect.id)).not.toContain("wish-1");
+    expect(playCall[0].data.context).toMatchObject({ staleExcluded: 1, rerank: { mode: "COLD_START" } });
+    expect(buyCall[0].data.context).toMatchObject({ staleExcluded: 1, rerank: { mode: "COLD_START" } });
+    expect(eventFindMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ kind: { in: ["EXPOSURE", "ROTATION"] } }),
+    }));
   });
 
   it("creates both runs in one transaction with four cold-start play items and full explanations", async () => {
