@@ -234,7 +234,7 @@
     from durable feedback rows and never pruned), calibration explanations
     on game and wishlist detail, and new runs rotating in fresh games by
     excluding recently exposed candidates with a thin-pool fallback
-  - [ ] 12e. **Source-aware availability and recommendation semantics** -
+  - [x] 12e. **Source-aware availability and recommendation semantics** -
     reusable alternative store sources for owned games, icon-aware availability
     presentation and filtering, soft play-next source tuning, and the clarified
     separation between hidden candidate eligibility and retained play history
@@ -248,7 +248,7 @@
       create-or-reuse; icon-decorated game-detail source values; individually
       filterable saved alternative sources in Library; accessible fallback-icon
       treatment for custom sources
-    - [ ] 12e-c. **Source-tuned play-next and retained hidden history** -
+    - [x] 12e-c. **Source-tuned play-next and retained hidden history** -
       extend the existing Tune-this-run context and presets with inclusive,
       modest source boosts and visible source explanations; leave buy/pricing
       behavior unchanged; retain completion and abandonment events from hidden

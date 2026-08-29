@@ -28,7 +28,13 @@ import {
 } from "@/lib/recommendations/rerank";
 import { assignBuyRoles, assignPlayRoles } from "@/lib/recommendations/roles";
 import { resolveCandidateDimensionValues } from "@/lib/recommendations/profile";
-import { countTuneMatches, matchTuneCriteria, type TuneCandidateInput } from "@/lib/recommendations/tune";
+import {
+  applySourceTune,
+  countTuneMatches,
+  matchTuneCriteria,
+  type CandidateSource,
+  type TuneCandidateInput,
+} from "@/lib/recommendations/tune";
 import type {
   CompatEvidenceInput,
   ExplanationCaveat,
@@ -150,7 +156,15 @@ async function loadCandidates(client: Prisma.TransactionClient) {
         },
       },
       externalIds: { select: { externalId: true } },
-      availability: { select: { source: true, steamPlaytimeTotal: true, steamLastPlayed: true } },
+      availability: {
+        select: {
+          source: true,
+          alternativeSourceId: true,
+          alternativeSource: { select: { name: true } },
+          steamPlaytimeTotal: true,
+          steamLastPlayed: true,
+        },
+      },
       compatSnapshots: {
         select: { provider: true, result: true, fetchedAt: true },
       },
@@ -469,6 +483,11 @@ export async function updateRecommendations() {
       const playExposure = filterStaleExposures(eligible, latestExposures.play, now, 4);
       const buyExposure = filterStaleExposures(buyEligibleList, latestExposures.buy, now, 3);
       const playPoolIds = new Set(playExposure.candidates.map((candidate) => candidate.id));
+      const secondChanceCandidateIds = new Set(
+        playExposure.candidates
+          .filter((candidate) => candidate.libraryEntry?.playState === "ABANDONED" && candidate.libraryEntry.replayCandidate)
+          .map((candidate) => candidate.id),
+      );
       const buyPoolIds = new Set(buyExposure.candidates.map((candidate) => candidate.id));
       const enteredPlayInterest = new Map(candidates.map((candidate) => [
         candidate.id,
@@ -492,6 +511,9 @@ export async function updateRecommendations() {
         enteredPlayInterest,
         dismissalCounts,
       );
+      const secondChanceIds = baselinePool
+        .filter((candidate) => secondChanceCandidateIds.has(candidate.id))
+        .map((candidate) => candidate.id);
       const evidenceById = new Map(rows.map((row) => [row.id, compatEvidenceFor(row)]));
       const rowById = new Map(rows.map((row) => [row.id, row]));
       const preferences = (await tx.recommendationPreference.findMany()) as TastePreference[];
@@ -501,8 +523,28 @@ export async function updateRecommendations() {
       ]));
       const playPool = baselinePool.map((item) => ({ ...item, caveats: [] as ExplanationCaveat[] }));
       const tunedPlayPool = applyTune(playPool, playTune, playTuneInputs, 4);
+      const sourceNamesById = new Map(
+        rows.flatMap((row) =>
+          row.availability.flatMap((availability) =>
+            availability.alternativeSourceId && availability.alternativeSource?.name
+              ? [[availability.alternativeSourceId, availability.alternativeSource.name] as const]
+              : [],
+          ),
+        ),
+      );
+      const sourceTunedPlayPool = applySourceTune(
+        tunedPlayPool.map((item) => ({
+          ...item,
+          sources: (rowById.get(item.id)?.availability ?? []).map((availability): CandidateSource => ({
+            source: availability.source,
+            alternativeSourceId: availability.alternativeSourceId ?? null,
+          })),
+        })),
+        playTune?.sourceTune,
+        sourceNamesById,
+      );
 
-      const rerankInputs: RerankPlayInput[] = tunedPlayPool.map((item) => {
+      const rerankInputs: RerankPlayInput[] = sourceTunedPlayPool.map((item) => {
         const row = rowById.get(item.id)!;
         const payload = row.metadataSnapshots[0]?.payload;
         const parsedPayload = parseRawgMetadataPayload(payload);
@@ -545,6 +587,7 @@ export async function updateRecommendations() {
           genres: item.genres,
         })),
         playRerank.context.mode,
+        secondChanceIds,
       );
       const playPoolById = new Map<string, (typeof playRerank.pool)[number]>();
       for (const item of playRerank.pool) {

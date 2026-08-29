@@ -90,4 +90,42 @@ describe("assignPlayRoles", () => {
     const result = assignPlayRoles([candidate("only")], "RERANKED");
     expect(result.assigned).toEqual([{ id: "only", role: "BEST_FIT_1", caveats: [] }]);
   });
+
+  it("keeps second chances out of primary roles and rotates them through out-of-the-box", () => {
+    const result = assignPlayRoles(
+      [candidate("fit-1", 5), candidate("fit-2", 4), candidate("second-1", 10), candidate("second-2", 9)],
+      "RERANKED",
+      ["second-1", "second-2"],
+    );
+
+    expect(result.assigned).toEqual([
+      { id: "fit-1", role: "BEST_FIT_1", caveats: [] },
+      { id: "fit-2", role: "BEST_FIT_2", caveats: [] },
+      {
+        id: "second-1",
+        role: "OUT_OF_THE_BOX",
+        caveats: [{ factor: "second_chance", label: "Second chance: previously abandoned, flagged for replay" }],
+      },
+    ]);
+    expect(result.batches.OUT_OF_THE_BOX).toEqual(["second-2"]);
+    expect(result.batches.BEST_FIT_1).toEqual([]);
+    expect(result.batches.CHANGE_OF_PACE).toEqual([]);
+  });
+
+  it("uses second chances for every role when the primary pool is empty in cold start", () => {
+    const result = assignPlayRoles(
+      [candidate("second-1", 3), candidate("second-2", 2), candidate("second-3", 1), candidate("second-4", 0)],
+      "COLD_START",
+      ["second-1", "second-2", "second-3", "second-4"],
+    );
+
+    expect(result.assigned.map((item) => [item.id, item.role])).toEqual([
+      ["second-1", "BEST_FIT_1"],
+      ["second-2", "BEST_FIT_2"],
+      ["second-3", "OUT_OF_THE_BOX"],
+      ["second-4", "CHANGE_OF_PACE"],
+    ]);
+    expect(result.assigned.every((item) => item.caveats.some((caveat) => caveat.factor === "second_chance"))).toBe(true);
+    expect(result.batches.OUT_OF_THE_BOX).toEqual([]);
+  });
 });

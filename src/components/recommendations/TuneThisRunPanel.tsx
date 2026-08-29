@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { clearTuneState, deleteRecommendationPreset, loadRecommendationPreset, saveRecommendationPreset, saveTuneState } from "@/actions/recommendations";
 import type { TuneContext } from "@/lib/recommendations/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SourceIcon } from "@/components/sources/SourceIcon";
 
 interface KnownValues {
   genres: string[];
@@ -17,6 +18,13 @@ interface TuneThisRunPanelProps {
   knownValues: KnownValues;
   thinPool: boolean;
   presets: RecommendationPreset[];
+  alternativeSources?: AlternativeSource[];
+}
+
+interface AlternativeSource {
+  id: string;
+  name: string;
+  iconName: string;
 }
 
 interface RecommendationPreset {
@@ -34,7 +42,7 @@ const LENGTH_OPTIONS = [["SHORT", "Short"], ["MEDIUM", "Medium"], ["LONG", "Long
 const ERA_OPTIONS = [["PRE_2005", "Before 2005"], ["Y2005_2014", "2005-2014"], ["Y2015_2019", "2015-2019"], ["Y2020_PLUS", "2020 or newer"]] as const;
 
 function emptyTune(): TuneContext {
-  return { experience: null, length: null, genres: [], tags: [], sequelPosture: null, era: null, maturity: null };
+  return { experience: null, length: null, genres: [], tags: [], sequelPosture: null, era: null, maturity: null, sourceTune: null };
 }
 
 const selectClassName = "w-full";
@@ -76,7 +84,7 @@ function MultiValuePicker({ label, options, selected, onChange }: MultiValuePick
   );
 }
 
-export function TuneThisRunPanel({ engine, initialTune, knownValues, thinPool, presets }: TuneThisRunPanelProps) {
+export function TuneThisRunPanel({ engine, initialTune, knownValues, thinPool, presets, alternativeSources = [] }: TuneThisRunPanelProps) {
   const [tune, setTune] = useState<TuneContext>(initialTune ?? emptyTune());
   const [saving, setSaving] = useState(false);
   const [presetName, setPresetName] = useState("");
@@ -85,6 +93,26 @@ export function TuneThisRunPanel({ engine, initialTune, knownValues, thinPool, p
 
   const update = <K extends keyof TuneContext>(key: K, value: TuneContext[K]) => {
     setTune((current) => ({ ...current, [key]: value }));
+  };
+
+  const sourceTune = tune.sourceTune ?? {
+    steam: false,
+    rom: false,
+    allAlternatives: false,
+    alternativeSourceIds: [],
+  };
+
+  const updateSourceTune = (key: "steam" | "rom" | "allAlternatives", checked: boolean) => {
+    update("sourceTune", { ...sourceTune, [key]: checked });
+  };
+
+  const toggleAlternativeSource = (id: string, checked: boolean) => {
+    update("sourceTune", {
+      ...sourceTune,
+      alternativeSourceIds: checked
+        ? [...new Set([...sourceTune.alternativeSourceIds, id])]
+        : sourceTune.alternativeSourceIds.filter((sourceId) => sourceId !== id),
+    });
   };
 
   const save = async () => {
@@ -197,6 +225,35 @@ export function TuneThisRunPanel({ engine, initialTune, knownValues, thinPool, p
         </label>
         <MultiValuePicker label="Genres" options={knownValues.genres} selected={tune.genres} onChange={(values) => update("genres", values)} />
         <MultiValuePicker label="Tags" options={knownValues.tags} selected={tune.tags} onChange={(values) => update("tags", values)} />
+        {engine === "PLAY_NEXT" && (
+          <fieldset className="grid gap-2 text-xs text-muted-foreground md:col-span-2 xl:col-span-4">
+            <legend>Sources</legend>
+            <div className="flex flex-wrap gap-x-4 gap-y-2">
+              <label className="flex items-center gap-2 text-sm text-foreground">
+                <input type="checkbox" checked={sourceTune.steam} onChange={(event) => updateSourceTune("steam", event.target.checked)} className="accent-foreground" />
+                <SourceIcon iconName="MonitorPlay" />
+                Steam
+              </label>
+              <label className="flex items-center gap-2 text-sm text-foreground">
+                <input type="checkbox" checked={sourceTune.rom} onChange={(event) => updateSourceTune("rom", event.target.checked)} className="accent-foreground" />
+                <SourceIcon iconName="Disc3" />
+                ROM
+              </label>
+              <label className="flex items-center gap-2 text-sm text-foreground">
+                <input type="checkbox" checked={sourceTune.allAlternatives} onChange={(event) => updateSourceTune("allAlternatives", event.target.checked)} className="accent-foreground" />
+                <SourceIcon iconName="Box" />
+                Any alternative source
+              </label>
+              {alternativeSources.map((source) => (
+                <label key={source.id} className="flex items-center gap-2 text-sm text-foreground">
+                  <input type="checkbox" checked={sourceTune.alternativeSourceIds.includes(source.id)} onChange={(event) => toggleAlternativeSource(source.id, event.target.checked)} className="accent-foreground" />
+                  <SourceIcon iconName={source.iconName} />
+                  {source.name}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        )}
         <div className="flex items-end gap-2 md:col-span-2 xl:col-span-2">
           <button type="button" onClick={() => void save()} disabled={saving} className="rounded-md bg-foreground px-3 py-2 text-sm text-background hover:opacity-90 disabled:opacity-50">{saving ? "Saving..." : "Save tune"}</button>
           <button type="button" onClick={() => void clear()} disabled={saving || !initialTune} className="rounded-md border border-border px-3 py-2 text-sm hover:text-foreground disabled:opacity-50">Clear tune</button>

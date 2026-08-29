@@ -43,6 +43,11 @@ function fallbackCaveat(label: string): ExplanationCaveat {
   return { factor: "role_fallback", label };
 }
 
+const SECOND_CHANCE_CAVEAT: ExplanationCaveat = {
+  factor: "second_chance",
+  label: "Second chance: previously abandoned, flagged for replay",
+};
+
 function assignRole(
   assigned: AssignedRole[],
   candidate: PlayRoleCandidate | undefined,
@@ -78,6 +83,7 @@ function selectColdStartOrder(
 export function assignPlayRoles(
   pool: readonly PlayRoleCandidate[],
   mode: RerankMode,
+  secondChances: readonly string[] = [],
 ): RoleAssignment {
   const assigned: AssignedRole[] = [];
   const batches: Record<RecommendationRole, string[]> = {
@@ -88,32 +94,50 @@ export function assignPlayRoles(
     DEAL: [],
   };
 
+  const secondChanceIds = new Set(secondChances);
+  const primaryPool = pool.filter((candidate) => !secondChanceIds.has(candidate.id));
+  const secondChancePool = secondChances
+    .map((id) => pool.find((candidate) => candidate.id === id))
+    .filter((candidate): candidate is PlayRoleCandidate => candidate !== undefined);
+  const hasPrimary = primaryPool.length > 0;
+  const assignPlayRole = (
+    candidate: PlayRoleCandidate | undefined,
+    role: RecommendationRole,
+    caveats: ExplanationCaveat[] = [],
+  ) => assignRole(
+    assigned,
+    candidate,
+    role,
+    secondChanceIds.has(candidate?.id ?? "") ? [...caveats, SECOND_CHANCE_CAVEAT] : caveats,
+  );
+
   if (mode === "COLD_START") {
-    const displayPool = selectColdStartOrder(pool);
-    assignRole(assigned, displayPool[0], "BEST_FIT_1");
-    assignRole(assigned, displayPool[1], "BEST_FIT_2");
+    const displayPool = selectColdStartOrder(hasPrimary ? primaryPool : secondChancePool);
+    assignPlayRole(displayPool[0], "BEST_FIT_1");
+    assignPlayRole(displayPool[1], "BEST_FIT_2");
     const remaining = displayPool.slice(2);
     const ready = remaining.find((candidate) => candidate.envStatus === "READY");
     const outOfTheBox = ready ?? remaining[0];
-    assignRole(
-      assigned,
+    assignPlayRole(
       outOfTheBox,
       "OUT_OF_THE_BOX",
       ready ? [] : [fallbackCaveat(ROLE_FALLBACK_LABELS.noReady)],
     );
-    assignRole(
-      assigned,
+    if (!outOfTheBox && hasPrimary) assignPlayRole(secondChancePool[0], "OUT_OF_THE_BOX");
+    assignPlayRole(
       remaining.find((candidate) => candidate.id !== outOfTheBox?.id),
       "CHANGE_OF_PACE",
       [fallbackCaveat(ROLE_FALLBACK_LABELS.noTaste)],
     );
     const displayIds = new Set(displayPool.map((candidate) => candidate.id));
-    batches.BEST_FIT_1 = pool.filter((candidate) => !displayIds.has(candidate.id)).map((candidate) => candidate.id);
+    if (!outOfTheBox && hasPrimary && secondChancePool[0]) displayIds.add(secondChancePool[0].id);
+    batches.BEST_FIT_1 = primaryPool.filter((candidate) => !displayIds.has(candidate.id)).map((candidate) => candidate.id);
     batches.BEST_FIT_2 = batches.BEST_FIT_1.slice();
-    batches.OUT_OF_THE_BOX = pool
+    batches.OUT_OF_THE_BOX = primaryPool
       .filter((candidate) => candidate.envStatus === "READY" && !displayIds.has(candidate.id))
-      .map((candidate) => candidate.id);
-    batches.CHANGE_OF_PACE = pool
+      .map((candidate) => candidate.id)
+      .concat(secondChancePool.filter((candidate) => !displayIds.has(candidate.id)).map((candidate) => candidate.id));
+    batches.CHANGE_OF_PACE = primaryPool
       .filter((candidate) => !displayIds.has(candidate.id))
       .slice()
       .sort((left, right) => left.tastePoints - right.tastePoints)
@@ -122,20 +146,22 @@ export function assignPlayRoles(
   }
 
   const displayIds = new Set<string>();
-  assignRole(assigned, pool[0], "BEST_FIT_1");
-  assignRole(assigned, pool[1], "BEST_FIT_2");
-  for (const candidate of pool.slice(0, 2)) displayIds.add(candidate.id);
+  const workingPool = hasPrimary ? primaryPool : secondChancePool;
+  assignPlayRole(workingPool[0], "BEST_FIT_1");
+  assignPlayRole(workingPool[1], "BEST_FIT_2");
+  for (const candidate of workingPool.slice(0, 2)) displayIds.add(candidate.id);
 
-  const remaining = pool.filter((candidate) => !displayIds.has(candidate.id));
+  const remaining = workingPool.filter((candidate) => !displayIds.has(candidate.id));
   const ready = remaining.find((candidate) => candidate.envStatus === "READY");
   const outOfTheBox = ready ?? remaining[0];
-  assignRole(
-    assigned,
+  assignPlayRole(
     outOfTheBox,
     "OUT_OF_THE_BOX",
     ready ? [] : [fallbackCaveat(ROLE_FALLBACK_LABELS.noReady)],
   );
+  if (!outOfTheBox && hasPrimary) assignPlayRole(secondChancePool[0], "OUT_OF_THE_BOX");
   if (outOfTheBox) displayIds.add(outOfTheBox.id);
+  if (!outOfTheBox && secondChancePool[0]) displayIds.add(secondChancePool[0].id);
 
   const paceCandidates = remaining.filter((candidate) => !displayIds.has(candidate.id));
   const changeOfPace = paceCandidates
@@ -143,20 +169,20 @@ export function assignPlayRoles(
     .slice()
     .sort((left, right) => left.tastePoints - right.tastePoints)[0];
   const pace = changeOfPace ?? paceCandidates[0];
-  assignRole(
-    assigned,
+  assignPlayRole(
     pace,
     "CHANGE_OF_PACE",
     changeOfPace ? [] : [fallbackCaveat(ROLE_FALLBACK_LABELS.noTaste)],
   );
   if (pace) displayIds.add(pace.id);
 
-  batches.BEST_FIT_1 = pool.filter((candidate) => !displayIds.has(candidate.id)).map((candidate) => candidate.id);
+  batches.BEST_FIT_1 = primaryPool.filter((candidate) => !displayIds.has(candidate.id)).map((candidate) => candidate.id);
   batches.BEST_FIT_2 = batches.BEST_FIT_1.slice();
-  batches.OUT_OF_THE_BOX = pool
+  batches.OUT_OF_THE_BOX = primaryPool
     .filter((candidate) => candidate.envStatus === "READY" && !displayIds.has(candidate.id))
-    .map((candidate) => candidate.id);
-  batches.CHANGE_OF_PACE = pool
+    .map((candidate) => candidate.id)
+    .concat(secondChancePool.filter((candidate) => !displayIds.has(candidate.id)).map((candidate) => candidate.id));
+  batches.CHANGE_OF_PACE = primaryPool
     .filter((candidate) => !displayIds.has(candidate.id))
     .slice()
     .sort((left, right) => left.tastePoints - right.tastePoints)

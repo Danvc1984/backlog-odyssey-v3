@@ -47,4 +47,47 @@ describe("rebuildRecommendationProfile", () => {
     expect(result.evidence.unresolvedTargets).toBe(1);
     expect(Object.keys(result.dimensions)).toHaveLength(9);
   });
+
+  it("retains completion and abandonment signals from hidden games", async () => {
+    const now = new Date("2026-01-01T00:00:00.000Z");
+    const hiddenGame = {
+      libraryEntry: {
+        hidden: true,
+        gameExperience: "PC_GAMING",
+        preferredEnvironment: "BAZZITE",
+      },
+    };
+    const client = {
+      recommendationEvent: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            kind: "COMPLETION",
+            gameId: "hidden-completed",
+            wishlistEntryId: null,
+            createdAt: now,
+            payload: null,
+            game: { ...hiddenGame, metadataSnapshots: [{ payload: payload({ genres: ["RPG"] }) }] },
+            wishlistEntry: null,
+          },
+          {
+            kind: "ABANDONMENT",
+            gameId: "hidden-abandoned",
+            wishlistEntryId: null,
+            createdAt: now,
+            payload: null,
+            game: { ...hiddenGame, metadataSnapshots: [{ payload: payload({ genres: [], tags: ["Stealth"] }) }] },
+            wishlistEntry: null,
+          },
+        ]),
+      },
+      recommendationProfile: { upsert: vi.fn().mockResolvedValue({}) },
+    };
+
+    const result = await rebuildRecommendationProfile(client as never, now);
+
+    expect(result.evidence.byKind).toMatchObject({ COMPLETION: 1, ABANDONMENT: 1 });
+    expect(result.dimensions.GENRE.RPG).toMatchObject({ weight: 2, support: 1 });
+    expect(result.dimensions.TAG.Stealth).toMatchObject({ weight: -1, support: 1 });
+    expect(result.dimensions.EXPERIENCE.PC_GAMING).toMatchObject({ weight: 1, support: 2 });
+  });
 });

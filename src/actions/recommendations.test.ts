@@ -383,7 +383,12 @@ interface CandidateRowShape {
     preferredEnvironment?: "BAZZITE" | "STEAM_DECK" | "WINDOWS" | null;
   };
   externalIds: { externalId: string }[];
-  availability: { source: "STEAM" | "OTHER_PLATFORM" | "ROM"; steamLastPlayed?: Date | null }[];
+  availability: {
+    source: "STEAM" | "OTHER_PLATFORM" | "ROM";
+    alternativeSourceId?: string | null;
+    alternativeSource?: { name: string } | null;
+    steamLastPlayed?: Date | null;
+  }[];
   compatSnapshots: { provider: string; result: unknown; fetchedAt: Date }[];
   metadataSnapshots: { payload: unknown }[];
   envCompat: { environment: "BAZZITE" | "STEAM_DECK" | "WINDOWS"; status: "READY" | "READY_WITH_TINKERING" | "FALLBACK_RECOMMENDED" | "REQUIRED" | "UNKNOWN" }[];
@@ -477,6 +482,18 @@ function buyRow(overrides: Partial<BuyRowShape> = {}): BuyRowShape {
   };
 }
 
+function emptyTuneForAction() {
+  return {
+    experience: null,
+    length: null,
+    genres: [],
+    tags: [],
+    sequelPosture: null,
+    era: null,
+    maturity: null,
+  };
+}
+
 describe("updateRecommendations", () => {
   it("requires authentication before touching the database", async () => {
     vi.mocked(requireUser).mockRejectedValueOnce(new Error("Unauthorized"));
@@ -526,6 +543,45 @@ describe("updateRecommendations", () => {
       buy: null,
       thinPool: true,
     });
+  });
+
+  it("boosts source-matching play items while leaving buy scoring untouched", async () => {
+    const sourceTune = {
+      steam: true,
+      rom: false,
+      allAlternatives: false,
+      alternativeSourceIds: [],
+    };
+    tuneStateFindUnique.mockResolvedValue({
+      playTune: { ...emptyTuneForAction(), sourceTune },
+      buyTune: { ...emptyTuneForAction(), sourceTune },
+    });
+    gameFindMany.mockResolvedValue([baseRow()]);
+    wishlistFindMany.mockResolvedValue([buyRow()]);
+
+    const result = await updateRecommendations();
+
+    expect(result.success).toBe(true);
+    const playCall = runCreate.mock.calls.find((call) => (call[0] as { data: { kind: string } }).data.kind === "PLAY_NEXT")!;
+    const buyCall = runCreate.mock.calls.find((call) => (call[0] as { data: { kind: string } }).data.kind === "BUY")!;
+    expect(playCall[0].data.items.create[0].positive).toContainEqual(expect.objectContaining({ factor: "source_tune", points: 3 }));
+    expect(buyCall[0].data.items.create[0].positive).not.toContainEqual(expect.objectContaining({ factor: "source_tune" }));
+    expect((buyCall[0] as { data: { context: { tune: { buy: unknown } } } }).data.context.tune.buy).toEqual({ ...emptyTuneForAction(), sourceTune });
+  });
+
+  it("demotes an abandoned replay candidate to out-of-the-box when a primary exists", async () => {
+    gameFindMany.mockResolvedValue([
+      { ...baseRow(), id: "primary", name: "Primary", libraryEntry: libraryEntry({ interest: 5 }) },
+      { ...baseRow(), id: "second-chance", name: "Second chance", libraryEntry: libraryEntry({ playState: "ABANDONED", replayCandidate: true, interest: 5 }) },
+    ]);
+
+    const result = await updateRecommendations();
+
+    expect(result.success).toBe(true);
+    const playCall = runCreate.mock.calls.find((call) => (call[0] as { data: { kind: string } }).data.kind === "PLAY_NEXT")!;
+    const secondChance = playCall[0].data.items.create.find((item: { game: { connect: { id: string } } }) => item.game.connect.id === "second-chance");
+    expect(secondChance).toMatchObject({ role: "OUT_OF_THE_BOX" });
+    expect(secondChance.caveats).toContainEqual({ factor: "second_chance", label: "Second chance: previously abandoned, flagged for replay" });
   });
 
   it("calibrates play and buy interest from grouped, kind-specific feedback", async () => {

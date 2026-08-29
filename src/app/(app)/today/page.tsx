@@ -13,6 +13,7 @@ import { TasteSetupPanel } from "@/components/recommendations/TasteSetupPanel";
 import { listKnownGenreTagValues, listRecommendationPresets } from "@/actions/recommendations";
 import { tuneContextSchema, type TuneContext } from "@/lib/recommendations/types";
 import { loadPickableTasteSetupGames, selectInitialTasteSetupPicks, shouldShowTasteSetup } from "@/lib/recommendations/taste-setup";
+import { resolveSourcePresentation } from "@/lib/sources/known-sources";
 
 const PLAY_ROLE_GROUPS = [
   { label: "Best fit", roles: ["BEST_FIT_1", "BEST_FIT_2"] },
@@ -61,6 +62,11 @@ export default async function TodayPage() {
   const knownValues = knownValuesResult.success ? knownValuesResult.data : { genres: [], tags: [] };
   const presetsResult = await listRecommendationPresets();
   const presets = presetsResult.success ? presetsResult.data.map((preset) => ({ id: preset.id, name: preset.name })) : [];
+  const alternativeSources = await prisma.alternativeSource.findMany({
+    where: { archivedAt: null },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
   const tasteGames = await loadPickableTasteSetupGames(prisma);
   const tasteEventCount = await prisma.recommendationEvent.count({ where: { kind: "TASTE_SETUP_ANSWER" } });
   const initialTastePicks = selectInitialTasteSetupPicks(tasteGames);
@@ -108,7 +114,7 @@ export default async function TodayPage() {
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
           Play next
         </h2>
-        <TuneThisRunPanel engine="PLAY_NEXT" initialTune={storedTune(tuneState?.playTune)} knownValues={knownValues} thinPool={playContext?.tune?.thinPool === true} presets={presets} />
+        <TuneThisRunPanel engine="PLAY_NEXT" initialTune={storedTune(tuneState?.playTune)} knownValues={knownValues} thinPool={playContext?.tune?.thinPool === true} presets={presets} alternativeSources={alternativeSources.map((source) => ({ ...source, iconName: resolveSourcePresentation(source.name).iconName }))} />
         {latestPlayNextRun && <ColdStartNote visible={coldStart} />}
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">No eligible games right now.</p>

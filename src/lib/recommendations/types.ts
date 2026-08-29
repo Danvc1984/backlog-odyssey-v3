@@ -34,7 +34,9 @@ export type ExplanationFactorKey =
   | "limited_basis"
   | "role_fallback"
   | "tune_match"
-  | "tune_thin_pool";
+  | "tune_thin_pool"
+  | "source_tune"
+  | "second_chance";
 
 export const RERANK_TASTE_CLAMP = 3;
 export const RERANK_TASTE_TOTAL_CAP = 12;
@@ -53,6 +55,14 @@ export const COLD_START_MIN_EVENTS = 5;
 
 export const TUNE_MATCH_POINTS = 5;
 export const TUNE_TOTAL_CAP = 10;
+export const SOURCE_TUNE_MATCH_POINTS = 3;
+
+export interface SourceTune {
+  steam: boolean;
+  rom: boolean;
+  allAlternatives: boolean;
+  alternativeSourceIds: string[];
+}
 
 export interface TuneContext {
   experience: GameExperience | null;
@@ -62,6 +72,7 @@ export interface TuneContext {
   sequelPosture: "SEQUEL" | "STANDALONE" | null;
   era: "PRE_2005" | "Y2005_2014" | "Y2015_2019" | "Y2020_PLUS" | null;
   maturity: "CASUAL" | "MATURE" | null;
+  sourceTune?: SourceTune | null;
 }
 
 export const tuneContextSchema = z.object({
@@ -72,6 +83,12 @@ export const tuneContextSchema = z.object({
   sequelPosture: z.enum(["SEQUEL", "STANDALONE"]).nullable(),
   era: z.enum(["PRE_2005", "Y2005_2014", "Y2015_2019", "Y2020_PLUS"]).nullable(),
   maturity: z.enum(["CASUAL", "MATURE"]).nullable(),
+  sourceTune: z.object({
+    steam: z.boolean(),
+    rom: z.boolean(),
+    allAlternatives: z.boolean(),
+    alternativeSourceIds: z.array(z.string().trim().min(1)).max(100),
+  }).strict().nullable().optional(),
 }).strict();
 
 export const RERANK_ENVIRONMENT_POINTS: Record<string, number> = {
@@ -99,6 +116,7 @@ export interface ExplanationFactor {
   factor: ExplanationFactorKey;
   label: string;
   points: number;
+  sourceNames?: string[];
 }
 
 export interface ExplanationCaveat {

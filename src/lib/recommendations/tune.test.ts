@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
-import { countTuneMatches, matchTuneCriteria, type TuneCandidateInput } from "./tune";
+import {
+  applySourceTune,
+  countTuneMatches,
+  matchSourceTune,
+  matchTuneCriteria,
+  type TuneCandidateInput,
+} from "./tune";
 import type { TuneContext } from "./types";
 
 const emptyTune: TuneContext = {
@@ -13,6 +19,11 @@ const emptyTune: TuneContext = {
   era: null,
   maturity: null,
 };
+
+const source = (source: "STEAM" | "ROM" | "OTHER_PLATFORM", alternativeSourceId: string | null = null) => ({
+  source,
+  alternativeSourceId,
+});
 
 const candidate = (overrides: Partial<TuneCandidateInput> = {}): TuneCandidateInput => ({
   rawgId: 10,
@@ -69,5 +80,49 @@ describe("countTuneMatches", () => {
     expect(countTuneMatches(tune, candidates, 4)).toEqual({ matchingCount: 1, thinPool: true });
     expect(countTuneMatches(tune, candidates, 3)).toEqual({ matchingCount: 1, thinPool: true });
     expect(countTuneMatches(tune, [candidate(), candidate({ genres: ["Puzzle"] }), candidate({ genres: ["Puzzle"] })], 3).thinPool).toBe(false);
+  });
+});
+
+describe("matchSourceTune", () => {
+  it("matches each selected built-in source inclusively", () => {
+    const sources = [source("STEAM"), source("ROM"), source("OTHER_PLATFORM", "epic")];
+
+    expect(matchSourceTune({ steam: true, rom: false, allAlternatives: false, alternativeSourceIds: [] }, sources)).toEqual([sources[0]]);
+    expect(matchSourceTune({ steam: false, rom: true, allAlternatives: false, alternativeSourceIds: [] }, sources)).toEqual([sources[1]]);
+  });
+
+  it("matches all alternatives or selected alternative ids", () => {
+    const sources = [source("OTHER_PLATFORM", "epic"), source("OTHER_PLATFORM", "gog")];
+
+    expect(matchSourceTune({ steam: false, rom: false, allAlternatives: true, alternativeSourceIds: [] }, sources)).toEqual(sources);
+    expect(matchSourceTune({ steam: false, rom: false, allAlternatives: false, alternativeSourceIds: ["gog"] }, sources)).toEqual([sources[1]]);
+  });
+
+  it("returns no matches for empty selections or no availability rows", () => {
+    const tune = { steam: false, rom: false, allAlternatives: false, alternativeSourceIds: [] };
+    expect(matchSourceTune(tune, [source("STEAM")])).toEqual([]);
+    expect(matchSourceTune({ ...tune, steam: true }, [])).toEqual([]);
+  });
+});
+
+describe("applySourceTune", () => {
+  it("adds one factor with every matched source name and keeps non-matches", () => {
+    const pool = [
+      { id: "matched", score: 10, positive: [], negative: [], sources: [source("STEAM"), source("OTHER_PLATFORM", "epic")] },
+      { id: "plain", score: 20, positive: [], negative: [], sources: [source("ROM")] },
+    ];
+
+    const result = applySourceTune(pool, { steam: true, rom: false, allAlternatives: false, alternativeSourceIds: ["epic"] }, new Map([["epic", "Epic Games Store"]]));
+
+    const matched = result.find((item) => item.id === "matched");
+    const plain = result.find((item) => item.id === "plain");
+    expect(matched).toMatchObject({ id: "matched", score: 13 });
+    expect(matched?.positive).toEqual([{
+      factor: "source_tune",
+      label: "Matches your source tune: Steam, Epic Games Store",
+      points: 3,
+      sourceNames: ["Steam", "Epic Games Store"],
+    }]);
+    expect(plain).toMatchObject({ id: "plain", score: 20, positive: [] });
   });
 });
