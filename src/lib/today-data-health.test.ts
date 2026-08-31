@@ -4,6 +4,7 @@ vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 
 import {
   computeActiveBacklogProgress,
+  computeAbandonedCount,
   computeProfileCoverage,
   computeRawgCoverage,
   loadTodayDataHealth,
@@ -13,6 +14,7 @@ import {
 function row(overrides: Partial<TodayDataHealthGameRow> = {}): TodayDataHealthGameRow {
   return {
     id: "game-1",
+    name: "Game 1",
     libraryEntry: {
       playState: "NOT_STARTED",
       interest: 3,
@@ -31,7 +33,8 @@ describe("computeActiveBacklogProgress", () => {
       row({ id: "a", libraryEntry: { playState: "ABANDONED", interest: 3, priority: "NONE", preferredEnvironment: null, gameExperience: null } }),
       row({ id: "b", libraryEntry: { playState: "IN_PROGRESS", interest: null, priority: "NONE", preferredEnvironment: null, gameExperience: null } }),
     ];
-    expect(computeActiveBacklogProgress(rows)).toEqual({ started: 1, total: 1 });
+    expect(computeActiveBacklogProgress(rows)).toEqual({ playedBefore: 0, inProgress: 1, notStarted: 0, total: 1 });
+    expect(computeAbandonedCount(rows)).toBe(1);
   });
 
   it("computes started over total across the three non-abandoned play states", () => {
@@ -41,11 +44,11 @@ describe("computeActiveBacklogProgress", () => {
       row({ id: "c", libraryEntry: { playState: "PLAYED_BEFORE", interest: null, priority: "NONE", preferredEnvironment: null, gameExperience: null } }),
       row({ id: "d", libraryEntry: { playState: "ABANDONED", interest: null, priority: "NONE", preferredEnvironment: null, gameExperience: null } }),
     ];
-    expect(computeActiveBacklogProgress(rows)).toEqual({ started: 2, total: 3 });
+    expect(computeActiveBacklogProgress(rows)).toEqual({ playedBefore: 1, inProgress: 1, notStarted: 1, total: 3 });
   });
 
   it("returns zero totals for an empty universe", () => {
-    expect(computeActiveBacklogProgress([])).toEqual({ started: 0, total: 0 });
+    expect(computeActiveBacklogProgress([])).toEqual({ playedBefore: 0, inProgress: 0, notStarted: 0, total: 0 });
   });
 });
 
@@ -55,7 +58,25 @@ describe("computeRawgCoverage", () => {
       row({ id: "a", metadataSnapshots: [{ id: "snap-1" }] }),
       row({ id: "b" }),
     ];
-    expect(computeRawgCoverage(rows)).toEqual({ covered: 1, total: 2 });
+    expect(computeRawgCoverage(rows)).toEqual({
+      covered: 1,
+      total: 2,
+      missing: [{ id: "b", name: "Game 1" }],
+    });
+  });
+
+  it("returns missing titles in case-insensitive name order", () => {
+    const rows = [
+      row({ id: "z", name: "Zelda" }),
+      row({ id: "a", name: "alpha" }),
+      row({ id: "m", name: "Metroid" }),
+      row({ id: "covered", name: "Covered", metadataSnapshots: [{ id: "snap-1" }] }),
+    ];
+    expect(computeRawgCoverage(rows).missing).toEqual([
+      { id: "a", name: "alpha" },
+      { id: "m", name: "Metroid" },
+      { id: "z", name: "Zelda" },
+    ]);
   });
 });
 
@@ -73,12 +94,12 @@ describe("computeProfileCoverage", () => {
         },
       }),
     ];
-    expect(computeProfileCoverage(rows)).toEqual({ complete: 0, total: 1 });
+    expect(computeProfileCoverage(rows)).toEqual({ complete: 0, total: 1, incomplete: [{ id: "a", name: "Game 1" }] });
   });
 
   it("is incomplete when interest is present but all three companions are absent", () => {
     const rows = [row({ id: "a" })];
-    expect(computeProfileCoverage(rows)).toEqual({ complete: 0, total: 1 });
+    expect(computeProfileCoverage(rows)).toEqual({ complete: 0, total: 1, incomplete: [{ id: "a", name: "Game 1" }] });
   });
 
   it("is complete through non-NONE priority alone", () => {
@@ -94,7 +115,7 @@ describe("computeProfileCoverage", () => {
         },
       }),
     ];
-    expect(computeProfileCoverage(rows)).toEqual({ complete: 1, total: 1 });
+    expect(computeProfileCoverage(rows)).toEqual({ complete: 1, total: 1, incomplete: [] });
   });
 
   it("is complete through preferred environment alone", () => {
@@ -110,7 +131,7 @@ describe("computeProfileCoverage", () => {
         },
       }),
     ];
-    expect(computeProfileCoverage(rows)).toEqual({ complete: 1, total: 1 });
+    expect(computeProfileCoverage(rows)).toEqual({ complete: 1, total: 1, incomplete: [] });
   });
 
   it("is complete through game experience alone", () => {
@@ -126,7 +147,7 @@ describe("computeProfileCoverage", () => {
         },
       }),
     ];
-    expect(computeProfileCoverage(rows)).toEqual({ complete: 1, total: 1 });
+    expect(computeProfileCoverage(rows)).toEqual({ complete: 1, total: 1, incomplete: [] });
   });
 
   it("counts NONE priority and rating as contributing nothing", () => {
@@ -134,7 +155,7 @@ describe("computeProfileCoverage", () => {
       row({ id: "a", libraryEntry: { playState: "IN_PROGRESS", interest: 5, priority: "NONE", preferredEnvironment: null, gameExperience: null } }),
       row({ id: "b", libraryEntry: { playState: "PLAYED_BEFORE", interest: null, priority: "HIGH", preferredEnvironment: null, gameExperience: null } }),
     ];
-    expect(computeProfileCoverage(rows)).toEqual({ complete: 0, total: 2 });
+    expect(computeProfileCoverage(rows)).toEqual({ complete: 0, total: 2, incomplete: [{ id: "a", name: "Game 1" }, { id: "b", name: "Game 1" }] });
   });
 
   it("counts every visible game in the denominator even when incomplete", () => {
@@ -142,7 +163,25 @@ describe("computeProfileCoverage", () => {
       row({ id: "a" }),
       row({ id: "b", libraryEntry: { playState: "NOT_STARTED", interest: 4, priority: "MEDIUM", preferredEnvironment: null, gameExperience: null } }),
     ];
-    expect(computeProfileCoverage(rows)).toEqual({ complete: 1, total: 2 });
+    expect(computeProfileCoverage(rows)).toEqual({ complete: 1, total: 2, incomplete: [{ id: "a", name: "Game 1" }] });
+  });
+
+  it("returns incomplete titles in case-insensitive name order", () => {
+    const rows = [
+      row({ id: "z", name: "Zelda" }),
+      row({ id: "a", name: "alpha" }),
+      row({ id: "m", name: "Metroid" }),
+      row({
+        id: "complete",
+        name: "Complete",
+        libraryEntry: { playState: "NOT_STARTED", interest: 4, priority: "HIGH", preferredEnvironment: null, gameExperience: null },
+      }),
+    ];
+    expect(computeProfileCoverage(rows).incomplete).toEqual([
+      { id: "a", name: "alpha" },
+      { id: "m", name: "Metroid" },
+      { id: "z", name: "Zelda" },
+    ]);
   });
 });
 
@@ -160,9 +199,10 @@ describe("loadTodayDataHealth", () => {
         },
         metadataSnapshots: [{ id: "snap-1" }],
       }),
-      row({ id: "incomplete" }),
+      row({ id: "incomplete", name: "Alpha" }),
       row({
         id: "abandoned",
+        name: "Zeta",
         libraryEntry: {
           playState: "ABANDONED",
           interest: 3,
@@ -179,6 +219,7 @@ describe("loadTodayDataHealth", () => {
       where: { type: "BASE_GAME", libraryEntry: { is: { hidden: false } } },
       select: {
         id: true,
+        name: true,
         libraryEntry: {
           select: {
             playState: true,
@@ -195,9 +236,18 @@ describe("loadTodayDataHealth", () => {
       },
     });
     expect(health).toEqual({
-      activeBacklog: { started: 1, total: 2 },
-      rawgMetadata: { covered: 1, total: 3 },
-      recommendationProfile: { complete: 1, total: 3 },
+      activeBacklog: { playedBefore: 0, inProgress: 1, notStarted: 1, total: 2 },
+      abandoned: 1,
+      rawgMetadata: {
+        covered: 1,
+        total: 3,
+        missing: [{ id: "incomplete", name: "Alpha" }, { id: "abandoned", name: "Zeta" }],
+      },
+      recommendationProfile: {
+        complete: 1,
+        total: 3,
+        incomplete: [{ id: "incomplete", name: "Alpha" }, { id: "abandoned", name: "Zeta" }],
+      },
     });
   });
 });

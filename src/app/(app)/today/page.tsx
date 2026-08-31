@@ -16,6 +16,13 @@ import { loadPickableTasteSetupGames, selectInitialTasteSetupPicks, shouldShowTa
 import { resolveSourcePresentation } from "@/lib/sources/known-sources";
 import { refreshSteamActivityCacheIfStale } from "@/lib/steam-activity";
 import { RecentSteamActivity } from "@/components/today/RecentSteamActivity";
+import { TodaySummary } from "@/components/today/TodaySummary";
+import { loadTodayDataHealth } from "@/lib/today-data-health";
+import { CoverageDialog } from "@/components/today/CoverageDialog";
+import { TodayOffers } from "@/components/today/TodayOffers";
+import { rankTodayOffers } from "@/lib/today-offers";
+import { loadTodayOperations } from "@/lib/today-operations";
+import { TodayOperations } from "@/components/today/TodayOperations";
 
 const PLAY_ROLE_GROUPS = [
   { label: "Best fit", roles: ["BEST_FIT_1", "BEST_FIT_2"] },
@@ -73,6 +80,37 @@ export default async function TodayPage() {
   const tasteEventCount = await prisma.recommendationEvent.count({ where: { kind: "TASTE_SETUP_ANSWER" } });
   const initialTastePicks = selectInitialTasteSetupPicks(tasteGames);
   const showTasteSetup = shouldShowTasteSetup(tasteEventCount, tasteGames.length);
+  const todayGames = await prisma.game.findMany({
+    where: {
+      type: "BASE_GAME",
+      libraryEntry: { is: { hidden: false } },
+    },
+    orderBy: { name: "asc" },
+    select: {
+      id: true,
+      name: true,
+      libraryEntry: { select: { isMainGame: true, playState: true } },
+    },
+  });
+  const dataHealth = await loadTodayDataHealth(prisma);
+  const wishlistEntries = await prisma.wishlistEntry.findMany({
+    select: {
+      id: true,
+      name: true,
+      targetPriceMxn: true,
+      offers: { orderBy: [{ price: { sort: "asc", nulls: "last" } }] },
+    },
+  });
+  const todayOffers = rankTodayOffers(
+    wishlistEntries.map(({ id, name, targetPriceMxn, offers }) => ({
+      wishlistEntryId: id,
+      gameName: name,
+      targetPriceMxn,
+      offers,
+    })),
+    new Date(),
+  );
+  const todayOperations = await loadTodayOperations(prisma);
   const playContext = latestPlayNextRun?.context as { rerank?: { mode?: string }; tune?: { thinPool?: boolean } } | null | undefined;
   const buyContext = latestBuyRun?.context as { tune?: { thinPool?: boolean } } | null | undefined;
 
@@ -101,6 +139,32 @@ export default async function TodayPage() {
           initialPicks={initialTastePicks.map((pick) => ({ id: pick.id, name: pick.name }))}
         />
       )}
+
+      <TodaySummary
+        games={todayGames}
+        activeBacklog={dataHealth.activeBacklog}
+        abandoned={dataHealth.abandoned}
+      />
+
+      <section>
+        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+          Catalog coverage
+        </h2>
+        <CoverageDialog
+          label="games missing RAWG metadata"
+          basis="Based on provider metadata coverage for visible base games."
+          titles={dataHealth.rawgMetadata.missing}
+        />
+        <CoverageDialog
+          label="games with incomplete recommendation profiles"
+          basis="Based on local personal fields: interest plus priority, preferred environment, or game experience."
+          titles={dataHealth.recommendationProfile.incomplete}
+        />
+      </section>
+
+      <TodayOffers offers={todayOffers} />
+
+      <TodayOperations view={todayOperations} />
 
       <section>
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">

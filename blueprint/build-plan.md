@@ -268,7 +268,7 @@
     imported and unimported recent titles, explicit manual-sync suggestion for
     the latter, fresh-empty and stale-on-error states; no full sync or
     automatic catalog mutation.
-  - [ ] 13b. **Today composition and coverage dialogs** - functional Today
+  - [x] 13b. **Today composition and coverage dialogs** - functional Today
     composition of existing main/in-progress, recommendation, offer, provider,
     and operation data; accessible click-open coverage dialogs with ten linked
     game titles, expandable pagination, and clear local/provider freshness
