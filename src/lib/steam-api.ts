@@ -3,6 +3,8 @@ const OWNED_GAMES_ENDPOINT =
 const STORE_SEARCH_ENDPOINT = "https://store.steampowered.com/api/storesearch/";
 const STEAM_WISHLIST_ENDPOINT =
   "https://api.steampowered.com/IWishlistService/GetWishlist/v1/";
+const RECENTLY_PLAYED_ENDPOINT =
+  "https://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v0001/";
 const STORE_DETAILS_CONCURRENCY = 8;
 const STEAM_REQUEST_TIMEOUT_MS = 15_000;
 
@@ -21,6 +23,18 @@ export interface SteamWishlistGame {
   type?: "DLC";
   steamBaseAppId?: string;
 }
+
+export interface RecentSteamGame {
+  steamAppId: string;
+  name: string;
+  lastPlayedAt: string | null;
+  playtimeForeverMinutes: number;
+  playtimeTwoWeeksMinutes: number | null;
+}
+
+export type SteamRecentActivityFetchResult =
+  | { status: "OK"; games: RecentSteamGame[] }
+  | { status: "UNAVAILABLE" };
 
 export type SteamWishlistFetchResult = {
   games: SteamWishlistGame[];
@@ -75,6 +89,21 @@ interface SteamWishlistItem {
 interface SteamWishlistResponse {
   response?: {
     items?: unknown;
+  };
+}
+
+interface SteamRecentGameResponse {
+  appid?: unknown;
+  name?: unknown;
+  playtime_2weeks?: unknown;
+  playtime_forever?: unknown;
+  rtime_last_played?: unknown;
+}
+
+interface SteamRecentActivityResponse {
+  response?: {
+    total_count?: unknown;
+    games?: unknown;
   };
 }
 
@@ -342,6 +371,76 @@ export async function fetchSteamStorePrices(
     );
   }
   return prices;
+}
+
+function normalizeRecentGame(value: unknown): RecentSteamGame | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const game = value as SteamRecentGameResponse;
+  if (
+    !isFiniteNumber(game.appid) ||
+    !Number.isInteger(game.appid) ||
+    typeof game.name !== "string" ||
+    game.name.trim().length === 0
+  ) {
+    return null;
+  }
+
+  const lastPlayedSeconds = isFiniteNumber(game.rtime_last_played)
+    ? Math.floor(game.rtime_last_played)
+    : null;
+  return {
+    steamAppId: String(game.appid),
+    name: game.name,
+    lastPlayedAt:
+      lastPlayedSeconds !== null && lastPlayedSeconds > 0
+        ? new Date(lastPlayedSeconds * 1000).toISOString()
+        : null,
+    playtimeForeverMinutes: isFiniteNumber(game.playtime_forever)
+      ? Math.floor(game.playtime_forever)
+      : 0,
+    playtimeTwoWeeksMinutes: isFiniteNumber(game.playtime_2weeks)
+      ? Math.floor(game.playtime_2weeks)
+      : null,
+  };
+}
+
+export async function fetchRecentlyPlayedGames(
+  steamId64: string,
+  apiKey: string,
+  fetchFn: typeof fetch = fetch,
+): Promise<SteamRecentActivityFetchResult> {
+  try {
+    const params = new URLSearchParams({
+      key: apiKey,
+      steamid: steamId64,
+      format: "json",
+    });
+    const response = await fetchWithTimeout(
+      fetchFn,
+      `${RECENTLY_PLAYED_ENDPOINT}?${params}`,
+    );
+    if (!response.ok) {
+      return { status: "UNAVAILABLE" };
+    }
+
+    const payload: unknown = await response.json();
+    const games = (payload as SteamRecentActivityResponse).response?.games;
+    if (!Array.isArray(games)) {
+      // A capped or private profile returns an empty games list rather than an error.
+      return { status: "OK", games: [] };
+    }
+
+    const recent = games.flatMap((value) => {
+      const game = normalizeRecentGame(value);
+      return game ? [game] : [];
+    });
+    return { status: "OK", games: recent };
+  } catch {
+    return { status: "UNAVAILABLE" };
+  }
 }
 
 async function fetchWithTimeout(

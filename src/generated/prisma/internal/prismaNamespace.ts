@@ -402,6 +402,7 @@ export const ModelName = {
   Session: 'Session',
   AppSettings: 'AppSettings',
   SteamConnection: 'SteamConnection',
+  SteamRecentActivityCache: 'SteamRecentActivityCache',
   Game: 'Game',
   UnresolvedSteamDlc: 'UnresolvedSteamDlc',
   WishlistImportReview: 'WishlistImportReview',
@@ -453,7 +454,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "account" | "session" | "appSettings" | "steamConnection" | "game" | "unresolvedSteamDlc" | "wishlistImportReview" | "wishlistImportIgnore" | "externalGameId" | "metadataSnapshot" | "enrichmentJob" | "personalTag" | "gameTag" | "collection" | "collectionMembership" | "libraryEntry" | "alternativeSource" | "gameAvailability" | "wishlistEntry" | "wishlistMetadataSnapshot" | "dealOffer" | "itadIdentity" | "priceRefresh" | "wishlistCompatSweep" | "compatibilitySnapshot" | "environmentCompatibility" | "wishlistCompatibilitySnapshot" | "wishlistEnvironmentCompatibility" | "possibleDuplicate" | "recommendationRun" | "recommendationItem" | "recommendationFeedback" | "recommendationEvent" | "recommendationProfile" | "recommendationPreference" | "recommendationTuneState" | "recommendationPreset" | "wallpaperState" | "syncRun" | "catalogOperation"
+    modelProps: "user" | "account" | "session" | "appSettings" | "steamConnection" | "steamRecentActivityCache" | "game" | "unresolvedSteamDlc" | "wishlistImportReview" | "wishlistImportIgnore" | "externalGameId" | "metadataSnapshot" | "enrichmentJob" | "personalTag" | "gameTag" | "collection" | "collectionMembership" | "libraryEntry" | "alternativeSource" | "gameAvailability" | "wishlistEntry" | "wishlistMetadataSnapshot" | "dealOffer" | "itadIdentity" | "priceRefresh" | "wishlistCompatSweep" | "compatibilitySnapshot" | "environmentCompatibility" | "wishlistCompatibilitySnapshot" | "wishlistEnvironmentCompatibility" | "possibleDuplicate" | "recommendationRun" | "recommendationItem" | "recommendationFeedback" | "recommendationEvent" | "recommendationProfile" | "recommendationPreference" | "recommendationTuneState" | "recommendationPreset" | "wallpaperState" | "syncRun" | "catalogOperation"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -824,6 +825,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.SteamConnectionCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.SteamConnectionCountAggregateOutputType> | number
+        }
+      }
+    }
+    SteamRecentActivityCache: {
+      payload: Prisma.$SteamRecentActivityCachePayload<ExtArgs>
+      fields: Prisma.SteamRecentActivityCacheFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SteamRecentActivityCacheFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SteamRecentActivityCachePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SteamRecentActivityCacheFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SteamRecentActivityCachePayload>
+        }
+        findFirst: {
+          args: Prisma.SteamRecentActivityCacheFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SteamRecentActivityCachePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SteamRecentActivityCacheFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SteamRecentActivityCachePayload>
+        }
+        findMany: {
+          args: Prisma.SteamRecentActivityCacheFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SteamRecentActivityCachePayload>[]
+        }
+        create: {
+          args: Prisma.SteamRecentActivityCacheCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SteamRecentActivityCachePayload>
+        }
+        createMany: {
+          args: Prisma.SteamRecentActivityCacheCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.SteamRecentActivityCacheCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SteamRecentActivityCachePayload>[]
+        }
+        delete: {
+          args: Prisma.SteamRecentActivityCacheDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SteamRecentActivityCachePayload>
+        }
+        update: {
+          args: Prisma.SteamRecentActivityCacheUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SteamRecentActivityCachePayload>
+        }
+        deleteMany: {
+          args: Prisma.SteamRecentActivityCacheDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SteamRecentActivityCacheUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.SteamRecentActivityCacheUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SteamRecentActivityCachePayload>[]
+        }
+        upsert: {
+          args: Prisma.SteamRecentActivityCacheUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SteamRecentActivityCachePayload>
+        }
+        aggregate: {
+          args: Prisma.SteamRecentActivityCacheAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSteamRecentActivityCache>
+        }
+        groupBy: {
+          args: Prisma.SteamRecentActivityCacheGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SteamRecentActivityCacheGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SteamRecentActivityCacheCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SteamRecentActivityCacheCountAggregateOutputType> | number
         }
       }
     }
@@ -3602,6 +3677,19 @@ export const SteamConnectionScalarFieldEnum = {
 export type SteamConnectionScalarFieldEnum = (typeof SteamConnectionScalarFieldEnum)[keyof typeof SteamConnectionScalarFieldEnum]
 
 
+export const SteamRecentActivityCacheScalarFieldEnum = {
+  id: 'id',
+  entries: 'entries',
+  refreshedAt: 'refreshedAt',
+  lastAttemptAt: 'lastAttemptAt',
+  lastError: 'lastError',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SteamRecentActivityCacheScalarFieldEnum = (typeof SteamRecentActivityCacheScalarFieldEnum)[keyof typeof SteamRecentActivityCacheScalarFieldEnum]
+
+
 export const GameScalarFieldEnum = {
   id: 'id',
   type: 'type',
@@ -4761,6 +4849,7 @@ export type GlobalOmitConfig = {
   session?: Prisma.SessionOmit
   appSettings?: Prisma.AppSettingsOmit
   steamConnection?: Prisma.SteamConnectionOmit
+  steamRecentActivityCache?: Prisma.SteamRecentActivityCacheOmit
   game?: Prisma.GameOmit
   unresolvedSteamDlc?: Prisma.UnresolvedSteamDlcOmit
   wishlistImportReview?: Prisma.WishlistImportReviewOmit

@@ -84,7 +84,7 @@ export function SteamConnectionCard({
   };
 
   return (
-    <div className="rounded-lg border border-border p-4">
+    <div id="steam-connection-card" className="rounded-lg border border-border p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h3 className="font-medium">Steam</h3>

@@ -14,6 +14,8 @@ import { listKnownGenreTagValues, listRecommendationPresets } from "@/actions/re
 import { tuneContextSchema, type TuneContext } from "@/lib/recommendations/types";
 import { loadPickableTasteSetupGames, selectInitialTasteSetupPicks, shouldShowTasteSetup } from "@/lib/recommendations/taste-setup";
 import { resolveSourcePresentation } from "@/lib/sources/known-sources";
+import { refreshSteamActivityCacheIfStale } from "@/lib/steam-activity";
+import { RecentSteamActivity } from "@/components/today/RecentSteamActivity";
 
 const PLAY_ROLE_GROUPS = [
   { label: "Best fit", roles: ["BEST_FIT_1", "BEST_FIT_2"] },
@@ -79,6 +81,7 @@ export default async function TodayPage() {
   const coldStart = playContext?.rerank?.mode === "COLD_START";
   const hasPlayRoles = items.some((item) => item.role !== null);
   const hasBuyRoles = buyItems.some((item) => item.role !== null);
+  const steamActivityView = await refreshSteamActivityCacheIfStale();
 
   return (
     <div className="space-y-8">
@@ -98,6 +101,13 @@ export default async function TodayPage() {
           initialPicks={initialTastePicks.map((pick) => ({ id: pick.id, name: pick.name }))}
         />
       )}
+
+      <section>
+        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+          Recent Steam activity
+        </h2>
+        <RecentSteamActivity view={steamActivityView} />
+      </section>
 
       {!latestPlayNextRun && (
         <div className="rounded-lg border border-border p-8 text-center">

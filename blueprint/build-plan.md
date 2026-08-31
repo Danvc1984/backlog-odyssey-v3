@@ -143,7 +143,7 @@
     refreshes and a simple "compatibility details not found" note on the
     detail page; single 180-day freshness window
 
-- [ ] 12. **Recommendation engine** - explicit explainable play and buy runs;
+- [x] 12. **Recommendation engine** - explicit explainable play and buy runs;
   deterministic baseline eligibility and scoring, then privacy-preserving
   adaptive diversification from personal history, editable preferences, and
   provider metadata; fresh offers, calibration, dismissal, candidate batches,
@@ -261,7 +261,7 @@
   explicit play-next and buy results, three best discount-sorted wishlist
   offers, provider freshness, operation status, active-backlog progress, and
   actionable catalog coverage.
-  - [ ] 13a. **Dashboard data health and recent Steam activity** - active
+  - [x] 13a. **Dashboard data health and recent Steam activity** - active
     backlog progress excluding abandoned games; separate RAWG-metadata and
     recommendation-profile completeness counts; a persisted 24-hour recent
     Steam activity cache populated by a narrow query when Today loads;

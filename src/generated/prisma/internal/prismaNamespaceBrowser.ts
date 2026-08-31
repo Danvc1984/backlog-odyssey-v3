@@ -56,6 +56,7 @@ export const ModelName = {
   Session: 'Session',
   AppSettings: 'AppSettings',
   SteamConnection: 'SteamConnection',
+  SteamRecentActivityCache: 'SteamRecentActivityCache',
   Game: 'Game',
   UnresolvedSteamDlc: 'UnresolvedSteamDlc',
   WishlistImportReview: 'WishlistImportReview',
@@ -180,6 +181,19 @@ export const SteamConnectionScalarFieldEnum = {
 } as const
 
 export type SteamConnectionScalarFieldEnum = (typeof SteamConnectionScalarFieldEnum)[keyof typeof SteamConnectionScalarFieldEnum]
+
+
+export const SteamRecentActivityCacheScalarFieldEnum = {
+  id: 'id',
+  entries: 'entries',
+  refreshedAt: 'refreshedAt',
+  lastAttemptAt: 'lastAttemptAt',
+  lastError: 'lastError',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SteamRecentActivityCacheScalarFieldEnum = (typeof SteamRecentActivityCacheScalarFieldEnum)[keyof typeof SteamRecentActivityCacheScalarFieldEnum]
 
 
 export const GameScalarFieldEnum = {

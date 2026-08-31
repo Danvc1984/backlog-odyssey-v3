@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   fetchOwnedGames,
+  fetchRecentlyPlayedGames,
   fetchSteamStorePrices,
   fetchSteamWishlist,
   findSteamAppIdByName,
@@ -347,5 +348,149 @@ describe("fetchSteamStorePrices", () => {
     const requestUrl = new URL(fetchMock.mock.calls[0][0] as string);
     expect(requestUrl.searchParams.get("cc")).toBe("MX");
     expect(requestUrl.searchParams.get("filters")).toBe("price_overview");
+  });
+});
+
+describe("fetchRecentlyPlayedGames", () => {
+  const fetchMock = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
+  it("parses the full recent-activity entry shape and sends the Steam API parameters", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          response: {
+            total_count: 1,
+            games: [
+              {
+                appid: 620,
+                name: "Portal 2",
+                playtime_2weeks: 95,
+                playtime_forever: 1240,
+                rtime_last_played: 1700000000,
+              },
+            ],
+          },
+        }),
+        { status: 200 },
+      ),
+    );
+
+    await expect(
+      fetchRecentlyPlayedGames("76561198000000000", "test-key"),
+    ).resolves.toEqual({
+      status: "OK",
+      games: [
+        {
+          steamAppId: "620",
+          name: "Portal 2",
+          lastPlayedAt: new Date(1700000000 * 1000).toISOString(),
+          playtimeForeverMinutes: 1240,
+          playtimeTwoWeeksMinutes: 95,
+        },
+      ],
+    });
+
+    const url = new URL(fetchMock.mock.calls[0][0] as string);
+    expect(url.pathname).toBe("/IPlayerService/GetRecentlyPlayedGames/v0001/");
+    expect(url.searchParams.get("key")).toBe("test-key");
+    expect(url.searchParams.get("steamid")).toBe("76561198000000000");
+    expect(fetchMock.mock.calls[0][1]).toEqual({
+      cache: "no-store",
+      signal: expect.any(AbortSignal),
+    });
+  });
+
+  it("tolerates missing playtime_2weeks and rtime_last_played", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          response: {
+            games: [{ appid: 10, name: "Portal", playtime_forever: 30 }],
+          },
+        }),
+        { status: 200 },
+      ),
+    );
+
+    await expect(fetchRecentlyPlayedGames("steam-id", "test-key")).resolves.toEqual({
+      status: "OK",
+      games: [
+        {
+          steamAppId: "10",
+          name: "Portal",
+          lastPlayedAt: null,
+          playtimeForeverMinutes: 30,
+          playtimeTwoWeeksMinutes: null,
+        },
+      ],
+    });
+  });
+
+  it("skips malformed entries and keeps valid ones", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          response: {
+            games: [
+              { appid: "not-a-number", name: "Invalid appid" },
+              { appid: 11, name: "   " },
+              null,
+              { appid: 12, name: "Valid" },
+            ],
+          },
+        }),
+        { status: 200 },
+      ),
+    );
+
+    await expect(fetchRecentlyPlayedGames("steam-id", "test-key")).resolves.toEqual({
+      status: "OK",
+      games: [
+        {
+          steamAppId: "12",
+          name: "Valid",
+          lastPlayedAt: null,
+          playtimeForeverMinutes: 0,
+          playtimeTwoWeeksMinutes: null,
+        },
+      ],
+    });
+  });
+
+  it("treats a private profile or missing games array as OK with an empty list", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ response: {} }), { status: 200 }),
+    );
+    await expect(fetchRecentlyPlayedGames("steam-id", "test-key")).resolves.toEqual({
+      status: "OK",
+      games: [],
+    });
+
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({}), { status: 200 }));
+    await expect(fetchRecentlyPlayedGames("steam-id", "test-key")).resolves.toEqual({
+      status: "OK",
+      games: [],
+    });
+  });
+
+  it("returns UNAVAILABLE on a non-OK HTTP status", async () => {
+    fetchMock.mockResolvedValue(new Response("Service unavailable", { status: 503 }));
+
+    await expect(fetchRecentlyPlayedGames("steam-id", "test-key")).resolves.toEqual({
+      status: "UNAVAILABLE",
+    });
+  });
+
+  it("returns UNAVAILABLE for malformed JSON", async () => {
+    fetchMock.mockResolvedValue(new Response("not-json", { status: 200 }));
+
+    await expect(fetchRecentlyPlayedGames("steam-id", "test-key")).resolves.toEqual({
+      status: "UNAVAILABLE",
+    });
   });
 });
