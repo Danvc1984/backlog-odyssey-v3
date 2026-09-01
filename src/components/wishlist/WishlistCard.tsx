@@ -47,7 +47,7 @@ export function WishlistCard({ entry, baseGames }: WishlistCardProps) {
     : entry.offerView.alternatives.filter((offer) => offer.shop !== "Steam Store");
 
   return (
-    <article className="overflow-hidden rounded-lg border border-border bg-card">
+    <article className="overflow-hidden rounded-lg border border-border bg-card shadow-card">
       {imageUrl ? (
         <div className="relative h-40 w-full">
           <Image

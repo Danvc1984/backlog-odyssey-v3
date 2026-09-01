@@ -63,7 +63,7 @@ function MultiValuePicker({ label, options, selected, onChange }: MultiValuePick
     <div className="grid gap-1 text-xs text-muted-foreground">
       <span>{label}</span>
       <details className="group relative">
-        <summary className="flex h-8 cursor-pointer list-none items-center justify-between rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30">
+        <summary className="flex h-8 cursor-pointer list-none items-center justify-between rounded-lg border border-border bg-transparent px-2.5 text-sm text-foreground outline-none transition-colors focus-visible:border-signal focus-visible:ring-3 focus-visible:ring-signal/30 dark:bg-input/30">
           <span>{selected.length === 0 ? "Any" : `${selected.length} selected`}</span>
           <span className="text-muted-foreground">⌄</span>
         </summary>

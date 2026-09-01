@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { SteamConnectionCard } from "@/components/steam/SteamConnectionCard";
 import { UnresolvedDlcReviewCard } from "@/components/steam/UnresolvedDlcReviewCard";
 import { CompatibilitySweepPanel } from "@/components/games/CompatibilitySweepPanel";
+import { AppearanceSection } from "@/components/settings/AppearanceSection";
 import { getLatestCompatBatchStatus } from "@/lib/compat-batch-runner";
 import { RestartRecommendationsSection } from "@/components/recommendations/RestartRecommendationsSection";
 import { RecommendationProfileSection } from "@/components/recommendations/RecommendationProfileSection";
@@ -31,6 +32,8 @@ export default async function SettingsPage() {
   return (
     <div>
       <h1 className="text-2xl font-semibold">Settings</h1>
+
+      <AppearanceSection />
 
       <CompatibilitySweepPanel initialBatch={latestCompatBatch?.data ?? null} />
 

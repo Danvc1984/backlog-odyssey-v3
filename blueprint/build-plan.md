@@ -282,7 +282,7 @@
   behavior. The outcome is full dark/light/system parity, token consistency,
   responsive navigation, accessible states, and a visual review of every
   existing route.
-  - [ ] 14a. **Theme tokens, modes, preferences, and app shell** - Port the
+  - [x] 14a. **Theme tokens, modes, preferences, and app shell** - Port the
     prototype-validated semantic token system into the application; deliver
     dark, light, and system modes with the same hierarchy rather than a simple
     inversion; update typography, surfaces, buttons, cards, desktop sidebar,

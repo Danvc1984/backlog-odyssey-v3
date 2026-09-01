@@ -16,7 +16,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           await signOut();
         }}
       />
-      <main className="flex-1 p-6 pb-24 md:pb-6">{children}</main>
+      <main className="mx-auto w-full min-w-0 max-w-[1440px] flex-1 px-4 pt-8 pb-24 md:px-[clamp(24px,5vw,72px)] md:pt-10 md:pb-12">
+        {children}
+      </main>
     </div>
   );
 }

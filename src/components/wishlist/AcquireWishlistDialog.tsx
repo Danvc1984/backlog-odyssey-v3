@@ -124,7 +124,7 @@ export function AcquireWishlistDialog({
                   type="checkbox"
                   checked={parentReplay}
                   onChange={(event) => setParentReplay(event.target.checked)}
-                  className="size-4 rounded border-input"
+                  className="size-4 rounded border-border"
                 />
                 Mark parent as replay candidate
               </label>

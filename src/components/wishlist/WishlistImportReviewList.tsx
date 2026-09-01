@@ -71,7 +71,7 @@ export function WishlistImportReviewList({
         const disabled = busyId === review.id;
 
         return (
-          <article key={review.id} className="rounded-xl border border-border/70 bg-card/80 p-4 shadow-sm">
+          <article key={review.id} className="rounded-xl border border-border/70 bg-card/80 p-4 shadow-card">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h3 className="font-medium">Possible match: {review.name}</h3>
@@ -116,7 +116,7 @@ export function WishlistImportReviewList({
               />
               <select
                 aria-label={`Target for ${review.name}`}
-                className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm"
+                className="h-8 rounded-lg border border-border bg-transparent px-2.5 text-sm"
                 value={selectedTarget}
                 disabled={disabled || matchingTargets.length === 0}
                 onChange={(event) => setSelected((current) => ({ ...current, [review.id]: event.target.value }))}

@@ -199,7 +199,7 @@ export function PersonalFieldsForm({
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Any notes about this game..."
           rows={3}
-          className="w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50"
+          className="w-full rounded-lg border border-border bg-transparent px-2.5 py-1.5 text-sm transition-colors placeholder:text-muted-foreground focus-visible:border-signal focus-visible:ring-3 focus-visible:ring-signal/30 disabled:pointer-events-none disabled:opacity-50"
         />
       </div>
 
