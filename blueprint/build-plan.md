@@ -298,19 +298,20 @@
     Carousels have manual controls, a slow pause-on-hover/focus auto-advance,
     and no auto-advance under reduced motion. Empty states retain contextual
     guidance and actions without triggering hidden provider work.
-  - [ ] 14c. **Library and Wishlist decision surfaces** - Apply the shared
-    visual system to catalog and wishlist browsing, including the approved
-    Library grid/list and Wishlist focus/list alternatives; improve filtering,
-    hierarchy, offer, identity, compatibility, import-review, freshness, and
-    empty/stale/error presentation while preserving current queries, source
-    semantics, currencies, and actions.
-  - [ ] 14d. **Detail, collection, and supporting route composition** - Apply
+  - [x] 14c. **Library browsing surfaces** - toolbar, filter chips, and
+    health strip over unchanged queries; approved grid/list alternatives
+    with deterministic cover gradients; restyled duplicates review,
+    enrichment panel, and empty states
+  - [ ] 14d. **Wishlist browsing surfaces** - signal grid, focus/list
+    alternatives, and entry-card composition for offers, identity,
+    staleness, target, and interest over unchanged queries and actions
+  - [ ] 14e. **Detail, collection, and supporting route composition** - Apply
     the shared system to Game Detail, Wishlist Detail, Collections, and their
     dialogs/forms. Reuse existing RAWG artwork with contrast overlays when
     available, use abstract local fallbacks otherwise or in reduced-data mode,
     and preserve current detail actions, read-only evidence boundaries, and
     destructive confirmations. Dynamic per-game palettes remain feature 16.
-  - [ ] 14e. **Cross-app states, accessibility, and visual acceptance** -
+  - [ ] 14f. **Cross-app states, accessibility, and visual acceptance** -
     Finish visual Settings controls, loading/empty/error/stale/operation
     states, keyboard/focus/target/contrast treatment, reduced-motion and
     reduced-data behavior, mobile review, and token-consistency cleanup.

@@ -48,19 +48,21 @@ The exact checked state is owned by blueprint/build-plan.md.
    system parity, non-migrating visual preferences, responsive shell.
 10. **[ ] 14b: Today dashboard composition** - Existing data rendered as two
     carousels, dominant Play Next, and lower operational context.
-11. **[ ] 14c: Library and Wishlist surfaces** - Shared system plus approved
-    Library grid/list and Wishlist focus/list, without changing behavior.
-12. **[ ] 14d: Detail, collection, supporting routes** - Game/Wishlist Detail,
+11. **[ ] 14c: Library surfaces** - Shared system plus approved grid/list,
+    filter chips, and health strip, without changing queries or behavior.
+12. **[ ] 14d: Wishlist surfaces** - Shared system plus approved focus/list,
+    signal grid, and entry-card offer/identity composition.
+13. **[ ] 14e: Detail, collection, supporting routes** - Game/Wishlist Detail,
     Collections, dialogs, safe image overlays, and fallbacks.
-13. **[ ] 14e: Acceptance and accessibility** - Settings visual controls,
+14. **[ ] 14f: Acceptance and accessibility** - Settings visual controls,
     cross-app states, mobile, keyboard, contrast, and final visual review.
-14. **[ ] 15: Wallhaven background** - Optional cached SFW pool, daily
+15. **[ ] 15: Wallhaven background** - Optional cached SFW pool, daily
     deterministic rotation, shuffle, attribution, fallback, reduced-data off.
-15. **[ ] 16: Per-game themes** - Server-derived RAWG palette data, read-only
+16. **[ ] 16: Per-game themes** - Server-derived RAWG palette data, read-only
     game-detail use, contrast safeguards, deterministic fallback.
-16. **[ ] 17: Settings and export** - Sessions, provider/queue controls,
+17. **[ ] 17: Settings and export** - Sessions, provider/queue controls,
     diagnostics, Wallhaven, visual preferences, and manual JSON export.
-17. **[ ] 18: Deployment and CI readiness** - Vercel/Supabase, Cron, smoke
+18. **[ ] 18: Deployment and CI readiness** - Vercel/Supabase, Cron, smoke
     tests, Verify command, and automatic checks.
 
 ## Data model and ownership
@@ -256,6 +258,6 @@ freshness, and operations are supporting sections.
 
 ## Next workflow action
 
-The next uncompleted item is **Feature 14a: Theme tokens, modes, preferences,
-and app shell**. Run $feature 14a to produce its reviewed implementation spec.
+The next uncompleted item is **Feature 14c: Library browsing surfaces**. Run
+$feature 14c to produce its reviewed implementation spec.
 This overview does not authorize code changes.

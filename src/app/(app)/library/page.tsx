@@ -1,32 +1,21 @@
 import Link from "next/link";
-import { Fragment } from "react";
 import { prisma } from "@/lib/prisma";
-import { Star, Clock, RotateCcw, EyeOff } from "lucide-react";
 import { CreateGameDialog } from "@/components/games/CreateGameDialog";
 import { UpdateRecommendationsButton } from "@/components/recommendations/UpdateRecommendationsButton";
 import { LibraryFilters } from "@/components/games/LibraryFilters";
+import { ViewSwitch } from "@/components/games/ViewSwitch";
+import { LibraryGameCard } from "@/components/games/LibraryGameCard";
+import { LibraryHealthStrip } from "@/components/games/LibraryHealthStrip";
 import { DuplicatesList } from "@/components/games/DuplicatesList";
 import { RawgBatchEnrichmentPanel } from "@/components/games/RawgBatchEnrichmentPanel";
 import { getLatestRawgBatchStatus } from "@/lib/rawg-batch-runner";
+import { loadTodayDataHealth } from "@/lib/today-data-health";
+import { fuzzyMatch } from "@/lib/fuzzy-match";
 import {
   getSystemCollectionDefinition,
   getSystemCollections,
 } from "@/lib/system-collections";
 import { availabilitySourcePresentation } from "@/lib/sources/known-sources";
-import { SourceIcon } from "@/components/sources/SourceIcon";
-
-const PLAY_STATE_LABELS: Record<string, string> = {
-  NOT_STARTED: "Not started",
-  IN_PROGRESS: "In progress",
-  PLAYED_BEFORE: "Played before",
-  ABANDONED: "Abandoned",
-};
-
-const FLAG_INDICATORS = [
-  { key: "playSoon" as const, Icon: Clock, label: "Play soon" },
-  { key: "replayCandidate" as const, Icon: RotateCcw, label: "Replay candidate" },
-  { key: "hidden" as const, Icon: EyeOff, label: "Hidden" },
-];
 
 interface LibrarySearchParams {
   q?: string;
@@ -36,6 +25,13 @@ interface LibrarySearchParams {
   sort?: string;
   collection?: string;
   duplicates?: string;
+  view?: string;
+}
+
+type LibraryView = "grid" | "list";
+
+function normalizeLibraryView(value: string | undefined): LibraryView {
+  return value === "list" ? "list" : "grid";
 }
 
 export default async function LibraryPage({
@@ -43,8 +39,9 @@ export default async function LibraryPage({
 }: {
   searchParams: Promise<LibrarySearchParams>;
 }) {
-  const { q = "", source, alt, state, sort = "newest", collection, duplicates } =
+  const { q = "", source, alt, state, sort = "newest", collection, duplicates, view: viewParam } =
     await searchParams;
+  const view = normalizeLibraryView(viewParam);
 
   if (duplicates === "true") {
     const openDuplicates = await prisma.possibleDuplicate.findMany({
@@ -96,7 +93,7 @@ export default async function LibraryPage({
         : undefined
       : undefined;
 
-  const [manualCollections, systemCollections, latestRawgBatch, pendingUnresolvedDlc, alternativeSources] = await Promise.all([
+  const [manualCollections, systemCollections, latestRawgBatch, pendingUnresolvedDlc, alternativeSources, dataHealth, mainGameGames] = await Promise.all([
     prisma.collection.findMany({
       where: { isSystem: false },
       orderBy: { name: "asc" },
@@ -109,6 +106,19 @@ export default async function LibraryPage({
       where: { archivedAt: null },
       orderBy: { name: "asc" },
       select: { id: true, name: true },
+    }),
+    loadTodayDataHealth(prisma),
+    prisma.game.findMany({
+      where: {
+        type: "BASE_GAME",
+        libraryEntry: { is: { hidden: false } },
+      },
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        libraryEntry: { select: { isMainGame: true, playState: true } },
+      },
     }),
   ]);
 
@@ -133,13 +143,41 @@ export default async function LibraryPage({
         }
       : undefined;
 
+  const trimmedQuery = q.trim();
+  const fuzzyIds = trimmedQuery
+    ? await prisma.libraryEntry
+        .findMany({
+          where: { game: { type: "BASE_GAME" } },
+          select: { id: true, game: { select: { id: true, name: true } } },
+        })
+        .then((pool) => {
+          const seen = new Set<string>();
+          return pool
+          .map((entry) => {
+            if (seen.has(entry.game.id)) return null;
+            seen.add(entry.game.id);
+            return {
+              id: entry.game.id,
+              result: fuzzyMatch(trimmedQuery, entry.game.name),
+            };
+          })
+          .filter((entry): entry is { id: string; result: { matched: boolean; score: number } } =>
+            entry !== null && entry.result.matched,
+          )
+          .sort(
+            (left, right) =>
+              right.result.score - left.result.score ||
+              left.id.localeCompare(right.id),
+          )
+          .map((entry) => entry.id);
+        })
+    : null;
+
   const entries = await prisma.libraryEntry.findMany({
     where: {
       game: {
         type: "BASE_GAME",
-        name: q
-          ? { contains: q, mode: "insensitive" }
-          : undefined,
+        id: fuzzyIds ? { in: fuzzyIds } : undefined,
         availability: availabilityFilter,
       },
       playState: stateFilter ?? undefined,
@@ -151,6 +189,13 @@ export default async function LibraryPage({
             availability: { include: { alternativeSource: true } },
             baseGame: {
               select: { id: true, name: true },
+            },
+            metadataSnapshots: {
+              where: { provider: "RAWG" },
+              select: { id: true, payload: true },
+            },
+            _count: {
+              select: { dlcs: true, collections: true },
             },
           },
       },
@@ -169,11 +214,28 @@ export default async function LibraryPage({
     })(),
   });
 
+  const mainGame = mainGameGames.find((game) => game.libraryEntry?.isMainGame === true) ?? null;
+  const inProgressGames = mainGameGames.filter(
+    (game) => game.libraryEntry?.playState === "IN_PROGRESS",
+  );
+  const mainGamePicks = [
+    ...(mainGame ? [mainGame] : []),
+    ...inProgressGames.filter((game) => game.id !== mainGame?.id),
+  ].map((game) => ({ id: game.id, name: game.name }));
+
   return (
-    <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Library</h1>
-        <div className="flex items-center gap-3">
+    <div data-view={view}>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="technical-label text-muted-foreground">Catalog / owned games</p>
+          <h1 className="mt-2">
+            Your library, <span className="text-signal-strong">in orbit.</span>
+          </h1>
+          <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+            A focused view of what you own, what needs attention, and what could move next.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
           {pendingUnresolvedDlc > 0 && (
             <Link
               href="/settings"
@@ -196,7 +258,7 @@ export default async function LibraryPage({
         </div>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <LibraryFilters
           collections={[
             ...systemCollections.map((c) => ({
@@ -215,6 +277,16 @@ export default async function LibraryPage({
             iconName: availabilitySourcePresentation("OTHER_PLATFORM", alternative.name).iconName,
           }))}
         />
+        <ViewSwitch view={view} label="Library view" />
+      </div>
+
+      <div className="mt-6">
+        <LibraryHealthStrip
+          key={mainGame?.id ?? "none"}
+          health={dataHealth}
+          games={mainGamePicks}
+          mainGame={mainGame ? { id: mainGame.id, name: mainGame.name } : null}
+        />
       </div>
 
       <RawgBatchEnrichmentPanel
@@ -222,99 +294,47 @@ export default async function LibraryPage({
       />
 
       {entries.length === 0 ? (
-        <div className="mt-16 flex flex-col items-center gap-2 text-center">
-          <p className="text-lg font-medium">No games found</p>
-          <p className="text-sm text-muted-foreground">
-            {q || source || alt || state
-              ? "Try adjusting your search or filters."
-              : "Add your first game to get started."}
-          </p>
-        </div>
+        q || source || alt || state || (collection && collection !== "ALL") ? (
+          <div className="mt-16 flex flex-col items-center gap-2 text-center">
+            <p className="technical-label text-muted-foreground">Nothing hidden here</p>
+            <p className="text-lg font-medium">No games match those filters.</p>
+            <p className="text-sm text-muted-foreground">
+              Use filters to narrow the orbit, or add a new game to your catalog.
+            </p>
+            <Link
+              href="/library"
+              className="mt-4 w-fit text-sm font-medium text-signal-strong underline underline-offset-4 hover:text-foreground"
+            >
+              Reset filters
+            </Link>
+          </div>
+        ) : (
+          <div className="mt-16 flex flex-col items-center gap-2 text-center">
+            <p className="text-lg font-medium">No games found</p>
+            <p className="text-sm text-muted-foreground">
+              Add your first game to get started.
+            </p>
+            <CreateGameDialog alternativeSources={alternativeSources.map((alternative) => ({
+              ...alternative,
+              iconName: availabilitySourcePresentation("OTHER_PLATFORM", alternative.name).iconName,
+            }))} />
+          </div>
+        )
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-lg border border-border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-left text-xs uppercase text-muted-foreground">
-                <th className="px-4 py-3 font-medium">Name</th>
-                <th className="px-4 py-3 font-medium">Type</th>
-                <th className="px-4 py-3 font-medium">Availability</th>
-                <th className="px-4 py-3 font-medium">Play state</th>
-                <th className="px-4 py-3 font-medium">Flags</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map((entry) => (
-                <tr
-                  key={entry.id}
-                  className="border-b border-border last:border-0"
-                >
-                  <td className="px-4 py-3 font-medium">
-                    {entry.game.type === "DLC" ? (
-                      <>
-                        <span>{entry.game.name}</span>
-                        {entry.game.baseGame && (
-                          <span className="ml-2 text-xs font-normal text-muted-foreground">
-                            DLC for{" "}
-                            <Link href={`/games/${entry.game.baseGame.id}`} className="hover:underline">
-                              {entry.game.baseGame.name}
-                            </Link>
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      <Link href={`/games/${entry.game.id}`} className="hover:underline">
-                        {entry.game.name}
-                      </Link>
-                    )}
-                    {entry.isMainGame && (
-                      <span className="ml-2 inline-flex items-center gap-1 rounded-md bg-primary/15 px-1.5 py-0.5 text-xs font-medium text-primary">
-                        <Star className="size-3" />
-                        Main
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">{entry.game.type}</td>
-                  <td className="px-4 py-3">
-                    {entry.game.availability.length === 0
-                      ? "-"
-                      : entry.game.availability.map((a, index) => {
-                          const presentation = availabilitySourcePresentation(
-                            a.source,
-                            a.alternativeSource?.name ?? null,
-                          );
-                          return (
-                            <Fragment key={a.id}>
-                              {index > 0 && ", "}
-                              <span className="inline-flex items-center gap-1">
-                                <SourceIcon iconName={presentation.iconName} />
-                                {presentation.label}
-                              </span>
-                            </Fragment>
-                          );
-                        })}
-                  </td>
-                  <td className="px-4 py-3">
-                    {PLAY_STATE_LABELS[entry.playState] ?? entry.playState}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      {FLAG_INDICATORS.filter((f) => entry[f.key]).map((f) => (
-                        <span key={f.key} title={f.label}>
-                          <f.Icon
-                            aria-label={f.label}
-                            className="size-4 text-muted-foreground"
-                          />
-                        </span>
-                      ))}
-                      {!FLAG_INDICATORS.some((f) => entry[f.key]) && (
-                        <span className="text-xs text-muted-foreground">-</span>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mt-6">
+          <div
+            className={view === "list"
+              ? "space-y-3"
+              : "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"}
+          >
+            {entries.map((entry) => (
+              <LibraryGameCard
+                key={entry.id}
+                entry={entry}
+                variant={view}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>

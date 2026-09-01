@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Carousel } from "@/components/today/Carousel";
+import { gradientFor } from "@/lib/cover-gradient";
 
 interface CurrentlyPlayingGame {
   id: string;
@@ -8,18 +9,6 @@ interface CurrentlyPlayingGame {
     isMainGame: boolean;
     playState: string;
   } | null;
-}
-
-const TOKEN_GRADIENTS = [
-  "from-signal/80 via-card to-card-alt",
-  "from-opportunity/80 via-card to-card-alt",
-  "from-primary/80 via-card to-card-alt",
-  "from-warning/80 via-card to-card-alt",
-] as const;
-
-function gradientFor(gameId: string): string {
-  const hash = [...gameId].reduce((total, character) => total + character.charCodeAt(0), 0);
-  return TOKEN_GRADIENTS[hash % TOKEN_GRADIENTS.length];
 }
 
 function playStateLabel(playState: string): string {

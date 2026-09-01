@@ -178,7 +178,7 @@ export function RawgBatchEnrichmentPanel({
   }
 
   return (
-    <section className="mt-4 rounded-lg border border-border p-4" aria-labelledby="rawg-batch-heading">
+    <section className="mt-4 rounded-lg border border-border bg-card p-4 shadow-card" aria-labelledby="rawg-batch-heading">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 id="rawg-batch-heading" className="text-sm font-medium">
