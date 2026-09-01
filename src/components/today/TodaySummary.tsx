@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { CurrentlyPlayingCarousel } from "@/components/today/CurrentlyPlayingCarousel";
 import type { TodayDataHealth } from "@/lib/today-data-health";
 
 interface TodaySummaryGame {
@@ -12,53 +12,36 @@ interface TodaySummaryGame {
 
 interface TodaySummaryProps {
   games: readonly TodaySummaryGame[];
-  activeBacklog: TodayDataHealth["activeBacklog"];
-  abandoned: number;
 }
 
-export function TodaySummary({ games, activeBacklog, abandoned }: TodaySummaryProps) {
-  const mainGame = games.find((game) => game.libraryEntry?.isMainGame);
-  const inProgressGames = games.filter(
-    (game) => game.libraryEntry?.playState === "IN_PROGRESS" && game.id !== mainGame?.id,
-  );
-
+export function TodaySummary({ games }: TodaySummaryProps) {
   return (
     <section className="space-y-5">
       <div>
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Current games
+          Currently playing
         </h2>
-        {mainGame ? (
-          <p className="text-sm">
-            Main game: <Link href={`/games/${mainGame.id}`} className="font-medium hover:underline">{mainGame.name}</Link>
-          </p>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            No main game selected. <Link href="/library" className="underline underline-offset-4 hover:text-foreground">Choose one from your library</Link>.
-          </p>
-        )}
+        <CurrentlyPlayingCarousel games={games} />
       </div>
 
-      <div>
-        <h3 className="mb-2 text-sm font-medium">In progress</h3>
-        {inProgressGames.length > 0 ? (
-          <ul className="space-y-1 text-sm">
-            {inProgressGames.map((game) => (
-              <li key={game.id}>
-                <Link href={`/games/${game.id}`} className="hover:underline">{game.name}</Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-muted-foreground">Nothing in progress.</p>
-        )}
-      </div>
+    </section>
+  );
+}
 
-      <div className="text-sm text-muted-foreground">
-        <p>
-          {activeBacklog.playedBefore} of {activeBacklog.total} played through
-        </p>
-        <p>{abandoned} abandoned</p>
+export function TodayDataHealth({
+  activeBacklog,
+  abandoned,
+}: {
+  activeBacklog: TodayDataHealth["activeBacklog"];
+  abandoned: number;
+}) {
+  return (
+    <section className="rounded-xl border border-border bg-card p-4">
+      <p className="technical-label text-muted-foreground">Data health</p>
+      <div className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
+        <p><span className="font-medium text-foreground">{activeBacklog.playedBefore}</span> of {activeBacklog.total} played through</p>
+        <p><span className="font-medium text-foreground">{activeBacklog.inProgress}</span> in progress</p>
+        <p><span className="font-medium text-foreground">{abandoned}</span> abandoned</p>
       </div>
     </section>
   );

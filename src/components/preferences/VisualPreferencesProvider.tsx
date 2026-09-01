@@ -16,12 +16,15 @@ import {
   applyVisualAttributes,
   normalizeData,
   normalizeMotion,
+  resolveVisualPreferences,
   type DataSetting,
+  type MotionPreference,
   type MotionSetting,
 } from "@/lib/visual-preferences";
 
-interface VisualPreferencesValue {
+export interface VisualPreferencesValue {
   motion: MotionSetting;
+  resolvedMotion: MotionPreference;
   data: DataSetting;
   setMotion: (value: MotionSetting) => void;
   setData: (value: DataSetting) => void;
@@ -34,6 +37,7 @@ interface VisualPreferencesState {
 
 const VisualPreferencesContext = createContext<VisualPreferencesValue>({
   motion: "system",
+  resolvedMotion: "full",
   data: "system",
   setMotion: () => {},
   setData: () => {},
@@ -57,7 +61,16 @@ function readStoredPreferences(): VisualPreferencesState {
 
 export function VisualPreferencesProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<VisualPreferencesState>(readStoredPreferences);
+  const [systemReducedMotion, setSystemReducedMotion] = useState(false);
   const stateRef = useRef(state);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setSystemReducedMotion(mediaQuery.matches);
+    update();
+    mediaQuery.addEventListener("change", update);
+    return () => mediaQuery.removeEventListener("change", update);
+  }, []);
 
   const commit = useCallback((next: VisualPreferencesState) => {
     stateRef.current = next;
@@ -104,8 +117,17 @@ export function VisualPreferencesProvider({ children }: { children: ReactNode })
   );
 
   const value = useMemo(
-    () => ({ motion: state.motion, data: state.data, setMotion, setData }),
-    [state, setMotion, setData],
+    () => ({
+      motion: state.motion,
+      resolvedMotion: resolveVisualPreferences(state.motion, state.data, {
+        reducedMotion: systemReducedMotion,
+        reducedData: false,
+      }).motion,
+      data: state.data,
+      setMotion,
+      setData,
+    }),
+    [state, setMotion, setData, systemReducedMotion],
   );
 
   return (

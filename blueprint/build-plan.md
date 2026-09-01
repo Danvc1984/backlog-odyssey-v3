@@ -289,7 +289,7 @@
     and mobile bottom navigation; add non-migrating visual-preference controls
     only for theme, reduced motion, and reduced data, leaving the broader
     Settings and export scope to 17.
-  - [ ] 14b. **Today decision dashboard** - Redesign Today around its existing
+  - [x] 14b. **Today decision dashboard** - Redesign Today around its existing
     data and business logic: a split first viewport with `Currently playing`
     and `Featured offers` carousels, a larger Play Next section with a dominant
     primary Best Fit and a compact rail for the remaining stored roles,

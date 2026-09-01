@@ -2,6 +2,7 @@ import {
   RecommendationItemCard,
 } from "@/components/recommendations/RecommendationItemCard";
 import { ShowAnotherButton } from "@/components/recommendations/ShowAnotherButton";
+import { PlayNextRailCard } from "@/components/recommendations/PlayNextRailCard";
 import {
   UpdateRecommendationsButton,
 } from "@/components/recommendations/UpdateRecommendationsButton";
@@ -16,10 +17,10 @@ import { loadPickableTasteSetupGames, selectInitialTasteSetupPicks, shouldShowTa
 import { resolveSourcePresentation } from "@/lib/sources/known-sources";
 import { refreshSteamActivityCacheIfStale } from "@/lib/steam-activity";
 import { RecentSteamActivity } from "@/components/today/RecentSteamActivity";
-import { TodaySummary } from "@/components/today/TodaySummary";
+import { TodayDataHealth, TodaySummary } from "@/components/today/TodaySummary";
 import { loadTodayDataHealth } from "@/lib/today-data-health";
 import { CoverageDialog } from "@/components/today/CoverageDialog";
-import { TodayOffers } from "@/components/today/TodayOffers";
+import { FeaturedOffersCarousel } from "@/components/today/FeaturedOffersCarousel";
 import { rankTodayOffers } from "@/lib/today-offers";
 import { loadTodayOperations } from "@/lib/today-operations";
 import { TodayOperations } from "@/components/today/TodayOperations";
@@ -123,15 +124,22 @@ export default async function TodayPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Today</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1 className="font-display text-5xl font-semibold tracking-tight">Today</h1>
+          <p className="mt-2 max-w-xl text-base text-muted-foreground">
             What to play next from your backlog.
           </p>
         </div>
-        <UpdateRecommendationsButton />
-      </div>
+        <div className="flex flex-col items-start gap-2 sm:items-end">
+          <UpdateRecommendationsButton />
+          {latestPlayNextRun && (
+            <p className="technical-label text-muted-foreground">
+              Latest run {latestPlayNextRun.createdAt.toLocaleString()}
+            </p>
+          )}
+        </div>
+      </header>
 
       {showTasteSetup && (
         <TasteSetupPanel
@@ -142,36 +150,9 @@ export default async function TodayPage() {
 
       <TodaySummary
         games={todayGames}
-        activeBacklog={dataHealth.activeBacklog}
-        abandoned={dataHealth.abandoned}
       />
 
-      <section>
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Catalog coverage
-        </h2>
-        <CoverageDialog
-          label="games missing RAWG metadata"
-          basis="Based on provider metadata coverage for visible base games."
-          titles={dataHealth.rawgMetadata.missing}
-        />
-        <CoverageDialog
-          label="games with incomplete recommendation profiles"
-          basis="Based on local personal fields: interest plus priority, preferred environment, or game experience."
-          titles={dataHealth.recommendationProfile.incomplete}
-        />
-      </section>
-
-      <TodayOffers offers={todayOffers} />
-
-      <TodayOperations view={todayOperations} />
-
-      <section>
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Recent Steam activity
-        </h2>
-        <RecentSteamActivity view={steamActivityView} />
-      </section>
+      <FeaturedOffersCarousel offers={todayOffers} />
 
       {!latestPlayNextRun && (
         <div className="rounded-lg border border-border p-8 text-center">
@@ -212,33 +193,50 @@ export default async function TodayPage() {
             })}
           </div>
         ) : (
-          <div className="space-y-5">
-            {PLAY_ROLE_GROUPS.map((group) => {
-              const groupItems = items.filter((item) => hasRole(group.roles, item.role));
-              if (groupItems.length === 0) return null;
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start">
+            {(() => {
+              const roleItems = PLAY_ROLE_GROUPS.flatMap((group) => group.roles.map((role) => items.find((item) => item.role === role && item.gameId)) .filter((item): item is (typeof items)[number] => item !== undefined));
+              const dominant = roleItems.find((item) => item.role === "BEST_FIT_1") ?? roleItems[0];
+              if (!dominant?.gameId || !dominant.role) return null;
+              const railItems = roleItems.filter((item) => item.id !== dominant.id);
               return (
-                <div key={group.label}>
-                  <h3 className="mb-2 text-sm font-medium text-muted-foreground">{group.label}</h3>
-                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    {groupItems.map((item) => item.gameId && item.role ? (
-                      <ShowAnotherButton
-                        key={item.id}
-                        runId={latestPlayNextRun?.id ?? ""}
-                        role={item.role}
-                        itemId={item.id}
-                        target={{ kind: "PLAY_NEXT", gameId: item.gameId }}
-                        name={item.game?.name ?? "Unknown game"}
-                        rank={item.rank}
-                        score={item.score}
-                        positive={item.positive}
-                        negative={item.negative}
-                        caveats={item.caveats}
-                      />
-                    ) : null)}
+                <>
+                  <div className="xl:w-2/3">
+                    <ShowAnotherButton
+                      runId={latestPlayNextRun?.id ?? ""}
+                      role={dominant.role}
+                      itemId={dominant.id}
+                      target={{ kind: "PLAY_NEXT", gameId: dominant.gameId }}
+                      name={dominant.game?.name ?? "Unknown game"}
+                      rank={dominant.rank}
+                      score={dominant.score}
+                      positive={dominant.positive}
+                      negative={dominant.negative}
+                      caveats={dominant.caveats}
+                    />
                   </div>
-                </div>
+                  {railItems.length > 0 && (
+                    <div className="grid gap-3 sm:grid-cols-2 xl:w-1/3 xl:grid-cols-1">
+                      {railItems.map((item) => (
+                        <PlayNextRailCard
+                          key={item.id}
+                          runId={latestPlayNextRun?.id ?? ""}
+                          role={item.role!}
+                          itemId={item.id}
+                          gameId={item.gameId!}
+                          name={item.game?.name ?? "Unknown game"}
+                          rank={item.rank}
+                          score={item.score}
+                          positive={item.positive}
+                          negative={item.negative}
+                          caveats={item.caveats}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
               );
-            })}
+            })()}
           </div>
         )}
       </section>
@@ -317,6 +315,34 @@ export default async function TodayPage() {
           </div>
         )}
       </section>
+
+      <section>
+        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+          Recent Steam activity
+        </h2>
+        <RecentSteamActivity view={steamActivityView} />
+      </section>
+
+      <div className="space-y-4">
+        <TodayDataHealth activeBacklog={dataHealth.activeBacklog} abandoned={dataHealth.abandoned} />
+        <section>
+          <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+            Catalog coverage
+          </h2>
+          <CoverageDialog
+            label="games missing RAWG metadata"
+            basis="Based on provider metadata coverage for visible base games."
+            titles={dataHealth.rawgMetadata.missing}
+          />
+          <CoverageDialog
+            label="games with incomplete recommendation profiles"
+            basis="Based on local personal fields: interest plus priority, preferred environment, or game experience."
+            titles={dataHealth.recommendationProfile.incomplete}
+          />
+        </section>
+      </div>
+
+      <TodayOperations view={todayOperations} />
     </div>
   );
 }
