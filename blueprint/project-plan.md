@@ -706,8 +706,9 @@ deferred to the feature-14 prototype and visual-foundation work.
 Direction is **dark-first**, derived from the reference material in
 `blueprint/reference/`:
 
-- Deep charcoal and navy surfaces; dark mode default, light mode fully
-  supported.
+- Deep charcoal and navy surfaces in dark mode; warm off-white or blue-gray
+  surfaces with navy/carbon text in light mode. Light mode is the same visual
+  identity, not a literal color inversion.
 - **Dual-accent semantic tokens**: cyan/teal for interactive elements,
   progress, and ready states; magenta/pink for opportunity signals, deals,
   and buy recommendations; amber for warnings, stale evidence, and mixed
@@ -715,11 +716,19 @@ Direction is **dark-first**, derived from the reference material in
 - Rounded cards, pill buttons, and badge chips as the component baseline on
   shadcn/ui tokens.
 - Bold display typography reserved for page headers and hero moments.
+- Technical monospace typography for small labels, source/provider evidence,
+  freshness, and compact operational context.
 - Desktop icon sidebar and mobile bottom navigation.
 - `/prototype` runs before feature 14 to lock the look against the references
   in throwaway mockups.
 
-The application shell and existing components support:
+Feature 14 ports the approved shared `prototypes/theme.css` token direction
+into the application and treats the existing Today, Library, Wishlist, and
+Game Detail mockups as its composition references. Wishlist Detail, Collections,
+and Settings extend that same system during implementation rather than starting
+another prototype cycle.
+
+The application shell and existing components must support:
 
 - Light, dark, and system modes.
 - Accessible contrast, semantic color tokens, and readable overlays.
@@ -729,6 +738,79 @@ The application shell and existing components support:
 - Reduced-data and reduced-motion behavior where applicable.
 - Stable local fallback visuals.
 - Settings-controlled behavior.
+
+Theme mode defaults to the system preference and may be overridden manually.
+Reduced motion and reduced data also respect system preferences by default and
+may be overridden manually from the visual/accessibility portion of Settings.
+These controls use a non-migrating visual-preference mechanism. Reduced motion
+disables carousel auto-advance and nonessential animation. Reduced data uses
+token-only fallbacks instead of remote artwork. These visual preferences are
+part of the feature-14 foundation; sessions, provider controls, queue
+operations, diagnostics, and JSON export remain feature 17.
+
+Existing RAWG artwork may appear in cards, carousels, and page moments only
+behind readable contrast overlays. Missing artwork and reduced-data mode use
+the deterministic abstract fallback system. Feature 14 does not derive or
+persist per-game palettes; that server-side enrichment concern remains feature
+16.
+
+Feature 14 changes presentation and small interaction composition only. It does
+not add providers, migrations, queue work, background work,
+price/recommendation logic, persistent data mutations, or different catalog,
+wishlist, compatibility, and provider-data boundaries.
+
+### Today dashboard hierarchy
+
+Today remains the post-login decision dashboard and retains the existing local
+composition rules from section 12. It does not launch games or silently run a
+sync, price refresh, enrichment, compatibility refresh, or recommendation run.
+
+Its first viewport is divided into two equal, independently useful surfaces:
+
+- **Currently playing** - a carousel led by the existing main game, followed
+  by existing `IN_PROGRESS` games. Each slide can show artwork, current state,
+  active-backlog context, playtime or recent activity where available, and
+  links to the existing game detail. It never claims to resume or launch a
+  game.
+- **Featured offers** - a carousel over the existing fresh Today offer ranking:
+  up to three selected valid offers, ordered by the current discount,
+  target-hit, price, and stable-name rules. It shows returned currency, store,
+  freshness, and links to the existing wishlist detail and seller without
+  introducing a second offer-ranking contract.
+
+Both carousels have visible manual navigation, position indicators, keyboard
+access, slow and discreet auto-advance, and pause on hover or focus. Under
+reduced motion they remain manual. When data is absent, their place is retained
+by a contextual empty state such as selecting a main game, browsing Library,
+or manually updating prices; these prompts never trigger hidden provider work.
+
+**Play Next** receives the largest independent section. Its existing latest
+explicit run and role semantics remain unchanged: one primary Best Fit card
+occupies roughly two thirds of the layout, while a compact rail carries every
+remaining stored role, including the second Best Fit, Change of Pace, and Out
+of the Box. The dominant card exposes the stored explanation, factors, caveats,
+compatibility/source context, and existing `Start playing` action. That action
+marks a catalog item `IN_PROGRESS` and follows the existing main-game decision
+flow; it never opens or resumes an external game.
+
+The existing Buy recommendation surface remains a full section below Play Next.
+Recent Steam activity, data-health coverage, provider freshness, and background
+operations remain lower-priority supporting sections. All existing empty,
+fresh, stale-on-error, and operation states stay explicit.
+
+### Feature-14 delivery and acceptance
+
+Feature 14 is intentionally split into 14a through 14e: theme/shell and visual
+preferences; Today; Library and Wishlist; detail/collection/supporting routes;
+then cross-app states, accessibility, and acceptance. Each part is independently
+reviewable and must preserve the relevant existing behavior before the next part
+begins.
+
+The final acceptance pass covers each primary route and its main flows on
+desktop and mobile, in dark, light, and system modes. It includes keyboard
+access, focus visibility, target sizing, contrast, reduced-motion/reduced-data
+behavior, loading, empty, error, stale, provider-freshness, and operation
+states, alongside the existing automated checks.
 
 ### Wallhaven global background
 
@@ -768,7 +850,7 @@ Settings includes:
 - Fixed environment display.
 - Steam wishlist-import status and review access.
 - Vercel Cron price-refresh status and diagnostics once deployment enables it.
-- Theme and accessibility preferences.
+- The theme and accessibility preference area introduced by feature 14.
 - Wallhaven enablement and refresh controls.
 - Reduced-data behavior.
 - Manual provider refresh controls.

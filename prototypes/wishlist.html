@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Backlog Odyssey - Wishlist prototype</title>
+    <link rel="stylesheet" href="theme.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="library.html">
+          <span class="brand-mark">BO</span>
+          <span>
+            <span class="brand-name">Backlog Odyssey</span>
+            <span class="brand-version">private / v3</span>
+          </span>
+        </a>
+
+        <nav aria-label="Primary navigation">
+          <div class="nav-label">Navigate</div>
+          <ul class="nav-list">
+            <li><a class="nav-link" href="today.html"><span class="nav-icon">01</span>Today</a></li>
+            <li><a class="nav-link" href="library.html"><span class="nav-icon">02</span>Library</a></li>
+            <li><a class="nav-link" href="wishlist.html" aria-current="page"><span class="nav-icon">03</span>Wishlist</a></li>
+            <li><a class="nav-link" href="#"><span class="nav-icon">04</span>Collections</a></li>
+          </ul>
+        </nav>
+
+        <nav aria-label="Workspace navigation">
+          <div class="nav-label">Workspace</div>
+          <ul class="nav-list">
+            <li><a class="nav-link" href="#"><span class="nav-icon">05</span>Sources</a></li>
+            <li><a class="nav-link" href="#"><span class="nav-icon">06</span>Settings</a></li>
+          </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="technical">Wishlist status</div>
+          <p><span style="color: var(--color-opportunity)">●</span> 3 fresh opportunities</p>
+          <p class="technical">prices / updated 16m ago</p>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <div class="eyebrow">Wishlist / decision queue</div>
+
+        <header class="page-header wishlist-page-header">
+          <div>
+            <h1>Worth the wait.<br><span style="color: var(--color-opportunity)">Buy with signal.</span></h1>
+            <p class="lede">Independent wishes, useful prices, and just enough context to know what deserves your money next.</p>
+          </div>
+          <div class="wishlist-header-actions">
+            <button class="button button-secondary" type="button">Import Steam wishlist</button>
+            <button class="button button-primary" type="button">+ Add wish</button>
+          </div>
+        </header>
+
+        <section class="wishlist-signal-grid" aria-label="Wishlist signals">
+          <article class="wishlist-signal-card signal">
+            <div class="technical">Active wishes</div>
+            <div class="wishlist-signal-value">27</div>
+            <p class="wishlist-signal-detail">21 base games · 6 DLC</p>
+          </article>
+          <article class="wishlist-signal-card opportunity">
+            <div class="technical">Opportunity signals</div>
+            <div class="wishlist-signal-value">03</div>
+            <p class="wishlist-signal-detail">fresh MXN offers at target</p>
+          </article>
+          <article class="wishlist-signal-card warning">
+            <div class="technical">Needs your review</div>
+            <div class="wishlist-signal-value">01</div>
+            <p class="wishlist-signal-detail">Steam identity match pending</p>
+          </article>
+        </section>
+
+        <section class="wishlist-toolbar" aria-label="Wishlist tools">
+          <label class="search-box">
+            <span>/</span>
+            <input type="search" value="" placeholder="Search wishes and DLC" aria-label="Search wishlist">
+            <span class="technical">⌘ K</span>
+          </label>
+          <button class="button button-secondary" type="button">Update prices ↻</button>
+        </section>
+
+        <div class="filter-strip wishlist-filter-strip" aria-label="Wishlist filters">
+          <button class="filter-chip active" type="button">All wishes <span class="count">27</span></button>
+          <button class="filter-chip" type="button">Base games <span class="count">21</span></button>
+          <button class="filter-chip" type="button">DLC <span class="count">6</span></button>
+          <button class="filter-chip" type="button">5 stars <span class="count">4</span></button>
+          <button class="filter-chip" type="button">Opportunities <span class="count">3</span></button>
+          <button class="filter-chip" type="button">Needs review <span class="count">1</span></button>
+        </div>
+
+        <section class="wishlist-review-card" aria-labelledby="review-heading">
+          <div>
+            <div class="eyebrow">Steam import / manual review</div>
+            <h2 id="review-heading">One identity match needs your call.</h2>
+            <p><strong>The Outer Wilds</strong> from Steam may match a local entry named <strong>Outer Wilds</strong>. Nothing will be linked until you confirm the candidate.</p>
+          </div>
+          <div class="wishlist-review-status">
+            <span class="wishlist-status warning">review pending</span>
+            <button class="button button-secondary" type="button">Review match ↗</button>
+          </div>
+        </section>
+
+        <div class="section-heading wishlist-list-heading">
+          <div>
+            <div class="eyebrow">Visible wishes</div>
+            <h2>27 games in your orbit</h2>
+            <p>Sorted by interest, then by the strongest current price signal.</p>
+          </div>
+          <div class="wishlist-view-controls">
+            <span class="technical">View</span>
+            <div class="view-switch" aria-label="Wishlist view">
+              <button class="view-button" type="button" data-wishlist-view="focus" aria-pressed="true">Focus</button>
+              <button class="view-button" type="button" data-wishlist-view="list" aria-pressed="false">List</button>
+            </div>
+            <span class="technical">1 - 3 / 27</span>
+          </div>
+        </div>
+
+        <section class="wishlist-entries" id="wishlist-entries" aria-label="Wishlist entries">
+          <article class="wishlist-entry">
+            <div class="wishlist-cover" style="--cover-a: var(--color-midnight); --cover-b: var(--color-opportunity); --cover-ink: var(--color-pure)">
+              <div class="wishlist-cover-title">Hades<br>II</div>
+              <div class="wishlist-cover-code">WISH / 001</div>
+            </div>
+            <div class="wishlist-entry-body">
+              <div>
+                <div class="wishlist-entry-header">
+                  <div>
+                    <h3 class="wishlist-entry-title"><a href="#">Hades II</a></h3>
+                    <p class="wishlist-entry-type">Base game · Steam identity confirmed</p>
+                  </div>
+                  <span class="badge badge-opportunity">opportunity</span>
+                </div>
+                <p class="wishlist-entry-description">A high-interest action roguelike for shorter sessions when the backlog needs momentum.</p>
+                <div class="wishlist-entry-tags">
+                  <span class="badge badge-state">Bazzite ready</span>
+                  <span class="badge">solo</span>
+                  <span class="badge">medium session</span>
+                </div>
+              </div>
+              <div class="wishlist-entry-footer">
+                <span class="source-badge"><span class="source-dot"></span>Steam</span>
+                <span class="technical">added Aug 26 · target MXN 350</span>
+                <a href="#">Open wish ↗</a>
+              </div>
+            </div>
+            <aside class="wishlist-entry-signal" aria-label="Hades II price and interest">
+              <div class="wishlist-interest-block">
+                <span class="technical">Interest</span>
+                <span class="wishlist-stars" aria-label="5 of 5 stars">★★★★★</span>
+              </div>
+              <div class="wishlist-price-block">
+                <div class="technical">Best valid MXN offer</div>
+                <div class="wishlist-price">MXN 319.99</div>
+                <p class="wishlist-price-source">Steam Store · -20%</p>
+                <div class="wishlist-offer-meta"><span>low MXN 299.99</span><span>fresh 16m</span></div>
+              </div>
+              <div class="wishlist-compatibility"><span>Target hit</span><strong>MXN 350.00</strong></div>
+            </aside>
+          </article>
+
+          <article class="wishlist-entry">
+            <div class="wishlist-cover" style="--cover-a: var(--color-signal); --cover-b: var(--color-midnight-soft); --cover-ink: var(--color-carbon)">
+              <div class="wishlist-cover-title">Disco<br>Elysium</div>
+              <div class="wishlist-cover-code">WISH / 002</div>
+            </div>
+            <div class="wishlist-entry-body">
+              <div>
+                <div class="wishlist-entry-header">
+                  <div>
+                    <h3 class="wishlist-entry-title"><a href="#">Disco Elysium: The Final Cut</a></h3>
+                    <p class="wishlist-entry-type">Base game · Steam identity confirmed</p>
+                  </div>
+                  <span class="wishlist-status muted">watching</span>
+                </div>
+                <p class="wishlist-entry-description">A narrative RPG saved for a quiet stretch, with no current price strong enough to act on.</p>
+                <div class="wishlist-entry-tags">
+                  <span class="badge">Bazzite unknown</span>
+                  <span class="badge">solo</span>
+                  <span class="badge">long session</span>
+                </div>
+              </div>
+              <div class="wishlist-entry-footer">
+                <span class="source-badge"><span class="source-dot"></span>Steam</span>
+                <span class="technical">added Aug 21 · no target</span>
+                <a href="#">Open wish ↗</a>
+              </div>
+            </div>
+            <aside class="wishlist-entry-signal" aria-label="Disco Elysium price and interest">
+              <div class="wishlist-interest-block">
+                <span class="technical">Interest</span>
+                <span class="wishlist-stars" aria-label="4 of 5 stars">★★★★☆</span>
+              </div>
+              <div class="wishlist-price-block">
+                <div class="technical">Current offer</div>
+                <div class="wishlist-price">No price</div>
+                <p class="wishlist-price-source">No valid offers available</p>
+                <div class="wishlist-offer-meta"><span>price caveat</span><span>identity ready</span></div>
+              </div>
+              <div class="wishlist-compatibility"><span>Compatibility</span><strong>not checked</strong></div>
+            </aside>
+          </article>
+
+          <article class="wishlist-entry">
+            <div class="wishlist-cover" style="--cover-a: var(--color-opportunity-soft); --cover-b: var(--color-warning); --cover-ink: var(--color-pure)">
+              <div class="wishlist-cover-title">Artorias<br>of the Abyss</div>
+              <div class="wishlist-cover-code">DLC / 003</div>
+            </div>
+            <div class="wishlist-entry-body">
+              <div>
+                <div class="wishlist-entry-header">
+                  <div>
+                    <h3 class="wishlist-entry-title"><a href="#">Artorias of the Abyss</a></h3>
+                    <p class="wishlist-entry-type">DLC · for DARK SOULS™: REMASTERED</p>
+                  </div>
+                  <span class="badge badge-warning">stale offer</span>
+                </div>
+                <p class="wishlist-entry-description">A wishlist expansion attached to an owned base game. Compatibility follows the catalog base and stays read-only here.</p>
+                <div class="wishlist-entry-tags">
+                  <span class="badge">owned base</span>
+                  <span class="badge badge-state">Bazzite inherited</span>
+                  <span class="badge">short session</span>
+                </div>
+              </div>
+              <div class="wishlist-entry-footer">
+                <span class="source-badge"><span class="source-dot"></span>Steam</span>
+                <span class="technical">added Aug 18 · target MXN 150</span>
+                <a href="#">Open wish ↗</a>
+              </div>
+            </div>
+            <aside class="wishlist-entry-signal" aria-label="Artorias of the Abyss price and interest">
+              <div class="wishlist-interest-block">
+                <span class="technical">Interest</span>
+                <span class="wishlist-stars" aria-label="3 of 5 stars">★★★☆☆</span>
+              </div>
+              <div class="wishlist-price-block">
+                <div class="technical">Last valid MXN offer</div>
+                <div class="wishlist-price">MXN 189.99</div>
+                <p class="wishlist-price-source">Steam Store · price stale</p>
+                <div class="wishlist-offer-meta"><span>low MXN 129.99</span><span>11d old</span></div>
+              </div>
+              <div class="wishlist-compatibility"><span>Base game</span><strong>ready</strong></div>
+              <div class="wishlist-offer-alternative"><strong>Alternative:</strong> ITAD offer unavailable</div>
+            </aside>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <nav class="mobile-nav" aria-label="Mobile navigation">
+      <a href="today.html">Today</a>
+      <a href="library.html">Library</a>
+      <a href="wishlist.html" aria-current="page">Wishlist</a>
+      <a href="#">Settings</a>
+    </nav>
+
+    <script>
+      const wishlistEntries = document.querySelector("#wishlist-entries");
+      const wishlistViewButtons = document.querySelectorAll("[data-wishlist-view]");
+
+      wishlistViewButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const isList = button.dataset.wishlistView === "list";
+          wishlistEntries.classList.toggle("compact-list", isList);
+          wishlistViewButtons.forEach((viewButton) => {
+            viewButton.setAttribute("aria-pressed", String(viewButton === button));
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

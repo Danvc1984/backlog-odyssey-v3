@@ -256,7 +256,7 @@
       unhidden abandoned replay candidates as explained, low-priority
       Out-of-the-Box second chances
 
-- [ ] 13. **Today dashboard** - post-login functional dashboard without a
+- [x] 13. **Today dashboard** - post-login functional dashboard without a
   feature-13 visual redesign. It composes main/in-progress games, latest three
   explicit play-next and buy results, three best discount-sorted wishlist
   offers, provider freshness, operation status, active-backlog progress, and
@@ -276,12 +276,47 @@
 
 ## Personalization and operations
 
-- [ ] 14. **Global visual foundation and full-app UI review** -
-  prototype-validated dark-first theme derived from blueprint/reference/
-  using dual-accent semantic tokens (cyan interactive, magenta opportunity,
-  amber warning), accessible contrast, token consistency, responsive
-  desktop/mobile navigation, full-app tidy-up, reduced-data and reduced-motion
-  safeguards, fallback visuals
+- [ ] 14. **Global visual foundation and full-app UI review** - Apply the
+  approved prototype direction across the existing app without changing product
+  rules, provider boundaries, schemas, jobs, recommendation ranking, or price
+  behavior. The outcome is full dark/light/system parity, token consistency,
+  responsive navigation, accessible states, and a visual review of every
+  existing route.
+  - [ ] 14a. **Theme tokens, modes, preferences, and app shell** - Port the
+    prototype-validated semantic token system into the application; deliver
+    dark, light, and system modes with the same hierarchy rather than a simple
+    inversion; update typography, surfaces, buttons, cards, desktop sidebar,
+    and mobile bottom navigation; add non-migrating visual-preference controls
+    only for theme, reduced motion, and reduced data, leaving the broader
+    Settings and export scope to 17.
+  - [ ] 14b. **Today decision dashboard** - Redesign Today around its existing
+    data and business logic: a split first viewport with `Currently playing`
+    and `Featured offers` carousels, a larger Play Next section with a dominant
+    primary Best Fit and a compact rail for the remaining stored roles,
+    including the second Best Fit, Change of Pace, and Out of the Box, then the
+    existing Buy, activity, coverage, freshness, and operation surfaces.
+    Carousels have manual controls, a slow pause-on-hover/focus auto-advance,
+    and no auto-advance under reduced motion. Empty states retain contextual
+    guidance and actions without triggering hidden provider work.
+  - [ ] 14c. **Library and Wishlist decision surfaces** - Apply the shared
+    visual system to catalog and wishlist browsing, including the approved
+    Library grid/list and Wishlist focus/list alternatives; improve filtering,
+    hierarchy, offer, identity, compatibility, import-review, freshness, and
+    empty/stale/error presentation while preserving current queries, source
+    semantics, currencies, and actions.
+  - [ ] 14d. **Detail, collection, and supporting route composition** - Apply
+    the shared system to Game Detail, Wishlist Detail, Collections, and their
+    dialogs/forms. Reuse existing RAWG artwork with contrast overlays when
+    available, use abstract local fallbacks otherwise or in reduced-data mode,
+    and preserve current detail actions, read-only evidence boundaries, and
+    destructive confirmations. Dynamic per-game palettes remain feature 16.
+  - [ ] 14e. **Cross-app states, accessibility, and visual acceptance** -
+    Finish visual Settings controls, loading/empty/error/stale/operation
+    states, keyboard/focus/target/contrast treatment, reduced-motion and
+    reduced-data behavior, mobile review, and token-consistency cleanup.
+    Prove the main flows on every route in desktop and mobile across dark,
+    light, and system modes, then run the existing automated checks. Wallhaven,
+    new providers, migrations, queues, and background work remain out of scope.
 
 - [ ] 15. **Wallhaven global background** - SFW keyword-pool caching (~10
   candidates), deterministic daily rotation with shuffle, desktop-oriented
@@ -293,8 +328,8 @@
   applied read-only to detail pages with contrast overlays, accessibility
   safeguards, and deterministic fallback
 
-- [ ] 17. **Settings and manual export** - sessions, theme and accessibility
-  preferences, Wallhaven controls, reduced-data settings, manual provider
+- [ ] 17. **Settings and manual export** - sessions, the visual/accessibility
+  preference area introduced by 14, Wallhaven controls, manual provider
   refresh/retry controls including the global compatibility sweep, queue
   progress, wishlist-import diagnostics, and personal-data-only JSON export
 

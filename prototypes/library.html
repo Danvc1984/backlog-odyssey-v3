@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Backlog Odyssey - Library prototype</title>
+    <link rel="stylesheet" href="theme.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="library.html">
+          <span class="brand-mark">BO</span>
+          <span>
+            <span class="brand-name">Backlog Odyssey</span>
+            <span class="brand-version">private / v3</span>
+          </span>
+        </a>
+
+        <nav aria-label="Primary navigation">
+          <div class="nav-label">Navigate</div>
+          <ul class="nav-list">
+            <li><a class="nav-link" href="today.html"><span class="nav-icon">01</span>Today</a></li>
+            <li><a class="nav-link" href="#" aria-current="page"><span class="nav-icon">02</span>Library</a></li>
+            <li><a class="nav-link" href="#"><span class="nav-icon">03</span>Wishlist</a></li>
+            <li><a class="nav-link" href="#"><span class="nav-icon">04</span>Collections</a></li>
+          </ul>
+        </nav>
+
+        <nav aria-label="Workspace navigation">
+          <div class="nav-label">Workspace</div>
+          <ul class="nav-list">
+            <li><a class="nav-link" href="#"><span class="nav-icon">05</span>Sources</a></li>
+            <li><a class="nav-link" href="#"><span class="nav-icon">06</span>Settings</a></li>
+          </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="technical">Catalog status</div>
+          <p><span style="color: var(--color-success)">●</span> 147 visible base games</p>
+          <p class="technical">last sync / 2d ago</p>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="page-header">
+          <div>
+            <div class="eyebrow">Catalog / owned games</div>
+            <h1>Your library,<br><span style="color: var(--color-signal-strong)">in orbit.</span></h1>
+            <p class="lede">A focused view of what you own, what needs attention, and what could move next.</p>
+          </div>
+          <a class="button button-primary" href="#">+ Add game</a>
+        </header>
+
+        <div class="toolbar">
+          <label class="search-box">
+            <span>/</span>
+            <input type="search" value="" placeholder="Search your catalog" aria-label="Search your catalog">
+            <span class="technical">⌘ K</span>
+          </label>
+          <button class="button button-secondary" type="button">Sort: newest ↓</button>
+          <div class="view-switch" aria-label="Library view">
+            <button class="view-button" type="button" data-view="grid" aria-pressed="true">Grid</button>
+            <button class="view-button" type="button" data-view="list" aria-pressed="false">List</button>
+          </div>
+        </div>
+
+        <div class="filter-strip" aria-label="Library filters">
+          <button class="filter-chip active" type="button">All <span class="count">147</span></button>
+          <button class="filter-chip" type="button">Not started <span class="count">102</span></button>
+          <button class="filter-chip" type="button">In progress <span class="count">1</span></button>
+          <button class="filter-chip" type="button">Played before <span class="count">3</span></button>
+          <button class="filter-chip" type="button">Abandoned <span class="count">0</span></button>
+          <button class="filter-chip" type="button">Steam</button>
+          <button class="filter-chip" type="button">Epic Games Store</button>
+          <button class="filter-chip" type="button">+ More filters</button>
+        </div>
+
+        <section class="health-grid" aria-label="Library data health">
+          <article class="health-card signal">
+            <div class="technical">Backlog progress</div>
+            <div class="health-value">4 / 147</div>
+            <p class="health-detail">played through · 0 abandoned</p>
+          </article>
+          <article class="health-card warning">
+            <div class="technical">Provider metadata</div>
+            <div class="health-value">11</div>
+            <p class="health-detail">games missing RAWG coverage</p>
+          </article>
+          <article class="health-card opportunity">
+            <div class="technical">Personal profile</div>
+            <div class="health-value">146</div>
+            <p class="health-detail">games need one more signal</p>
+          </article>
+          <article class="health-card">
+            <div class="technical">Main game</div>
+            <div class="health-value">01</div>
+            <p class="health-detail">DARK SOULS™: REMASTERED</p>
+          </article>
+        </section>
+
+        <div class="section-heading">
+          <div>
+            <div class="eyebrow">Visible catalog</div>
+            <h2>147 games in your orbit</h2>
+            <p>Sorted by recently added. Sources stay visible, never hidden behind a filter.</p>
+          </div>
+          <div class="technical">showing 1 - 12 / 147</div>
+        </div>
+
+        <section class="library-grid" aria-label="Library games">
+          <article class="library-card">
+            <div class="cover" style="--cover-a: var(--color-midnight); --cover-b: var(--color-signal); --cover-ink: var(--color-pure)">
+              <div class="cover-title">Dark<br>Souls</div>
+              <div class="cover-code">MAIN / 001</div>
+            </div>
+            <div class="card-body">
+              <div class="library-card-top">
+                <div>
+                  <h3>DARK SOULS™: REMASTERED</h3>
+                  <div class="badge-row">
+                    <span class="badge badge-state">main game</span>
+                    <span class="badge">in progress</span>
+                  </div>
+                </div>
+                <button class="icon-button" type="button" aria-label="More actions">•••</button>
+              </div>
+              <div class="source-row" style="margin-top: var(--space-3)">
+                <span class="source-badge"><span class="source-dot"></span>Steam</span>
+              </div>
+              <div class="meta-row"><span>playtime <strong>68h 12m</strong></span><span>added <strong>Aug 28</strong></span></div>
+              <div class="card-footer"><a href="game-detail.html">Open detail ↗</a><span class="technical">RAWG ready · Bazzite ready</span></div>
+            </div>
+          </article>
+
+          <article class="library-card">
+            <div class="cover" style="--cover-a: var(--color-opportunity-soft); --cover-b: var(--color-opportunity); --cover-ink: var(--color-pure)">
+              <div class="cover-title">Fear<br>files</div>
+              <div class="cover-code">PLAY / 002</div>
+            </div>
+            <div class="card-body">
+              <div class="library-card-top">
+                <div>
+                  <h3>F.E.A.R.</h3>
+                  <div class="badge-row">
+                    <span class="badge">in progress</span>
+                    <span class="badge badge-opportunity">play soon</span>
+                  </div>
+                </div>
+                <button class="icon-button" type="button" aria-label="More actions">•••</button>
+              </div>
+              <div class="source-row" style="margin-top: var(--space-3)">
+                <span class="source-badge"><span class="source-dot"></span>Steam</span>
+              </div>
+              <div class="meta-row"><span>playtime <strong>9h 40m</strong></span><span>added <strong>Aug 27</strong></span></div>
+              <div class="card-footer"><a href="#">Open detail ↗</a><span class="technical">RAWG missing · 1 signal</span></div>
+            </div>
+          </article>
+
+          <article class="library-card">
+            <div class="cover" style="--cover-a: var(--color-midnight-soft); --cover-b: var(--color-warning); --cover-ink: var(--color-carbon)">
+              <div class="cover-title">Hades<br>II</div>
+              <div class="cover-code">NEW / 003</div>
+            </div>
+            <div class="card-body">
+              <div class="library-card-top">
+                <div>
+                  <h3>Hades II</h3>
+                  <div class="badge-row">
+                    <span class="badge">not started</span>
+                    <span class="badge badge-warning">needs review</span>
+                  </div>
+                </div>
+                <button class="icon-button" type="button" aria-label="More actions">•••</button>
+              </div>
+              <div class="source-row" style="margin-top: var(--space-3)">
+                <span class="source-badge"><span class="source-dot"></span>Steam</span>
+                <span class="source-badge"><span class="source-dot" style="background: var(--color-opportunity)"></span>Epic Games Store</span>
+              </div>
+              <div class="meta-row"><span>playtime <strong>0h</strong></span><span>added <strong>Aug 26</strong></span></div>
+              <div class="card-footer"><a href="#">Open detail ↗</a><span class="technical">RAWG ready · profile incomplete</span></div>
+            </div>
+          </article>
+
+          <article class="library-card">
+            <div class="cover" style="--cover-a: var(--color-carbon); --cover-b: var(--color-pure); --cover-ink: var(--color-pure)">
+              <div class="cover-title">The<br>Witness</div>
+              <div class="cover-code">BACKLOG / 004</div>
+            </div>
+            <div class="card-body">
+              <div class="library-card-top">
+                <div>
+                  <h3>The Witness</h3>
+                  <div class="badge-row"><span class="badge">not started</span></div>
+                </div>
+                <button class="icon-button" type="button" aria-label="More actions">•••</button>
+              </div>
+              <div class="source-row" style="margin-top: var(--space-3)">
+                <span class="source-badge"><span class="source-dot"></span>Steam</span>
+              </div>
+              <div class="meta-row"><span>playtime <strong>0h</strong></span><span>added <strong>Aug 22</strong></span></div>
+              <div class="card-footer"><a href="#">Open detail ↗</a><span class="technical">RAWG ready · no preference</span></div>
+            </div>
+          </article>
+
+          <article class="library-card">
+            <div class="cover" style="--cover-a: var(--color-signal); --cover-b: var(--color-midnight); --cover-ink: var(--color-carbon)">
+              <div class="cover-title">Into the<br>breach</div>
+              <div class="cover-code">BACKLOG / 005</div>
+            </div>
+            <div class="card-body">
+              <div class="library-card-top">
+                <div>
+                  <h3>Into the Breach</h3>
+                  <div class="badge-row"><span class="badge">played before</span></div>
+                </div>
+                <button class="icon-button" type="button" aria-label="More actions">•••</button>
+              </div>
+              <div class="source-row" style="margin-top: var(--space-3)">
+                <span class="source-badge"><span class="source-dot"></span>Steam</span>
+                <span class="source-badge"><span class="source-dot" style="background: var(--color-success)"></span>ROM</span>
+              </div>
+              <div class="meta-row"><span>playtime <strong>24h 06m</strong></span><span>added <strong>Aug 18</strong></span></div>
+              <div class="card-footer"><a href="#">Open detail ↗</a><span class="technical">RAWG ready · Bazzite ready</span></div>
+            </div>
+          </article>
+
+          <article class="empty-card">
+            <div>
+              <div class="eyebrow">Nothing hidden here</div>
+              <h3>Every game has a next signal.</h3>
+              <p>Use filters to narrow the orbit, or add a new game to your catalog.</p>
+              <a class="button button-quiet" href="#">Reset filters</a>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <nav class="mobile-nav" aria-label="Mobile navigation">
+      <a href="today.html">Today</a>
+      <a href="#" aria-current="page">Library</a>
+      <a href="#">Wishlist</a>
+      <a href="#">Settings</a>
+    </nav>
+
+    <script>
+      const libraryGrid = document.querySelector(".library-grid");
+      const viewButtons = document.querySelectorAll("[data-view]");
+
+      viewButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const isList = button.dataset.view === "list";
+          libraryGrid.classList.toggle("list-view", isList);
+          viewButtons.forEach((viewButton) => {
+            viewButton.setAttribute("aria-pressed", String(viewButton === button));
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
