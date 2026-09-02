@@ -800,17 +800,40 @@ fresh, stale-on-error, and operation states stay explicit.
 
 ### Feature-14 delivery and acceptance
 
-Feature 14 is intentionally split into 14a through 14e: theme/shell and visual
-preferences; Today; Library and Wishlist; detail/collection/supporting routes;
-then cross-app states, accessibility, and acceptance. Each part is independently
-reviewable and must preserve the relevant existing behavior before the next part
-begins.
+Feature 14 is intentionally split into 14a through 14g, with each part
+independently reviewable and preserving the relevant existing behavior before
+the next part begins:
+
+- **14a - Theme tokens, modes, preferences, and app shell:** semantic tokens,
+  dark/light/system parity, typography, surfaces, cards, responsive navigation,
+  and non-migrating theme, reduced-motion, and reduced-data controls.
+- **14b - Today decision dashboard:** existing data composed as Currently
+  playing and Featured offers carousels, a dominant Play Next Best Fit, the
+  remaining stored roles, and the existing Buy and operations context.
+- **14c - Library browsing surfaces:** toolbar, filter chips, health strip,
+  approved grid/list alternatives, deterministic cover gradients, and restyled
+  enrichment, duplicate, empty, and catalog card surfaces.
+- **14d - Wishlist browsing surfaces:** signal grid, focus/list alternatives,
+  entry-card composition, offers, identity, staleness, target, and interest
+  over unchanged queries and actions.
+- **14e - Library and Wishlist header action rework:** homogenized header
+  actions, operation statuses, and follow-up sections across both pages, plus
+  ProtonDB compatibility tags on game cards in both views.
+- **14f - Detail, collection, and supporting route composition:** shared visual
+  treatment for Today, Game Detail, Wishlist Detail, Collections, Settings,
+  dialogs, and forms, with safe artwork overlays and deterministic fallbacks.
+- **14g - Cross-app states, accessibility, and visual acceptance:** loading,
+  empty, error, stale, operation, keyboard, focus, target, contrast,
+  reduced-motion, reduced-data, mobile, and full-route acceptance review.
 
 The final acceptance pass covers each primary route and its main flows on
 desktop and mobile, in dark, light, and system modes. It includes keyboard
 access, focus visibility, target sizing, contrast, reduced-motion/reduced-data
 behavior, loading, empty, error, stale, provider-freshness, and operation
-states, alongside the existing automated checks.
+states, alongside the existing automated checks. Feature 14 remains
+presentation and interaction composition only: it does not add providers,
+migrations, queues, background work, recommendation changes, price changes, or
+new catalog, wishlist, compatibility, or provider-data boundaries.
 
 ### Wallhaven global background
 

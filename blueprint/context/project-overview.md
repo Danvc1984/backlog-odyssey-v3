@@ -44,25 +44,31 @@ The exact checked state is owned by blueprint/build-plan.md.
    and inclusive source tuning.
 8. **[x] 13-13b: Today functional dashboard** - Progress, coverage, cached
    recent activity, latest explicit recommendations, offers, and operations.
-9. **[ ] 14a: Theme, preferences, and shell** - Prototype tokens, dark/light/
+9. **[x] 14a: Theme, preferences, and shell** - Prototype tokens, dark/light/
    system parity, non-migrating visual preferences, responsive shell.
-10. **[ ] 14b: Today dashboard composition** - Existing data rendered as two
+10. **[x] 14b: Today dashboard composition** - Existing data rendered as two
     carousels, dominant Play Next, and lower operational context.
-11. **[ ] 14c: Library surfaces** - Shared system plus approved grid/list,
-    filter chips, and health strip, without changing queries or behavior.
-12. **[ ] 14d: Wishlist surfaces** - Shared system plus approved focus/list,
-    signal grid, and entry-card offer/identity composition.
-13. **[ ] 14e: Detail, collection, supporting routes** - Game/Wishlist Detail,
-    Collections, dialogs, safe image overlays, and fallbacks.
-14. **[ ] 14f: Acceptance and accessibility** - Settings visual controls,
-    cross-app states, mobile, keyboard, contrast, and final visual review.
-15. **[ ] 15: Wallhaven background** - Optional cached SFW pool, daily
+11. **[x] 14c: Library surfaces** - Shared system plus approved grid/list,
+    filter chips, health strip, and catalog card parity without changing
+    queries or behavior.
+12. **[x] 14d: Wishlist surfaces** - Shared system plus approved focus/list,
+    signal grid, and entry-card offer, identity, staleness, target, and
+    interest composition.
+13. **[ ] 14e: Library and Wishlist header action rework** - Homogenized header
+    actions, operation statuses, follow-up sections, and ProtonDB compatibility
+    tags on game cards in both views.
+14. **[ ] 14f: Detail, collection, and supporting routes** - Shared treatment
+    for Today, Game Detail, Wishlist Detail, Collections, Settings, dialogs,
+    forms, safe image overlays, and deterministic fallbacks.
+15. **[ ] 14g: Acceptance and accessibility** - Cross-app states, mobile,
+    keyboard, focus, contrast, reduced motion/data, and final visual review.
+16. **[ ] 15: Wallhaven background** - Optional cached SFW pool, daily
     deterministic rotation, shuffle, attribution, fallback, reduced-data off.
-16. **[ ] 16: Per-game themes** - Server-derived RAWG palette data, read-only
+17. **[ ] 16: Per-game themes** - Server-derived RAWG palette data, read-only
     game-detail use, contrast safeguards, deterministic fallback.
-17. **[ ] 17: Settings and export** - Sessions, provider/queue controls,
+18. **[ ] 17: Settings and export** - Sessions, provider/queue controls,
     diagnostics, Wallhaven, visual preferences, and manual JSON export.
-18. **[ ] 18: Deployment and CI readiness** - Vercel/Supabase, Cron, smoke
+19. **[ ] 18: Deployment and CI readiness** - Vercel/Supabase, Cron, smoke
     tests, Verify command, and automatic checks.
 
 ## Data model and ownership
@@ -223,7 +229,7 @@ freshness, and operations are supporting sections.
 - /wishlist/[id] - metadata, identity/provenance, offers, target, notes,
   interest, acquire/edit/delete, compatibility, and fill-only enrichment.
 - /collections and /collections/[id] - collections and existing forms/dialogs,
-  restyled in Feature 14.
+  restyled in Feature 14f.
 - /settings - sessions, recommendation profile/reset, provider and queue
   controls, wishlist diagnostics, visual preferences, Wallhaven, and export.
 
@@ -258,6 +264,10 @@ freshness, and operations are supporting sections.
 
 ## Next workflow action
 
-The next uncompleted item is **Feature 14c: Library browsing surfaces**. Run
-$feature 14c to produce its reviewed implementation spec.
-This overview does not authorize code changes.
+The next unchecked item is **Feature 14e: Library and Wishlist header action
+rework**. Run `$feature 14e` to produce its reviewed implementation spec. If
+the UI direction needs another review, `$prototype` remains available for
+throwaway HTML/CSS mockups before implementation.
+
+This overview is generated from the two plans and does not authorize code
+changes.
