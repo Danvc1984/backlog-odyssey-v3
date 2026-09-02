@@ -88,13 +88,13 @@ export default async function WishlistPage({
     <div>
       <div className="flex flex-wrap items-start justify-between gap-5">
         <div className="max-w-2xl">
-          <p className="technical-label text-muted-foreground">Wishlist / decision queue</p>
+          <p className="technical-label text-muted-foreground">Wishlist</p>
           <h1 className="mt-2">
-            Worth the wait.<br />
-            <span className="text-opportunity-text">Buy with signal.</span>
+            Keen on a new<br />
+            <span className="text-opportunity-text">adventure?</span>
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-            Independent wishes, useful prices, and just enough context to know what deserves your money next.
+            Your selection of wishlisted games and dlcs, discounts powered by ITAD and just enough context to know what deserves your money next.
           </p>
         </div>
         <div className="flex max-w-2xl flex-wrap items-start justify-end gap-3">

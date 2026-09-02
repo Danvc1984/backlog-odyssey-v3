@@ -227,12 +227,12 @@ export default async function LibraryPage({
     <div data-view={view}>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="technical-label text-muted-foreground">Catalog / owned games</p>
+          <p className="technical-label text-muted-foreground">Owned Games Library</p>
           <h1 className="mt-2">
-            Your library, <span className="text-signal-strong">in orbit.</span>
+            Your games, <span className="text-signal-strong">your odyssey</span>
           </h1>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-            A focused view of what you own, what needs attention, and what could move next.
+            Use this catalog to manage your owned games and track details such as your progress, interest and compatibility.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -258,6 +258,19 @@ export default async function LibraryPage({
         </div>
       </div>
 
+      <div className="mt-6">
+        <LibraryHealthStrip
+          key={mainGame?.id ?? "none"}
+          health={dataHealth}
+          games={mainGamePicks}
+          mainGame={mainGame ? { id: mainGame.id, name: mainGame.name } : null}
+        />
+      </div>
+
+      <RawgBatchEnrichmentPanel
+        initialBatch={latestRawgBatch?.data ?? null}
+      />
+
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <LibraryFilters
           collections={[
@@ -279,19 +292,6 @@ export default async function LibraryPage({
         />
         <ViewSwitch view={view} label="Library view" />
       </div>
-
-      <div className="mt-6">
-        <LibraryHealthStrip
-          key={mainGame?.id ?? "none"}
-          health={dataHealth}
-          games={mainGamePicks}
-          mainGame={mainGame ? { id: mainGame.id, name: mainGame.name } : null}
-        />
-      </div>
-
-      <RawgBatchEnrichmentPanel
-        initialBatch={latestRawgBatch?.data ?? null}
-      />
 
       {entries.length === 0 ? (
         q || source || alt || state || (collection && collection !== "ALL") ? (
