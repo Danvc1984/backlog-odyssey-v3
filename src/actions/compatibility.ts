@@ -21,8 +21,14 @@ export async function refreshGameCompatibility(input: unknown) {
     const parsed = refreshSchema.safeParse(input);
     if (!parsed.success) return { success: false as const, data: null, error: "Invalid input" };
 
-    const game = await prisma.game.findUnique({ where: { id: parsed.data.gameId }, select: { id: true } });
+    const game = await prisma.game.findUnique({
+      where: { id: parsed.data.gameId },
+      select: { id: true, libraryEntry: { select: { hidden: true } } },
+    });
     if (!game) return { success: false as const, data: null, error: "Game not found" };
+    if (game.libraryEntry?.hidden === true) {
+      return { success: false as const, data: null, error: "Hidden games are not eligible for compatibility refresh" };
+    }
 
     const existing = await prisma.enrichmentJob.findUnique({
       where: { gameId_provider: { gameId: game.id, provider: "PROTONDB" } },

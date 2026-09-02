@@ -143,6 +143,12 @@ export async function runRawgEnrichmentJob(
     where: {
       id: jobId,
       provider: "RAWG",
+      game: {
+        OR: [
+          { libraryEntry: { is: null } },
+          { libraryEntry: { is: { hidden: false } } },
+        ],
+      },
       attempt: { lt: RAWG_JOB_MAX_ATTEMPTS },
       OR: [
         { status: "QUEUED" },

@@ -34,6 +34,7 @@ describe("compatibility queue", () => {
   it("requires a Steam identity and library entry, and excludes ROM-only games", () => {
     expect(isCompatEligible({ ...eligibleGame, externalIds: [] })).toBe(false);
     expect(isCompatEligible({ ...eligibleGame, libraryEntry: null })).toBe(false);
+    expect(isCompatEligible({ ...eligibleGame, libraryEntry: { id: "library-1", hidden: true } })).toBe(false);
     expect(isCompatEligible({
       ...eligibleGame,
       availability: [{ source: "ROM" }],
@@ -43,6 +44,19 @@ describe("compatibility queue", () => {
 
   it("skips an ineligible game before looking for a job", async () => {
     gameFindUnique.mockResolvedValue({ ...eligibleGame, externalIds: [] });
+
+    await expect(queueCompatibilityForGame("game-1")).resolves.toBeNull();
+
+    expect(jobFindUnique).not.toHaveBeenCalled();
+    expect(jobUpsert).not.toHaveBeenCalled();
+    expect(runCompatJob).not.toHaveBeenCalled();
+  });
+
+  it("skips hidden games before looking for a job", async () => {
+    gameFindUnique.mockResolvedValue({
+      ...eligibleGame,
+      libraryEntry: { id: "library-1", hidden: true },
+    });
 
     await expect(queueCompatibilityForGame("game-1")).resolves.toBeNull();
 

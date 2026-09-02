@@ -138,7 +138,7 @@ export function AlternativeSourcesCard({ sources }: AlternativeSourcesCardProps)
       className="mt-6 rounded-lg border border-border p-4"
       aria-labelledby="alternative-sources-heading"
     >
-      <div>
+      <div className="border-b border-border pb-3">
         <h2
           id="alternative-sources-heading"
           className="text-sm font-medium uppercase tracking-wider text-muted-foreground"
@@ -167,6 +167,8 @@ export function AlternativeSourcesCard({ sources }: AlternativeSourcesCardProps)
         </label>
         <Button
           type="button"
+          variant="outline"
+          size="sm"
           disabled={busy || createName.trim() === ""}
           onClick={() => void createSource(createName, false)}
         >

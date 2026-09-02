@@ -17,7 +17,7 @@ const activeBatchSelect = {
 
 interface SweepGame {
   id: string;
-  libraryEntry: { id: string } | null;
+  libraryEntry: { id: string; hidden: boolean } | null;
   externalIds: Array<{ namespace: string }>;
   availability: Array<{ source: string }>;
   enrichmentJobs: Array<{ status: "QUEUED" | "RUNNING" | "RETRY_WAIT" | "SUCCEEDED" | "FAILED" | "AWAITING_MATCH" }>;
@@ -69,10 +69,10 @@ export async function startCompatibilitySweep(input: unknown) {
       }
 
       const games = await tx.game.findMany({
-        where: { type: "BASE_GAME", libraryEntry: { isNot: null } },
+        where: { type: "BASE_GAME", libraryEntry: { is: { hidden: false } } },
         select: {
           id: true,
-          libraryEntry: { select: { id: true } },
+          libraryEntry: { select: { id: true, hidden: true } },
           externalIds: {
             where: { namespace: "STEAM_APP" as const },
             select: { namespace: true },
@@ -85,9 +85,10 @@ export async function startCompatibilitySweep(input: unknown) {
         },
       });
 
-      const skippedActiveWork = games.filter(isActiveJob).length;
-      const eligibleGames = games.filter((game) => !isActiveJob(game) && isCompatEligible(game));
-      const skippedIneligible = games.length - skippedActiveWork - eligibleGames.length;
+      const visibleGames = games.filter((game) => game.libraryEntry?.hidden !== true);
+      const skippedActiveWork = visibleGames.filter(isActiveJob).length;
+      const eligibleGames = visibleGames.filter((game) => !isActiveJob(game) && isCompatEligible(game));
+      const skippedIneligible = visibleGames.length - skippedActiveWork - eligibleGames.length;
       if (eligibleGames.length === 0) {
         return {
           kind: "NO_ELIGIBLE" as const,

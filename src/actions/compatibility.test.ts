@@ -67,6 +67,19 @@ describe("refreshGameCompatibility", () => {
     expect(jobCreate).not.toHaveBeenCalled();
   });
 
+  it("does not refresh a hidden game", async () => {
+    gameFindUnique.mockResolvedValue({ id: "game-1", libraryEntry: { hidden: true } });
+
+    await expect(refreshGameCompatibility({ gameId: "game-1" })).resolves.toEqual({
+      success: false,
+      data: null,
+      error: "Hidden games are not eligible for compatibility refresh",
+    });
+    expect(jobFindUnique).not.toHaveBeenCalled();
+    expect(jobCreate).not.toHaveBeenCalled();
+    expect(runCompatJob).not.toHaveBeenCalled();
+  });
+
   it("saves and clears a personal override", async () => {
     await expect(refreshGameCompatibility({ gameId: "game-1" })).resolves.toMatchObject({ success: true });
 

@@ -24,7 +24,7 @@ const compatBatchSelect = {
         select: {
           id: true,
           name: true,
-          libraryEntry: { select: { compatOverrideStatus: true } },
+          libraryEntry: { select: { compatOverrideStatus: true, hidden: true } },
         },
       },
     },
@@ -62,13 +62,14 @@ type CompatBatchRecord = {
     game: {
       id: string;
       name: string;
-      libraryEntry: { compatOverrideStatus: string | null } | null;
+      libraryEntry: { compatOverrideStatus: string | null; hidden?: boolean } | null;
     };
   }>;
 };
 
 function batchView(batch: CompatBatchRecord): CompatBatchView {
-  const summary = compatBatchSummary(batch.enrichmentJobs);
+  const visibleJobs = batch.enrichmentJobs.filter((job) => job.game.libraryEntry?.hidden !== true);
+  const summary = compatBatchSummary(visibleJobs);
   return {
     id: batch.id,
     status: summary.status,
@@ -76,7 +77,7 @@ function batchView(batch: CompatBatchRecord): CompatBatchView {
     progress: summary.progress,
     isTerminal: summary.isTerminal,
     finishedAt: batch.finishedAt?.toISOString() ?? null,
-    failedGames: batch.enrichmentJobs
+    failedGames: visibleJobs
       .filter((job) => job.status === "FAILED" && !job.game.libraryEntry?.compatOverrideStatus)
       .map((job) => ({ id: job.game.id, name: job.game.name })),
   };
@@ -99,7 +100,9 @@ async function refreshCompatBatch(batchId: string): Promise<CompatBatchRunResult
   const batch = await readCompatBatch(batchId);
   if (!batch) return null;
 
-  const summary = compatBatchSummary(batch.enrichmentJobs);
+  const summary = compatBatchSummary(
+    batch.enrichmentJobs.filter((job) => job.game.libraryEntry?.hidden !== true),
+  );
   const updated = await prisma.syncRun.update({
     where: { id: batch.id },
     data: {
@@ -134,7 +137,11 @@ export async function getLatestCompatBatchStatus(): Promise<CompatBatchRunResult
       provider: "PROTONDB",
       status: { in: ["PARTIAL", "FAILED"] },
       enrichmentJobs: {
-        some: { provider: "PROTONDB", status: "FAILED" },
+        some: {
+          provider: "PROTONDB",
+          status: "FAILED",
+          game: { libraryEntry: { is: { hidden: false } } },
+        },
       },
     },
     orderBy: { startedAt: "desc" },
@@ -144,7 +151,12 @@ export async function getLatestCompatBatchStatus(): Promise<CompatBatchRunResult
   if (failedView) return { success: true, data: failedView, error: null };
 
   const latestBatch = await prisma.syncRun.findFirst({
-    where: { provider: "PROTONDB" },
+    where: {
+      provider: "PROTONDB",
+      enrichmentJobs: {
+        some: { provider: "PROTONDB", game: { libraryEntry: { is: { hidden: false } } } },
+      },
+    },
     orderBy: { startedAt: "desc" },
     select: compatBatchSelect,
   });
@@ -167,6 +179,7 @@ export async function runCompatBatch(
     where: {
       syncRunId: batch.id,
       provider: "PROTONDB",
+      game: { libraryEntry: { is: { hidden: false } } },
       OR: [
         { status: "QUEUED" },
         { status: "RETRY_WAIT", nextAttemptAt: { lte: now } },

@@ -12,6 +12,7 @@ import type { RawgBatchView } from "@/lib/rawg-batch-runner";
 
 interface RawgBatchEnrichmentPanelProps {
   initialBatch: RawgBatchView | null;
+  embedded?: boolean;
 }
 
 interface BatchEndpointResult {
@@ -46,7 +47,7 @@ export function RawgBatchEnrichmentButton() {
   };
 
   return (
-    <Button type="button" variant="secondary" size="lg" disabled={running} onClick={() => void startBatch()}>
+    <Button type="button" variant="outline" size="sm" disabled={running} onClick={() => void startBatch()}>
       <Sparkles aria-hidden />
       {running ? "Starting..." : "Enrich eligible games"}
     </Button>
@@ -91,6 +92,7 @@ function shouldShowBatch(batch: RawgBatchView): boolean {
 
 export function RawgBatchEnrichmentPanel({
   initialBatch,
+  embedded = false,
 }: RawgBatchEnrichmentPanelProps) {
   const router = useRouter();
   const [batch, setBatch] = useState(
@@ -173,22 +175,33 @@ export function RawgBatchEnrichmentPanel({
     };
   }, [activeBatchId, refreshBatch, runBatch]);
 
-  if (!batch) {
-    return error ? <p className="mt-4 text-sm text-destructive">{error}</p> : null;
-  }
+  if (embedded && !batch && !error) return null;
 
   return (
-    <section className="mt-4 rounded-lg border border-border bg-card p-4 shadow-card" aria-labelledby="rawg-batch-heading">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 id="rawg-batch-heading" className="text-sm font-medium">
-            Catalog RAWG enrichment
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Queue games without RAWG metadata. Existing metadata is never replaced here.
-          </p>
+    <section
+      className={embedded ? "mt-4 border-t border-border pt-4" : "mt-6 rounded-lg border border-border p-4"}
+      aria-labelledby="rawg-batch-heading"
+    >
+      {embedded ? (
+        <h4 id="rawg-batch-heading" className="text-sm font-medium">
+          RAWG enrichment
+        </h4>
+      ) : (
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-3">
+          <div>
+            <h2
+              id="rawg-batch-heading"
+              className="text-sm font-medium uppercase tracking-wider text-muted-foreground"
+            >
+              Catalog RAWG enrichment
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Queue games without RAWG metadata. Existing metadata is never replaced here.
+            </p>
+          </div>
+          <RawgBatchEnrichmentButton />
         </div>
-      </div>
+      )}
 
       {batch && (
         <div className="mt-4 space-y-3 text-sm">

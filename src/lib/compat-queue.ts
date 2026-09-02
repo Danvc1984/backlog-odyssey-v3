@@ -9,7 +9,7 @@ import {
 import { runCompatJob, type CompatJobRunResult } from "@/lib/compat-job-runner";
 
 export interface CompatEligibilityGame {
-  libraryEntry: object | null;
+  libraryEntry: { id?: string; hidden?: boolean } | null;
   externalIds: ReadonlyArray<{ namespace: string }>;
   availability: ReadonlyArray<{ source: string }>;
 }
@@ -19,11 +19,11 @@ export function isCompatEligible(game: CompatEligibilityGame): boolean {
   const isRomOnly = game.availability.some(({ source }) => source === "ROM") &&
     !game.availability.some(({ source }) => source === "STEAM");
 
-  return game.libraryEntry !== null && hasSteamIdentity && !isRomOnly;
+  return game.libraryEntry !== null && game.libraryEntry.hidden !== true && hasSteamIdentity && !isRomOnly;
 }
 
 const eligibilitySelect = {
-  libraryEntry: { select: { id: true } },
+  libraryEntry: { select: { id: true, hidden: true } },
   externalIds: {
     where: { namespace: "STEAM_APP" as const },
     select: { namespace: true },

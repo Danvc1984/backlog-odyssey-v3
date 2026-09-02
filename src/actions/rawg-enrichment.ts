@@ -101,10 +101,13 @@ export async function requestRawgMatchReview(input: RequestRawgMatchReviewInput)
 
     const game = await prisma.game.findUnique({
       where: { id: parsed.data.gameId },
-      select: { id: true, name: true },
+      select: { id: true, name: true, libraryEntry: { select: { hidden: true } } },
     });
     if (!game) {
       return { success: false as const, data: null, error: "Game not found" };
+    }
+    if (game.libraryEntry?.hidden === true) {
+      return { success: false as const, data: null, error: "Hidden games are not eligible for RAWG enrichment" };
     }
 
     const candidates = await searchRawgCandidates(game.name, 1);
@@ -172,6 +175,7 @@ export async function requestRawgEnrichment(
       where: { id: gameId },
       select: {
         id: true,
+        libraryEntry: { select: { hidden: true } },
         metadataSnapshots: {
           where: { provider: "RAWG" },
           orderBy: { fetchedAt: "desc" },
@@ -183,6 +187,9 @@ export async function requestRawgEnrichment(
 
     if (!game) {
       return { success: false as const, data: null, error: "Game not found" };
+    }
+    if (game.libraryEntry?.hidden === true) {
+      return { success: false as const, data: null, error: "Hidden games are not eligible for RAWG enrichment" };
     }
 
     const existingJob = await prisma.enrichmentJob.findUnique({
@@ -439,6 +446,7 @@ export async function applyRawgTitle(input: ApplyRawgTitleInput) {
       where: { id: parsed.data.gameId },
       select: {
         id: true,
+        libraryEntry: { select: { hidden: true } },
         metadataSnapshots: {
           where: { provider: "RAWG" },
           orderBy: { fetchedAt: "desc" },
@@ -449,6 +457,9 @@ export async function applyRawgTitle(input: ApplyRawgTitleInput) {
     });
     if (!game) {
       return { success: false as const, data: null, error: "Game not found" };
+    }
+    if (game.libraryEntry?.hidden === true) {
+      return { success: false as const, data: null, error: "Hidden games are not eligible for RAWG enrichment" };
     }
 
     const snapshot = game.metadataSnapshots[0];

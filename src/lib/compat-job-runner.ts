@@ -190,6 +190,12 @@ export async function runCompatJob(jobId: string): Promise<CompatJobRunResult | 
     where: {
       id: jobId,
       provider: "PROTONDB",
+      game: {
+        OR: [
+          { libraryEntry: { is: null } },
+          { libraryEntry: { is: { hidden: false } } },
+        ],
+      },
       attempt: { lt: COMPAT_JOB_MAX_ATTEMPTS },
       OR: [{ status: "QUEUED" }, { status: "RETRY_WAIT", nextAttemptAt: { lte: now } }],
     },

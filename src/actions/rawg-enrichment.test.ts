@@ -154,6 +154,22 @@ describe("RAWG enrichment actions", () => {
     );
   });
 
+  it("does not queue RAWG work for a hidden game", async () => {
+    findGame.mockResolvedValue({
+      id: "game-1",
+      libraryEntry: { hidden: true },
+      metadataSnapshots: [],
+    });
+
+    await expect(requestRawgEnrichment({ gameId: "game-1" })).resolves.toEqual({
+      success: false,
+      data: null,
+      error: "Hidden games are not eligible for RAWG enrichment",
+    });
+    expect(findJob).not.toHaveBeenCalled();
+    expect(createJob).not.toHaveBeenCalled();
+  });
+
   it("returns an overwrite warning without mutating an existing snapshot", async () => {
     findGame.mockResolvedValue({
       id: "game-1",

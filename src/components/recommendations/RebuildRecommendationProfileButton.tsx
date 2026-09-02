@@ -22,5 +22,5 @@ export function RebuildRecommendationProfileButton() {
     router.refresh();
   };
 
-  return <Button type="button" variant="outline" onClick={() => void rebuild()} disabled={running}>{running ? "Rebuilding..." : "Rebuild profile"}</Button>;
+  return <Button type="button" variant="outline" size="sm" onClick={() => void rebuild()} disabled={running}>{running ? "Rebuilding..." : "Rebuild profile"}</Button>;
 }

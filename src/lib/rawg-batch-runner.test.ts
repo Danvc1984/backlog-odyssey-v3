@@ -299,6 +299,34 @@ describe("RAWG catalog batch runner", () => {
     });
   });
 
+  it("excludes hidden games from batch counts and follow-ups", async () => {
+    findBatch.mockResolvedValue(batch({
+      status: "PARTIAL",
+      enrichmentJobs: [
+        {
+          id: "job-visible",
+          status: "AWAITING_MATCH",
+          nextAttemptAt: null,
+          game: { id: "game-visible", name: "Portal 2", libraryEntry: { hidden: false } },
+        },
+        {
+          id: "job-hidden",
+          status: "FAILED",
+          nextAttemptAt: null,
+          game: { id: "game-hidden", name: "Hidden Game", libraryEntry: { hidden: true } },
+        },
+      ],
+    }));
+
+    await expect(getRawgBatchStatus("batch-1")).resolves.toMatchObject({
+      data: {
+        counts: { total: 1, awaitingMatch: 1, failed: 0 },
+        awaitingMatchGames: [{ id: "game-visible" }],
+        failedGames: [],
+      },
+    });
+  });
+
   it("prefers a batch with pending match review over a newer empty batch", async () => {
     const reviewBatch = batch({
       id: "batch-review",
@@ -328,7 +356,13 @@ describe("RAWG catalog batch runner", () => {
     expect(findBatch).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({
         status: "PARTIAL",
-        enrichmentJobs: { some: { provider: "RAWG", status: "AWAITING_MATCH" } },
+        enrichmentJobs: {
+          some: {
+            provider: "RAWG",
+            status: "AWAITING_MATCH",
+            game: { libraryEntry: { is: { hidden: false } } },
+          },
+        },
       }),
     }));
     expect(findBatch).toHaveBeenCalledTimes(1);
@@ -380,7 +414,13 @@ describe("RAWG catalog batch runner", () => {
     expect(findBatch).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({
         status: { in: ["PARTIAL", "FAILED"] },
-        enrichmentJobs: { some: { provider: "RAWG", status: "FAILED" } },
+        enrichmentJobs: {
+          some: {
+            provider: "RAWG",
+            status: "FAILED",
+            game: { libraryEntry: { is: { hidden: false } } },
+          },
+        },
       }),
     }));
     expect(findBatch).toHaveBeenCalledTimes(2);
@@ -390,9 +430,10 @@ describe("RAWG catalog batch runner", () => {
     findBatch.mockResolvedValue(batch({ id: "batch-new" }));
     findPendingBatches.mockResolvedValue([
       {
-        enrichmentJobs: [
-          { status: "AWAITING_MATCH", game: { id: "game-import", name: "Imported Game" } },
-          { status: "FAILED", game: { id: "game-failed", name: "Failed Game" } },
+          enrichmentJobs: [
+            { status: "AWAITING_MATCH", game: { id: "game-import", name: "Imported Game" } },
+            { status: "FAILED", game: { id: "game-hidden", name: "Hidden Game", libraryEntry: { hidden: true } } },
+            { status: "FAILED", game: { id: "game-failed", name: "Failed Game" } },
         ],
       },
       {

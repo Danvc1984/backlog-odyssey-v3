@@ -77,6 +77,13 @@ describe("compatibility sweep action", () => {
         availability: [{ source: "ROM" }],
         enrichmentJobs: [],
       },
+      {
+        id: "game-hidden",
+        libraryEntry: { id: "library-hidden", hidden: true },
+        externalIds: [{ namespace: "STEAM_APP" }],
+        availability: [{ source: "STEAM" }],
+        enrichmentJobs: [],
+      },
     ]);
 
     await expect(startCompatibilitySweep({})).resolves.toMatchObject({
@@ -90,6 +97,9 @@ describe("compatibility sweep action", () => {
     expect(upsertJob).toHaveBeenCalledWith(expect.objectContaining({
       where: { gameId_provider: { gameId: "game-eligible", provider: "PROTONDB" } },
       create: expect.objectContaining({ syncRunId: "batch-1", status: "QUEUED" }),
+    }));
+    expect(findGames).toHaveBeenCalledWith(expect.objectContaining({
+      where: { type: "BASE_GAME", libraryEntry: { is: { hidden: false } } },
     }));
   });
 

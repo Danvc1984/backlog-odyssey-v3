@@ -42,7 +42,17 @@ export async function loadTodayOperations(
     client.metadataSnapshot.findFirst({ where: { provider: "RAWG" }, orderBy: { fetchedAt: "desc" }, select: { fetchedAt: true } }),
     client.priceRefresh.findFirst({ where: { status: { in: ["SUCCESS", "PARTIAL"] } }, orderBy: { finishedAt: "desc" }, select: { finishedAt: true } }),
     client.compatibilitySnapshot.findFirst({ orderBy: { fetchedAt: "desc" }, select: { fetchedAt: true } }),
-    client.enrichmentJob.findMany({ select: { status: true } }),
+    client.enrichmentJob.findMany({
+      where: {
+        game: {
+          OR: [
+            { libraryEntry: { is: null } },
+            { libraryEntry: { is: { hidden: false } } },
+          ],
+        },
+      },
+      select: { status: true },
+    }),
     client.syncRun.findMany({ where: { status: "RUNNING" }, select: { provider: true, startedAt: true } }),
     client.priceRefresh.findMany({ where: { status: "RUNNING" }, select: { requestedAt: true } }),
     client.wishlistCompatSweep.findMany({ where: { status: "RUNNING" }, select: { requestedAt: true } }),

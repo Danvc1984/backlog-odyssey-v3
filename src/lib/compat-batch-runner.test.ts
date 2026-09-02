@@ -145,6 +145,30 @@ describe("compatibility batch runner", () => {
     });
   });
 
+  it("excludes hidden games from counts and failed follow-ups", async () => {
+    findFirst.mockResolvedValue(batch({
+      status: "PARTIAL",
+      enrichmentJobs: [
+        {
+          id: "job-visible",
+          status: "SUCCEEDED",
+          nextAttemptAt: null,
+          game: { id: "game-visible", name: "Portal 2", libraryEntry: { compatOverrideStatus: null, hidden: false } },
+        },
+        {
+          id: "job-hidden",
+          status: "FAILED",
+          nextAttemptAt: null,
+          game: { id: "game-hidden", name: "Hidden Game", libraryEntry: { compatOverrideStatus: null, hidden: true } },
+        },
+      ],
+    }));
+
+    await expect(getCompatBatchStatus("batch-1")).resolves.toMatchObject({
+      data: { counts: { total: 1, succeeded: 1, failed: 0 }, failedGames: [] },
+    });
+  });
+
   it("ignores an empty persisted batch when loading the latest status", async () => {
     findFirst
       .mockResolvedValueOnce(null)

@@ -140,9 +140,12 @@ export function UnresolvedDlcReviewCard({
 
   return (
     <section className="mt-6 rounded-lg border border-border p-4" aria-labelledby="unresolved-dlc-heading">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-3">
         <div>
-          <h2 id="unresolved-dlc-heading" className="text-sm font-medium">
+          <h2
+            id="unresolved-dlc-heading"
+            className="text-sm font-medium uppercase tracking-wider text-muted-foreground"
+          >
             Unresolved Steam DLC
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -174,7 +177,7 @@ export function UnresolvedDlcReviewCard({
                     Link base game
                   </Button>
                   {item.source === "OWNED_SYNC" && (
-                    <Button type="button" size="sm" onClick={() => openCreateDialog(item)}>
+                    <Button type="button" size="sm" variant="outline" onClick={() => openCreateDialog(item)}>
                       <WandSparkles />
                       Create base + DLC
                     </Button>

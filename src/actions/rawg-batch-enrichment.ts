@@ -68,7 +68,7 @@ export async function startRawgCatalogEnrichment(input: unknown) {
       const games = await tx.game.findMany({
         where: {
           type: "BASE_GAME",
-          libraryEntry: { isNot: null },
+          libraryEntry: { is: { hidden: false } },
         },
         select: {
           id: true,

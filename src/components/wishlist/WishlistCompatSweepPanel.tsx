@@ -11,6 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { formatMexicoTimestamp } from "@/lib/format-times";
 
+export type { WishlistCompatSweepRunView } from "@/actions/wishlist-compatibility";
+
 interface SweepCountBucket {
   total: number;
   refreshed: number;
@@ -61,19 +63,35 @@ export function WishlistCompatSweepPanel({
   const finished = formatMexicoTimestamp(run?.finishedAt ?? null);
 
   return (
-    <div className="flex flex-col items-end gap-1.5">
-      <Button
-        type="button"
-        variant="secondary"
-        size="lg"
-        onClick={() => void sweep()}
-        disabled={running}
-      >
-        <RefreshCw aria-hidden className={running ? "animate-spin" : ""} />
-        {running ? "Updating compatibility..." : "Update compatibility"}
-      </Button>
+    <div
+      className="mt-4 border-t border-border pt-4"
+      aria-labelledby="wishlist-compatibility-sweep-heading"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3
+            id="wishlist-compatibility-sweep-heading"
+            className="text-sm font-medium"
+          >
+            Wishlist games
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Refresh ProtonDB and AWAY evidence for eligible wishlist games.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => void sweep()}
+          disabled={running}
+        >
+          <RefreshCw aria-hidden className={running ? "animate-spin" : ""} />
+          {running ? "Updating compatibility..." : "Update compatibility"}
+        </Button>
+      </div>
       {counts && (
-        <p className="text-xs text-muted-foreground">
+        <p className="mt-4 text-xs text-muted-foreground">
           {counts.refreshed} refreshed · {counts.upToDate} up to date · {counts.failed} failed
           {finished && ` · ${finished}`}
         </p>

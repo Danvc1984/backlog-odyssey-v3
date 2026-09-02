@@ -120,9 +120,11 @@ export function AppearanceSection() {
 
   return (
     <section className="mt-6 rounded-lg border border-border p-4">
-      <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-        Appearance
-      </h2>
+      <div className="border-b border-border pb-3">
+        <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+          Appearance
+        </h2>
+      </div>
       <div className="mt-4 grid gap-4">
         <SettingRow
           title="Theme"

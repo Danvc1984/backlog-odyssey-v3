@@ -25,6 +25,7 @@ const rawgBatchSelect = {
         select: {
           id: true,
           name: true,
+          libraryEntry: { select: { hidden: true } },
         },
       },
     },
@@ -62,14 +63,14 @@ type RawgBatchRecord = {
     id: string;
     status: "QUEUED" | "RUNNING" | "RETRY_WAIT" | "AWAITING_MATCH" | "SUCCEEDED" | "FAILED";
     nextAttemptAt: Date | null;
-    game: { id: string; name: string };
+    game: { id: string; name: string; libraryEntry?: { hidden?: boolean } | null };
   }>;
 };
 
 type RawgPendingBatchRecord = {
   enrichmentJobs: Array<{
     status: "AWAITING_MATCH" | "FAILED";
-    game: { id: string; name: string };
+    game: { id: string; name: string; libraryEntry?: { hidden?: boolean } | null };
   }>;
 };
 
@@ -91,6 +92,7 @@ async function readPendingRawgFollowUps(): Promise<RawgPendingFollowUps> {
         some: {
           provider: "RAWG",
           status: { in: ["AWAITING_MATCH", "FAILED"] },
+          game: { libraryEntry: { is: { hidden: false } } },
         },
       },
     },
@@ -102,7 +104,7 @@ async function readPendingRawgFollowUps(): Promise<RawgPendingFollowUps> {
         },
         select: {
           status: true,
-          game: { select: { id: true, name: true } },
+          game: { select: { id: true, name: true, libraryEntry: { select: { hidden: true } } } },
         },
       },
     },
@@ -111,6 +113,7 @@ async function readPendingRawgFollowUps(): Promise<RawgPendingFollowUps> {
   const failedGames = new Map<string, { id: string; name: string }>();
   for (const batch of batches) {
     for (const job of batch.enrichmentJobs) {
+      if (job.game.libraryEntry?.hidden === true) continue;
       const games = job.status === "AWAITING_MATCH" ? awaitingMatchGames : failedGames;
       games.set(job.game.id, job.game);
     }
@@ -128,13 +131,16 @@ async function addPendingRawgFollowUps(
 }
 
 function batchView(batch: RawgBatchRecord): RawgBatchView {
-  const awaitingMatchGames = batch.enrichmentJobs
+  const visibleJobs = batch.enrichmentJobs.filter((job) => job.game.libraryEntry?.hidden !== true);
+  const awaitingMatchGames = visibleJobs
     .filter((job) => job.status === "AWAITING_MATCH")
     .map((job) => job.game);
-  const failedGames = batch.enrichmentJobs
+  const failedGames = visibleJobs
     .filter((job) => job.status === "FAILED")
     .map((job) => job.game);
-  const persistedSummary = persistedRawgBatchSummary(batch.status, batch.counts);
+  const persistedSummary = visibleJobs.length === batch.enrichmentJobs.length
+    ? persistedRawgBatchSummary(batch.status, batch.counts)
+    : null;
   if (persistedSummary) {
     return {
       id: batch.id,
@@ -149,13 +155,15 @@ function batchView(batch: RawgBatchRecord): RawgBatchView {
     };
   }
 
-  const summary = rawgBatchSummary(batch.enrichmentJobs);
+  const summary = rawgBatchSummary(visibleJobs);
   return {
     id: batch.id,
-    status: batch.status,
+    status: visibleJobs.length === batch.enrichmentJobs.length ? batch.status : summary.status,
     counts: summary.counts,
     progress: summary.progress,
-    isTerminal: batch.status !== "RUNNING",
+    isTerminal: visibleJobs.length === batch.enrichmentJobs.length
+      ? batch.status !== "RUNNING"
+      : summary.isTerminal,
     finishedAt: batch.finishedAt?.toISOString() ?? null,
     awaitingMatchGames,
     failedGames,
@@ -176,7 +184,9 @@ async function refreshRawgBatch(batchId: string): Promise<RawgBatchRunResult | n
     return null;
   }
 
-  const summary = rawgBatchSummary(batch.enrichmentJobs);
+  const summary = rawgBatchSummary(
+    batch.enrichmentJobs.filter((job) => job.game.libraryEntry?.hidden !== true),
+  );
   const finishedAt = summary.isTerminal ? batch.finishedAt ?? new Date() : null;
   const updated = await prisma.syncRun.update({
     where: { id: batch.id },
@@ -203,7 +213,11 @@ export async function getLatestRawgBatchStatus(): Promise<RawgBatchRunResult | n
       provider: "RAWG",
       status: "PARTIAL",
       enrichmentJobs: {
-        some: { provider: "RAWG", status: "AWAITING_MATCH" },
+        some: {
+          provider: "RAWG",
+          status: "AWAITING_MATCH",
+          game: { libraryEntry: { is: { hidden: false } } },
+        },
       },
     },
     orderBy: { startedAt: "desc" },
@@ -218,7 +232,11 @@ export async function getLatestRawgBatchStatus(): Promise<RawgBatchRunResult | n
       provider: "RAWG",
       status: { in: ["PARTIAL", "FAILED"] },
       enrichmentJobs: {
-        some: { provider: "RAWG", status: "FAILED" },
+        some: {
+          provider: "RAWG",
+          status: "FAILED",
+          game: { libraryEntry: { is: { hidden: false } } },
+        },
       },
     },
     orderBy: { startedAt: "desc" },
@@ -229,7 +247,12 @@ export async function getLatestRawgBatchStatus(): Promise<RawgBatchRunResult | n
   }
 
   const latestBatch = await prisma.syncRun.findFirst({
-    where: { provider: "RAWG" },
+    where: {
+      provider: "RAWG",
+      enrichmentJobs: {
+        some: { provider: "RAWG", game: { libraryEntry: { is: { hidden: false } } } },
+      },
+    },
     orderBy: { startedAt: "desc" },
     select: rawgBatchSelect,
   });
@@ -254,6 +277,7 @@ export async function runRawgCatalogBatch(
     where: {
       syncRunId: batch.id,
       provider: "RAWG",
+      game: { libraryEntry: { is: { hidden: false } } },
       OR: [
         { status: "QUEUED" },
         { status: "RETRY_WAIT", nextAttemptAt: { lte: now } },

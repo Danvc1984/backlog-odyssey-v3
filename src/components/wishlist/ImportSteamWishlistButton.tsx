@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, RefreshCw, X } from "lucide-react";
 import { toast } from "sonner";
@@ -10,6 +10,7 @@ import {
   type WishlistImportResult,
 } from "@/actions/steam-import-wishlist";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const ENRICHMENT_BATCH_SIZE = 12;
 
@@ -66,7 +67,13 @@ export function WishlistImportResultPanel({
   );
 }
 
-export function ImportSteamWishlistButton() {
+export function ImportSteamWishlistButton({
+  disabled = false,
+  onBusyChange,
+}: {
+  disabled?: boolean;
+  onBusyChange?: (busy: boolean) => void;
+}) {
   const router = useRouter();
   const [running, setRunning] = useState(false);
   const [enriching, setEnriching] = useState(false);
@@ -119,20 +126,33 @@ export function ImportSteamWishlistButton() {
 
   const busy = running || enriching;
 
+  useEffect(() => {
+    onBusyChange?.(busy);
+    return () => onBusyChange?.(false);
+  }, [busy, onBusyChange]);
+
   return (
-    <div className="flex min-w-52 flex-col items-end gap-2">
-      <Button type="button" variant="secondary" size="lg" onClick={() => void importWishlist()} disabled={busy}>
+    <div className={cn("flex flex-col items-end gap-2", result && "basis-full")}>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => void importWishlist()}
+        disabled={disabled || busy}
+      >
         {busy ? <RefreshCw aria-hidden className="animate-spin" /> : <Download aria-hidden />}
         {enriching
           ? `Enriching ${enrichmentProgress?.completed ?? 0}/${enrichmentProgress?.total ?? 0}...`
           : running ? "Importing wishlist..." : "Import Steam wishlist"}
       </Button>
       {result && (
-        <WishlistImportResultPanel
-          result={result}
-          onDismiss={() => setResult(null)}
-          enrichmentProgress={enrichmentProgress}
-        />
+        <div className="w-full">
+          <WishlistImportResultPanel
+            result={result}
+            onDismiss={() => setResult(null)}
+            enrichmentProgress={enrichmentProgress}
+          />
+        </div>
       )}
     </div>
   );

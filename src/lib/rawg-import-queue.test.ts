@@ -59,6 +59,9 @@ describe("queueRawgForImportedGames", () => {
     expect(findGames).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({ id: { in: ["eligible", "metadata", "active"] } }),
     }));
+    expect(findGames).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ libraryEntry: { is: { hidden: false } } }),
+    }));
     expect(upsertJob).toHaveBeenCalledTimes(1);
     expect(upsertJob).toHaveBeenCalledWith(expect.objectContaining({
       where: { gameId_provider: { gameId: "eligible", provider: "RAWG" } },

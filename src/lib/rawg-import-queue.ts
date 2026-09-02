@@ -51,7 +51,7 @@ export async function queueRawgForImportedGames(
       where: {
         id: { in: uniqueIds },
         type: "BASE_GAME",
-        libraryEntry: { isNot: null },
+        libraryEntry: { is: { hidden: false } },
       },
       select: {
         id: true,

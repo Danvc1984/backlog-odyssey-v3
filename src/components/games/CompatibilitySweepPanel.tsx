@@ -8,9 +8,20 @@ import { X } from "lucide-react";
 import { startCompatibilitySweep } from "@/actions/compat-batch-enrichment";
 import { Button } from "@/components/ui/button";
 import type { CompatBatchView } from "@/lib/compat-batch-runner";
+import {
+  WishlistCompatSweepPanel,
+  type WishlistCompatSweepRunView,
+} from "@/components/wishlist/WishlistCompatSweepPanel";
+import {
+  RawgBatchEnrichmentButton,
+  RawgBatchEnrichmentPanel,
+} from "@/components/games/RawgBatchEnrichmentPanel";
+import type { RawgBatchView } from "@/lib/rawg-batch-runner";
 
 interface CompatibilitySweepPanelProps {
   initialBatch: CompatBatchView | null;
+  initialRawgBatch: RawgBatchView | null;
+  initialWishlistRun: WishlistCompatSweepRunView | null;
 }
 
 interface BatchEndpointResult {
@@ -47,7 +58,11 @@ function terminalBatchMessage(batch: CompatBatchView): string {
   }
 }
 
-export function CompatibilitySweepPanel({ initialBatch }: CompatibilitySweepPanelProps) {
+export function CompatibilitySweepPanel({
+  initialBatch,
+  initialRawgBatch,
+  initialWishlistRun,
+}: CompatibilitySweepPanelProps) {
   const router = useRouter();
   const [batch, setBatch] = useState<CompatBatchView | null>(initialBatch);
   const [running, setRunning] = useState(false);
@@ -154,72 +169,100 @@ export function CompatibilitySweepPanel({ initialBatch }: CompatibilitySweepPane
 
   return (
     <section className="mt-6 rounded-lg border border-border p-4" aria-labelledby="compatibility-sweep-heading">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="border-b border-border pb-3">
         <div>
-          <h2 id="compatibility-sweep-heading" className="text-sm font-medium">
-            Compatibility evidence sweep
+          <h2
+            id="compatibility-sweep-heading"
+            className="text-sm font-medium uppercase tracking-wider text-muted-foreground"
+          >
+            Enrichment and compatibility
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Refresh ProtonDB and AWAY evidence for eligible catalog games.
+            Enrich RAWG metadata and refresh ProtonDB and AWAY evidence by library domain.
           </p>
         </div>
-        <Button type="button" size="sm" disabled={running || activeBatchId !== null} onClick={() => void startSweep()}>
-          {running ? "Starting..." : activeBatchId ? "Sweep running..." : "Sweep compatibility"}
-        </Button>
       </div>
 
-      {batch && (
-        <div className="mt-4 space-y-3 text-sm">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p>{batchMessage(batch)}</p>
-            <span className="rounded-md border border-border px-2 py-0.5 text-xs font-medium">
-              {batch.status}
-            </span>
+      <div className="mt-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-medium">Catalog games</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Refresh eligible games in your library.
+            </p>
           </div>
-          <progress
-            className="h-2 w-full overflow-hidden rounded-full"
-            value={batch.progress}
-            max={100}
-            aria-label="Compatibility sweep progress"
-          />
-          <p className="text-xs text-muted-foreground">{batch.progress}% complete</p>
-          <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground sm:grid-cols-5">
-            <span>Total: {batch.counts.total}</span>
-            <span>Queued: {batch.counts.queued}</span>
-            <span>Running: {batch.counts.running}</span>
-            <span>Retrying: {batch.counts.retryWaiting}</span>
-            <span>Succeeded: {batch.counts.succeeded}</span>
-            <span>Failed: {batch.counts.failed}</span>
+          <div className="flex flex-wrap justify-end gap-2">
+            <RawgBatchEnrichmentButton />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={running || activeBatchId !== null}
+              onClick={() => void startSweep()}
+            >
+              {running ? "Starting..." : activeBatchId ? "Sweep running..." : "Sweep compatibility"}
+            </Button>
           </div>
-
-          {visibleFailedGames.length > 0 && (
-            <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3">
-              <p className="font-medium">Compatibility refresh failed for these games</p>
-              <ul className="mt-2 space-y-1">
-                {visibleFailedGames.map((game) => (
-                  <li key={game.id} className="flex items-center justify-between gap-2">
-                    <Link href={`/games/${game.id}`} className="text-primary hover:underline">
-                      {game.name}
-                    </Link>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      aria-label={`Dismiss ${game.name} from failed games`}
-                      onClick={() => setDismissedGameIds((current) => new Set(current).add(game.id))}
-                    >
-                      <X aria-hidden />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
-      )}
 
-      {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+        <RawgBatchEnrichmentPanel initialBatch={initialRawgBatch} embedded />
+
+        {batch && (
+          <div className="mt-4 space-y-3 text-sm">
+            <h4 className="text-sm font-medium">Compatibility sweep</h4>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p>{batchMessage(batch)}</p>
+              <span className="rounded-md border border-border px-2 py-0.5 text-xs font-medium">
+                {batch.status}
+              </span>
+            </div>
+            <progress
+              className="h-2 w-full overflow-hidden rounded-full"
+              value={batch.progress}
+              max={100}
+              aria-label="Compatibility sweep progress"
+            />
+            <p className="text-xs text-muted-foreground">{batch.progress}% complete</p>
+            <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground sm:grid-cols-5">
+              <span>Total: {batch.counts.total}</span>
+              <span>Queued: {batch.counts.queued}</span>
+              <span>Running: {batch.counts.running}</span>
+              <span>Retrying: {batch.counts.retryWaiting}</span>
+              <span>Succeeded: {batch.counts.succeeded}</span>
+              <span>Failed: {batch.counts.failed}</span>
+            </div>
+
+            {visibleFailedGames.length > 0 && (
+              <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3">
+                <p className="font-medium">Compatibility refresh failed for these games</p>
+                <ul className="mt-2 space-y-1">
+                  {visibleFailedGames.map((game) => (
+                    <li key={game.id} className="flex items-center justify-between gap-2">
+                      <Link href={`/games/${game.id}`} className="text-primary hover:underline">
+                        {game.name}
+                      </Link>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        aria-label={`Dismiss ${game.name} from failed games`}
+                        onClick={() => setDismissedGameIds((current) => new Set(current).add(game.id))}
+                      >
+                        <X aria-hidden />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+      </div>
+
+      <WishlistCompatSweepPanel initialRun={initialWishlistRun} />
     </section>
   );
 }

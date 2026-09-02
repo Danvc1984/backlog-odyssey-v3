@@ -91,7 +91,7 @@ describe("RAWG catalog batch action", () => {
       error: null,
     });
     expect(findEligibleGames).toHaveBeenCalledWith(expect.objectContaining({
-      where: { type: "BASE_GAME", libraryEntry: { isNot: null } },
+      where: { type: "BASE_GAME", libraryEntry: { is: { hidden: false } } },
     }));
     expect(upsertJob).toHaveBeenCalledWith(expect.objectContaining({
       where: { gameId_provider: { gameId: "game-eligible", provider: "RAWG" } },

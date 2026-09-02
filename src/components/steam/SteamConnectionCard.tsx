@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { ImportSteamWishlistButton } from "@/components/wishlist/ImportSteamWishlistButton";
 import { importSteamGames } from "@/actions/steam-import";
 import { syncSteamPlaytime } from "@/actions/steam-sync";
 import { disconnectSteam } from "@/actions/steam";
@@ -22,6 +23,7 @@ export function SteamConnectionCard({
   const [submitting, setSubmitting] = useState(false);
   const [importing, setImporting] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [importingWishlist, setImportingWishlist] = useState(false);
 
   useEffect(() => {
     const status = searchParams.get("steam");
@@ -85,10 +87,14 @@ export function SteamConnectionCard({
 
   return (
     <div id="steam-connection-card" className="rounded-lg border border-border p-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="border-b border-border pb-3">
+        <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+          Steam connection
+        </h2>
+      </div>
+      <div className="mt-4 flex items-start justify-between gap-3">
         <div>
-          <h3 className="font-medium">Steam</h3>
-          <p className="mt-0.5 text-sm text-muted-foreground">
+          <p className="mt-1 text-sm text-muted-foreground">
             {connected
               ? `Linked to SteamID64 ${steamId64}`
               : "Link your Steam account to sync owned games and playtime."}
@@ -100,7 +106,7 @@ export function SteamConnectionCard({
               variant="outline"
               size="sm"
               onClick={handleSync}
-              disabled={syncing || importing || submitting}
+              disabled={syncing || importing || submitting || importingWishlist}
             >
               <RefreshCw />
               {syncing ? "Syncing..." : "Sync now"}
@@ -109,16 +115,20 @@ export function SteamConnectionCard({
               variant="outline"
               size="sm"
               onClick={handleImport}
-              disabled={importing || syncing || submitting}
+              disabled={importing || syncing || submitting || importingWishlist}
             >
               <Import />
               {importing ? "Importing..." : "Import from Steam"}
             </Button>
+            <ImportSteamWishlistButton
+              disabled={syncing || importing || submitting}
+              onBusyChange={setImportingWishlist}
+            />
             <Button
               variant="outline"
               size="sm"
               onClick={handleDisconnect}
-              disabled={submitting || importing || syncing}
+              disabled={submitting || importing || syncing || importingWishlist}
             >
               <Unplug />
               {submitting ? "Disconnecting..." : "Disconnect"}
