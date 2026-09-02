@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { Star, Clock, RotateCcw, EyeOff } from "lucide-react";
-import { gradientFor } from "@/lib/cover-gradient";
-import { availabilitySourcePresentation } from "@/lib/sources/known-sources";
-import { SourceIcon } from "@/components/sources/SourceIcon";
+import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
+import { formatDescriptionPreview } from "@/lib/cover-presentation";
+import { WishlistCover } from "@/components/wishlist/WishlistCover";
+import { LibraryInterestRating } from "./LibraryInterestRating";
 import { cn } from "@/lib/utils";
 
 export interface LibraryGameCardEntry {
   id: string;
+  interest: number | null;
   playState: string;
   isMainGame: boolean;
   playSoon: boolean;
@@ -28,15 +29,9 @@ export interface LibraryGameCardEntry {
   };
 }
 
-const PLAY_STATE_LABELS: Record<string, string> = {
-  NOT_STARTED: "Not started",
-  IN_PROGRESS: "In progress",
-  PLAYED_BEFORE: "Played before",
-  ABANDONED: "Abandoned",
-};
-
 interface CoverArtMeta {
   genres: string[];
+  description: string | null;
   developers: string[];
   releaseDate: string | null;
   rating: number | null;
@@ -47,27 +42,23 @@ interface CoverArtMeta {
 
 function extractCoverArtMeta(snapshots: readonly { payload?: unknown }[]): CoverArtMeta {
   for (const snapshot of snapshots) {
-    const payload = snapshot.payload;
-    if (typeof payload !== "object" || payload === null) continue;
-    const record = payload as Record<string, unknown>;
-    const stringArray = (value: unknown): string[] =>
-      Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
-    const esrb = record.esrbRating;
-    return {
-      genres: stringArray(record.genres),
-      developers: stringArray(record.developers),
-      releaseDate: typeof record.releaseDate === "string" ? record.releaseDate : null,
-      rating: typeof record.rating === "number" ? record.rating : null,
-      metacriticScore: typeof record.metacriticScore === "number" ? record.metacriticScore : null,
-      playtimeHours: typeof record.playtimeHours === "number" ? record.playtimeHours : null,
-      esrbName:
-        typeof esrb === "object" && esrb !== null && typeof (esrb as { name?: unknown }).name === "string"
-          ? (esrb as { name: string }).name
-          : null,
-    };
+    const payload = parseRawgMetadataPayload(snapshot.payload);
+    if (payload) {
+      return {
+        genres: payload.genres,
+        description: payload.description,
+        developers: payload.developers,
+        releaseDate: payload.releaseDate,
+        rating: payload.rating,
+        metacriticScore: payload.metacriticScore,
+        playtimeHours: payload.playtimeHours,
+        esrbName: payload.esrbRating?.name ?? null,
+      };
+    }
   }
   return {
     genres: [],
+    description: null,
     developers: [],
     releaseDate: null,
     rating: null,
@@ -77,19 +68,47 @@ function extractCoverArtMeta(snapshots: readonly { payload?: unknown }[]): Cover
   };
 }
 
+function formatPlaytime(hours: number): string {
+  const totalMinutes = Math.round(hours * 60);
+  if (totalMinutes < 60) return `${totalMinutes}m`;
+  const wholeHours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return minutes > 0 ? `${wholeHours}h ${minutes}m` : `${wholeHours}h`;
+}
+
 function Cover({ entry, compact }: { entry: LibraryGameCardEntry; compact: boolean }) {
+  const imageUrl = entry.game.metadataSnapshots
+    .map((snapshot) => parseRawgMetadataPayload(snapshot.payload)?.backgroundImageUrls[0] ?? null)
+    .find((value): value is string => value !== null) ?? null;
+
   return (
-    <Link
+    <WishlistCover
+      id={entry.game.id}
+      title={entry.game.name}
+      imageUrl={imageUrl}
       href={`/games/${entry.game.id}`}
-      className={`relative block overflow-hidden bg-gradient-to-br ${gradientFor(entry.game.id)} ${
-        compact ? "w-24 shrink-0 sm:w-28" : "w-full"
-      }`}
-      aria-hidden
-      tabIndex={-1}
-    >
-      <div className="absolute inset-0 bg-black/25" aria-hidden="true" />
-      <div className={compact ? "relative h-full min-h-28" : "relative min-h-16"} />
-    </Link>
+      className={compact ? "h-24 w-24 shrink-0" : "h-40"}
+      showTitle={!compact}
+    />
+  );
+}
+
+function MockActions({ gameId }: { gameId: string }) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Link
+        href={`/games/${gameId}`}
+        className="inline-flex h-7 items-center rounded-[8px] border border-border-strong bg-card px-2.5 text-xs font-bold text-foreground hover:bg-card-alt"
+      >
+        Edit
+      </Link>
+      <Link
+        href={`/games/${gameId}`}
+        className="inline-flex h-7 items-center rounded-[8px] border border-border-strong bg-card px-2.5 text-xs font-bold text-foreground hover:bg-card-alt"
+      >
+        Change state
+      </Link>
+    </div>
   );
 }
 
@@ -129,234 +148,114 @@ function CardMeta({ entry }: { entry: LibraryGameCardEntry }) {
   );
 }
 
-function formatReleaseYear(value: string): string {
-  const year = value.slice(0, 4);
-  return /^\d{4}$/.test(year) ? year : value;
-}
-
-function formatPlaytime(hours: number): string {
-  const totalMinutes = Math.round(hours * 60);
-  if (totalMinutes < 60) return `${totalMinutes}m`;
-  const h = Math.floor(totalMinutes / 60);
-  const m = totalMinutes % 60;
-  return m > 0 ? `${h}h ${m}m` : `${h}h`;
-}
-
-function CardHeader({ entry }: { entry: LibraryGameCardEntry }) {
-  return (
-    <div className="min-w-0 flex-1">
-      <h3 className="text-sm font-bold leading-snug tracking-[-0.02em]">
-        <Link href={`/games/${entry.game.id}`} className="hover:underline">
-          {entry.game.name}
-        </Link>
-      </h3>
-      {entry.game.type === "DLC" && entry.game.baseGame && (
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          DLC for{" "}
-          <Link href={`/games/${entry.game.baseGame.id}`} className="hover:underline">
-            {entry.game.baseGame.name}
-          </Link>
-        </p>
-      )}
-
-      <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        {entry.isMainGame && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
-            <Star className="size-3" />
-            Main game
-          </span>
-        )}
-        <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-          {PLAY_STATE_LABELS[entry.playState] ?? entry.playState}
-        </span>
-        {entry.playSoon && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-opportunity/15 px-2 py-0.5 text-xs font-medium text-opportunity-text">
-            <Clock className="size-3" />
-            Play soon
-          </span>
-        )}
-        {entry.replayCandidate && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-            <RotateCcw className="size-3" />
-            Replay
-          </span>
-        )}
-        {entry.hidden && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-            <EyeOff className="size-3" />
-            Hidden
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}
-
 function CardDetails({
-  entry,
-  genreLine,
-  developerLine,
-  releaseYear,
-  stats,
-  horizontal,
-  showStats,
+  descriptionPreview,
+  genres,
+  developers,
+  releaseDate,
+  rating,
+  metacriticScore,
+  playtimeHours,
+  esrbName,
+  listView,
 }: {
-  entry: LibraryGameCardEntry;
-  genreLine: string | null;
-  developerLine: string | null;
-  releaseYear: string | null;
-  stats: string[];
-  horizontal: boolean;
-  showStats: boolean;
+  descriptionPreview: string | null;
+  genres: string[];
+  developers: string[];
+  releaseDate: string | null;
+  rating: number | null;
+  metacriticScore: number | null;
+  playtimeHours: number | null;
+  esrbName: string | null;
+  listView: boolean;
 }) {
-  const creditRow =
-    genreLine || developerLine || releaseYear ? (
-      <span className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground">
-        {genreLine && <span>{genreLine}</span>}
-        {developerLine && (
-          <span>
-            {genreLine && <span aria-hidden className="mx-0.5 text-border-strong">/</span>}
-            {developerLine}
-          </span>
-        )}
-        {releaseYear && (
-          <span>
-            {(genreLine || developerLine) && (
-              <span aria-hidden className="mx-0.5 text-border-strong">/</span>
-            )}
-            {releaseYear}
-          </span>
-        )}
-      </span>
-    ) : null;
-
-  const statsRow =
-    showStats && stats.length > 0 ? (
-      <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
-        {stats.map((stat, index) => (
-          <span key={stat} className="flex items-center gap-x-2">
-            {index > 0 && <span aria-hidden className="text-muted-foreground/50">·</span>}
-            {stat}
-          </span>
-        ))}
-      </span>
-    ) : null;
-
-  const sourceRow =
-    entry.game.availability.length === 0 ? (
-      <span className="text-xs text-muted-foreground">No sources</span>
-    ) : (
-      <span className="flex flex-wrap gap-1">
-        {entry.game.availability.map((availability) => {
-          const presentation = availabilitySourcePresentation(
-            availability.source,
-            availability.alternativeSource?.name ?? null,
-          );
-          return (
-            <span
-              key={availability.id}
-              className="inline-flex items-center gap-1 rounded-md border border-border px-1.5 py-0.5 text-xs text-muted-foreground"
-            >
-              <SourceIcon iconName={presentation.iconName} />
-              {presentation.label}
-            </span>
-          );
-        })}
-      </span>
-    );
-
-  const groups = [sourceRow, creditRow, statsRow].filter((node) => node !== null);
-
-  if (horizontal) {
-    return (
-      <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 sm:max-w-md sm:justify-end">
-        {groups.map((group, index) => (
-          <span key={index} className="flex items-center gap-x-2.5">
-            {index > 0 && <span aria-hidden className="text-muted-foreground/40">·</span>}
-            {group}
-          </span>
-        ))}
-      </div>
-    );
-  }
+  const releaseYear = releaseDate?.slice(0, 4);
+  const stats = [
+    rating === null ? null : `RAWG ${rating.toFixed(1)}`,
+    metacriticScore === null ? null : `MC ${metacriticScore}`,
+    playtimeHours === null ? null : formatPlaytime(playtimeHours),
+    esrbName ? `ESRB ${esrbName}` : null,
+  ].filter((value): value is string => value !== null);
 
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-      {groups.map((group, index) => (
-        <span key={index} className="flex items-center gap-x-3">
-          {index > 0 && <span aria-hidden className="text-muted-foreground/40">·</span>}
-          {group}
-        </span>
-      ))}
+    <div className={listView ? "mt-2 flex flex-wrap items-center gap-x-2 gap-y-1" : "mt-4 space-y-3"}>
+      {descriptionPreview && !listView && (
+        <div className={listView ? "block" : "hidden sm:block"}>
+          <p
+            className="overflow-hidden leading-6 text-muted-foreground"
+            style={{ display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: 3 }}
+          >
+            {descriptionPreview}
+          </p>
+        </div>
+      )}
+      {genres.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {genres.slice(0, 3).map((genre) => (
+            <span key={genre} className="rounded-md border border-border px-2 py-0.5 text-xs">
+              {genre}
+            </span>
+          ))}
+        </div>
+      )}
+      {listView && (developers.length > 0 || releaseYear || stats.length > 0) && (
+        <div className="contents text-xs text-muted-foreground">
+          {developers[0] && <span>{developers[0]}</span>}
+          {releaseYear && <span>{developers[0] ? "·" : ""} {releaseYear}</span>}
+          {stats.map((stat) => (
+            <span key={stat}>· {stat}</span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 function CardBody({
   entry,
-  layout,
+  variant,
+  includeControls = true,
 }: {
   entry: LibraryGameCardEntry;
-  layout: "grid" | "list";
+  variant: "grid" | "list";
+  includeControls?: boolean;
 }) {
   const meta = extractCoverArtMeta(entry.game.metadataSnapshots);
-  const genreLine = meta.genres.length > 0 ? meta.genres.slice(0, 2).join(" · ") : null;
-  const developerLine = meta.developers[0] ?? null;
-  const releaseYear = meta.releaseDate ? formatReleaseYear(meta.releaseDate) : null;
-
-  const stats: string[] = [];
-  if (meta.rating !== null) stats.push(`★ ${meta.rating.toFixed(1)}`);
-  if (meta.metacriticScore !== null) stats.push(`MC ${meta.metacriticScore}`);
-  if (meta.playtimeHours !== null) stats.push(`⏱ ${formatPlaytime(meta.playtimeHours)}`);
-  if (meta.esrbName !== null) stats.push(`ESRB ${meta.esrbName}`);
-
-  if (layout === "list") {
-    return (
-      <div className="flex min-w-0 flex-1 flex-col p-4">
-        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <CardHeader entry={entry} />
-          <CardDetails
-            entry={entry}
-            genreLine={genreLine}
-            developerLine={developerLine}
-            releaseYear={releaseYear}
-            stats={stats}
-            horizontal
-            showStats
-          />
-        </div>
-        <div className="mt-auto flex items-center justify-between gap-3 border-t border-border pt-3">
-          <Link
-            href={`/games/${entry.game.id}`}
-            className="text-sm font-medium text-signal-strong hover:text-foreground"
-          >
-            Open detail ↗
-          </Link>
-          <CardMeta entry={entry} />
-        </div>
-      </div>
-    );
-  }
+  const descriptionPreview = meta.description
+    ? formatDescriptionPreview(meta.description)
+    : null;
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col p-4">
-      <CardHeader entry={entry} />
+    <div className={`flex min-w-0 flex-1 flex-col p-4 ${includeControls ? "" : "pt-0"}`}>
+      {variant === "list" && includeControls && (
+        <h3 className="mb-3 text-base font-bold leading-snug tracking-[-0.02em]">
+          <Link href={`/games/${entry.game.id}`} className="hover:underline">
+            {entry.game.name}
+          </Link>
+        </h3>
+      )}
+      {includeControls && (
+        <div className="flex items-center justify-between gap-3">
+          <LibraryInterestRating
+            gameId={entry.game.id}
+            gameName={entry.game.name}
+            interest={entry.interest}
+          />
+          <MockActions gameId={entry.game.id} />
+        </div>
+      )}
       <CardDetails
-        entry={entry}
-        genreLine={genreLine}
-        developerLine={developerLine}
-        releaseYear={releaseYear}
-        stats={stats}
-        horizontal={false}
-        showStats={false}
+        descriptionPreview={descriptionPreview}
+        genres={meta.genres}
+        developers={meta.developers}
+        releaseDate={meta.releaseDate}
+        rating={meta.rating}
+        metacriticScore={meta.metacriticScore}
+        playtimeHours={meta.playtimeHours}
+        esrbName={meta.esrbName}
+        listView={variant === "list"}
       />
-      <div className="mt-auto flex items-center justify-between gap-3 border-t border-border pt-3">
-        <Link
-          href={`/games/${entry.game.id}`}
-          className="text-sm font-medium text-signal-strong hover:text-foreground"
-        >
-          Open detail ↗
-        </Link>
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-2">
         <CardMeta entry={entry} />
       </div>
     </div>
@@ -372,12 +271,29 @@ export function LibraryGameCard({
 }) {
   if (variant === "list") {
     return (
-      <article className="flex overflow-hidden rounded-lg border border-border bg-card shadow-card">
-        <Cover entry={entry} compact />
-        <div className="flex flex-1 flex-col sm:flex-row sm:items-center sm:gap-6">
-          <div className="flex-1">
-            <CardBody entry={entry} layout="list" />
+      <article className="overflow-hidden rounded-lg border border-border bg-card shadow-card">
+        <div className="flex items-center gap-4 p-3 sm:p-4">
+          <Cover entry={entry} compact />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex min-w-0 flex-wrap items-center gap-3">
+                <h3 className="min-w-0 text-base font-bold leading-snug tracking-[-0.02em]">
+                  <Link href={`/games/${entry.game.id}`} className="hover:underline">
+                    {entry.game.name}
+                  </Link>
+                </h3>
+                <LibraryInterestRating
+                  gameId={entry.game.id}
+                  gameName={entry.game.name}
+                  interest={entry.interest}
+                />
+              </div>
+              <MockActions gameId={entry.game.id} />
+            </div>
           </div>
+        </div>
+        <div className="min-w-0">
+          <CardBody entry={entry} variant="list" includeControls={false} />
         </div>
       </article>
     );
@@ -386,7 +302,7 @@ export function LibraryGameCard({
   return (
     <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-card">
       <Cover entry={entry} compact={false} />
-      <CardBody entry={entry} layout="grid" />
+      <CardBody entry={entry} variant="grid" />
     </article>
   );
 }

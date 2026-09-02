@@ -2,17 +2,11 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useCallback, useState } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 const TYPE_OPTIONS = [
-  { value: "ALL", label: "All wishlist" },
+  { value: "ALL", label: "All wishes" },
   { value: "BASE_GAME", label: "Base games" },
   { value: "DLC", label: "DLC" },
 ];
@@ -47,7 +41,7 @@ export function WishlistFilterBar() {
   };
 
   return (
-    <div className="flex flex-wrap gap-2" aria-label="Wishlist filters">
+    <div className="flex flex-wrap items-center gap-2" aria-label="Wishlist filters">
       <form onSubmit={submitSearch} className="flex min-w-64 flex-1 gap-2">
         <Input
           type="search"
@@ -60,36 +54,48 @@ export function WishlistFilterBar() {
           Search
         </button>
       </form>
-      <Select
-        value={searchParams.get("type") ?? "ALL"}
-        onValueChange={(value) => update("type", value)}
-      >
-        <SelectTrigger aria-label="Wishlist type" className="w-44">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {TYPE_OPTIONS.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
+      <div className="flex flex-wrap gap-1.5" aria-label="Wishlist type filters">
+        {TYPE_OPTIONS.map((option) => {
+          const active = (searchParams.get("type") ?? "ALL") === option.value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={active}
+              onClick={() => update("type", option.value)}
+              className={cn(
+                "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                active
+                  ? "border-signal/40 bg-signal/10 text-signal-strong"
+                  : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+              )}
+            >
               {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select
-        value={searchParams.get("interest") ?? "ALL"}
-        onValueChange={(value) => update("interest", value)}
-      >
-        <SelectTrigger aria-label="Wishlist interest" className="w-44">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {INTEREST_OPTIONS.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex flex-wrap gap-1.5" aria-label="Wishlist interest filters">
+        {INTEREST_OPTIONS.map((option) => {
+          const active = (searchParams.get("interest") ?? "ALL") === option.value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={active}
+              onClick={() => update("interest", option.value)}
+              className={cn(
+                "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                active
+                  ? "border-signal/40 bg-signal/10 text-signal-strong"
+                  : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+              )}
+            >
               {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

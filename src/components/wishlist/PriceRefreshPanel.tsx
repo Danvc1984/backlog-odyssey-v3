@@ -36,7 +36,9 @@ function readCounts(value: unknown): CountBucket {
 function formatDate(value: string | Date | null): string | null {
   if (!value) return null;
   const date = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date.toLocaleString();
+  return Number.isNaN(date.getTime())
+    ? null
+    : date.toLocaleString("es-MX", { timeZone: "America/Mexico_City" });
 }
 
 export function PriceRefreshPanel({ initialRun }: { initialRun: PriceRefreshRunSummary | null }) {

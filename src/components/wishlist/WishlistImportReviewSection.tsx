@@ -57,9 +57,10 @@ export async function WishlistImportReviewSection() {
   }));
 
   return (
-    <section id="wishlist-import-reviews" aria-labelledby="wishlist-import-reviews-heading">
-      <div className="mt-6">
-        <h2 id="wishlist-import-reviews-heading" className="text-lg font-semibold">Wishlist import reviews</h2>
+    <section id="wishlist-import-reviews" aria-labelledby="wishlist-import-reviews-heading" className="mt-6 rounded-xl border border-warning/40 bg-warning/5 p-4 sm:p-5">
+      <div>
+        <p className="technical-label text-warning-text">Steam import / manual review</p>
+        <h2 id="wishlist-import-reviews-heading" className="mt-2 text-lg font-semibold">Identity matches need your call.</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Confirm a local match before attaching the Steam identity. Nothing is linked automatically.
         </p>

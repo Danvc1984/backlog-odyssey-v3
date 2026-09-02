@@ -1,11 +1,20 @@
 import Link from "next/link";
-import Image from "next/image";
 import { WishlistEntryActions } from "./WishlistEntryActions";
-import { WishlistIdentity } from "./WishlistIdentity";
-import { WishlistOfferAlternatives } from "./WishlistOfferAlternatives";
-import { WishlistOfferSection } from "./WishlistOfferSection";
 import type { WishlistOffersView } from "@/types/wishlist-offers";
 import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
+import { formatDescriptionPreview } from "@/lib/cover-presentation";
+import { WishlistCover } from "./WishlistCover";
+import { WishlistInterestRating } from "./WishlistInterestRating";
+
+const priceFormatter = new Intl.NumberFormat("es-MX", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+function formatPrice(price: number | null, currency: string | null): string {
+  if (price === null) return "No current price";
+  return `${currency?.trim().toUpperCase() ?? "Unknown currency"} ${priceFormatter.format(price)}`;
+}
 
 interface WishlistCardProps {
   baseGames: { id: string; name: string }[];
@@ -33,66 +42,83 @@ interface WishlistCardProps {
   };
 }
 
-export function WishlistCard({ entry, baseGames }: WishlistCardProps) {
+export function WishlistCard({
+  entry,
+  baseGames,
+  variant = "focus",
+}: WishlistCardProps & { variant?: "focus" | "list" }) {
   const ownMetadata = parseRawgMetadataPayload(entry.metadataSnapshot?.payload);
   const inheritedMetadata = parseRawgMetadataPayload(
     entry.baseGame?.metadataSnapshots[0]?.payload,
   );
   const metadata = ownMetadata ?? inheritedMetadata;
   const imageUrl = metadata?.backgroundImageUrls[0] ?? null;
-  const sourceUrl = entry.metadataSnapshot?.sourceUrl ?? entry.baseGame?.metadataSnapshots[0]?.sourceUrl ?? metadata?.rawgUrl ?? null;
-  const steamStoreIsSelected = entry.offerView.selected?.shop === "Steam Store";
-  const alternatives = steamStoreIsSelected
-    ? entry.offerView.alternatives
-    : entry.offerView.alternatives.filter((offer) => offer.shop !== "Steam Store");
+  const coverTitle = entry.type === "DLC" ? `${entry.name} (DLC)` : entry.name;
+  const selectedOffer = entry.offerView.selected;
+  const descriptionPreview = metadata?.description
+    ? formatDescriptionPreview(metadata.description)
+    : null;
+
+  if (variant === "list") {
+    return (
+      <article className={`overflow-hidden rounded-lg border border-border shadow-card ${entry.type === "DLC" ? "bg-primary/5" : "bg-card"}`}>
+        <div className="flex items-center gap-3 p-3 sm:gap-4 sm:p-4">
+          <WishlistCover
+            id={entry.id}
+            title={coverTitle}
+            imageUrl={imageUrl}
+            className="h-20 w-20 shrink-0 sm:h-24 sm:w-24"
+            showTitle={false}
+          />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex min-w-0 flex-wrap items-center gap-3">
+                <h2 className="min-w-0 text-base font-bold leading-snug tracking-[-0.02em]">
+                  <Link href={`/wishlist/${entry.id}`} className="hover:underline">
+                    {coverTitle}
+                  </Link>
+                </h2>
+                <WishlistInterestRating
+                  entryId={entry.id}
+                  entryName={entry.name}
+                  interest={entry.interest}
+                />
+              </div>
+              <WishlistEntryActions entry={entry} baseGames={baseGames} />
+            </div>
+            {entry.steamAppId !== null && (
+              <Link
+                href={`/wishlist/${entry.id}#offers`}
+                className="mt-2 inline-flex items-center gap-2 text-sm font-semibold hover:text-primary"
+                aria-label={`Open offers for ${entry.name}`}
+              >
+                {formatPrice(selectedOffer?.price ?? null, selectedOffer?.currency ?? null)}
+                {selectedOffer?.discount !== null && selectedOffer?.discount !== undefined && selectedOffer.discount > 0 && (
+                  <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 text-xs font-medium text-emerald-400">
+                    -{selectedOffer.discount}%
+                  </span>
+                )}
+              </Link>
+            )}
+          </div>
+        </div>
+      </article>
+    );
+  }
 
   return (
-    <article className="overflow-hidden rounded-lg border border-border bg-card shadow-card">
-      {imageUrl ? (
-        <div className="relative h-40 w-full">
-          <Image
-            src={imageUrl}
-            alt=""
-            fill
-            sizes="(min-width: 1280px) 33vw, 100vw"
-            className="object-cover"
-            loading="lazy"
-            unoptimized
-          />
-        </div>
-      ) : (
-        <div className="flex h-40 items-center justify-center bg-muted text-sm text-muted-foreground">
-          No artwork
-        </div>
-      )}
+    <article className={`overflow-hidden rounded-lg border border-border shadow-card ${entry.type === "DLC" ? "bg-primary/5" : "bg-card"}`}>
+      <WishlistCover id={entry.id} title={coverTitle} imageUrl={imageUrl} />
       <div className="space-y-3 p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="font-semibold leading-tight">
-              <Link href={`/wishlist/${entry.id}`} className="hover:underline">
-                {entry.name}
-              </Link>
-            </h2>
-            <p className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">
-              {entry.type === "DLC" ? "DLC" : "Base game"}
-            </p>
-          </div>
-          <div className="grid justify-items-end gap-2">
-            <span className="shrink-0 text-sm" aria-label={`${entry.interest ?? 0} of 5 stars`}>
-              {entry.interest ? `${"★".repeat(entry.interest)}${"☆".repeat(5 - entry.interest)}` : "No rating"}
-            </span>
-            <WishlistEntryActions entry={entry} baseGames={baseGames} />
-          </div>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="sr-only">{entry.name}</h2>
+          <WishlistInterestRating
+            entryId={entry.id}
+            entryName={entry.name}
+            interest={entry.interest}
+          />
+          <WishlistEntryActions entry={entry} baseGames={baseGames} />
         </div>
-
-        {entry.baseGame && (
-          <p className="text-sm text-muted-foreground">
-            DLC for{" "}
-            <Link href={`/games/${entry.baseGame.id}`} className="text-primary hover:underline">
-              {entry.baseGame.name}
-            </Link>
-          </p>
-        )}
 
         {entry.type === "BASE_GAME" && !ownMetadata && (
           <p className="text-xs text-muted-foreground">
@@ -100,28 +126,34 @@ export function WishlistCard({ entry, baseGames }: WishlistCardProps) {
           </p>
         )}
 
-        <WishlistIdentity
-          entryId={entry.id}
-          entryName={entry.name}
-          steamAppId={entry.steamAppId}
-          provenance={entry.steamAppIdProvenance}
-          snapshot={
-            entry.metadataSnapshot
-              ? { payload: entry.metadataSnapshot.payload, fetchedAt: entry.metadataSnapshot.fetchedAt }
-              : null
-          }
-        />
-
-        <WishlistOfferSection
-          offerView={entry.offerView}
-          hasConfirmedIdentity={entry.steamAppId !== null}
-        />
-        <WishlistOfferAlternatives alternatives={alternatives} />
+        {entry.steamAppId !== null && (
+          <Link
+            href={`/wishlist/${entry.id}#offers`}
+            className="flex items-center justify-between gap-3 border-t border-border pt-3 text-sm hover:text-primary"
+            aria-label={`Open offers for ${entry.name}`}
+          >
+            <span className="flex items-center gap-2 font-semibold">
+              {formatPrice(selectedOffer?.price ?? null, selectedOffer?.currency ?? null)}
+              {selectedOffer?.discount !== null && selectedOffer?.discount !== undefined && selectedOffer.discount > 0 && (
+                <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 text-xs font-medium text-emerald-400">
+                  -{selectedOffer.discount}%
+                </span>
+              )}
+            </span>
+          </Link>
+        )}
 
         {metadata && (
           <div className="space-y-2 text-sm">
-            {metadata.description && (
-              <p className="line-clamp-3 text-muted-foreground">{metadata.description}</p>
+            {descriptionPreview && (
+              <div className="hidden sm:block">
+                <p
+                  className="overflow-hidden leading-6 text-muted-foreground"
+                  style={{ display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: 3 }}
+                >
+                  {descriptionPreview}
+                </p>
+              </div>
             )}
             {metadata.genres.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
@@ -131,16 +163,6 @@ export function WishlistCard({ entry, baseGames }: WishlistCardProps) {
                   </span>
                 ))}
               </div>
-            )}
-            {sourceUrl && (
-              <a
-                href={sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs text-muted-foreground underline-offset-4 hover:underline"
-              >
-                RAWG source
-              </a>
             )}
             {!ownMetadata && inheritedMetadata && (
               <p className="text-xs text-muted-foreground">Metadata inherited from the base game.</p>

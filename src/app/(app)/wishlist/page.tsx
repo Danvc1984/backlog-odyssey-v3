@@ -7,6 +7,7 @@ import { ImportSteamWishlistButton } from "@/components/wishlist/ImportSteamWish
 import { WishlistImportReviewSection } from "@/components/wishlist/WishlistImportReviewSection";
 import { WishlistSyncChip } from "@/components/wishlist/WishlistSyncChip";
 import { UpdateRecommendationsButton } from "@/components/recommendations/UpdateRecommendationsButton";
+import { ViewSwitch } from "@/components/games/ViewSwitch";
 import { prisma } from "@/lib/prisma";
 import { buildEntryOfferView } from "@/lib/offer-selection";
 import { wishlistWhere } from "@/lib/wishlist-search";
@@ -15,6 +16,13 @@ interface WishlistSearchParams {
   type?: string;
   interest?: string;
   q?: string;
+  view?: string;
+}
+
+type WishlistView = "focus" | "list";
+
+function normalizeWishlistView(value: string | undefined): WishlistView {
+  return value === "list" ? "list" : "focus";
 }
 
 export default async function WishlistPage({
@@ -23,6 +31,7 @@ export default async function WishlistPage({
   searchParams: Promise<WishlistSearchParams>;
 }) {
   const params = await searchParams;
+  const view = normalizeWishlistView(params.view);
   const type = ["BASE_GAME", "DLC"].includes(params.type ?? "")
     ? (params.type as "BASE_GAME" | "DLC")
     : undefined;
@@ -69,17 +78,26 @@ export default async function WishlistPage({
     ...entry,
     offerView: buildEntryOfferView(offers, targetPriceMxn, new Date()),
   }));
+  const baseGameCount = entriesWithOfferViews.filter((entry) => entry.type === "BASE_GAME").length;
+  const dlcCount = entriesWithOfferViews.filter((entry) => entry.type === "DLC").length;
+  const opportunityCount = entriesWithOfferViews.filter((entry) => entry.offerView.opportunity.hasBadge).length;
+  const needsAttentionCount = entriesWithOfferViews.filter((entry) => entry.steamAppId === null).length;
+  const hasFilters = Boolean(query || type || interestFilter !== undefined);
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Wishlist</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Games and DLCs you may want to acquire later.
+      <div className="flex flex-wrap items-start justify-between gap-5">
+        <div className="max-w-2xl">
+          <p className="technical-label text-muted-foreground">Wishlist / decision queue</p>
+          <h1 className="mt-2">
+            Worth the wait.<br />
+            <span className="text-opportunity-text">Buy with signal.</span>
+          </h1>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+            Independent wishes, useful prices, and just enough context to know what deserves your money next.
           </p>
         </div>
-        <div className="flex items-start gap-3">
+        <div className="flex max-w-2xl flex-wrap items-start justify-end gap-3">
           <WishlistSyncChip />
           <ImportSteamWishlistButton />
           <UpdateRecommendationsButton />
@@ -112,11 +130,36 @@ export default async function WishlistPage({
           <AddWishlistDialog baseGames={baseGames} />
         </div>
       </div>
-      <div className="mt-5">
+      <div className="mt-6 grid gap-3 md:grid-cols-3" aria-label="Wishlist signals">
+        <article className="rounded-lg border border-signal/40 bg-signal/5 p-4">
+          <p className="technical-label text-muted-foreground">Active wishes</p>
+          <p className="mt-2 text-3xl font-bold tracking-tight">{entriesWithOfferViews.length.toString().padStart(2, "0")}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{baseGameCount} base games · {dlcCount} DLC</p>
+        </article>
+        <article className="rounded-lg border border-opportunity/40 bg-opportunity/5 p-4">
+          <p className="technical-label text-muted-foreground">Opportunity signals</p>
+          <p className="mt-2 text-3xl font-bold tracking-tight">{opportunityCount.toString().padStart(2, "0")}</p>
+          <p className="mt-1 text-xs text-muted-foreground">fresh offers at target</p>
+        </article>
+        <article className="rounded-lg border border-warning/40 bg-warning/5 p-4">
+          <p className="technical-label text-muted-foreground">Needs your review</p>
+          <p className="mt-2 text-3xl font-bold tracking-tight">{needsAttentionCount.toString().padStart(2, "0")}</p>
+          <p className="mt-1 text-xs text-muted-foreground">Steam identity pending</p>
+        </article>
+      </div>
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
         <WishlistFilterBar />
+        <ViewSwitch
+          view={view}
+          label="Wishlist view"
+          modes={[
+            { value: "focus", label: "Focus" },
+            { value: "list", label: "List" },
+          ]}
+        />
       </div>
       <WishlistImportReviewSection />
-      <WishlistList entries={entriesWithOfferViews} baseGames={baseGames} />
+      <WishlistList entries={entriesWithOfferViews} baseGames={baseGames} view={view} hasFilters={hasFilters} />
     </div>
   );
 }

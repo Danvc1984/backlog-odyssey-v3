@@ -18,6 +18,7 @@ import {
   normalizeMotion,
   resolveVisualPreferences,
   type DataSetting,
+  type DataPreference,
   type MotionPreference,
   type MotionSetting,
 } from "@/lib/visual-preferences";
@@ -26,6 +27,7 @@ export interface VisualPreferencesValue {
   motion: MotionSetting;
   resolvedMotion: MotionPreference;
   data: DataSetting;
+  resolvedData: DataPreference;
   setMotion: (value: MotionSetting) => void;
   setData: (value: DataSetting) => void;
 }
@@ -39,6 +41,7 @@ const VisualPreferencesContext = createContext<VisualPreferencesValue>({
   motion: "system",
   resolvedMotion: "full",
   data: "system",
+  resolvedData: "off",
   setMotion: () => {},
   setData: () => {},
 });
@@ -62,14 +65,23 @@ function readStoredPreferences(): VisualPreferencesState {
 export function VisualPreferencesProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<VisualPreferencesState>(readStoredPreferences);
   const [systemReducedMotion, setSystemReducedMotion] = useState(false);
+  const [systemReducedData, setSystemReducedData] = useState(false);
   const stateRef = useRef(state);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setSystemReducedMotion(mediaQuery.matches);
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const dataQuery = window.matchMedia("(prefers-reduced-data: reduce)");
+    const update = () => {
+      setSystemReducedMotion(motionQuery.matches);
+      setSystemReducedData(dataQuery.matches);
+    };
     update();
-    mediaQuery.addEventListener("change", update);
-    return () => mediaQuery.removeEventListener("change", update);
+    motionQuery.addEventListener("change", update);
+    dataQuery.addEventListener("change", update);
+    return () => {
+      motionQuery.removeEventListener("change", update);
+      dataQuery.removeEventListener("change", update);
+    };
   }, []);
 
   const commit = useCallback((next: VisualPreferencesState) => {
@@ -117,17 +129,21 @@ export function VisualPreferencesProvider({ children }: { children: ReactNode })
   );
 
   const value = useMemo(
-    () => ({
-      motion: state.motion,
-      resolvedMotion: resolveVisualPreferences(state.motion, state.data, {
+    () => {
+      const resolved = resolveVisualPreferences(state.motion, state.data, {
         reducedMotion: systemReducedMotion,
-        reducedData: false,
-      }).motion,
-      data: state.data,
-      setMotion,
-      setData,
-    }),
-    [state, setMotion, setData, systemReducedMotion],
+        reducedData: systemReducedData,
+      });
+      return {
+        motion: state.motion,
+        resolvedMotion: resolved.motion,
+        data: state.data,
+        resolvedData: resolved.data,
+        setMotion,
+        setData,
+      };
+    },
+    [state, setMotion, setData, systemReducedMotion, systemReducedData],
   );
 
   return (

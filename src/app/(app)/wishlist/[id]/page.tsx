@@ -199,11 +199,17 @@ export default async function WishlistDetailPage({
         }
       />
 
-      <WishlistOfferSection
-        offerView={offerView}
-        hasConfirmedIdentity={entry.steamAppId !== null}
-      />
-      <WishlistOfferAlternatives alternatives={alternatives} />
+      <section
+        id="offers"
+        tabIndex={-1}
+        className="scroll-mt-6 space-y-3 rounded-lg outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
+      >
+        <WishlistOfferSection
+          offerView={offerView}
+          hasConfirmedIdentity={entry.steamAppId !== null}
+        />
+        <WishlistOfferAlternatives alternatives={alternatives} />
+      </section>
 
       {buyItem && buyItem.wishlistEntryId === entry.id && (
         <div>

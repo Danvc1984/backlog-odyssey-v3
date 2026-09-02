@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
@@ -31,7 +32,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <script dangerouslySetInnerHTML={{ __html: prePaintVisualPreferences }} />
+        <Script id="pre-paint-visual-preferences" strategy="beforeInteractive">
+          {prePaintVisualPreferences}
+        </Script>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

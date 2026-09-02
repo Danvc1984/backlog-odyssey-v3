@@ -302,7 +302,7 @@
     health strip over unchanged queries; approved grid/list alternatives
     with deterministic cover gradients; restyled duplicates review,
     enrichment panel, and empty states
-  - [ ] 14d. **Wishlist browsing surfaces** - signal grid, focus/list
+  - [x] 14d. **Wishlist browsing surfaces** - signal grid, focus/list
     alternatives, and entry-card composition for offers, identity,
     staleness, target, and interest over unchanged queries and actions
   - [ ] 14e. **Detail, collection, and supporting route composition** - Apply
