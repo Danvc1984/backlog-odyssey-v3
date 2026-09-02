@@ -25,9 +25,13 @@ type SourceValue = "STEAM" | "ROM" | "CUSTOM" | `ALT:${string}`;
 
 interface CreateGameDialogProps {
   alternativeSources?: { id: string; name: string; iconName: string }[];
+  triggerSize?: "default" | "lg";
 }
 
-export function CreateGameDialog({ alternativeSources = [] }: CreateGameDialogProps) {
+export function CreateGameDialog({
+  alternativeSources = [],
+  triggerSize = "default",
+}: CreateGameDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -110,7 +114,7 @@ export function CreateGameDialog({ alternativeSources = [] }: CreateGameDialogPr
       }}
     >
       <DialogTrigger asChild>
-        <Button>
+        <Button size={triggerSize}>
           <Plus />
           Add game
         </Button>

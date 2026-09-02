@@ -305,9 +305,9 @@
   - [x] 14d. **Wishlist browsing surfaces** - signal grid, focus/list
     alternatives, and entry-card composition for offers, identity,
     staleness, target, and interest over unchanged queries and actions
-  - [ ] 14e. **Header action rework for Library and Wishlist**  - style and update the header actions for each of the targeted pages so that these actions and their statuses and followup sections all follow a similar design philosofy to what we have before them; additionally add protondb compatibility tags to the game cards in both views.
+  - [x] 14e. **Header action rework for Library and Wishlist**  - style and update the header actions for each of the targeted pages so that these actions and their statuses and followup sections all follow a similar design philosofy to what we have before them; additionally add protondb compatibility tags to the game cards in both views.
   - [ ] 14f. **Detail, collection, and supporting route composition** - Apply
-    the shared design system to Today,Game Detail, Wishlist Detail, Collections, settings and their dialogs/forms. Reuse existing RAWG artwork with contrast overlays when
+    the shared design system to Today,Game Detail, Wishlist Detail, Collections, settings and their dialogs/forms. Review order and operability of actions available in the setting; Reuse existing RAWG artwork with contrast overlays when
     available, use abstract local fallbacks otherwise or in reduced-data mode,
     and preserve current detail actions, read-only evidence boundaries, and
     destructive confirmations. Dynamic per-game palettes remain feature 16.

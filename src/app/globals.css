@@ -75,8 +75,8 @@
   --card-alt: #e9ecef;
   --popover: #ffffff;
   --popover-foreground: #16202b;
-  --primary: #16d6c1;
-  --primary-foreground: #06201d;
+  --primary: #0c8577;
+  --primary-foreground: #f6fffd;
   --secondary: #e9ecef;
   --secondary-foreground: #16202b;
   --muted: #e9ecef;
@@ -86,13 +86,13 @@
   --destructive: #d43f4a;
   --border: #d9dfe4;
   --input: #ffffff;
-  --ring: #16d6c1;
-  --signal: #16d6c1;
+  --ring: #0c8577;
+  --signal: #0c8577;
   --signal-strong: #0c8577;
   --signal-text: #0c8577;
-  --opportunity: #ee4d9b;
+  --opportunity: #c22575;
   --opportunity-text: #c22575;
-  --warning: #f2b45d;
+  --warning: #9a6208;
   --warning-text: #9a6208;
   --success: #1f8a4d;
   --danger: #d43f4a;
@@ -106,8 +106,8 @@
   --radius: 0.875rem;
   --sidebar: #efede6;
   --sidebar-foreground: #16202b;
-  --sidebar-primary: #16d6c1;
-  --sidebar-primary-foreground: #06201d;
+  --sidebar-primary: #0c8577;
+  --sidebar-primary-foreground: #f6fffd;
   --sidebar-accent: #e9ecef;
   --sidebar-accent-foreground: #16202b;
   --sidebar-border: #d9dfe4;
@@ -170,7 +170,6 @@
     @apply border-border outline-ring/50;
   }
   body {
-    background-image: radial-gradient(circle at 82% 0%, rgb(22 214 193 / 8%), transparent 28rem);
     @apply bg-background text-foreground;
   }
   html {

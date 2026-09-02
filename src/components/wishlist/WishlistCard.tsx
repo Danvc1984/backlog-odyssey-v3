@@ -5,6 +5,8 @@ import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
 import { formatDescriptionPreview } from "@/lib/cover-presentation";
 import { WishlistCover } from "./WishlistCover";
 import { WishlistInterestRating } from "./WishlistInterestRating";
+import { ProtonDbTag } from "@/components/games/ProtonDbTag";
+import type { ProtonDbCardTier } from "@/lib/protondb-tags";
 
 const priceFormatter = new Intl.NumberFormat("es-MX", {
   minimumFractionDigits: 2,
@@ -27,6 +29,7 @@ interface WishlistCardProps {
     gameExperience: string | null;
     notes: string | null;
     offerView: WishlistOffersView;
+    protonDbTier: ProtonDbCardTier | null;
     steamAppId: string | null;
     steamAppIdProvenance: string | null;
     baseGame: {
@@ -83,6 +86,7 @@ export function WishlistCard({
                   entryName={entry.name}
                   interest={entry.interest}
                 />
+                {entry.protonDbTier && <ProtonDbTag tier={entry.protonDbTier} />}
               </div>
               <WishlistEntryActions entry={entry} baseGames={baseGames} />
             </div>
@@ -112,11 +116,14 @@ export function WishlistCard({
       <div className="space-y-3 p-4">
         <div className="flex items-center justify-between gap-3">
           <h2 className="sr-only">{entry.name}</h2>
-          <WishlistInterestRating
-            entryId={entry.id}
-            entryName={entry.name}
-            interest={entry.interest}
-          />
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <WishlistInterestRating
+              entryId={entry.id}
+              entryName={entry.name}
+              interest={entry.interest}
+            />
+            {entry.protonDbTier && <ProtonDbTag tier={entry.protonDbTier} />}
+          </div>
           <WishlistEntryActions entry={entry} baseGames={baseGames} />
         </div>
 

@@ -2,15 +2,13 @@ import { WishlistFilterBar } from "@/components/wishlist/WishlistFilterBar";
 import { WishlistList } from "@/components/wishlist/WishlistList";
 import { AddWishlistDialog } from "@/components/wishlist/AddWishlistDialog";
 import { PriceRefreshPanel } from "@/components/wishlist/PriceRefreshPanel";
-import { WishlistCompatSweepPanel } from "@/components/wishlist/WishlistCompatSweepPanel";
-import { ImportSteamWishlistButton } from "@/components/wishlist/ImportSteamWishlistButton";
 import { WishlistImportReviewSection } from "@/components/wishlist/WishlistImportReviewSection";
-import { WishlistSyncChip } from "@/components/wishlist/WishlistSyncChip";
-import { UpdateRecommendationsButton } from "@/components/recommendations/UpdateRecommendationsButton";
 import { ViewSwitch } from "@/components/games/ViewSwitch";
 import { prisma } from "@/lib/prisma";
 import { buildEntryOfferView } from "@/lib/offer-selection";
 import { wishlistWhere } from "@/lib/wishlist-search";
+import { getWishlistCompatibilityEligibility } from "@/lib/wishlist-compatibility";
+import { deriveCardTier } from "@/lib/protondb-tags";
 
 interface WishlistSearchParams {
   type?: string;
@@ -41,7 +39,7 @@ export default async function WishlistPage({
     : undefined;
   const query = params.q?.trim() || undefined;
 
-  const [entries, baseGames, latestRun, latestCompatSweep] = await Promise.all([
+  const [entries, baseGames] = await Promise.all([
     prisma.wishlistEntry.findMany({
       where: wishlistWhere({ type, interest: interestFilter, query }),
       orderBy: [{ interest: "desc" }, { updatedAt: "desc" }],
@@ -56,6 +54,12 @@ export default async function WishlistPage({
         steamAppId: true,
         steamAppIdProvenance: true,
         targetPriceMxn: true,
+        compatSnapshots: {
+          where: { provider: "PROTONDB" },
+          orderBy: { fetchedAt: "desc" },
+          take: 1,
+          select: { result: true },
+        },
         offers: {
           orderBy: [{ price: { sort: "asc", nulls: "last" } }],
         },
@@ -70,14 +74,26 @@ export default async function WishlistPage({
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
-    prisma.priceRefresh.findFirst({ orderBy: { requestedAt: "desc" } }),
-    prisma.wishlistCompatSweep.findFirst({ orderBy: { requestedAt: "desc" } }),
   ]);
 
-  const entriesWithOfferViews = entries.map(({ offers, targetPriceMxn, ...entry }) => ({
-    ...entry,
-    offerView: buildEntryOfferView(offers, targetPriceMxn, new Date()),
-  }));
+  const entriesWithOfferViews = entries.map(({ offers, targetPriceMxn, compatSnapshots, ...entry }) => {
+    const eligibility = getWishlistCompatibilityEligibility({
+      type: entry.type,
+      steamAppId: entry.steamAppId,
+      steamAppIdProvenance: entry.steamAppIdProvenance,
+    });
+    return {
+      ...entry,
+      protonDbTier: eligibility.eligible
+        ? deriveCardTier({
+            steamAppId: eligibility.steamAppId,
+            isRomOnly: false,
+            snapshotResult: compatSnapshots[0]?.result ?? null,
+          })
+        : null,
+      offerView: buildEntryOfferView(offers, targetPriceMxn, new Date()),
+    };
+  });
   const baseGameCount = entriesWithOfferViews.filter((entry) => entry.type === "BASE_GAME").length;
   const dlcCount = entriesWithOfferViews.filter((entry) => entry.type === "DLC").length;
   const opportunityCount = entriesWithOfferViews.filter((entry) => entry.offerView.opportunity.hasBadge).length;
@@ -86,7 +102,7 @@ export default async function WishlistPage({
 
   return (
     <div>
-      <div className="flex flex-wrap items-start justify-between gap-5">
+      <div className="flex flex-wrap items-end justify-between gap-5">
         <div className="max-w-2xl">
           <p className="technical-label text-muted-foreground">Wishlist</p>
           <h1 className="mt-2">
@@ -97,37 +113,9 @@ export default async function WishlistPage({
             Your selection of wishlisted games and dlcs, discounts powered by ITAD and just enough context to know what deserves your money next.
           </p>
         </div>
-        <div className="flex max-w-2xl flex-wrap items-start justify-end gap-3">
-          <WishlistSyncChip />
-          <ImportSteamWishlistButton />
-          <UpdateRecommendationsButton />
-          <PriceRefreshPanel
-            initialRun={
-              latestRun
-                ? {
-                    id: latestRun.id,
-                    status: latestRun.status,
-                    counts: latestRun.counts,
-                    requestedAt: latestRun.requestedAt,
-                    finishedAt: latestRun.finishedAt,
-                  }
-                : null
-            }
-          />
-          <WishlistCompatSweepPanel
-            initialRun={
-              latestCompatSweep
-                ? {
-                    id: latestCompatSweep.id,
-                    status: latestCompatSweep.status,
-                    counts: latestCompatSweep.counts,
-                    requestedAt: latestCompatSweep.requestedAt,
-                    finishedAt: latestCompatSweep.finishedAt,
-                  }
-                : null
-            }
-          />
-          <AddWishlistDialog baseGames={baseGames} />
+        <div className="flex max-w-2xl flex-wrap items-end justify-end gap-3">
+          <PriceRefreshPanel />
+          <AddWishlistDialog baseGames={baseGames} triggerSize="lg" />
         </div>
       </div>
       <div className="mt-6 grid gap-3 md:grid-cols-3" aria-label="Wishlist signals">

@@ -7,9 +7,18 @@ import { getLatestCompatBatchStatus } from "@/lib/compat-batch-runner";
 import { RestartRecommendationsSection } from "@/components/recommendations/RestartRecommendationsSection";
 import { RecommendationProfileSection } from "@/components/recommendations/RecommendationProfileSection";
 import { AlternativeSourcesCard } from "@/components/sources/AlternativeSourcesCard";
+import { ImportSteamWishlistButton } from "@/components/wishlist/ImportSteamWishlistButton";
+import { WishlistSyncChip } from "@/components/wishlist/WishlistSyncChip";
+import { WishlistCompatSweepPanel } from "@/components/wishlist/WishlistCompatSweepPanel";
+import {
+  RawgBatchEnrichmentButton,
+  RawgBatchEnrichmentPanel,
+} from "@/components/games/RawgBatchEnrichmentPanel";
+import { getLatestRawgBatchStatus } from "@/lib/rawg-batch-runner";
+import { getLatestWishlistCompatSweep } from "@/actions/wishlist-compatibility";
 
 export default async function SettingsPage() {
-  const [steamConnection, unresolvedDlcs, baseGames, latestCompatBatch, profile, preferences, sources] = await Promise.all([
+  const [steamConnection, unresolvedDlcs, baseGames, latestCompatBatch, latestRawgBatch, latestWishlistSweep, profile, preferences, sources] = await Promise.all([
     prisma.steamConnection.findUnique({ where: { id: 1 } }),
     prisma.unresolvedSteamDlc.findMany({
       select: { id: true, steamAppId: true, name: true, steamBaseAppId: true, source: true, status: true },
@@ -21,6 +30,8 @@ export default async function SettingsPage() {
       orderBy: { name: "asc" },
     }),
     getLatestCompatBatchStatus(),
+    getLatestRawgBatchStatus(),
+    getLatestWishlistCompatSweep(),
     prisma.recommendationProfile.findUnique({ where: { id: 1 }, select: { payload: true, rebuiltAt: true } }),
     prisma.recommendationPreference.findMany({ orderBy: [{ dimension: "asc" }, { value: "asc" }] }),
     prisma.alternativeSource.findMany({
@@ -34,6 +45,36 @@ export default async function SettingsPage() {
       <h1 className="text-2xl font-semibold">Settings</h1>
 
       <AppearanceSection />
+
+      <section className="mt-6 rounded-lg border border-border bg-card p-4">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 className="text-sm font-medium">Library and wishlist operations</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Run imports, enrichment, and compatibility updates when you need them.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-end gap-3">
+            <WishlistSyncChip />
+            <ImportSteamWishlistButton />
+            <RawgBatchEnrichmentButton />
+          </div>
+        </div>
+        <WishlistCompatSweepPanel
+          initialRun={
+            latestWishlistSweep.data
+              ? {
+                  id: latestWishlistSweep.data.id,
+                  status: latestWishlistSweep.data.status,
+                  counts: latestWishlistSweep.data.counts,
+                  requestedAt: latestWishlistSweep.data.requestedAt,
+                  finishedAt: latestWishlistSweep.data.finishedAt,
+                }
+              : null
+          }
+        />
+        <RawgBatchEnrichmentPanel initialBatch={latestRawgBatch?.data ?? null} />
+      </section>
 
       <CompatibilitySweepPanel initialBatch={latestCompatBatch?.data ?? null} />
 

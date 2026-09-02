@@ -32,6 +32,7 @@ interface AddWishlistDialogProps {
   initialType?: "BASE_GAME" | "DLC";
   initialBaseGameId?: string;
   triggerLabel?: string;
+  triggerSize?: "default" | "lg";
 }
 
 export function AddWishlistDialog({
@@ -39,6 +40,7 @@ export function AddWishlistDialog({
   initialType = "BASE_GAME",
   initialBaseGameId = "",
   triggerLabel = "Add to wishlist",
+  triggerSize = "default",
 }: AddWishlistDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -138,7 +140,7 @@ export function AddWishlistDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button>
+        <Button size={triggerSize}>
           <Plus />
           {triggerLabel}
         </Button>

@@ -88,7 +88,7 @@ boundaries.
   unimported titles but never imports or links catalog records.
 - Game is catalog-only and represents a base game or DLC. LibraryEntry holds
   personal play state, main game, priority, interest, rating, environment,
-  game experience, notes, replay flag, and hidden state.
+  game experience, notes, replayCandidate, and hidden state.
 - ExternalGameId stores provider identities and provenance. GameAvailability is
   separate from origin, provider IDs, compatibility, and offer sellers.
 - Steam and ROM are built-in availability kinds. Other platform availability
@@ -135,8 +135,10 @@ boundaries.
 - ROM-only games are compatibility not applicable, not unknown. Mixed-source
   games may still receive Steam-keyed evidence.
 - A wish is priceable only with confirmed identity: Steam import, a
-  user-confirmed Steam URL/App ID, or an explicitly confirmed suggestion.
-  Provenance is visible.
+  user-confirmed Steam URL/App ID, or an explicitly confirmed suggestion. When
+  RAWG store URLs are empty in practice, the App ID resolves through Steam's
+  keyless `storesearch` exact-name match behind the steam-slug trigger, still
+  suggestion-only until confirmed. Provenance is visible.
 - One explicit global Wishlist price action queues confirmed identities,
   prevents overlap, and reports refreshed, failed, and identity-required items.
   Scheduled work waits for deployment.
@@ -149,6 +151,9 @@ boundaries.
 - ProtonDB and AWAY remain separate attributable evidence. A Steam App ID keys
   evidence. A single 180-day freshness rule keeps stale values visible and
   warns recommendations instead of excluding a game.
+- A global compatibility sweep is already available from Settings as part of the
+  shipped catalog and wishlist flows; Feature 17 may expand or relabel those
+  controls. Scheduled rescheduling waits for deployment.
 - Play Next considers non-hidden, non-main base games that are not started or
   replay-flagged played/abandoned games. In-progress titles belong to Today;
   DLC does not enter Play Next. Buy considers base wishes and eligible DLC
@@ -160,6 +165,10 @@ boundaries.
 - Play Next provides two Best Fit roles, Out of the Box, and Change of Pace.
   Buy provides Best Fit and deal roles under the documented deal-saturation
   rule. No alphabetical tie-break decides a displayed game.
+- Today renders the latest play-next run's stored roles (two best-fit, one
+  qualified out-of-the-box, one change-of-pace) and the latest buy run's stored
+  roles (best-fit and deal picks per the saturation rule); these remain the
+  latest explicitly generated runs.
 - Show another rotates retained candidates without a new run. Exposure is a
   temporary cooldown, never negative feedback. Start playing marks a game
   in progress and follows the existing main-game decision; it never launches a
@@ -172,41 +181,21 @@ never silently starts sync, enrichment, price, compatibility, or recommendation
 work. It keeps active-backlog progress, coverage dialogs, latest explicit runs,
 cached recent Steam activity, offers, freshness, and operation states.
 
-Feature 14 changes presentation and small interaction composition only. It adds
-no migrations, providers, queues, background work, recommendation changes,
-price changes, or data-boundary changes.
-
-- Dark-first identity: deep charcoal/navy surfaces in dark mode; warm off-white
-  or blue-gray surfaces with navy/carbon text in light mode. Light is not an
-  inverted dark theme.
-- Cyan/teal means interactive, progress, ready; magenta/pink means deals,
-  opportunity, Buy; amber means stale, warning, mixed evidence.
-- Rounded cards, pill buttons, chips, display type for headers, and technical
-  monospace for labels/evidence/freshness define the system.
-- Existing prototypes/theme.css and Today, Library, Wishlist, and Game Detail
-  mockups are the visual references. Desktop has an icon sidebar; mobile has
-  bottom navigation and accessible single-column composition.
-- Theme, reduced motion, and reduced data default from system preference and
-  allow manual override. Reduced motion disables carousel auto-advance and
-  nonessential animation. Reduced data prevents remote art/background fetches
-  and uses deterministic token-only fallback visuals.
-- RAWG artwork requires readable overlays. Dynamic per-game palette derivation
-  remains Feature 16, not Feature 14.
-
 ### Feature 14 Today composition
 
 The first viewport is two equal, independently useful carousels:
 
-- **Currently playing** leads with main game then in-progress titles, offers
-  local context, and links to Game Detail. It never claims to resume or launch.
-- **Featured offers** renders up to three items from the existing Today offer
+- Currently playing leads with main game then in-progress titles, offers
+  local context, and links to Game Detail. It never claims to resume or
+  launch.
+- Featured offers renders up to three items from the existing Today offer
   ranking, preserving discount/target/price ordering, returned currency, store,
   freshness, wishlist detail, and seller links.
 
-Both have visible manual navigation, position, keyboard access, slow discreet
-auto-advance, and pause on hover/focus. In reduced motion they are manual.
-Contextual empty states can link to existing actions but cannot trigger hidden
-provider work.
+Both carousels have visible manual navigation, position, keyboard
+access, slow discreet auto-advance, and pause on hover/focus. In reduced motion
+they are manual. Contextual empty states can link to existing actions but
+cannot trigger hidden provider work.
 
 Play Next is the largest independent section: a primary Best Fit card takes
 roughly two thirds of the layout and exposes stored explanations, factors,
@@ -250,15 +239,6 @@ freshness, and operations are supporting sections.
 
 ## Open questions and plan gaps
 
-- Project plan section 10 says a global catalog compatibility sweep waits for
-  Settings Feature 17, while completed build-plan 11b records a global sweep.
-  Clarify whether Feature 17 merely expands existing controls.
-- The project plan describes RAWG Steam-link suggestions, while completed plan
-  history records a Steam storesearch fallback when RAWG store URLs are empty.
-  Reconcile the wording in a future plan-only change.
-- Today section 12 names three latest Play Next recommendations, while the
-  four-role recommendation contract and Feature 14b require one dominant card
-  plus every remaining stored role. Feature 14b must preserve all stored roles.
 - Wallhaven rate limits and keyword defaults validate in Feature 15; exact
   Vercel/Supabase scheduler configuration validates in Feature 18.
 

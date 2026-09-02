@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Sparkles } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -17,6 +18,39 @@ interface BatchEndpointResult {
   success: boolean;
   data: RawgBatchView | null;
   error: string | null;
+}
+
+export function RawgBatchEnrichmentButton() {
+  const router = useRouter();
+  const [running, setRunning] = useState(false);
+
+  const startBatch = async () => {
+    setRunning(true);
+    try {
+      const result = await startRawgCatalogEnrichment({});
+      if (!result.success) {
+        throw new Error(result.error ?? "Failed to queue RAWG catalog enrichment");
+      }
+      if (result.data.kind === "BATCH" && result.data.counts.eligible === 0) {
+        if (result.data.counts.skippedActiveWork === 0) {
+          toast.info("No games to enrich");
+        }
+        return;
+      }
+      router.refresh();
+    } catch (caught) {
+      toast.error(caught instanceof Error ? caught.message : "Failed to queue RAWG catalog enrichment");
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <Button type="button" variant="secondary" size="lg" disabled={running} onClick={() => void startBatch()}>
+      <Sparkles aria-hidden />
+      {running ? "Starting..." : "Enrich eligible games"}
+    </Button>
+  );
 }
 
 function batchMessage(batch: RawgBatchView): string {
@@ -62,7 +96,6 @@ export function RawgBatchEnrichmentPanel({
   const [batch, setBatch] = useState(
     initialBatch && shouldShowBatch(initialBatch) ? initialBatch : null,
   );
-  const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const reportedTerminalBatchId = useRef<string | null>(null);
 
@@ -140,41 +173,8 @@ export function RawgBatchEnrichmentPanel({
     };
   }, [activeBatchId, refreshBatch, runBatch]);
 
-  const startBatch = async () => {
-    setRunning(true);
-    setError(null);
-    try {
-      const result = await startRawgCatalogEnrichment({});
-      if (!result.success) {
-        throw new Error(result.error ?? "Failed to queue RAWG catalog enrichment");
-      }
-      if (result.data.kind === "BATCH" && result.data.counts.eligible === 0) {
-        if (result.data.counts.skippedActiveWork === 0) {
-          toast.info("No games to enrich");
-        }
-        return;
-      }
-
-      const latest = await refreshBatch(result.data.batchId);
-      if (latest.status === "RUNNING") {
-        await runBatch(latest.id);
-      }
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Failed to queue RAWG catalog enrichment");
-    } finally {
-      setRunning(false);
-    }
-  };
-
   if (!batch) {
-    return (
-      <div className="mt-4 flex justify-end">
-        <Button type="button" size="sm" disabled={running} onClick={() => void startBatch()}>
-          {running ? "Starting..." : "Enrich eligible games"}
-        </Button>
-        {error && <p className="ml-3 self-center text-sm text-destructive">{error}</p>}
-      </div>
-    );
+    return error ? <p className="mt-4 text-sm text-destructive">{error}</p> : null;
   }
 
   return (
@@ -188,11 +188,6 @@ export function RawgBatchEnrichmentPanel({
             Queue games without RAWG metadata. Existing metadata is never replaced here.
           </p>
         </div>
-        {batch.isTerminal && (
-          <Button type="button" size="sm" disabled={running} onClick={() => void startBatch()}>
-            {running ? "Starting..." : "Enrich eligible games"}
-          </Button>
-        )}
       </div>
 
       {batch && (

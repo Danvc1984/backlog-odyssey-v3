@@ -354,11 +354,14 @@ confirmed. Identity has three paths, each recording provenance:
 - **Manual entry**: the wish form accepts a Steam store URL or raw App ID;
   the URL is parsed and stored as user-confirmed identity. This also serves
   as the override path.
-- **RAWG suggestion**: wishlist RAWG enrichment additionally captures Steam
-  store links. A derived App ID is stored only as a suggestion and requires
-  one-click confirmation before the entry is priced. The wishlist RAWG
-  snapshot contract therefore extends to store links; the catalog snapshot
-  contract stays unchanged.
+- **RAWG suggestion**: wishlist RAWG enrichment captures Steam store links
+  when present. A derived App ID is stored only as a suggestion and requires
+  one-click confirmation before the entry is priced. Live data showed RAWG
+  store URLs empty in practice, so the App ID resolves through Steam's keyless
+  `storesearch` exact-name match behind the steam-slug trigger, still
+  suggestion-only until confirmed. The wishlist RAWG snapshot contract extends
+  to store links when present; the catalog snapshot contract stays
+  unchanged.
 
 Provenance travels with the identity so the price queue's "confirmed
 identity" rule stays honest. ITAD mapping uses a cached
@@ -486,10 +489,11 @@ page instead of batch progress or error surfaces.
 Freshness uses a single **180-day window** across all evidence types. Stale
 evidence keeps its values, shows its age, and produces a visible
 recommendation warning - never a penalty. Refresh triggers are the post-RAWG
-automatic queue and per-game manual refresh. A global sweep waits for
-Settings' provider controls (feature 17); scheduled rescheduling waits for
-deployment (feature 18). Provider endpoint stability (ProtonDB summary
-endpoint and AWAY dataset shape) validates during the feature spec.
+automatic queue and per-game manual refresh. A global compatibility sweep is
+already available from Settings; feature 17 may expand or relabel those
+controls. Scheduled rescheduling waits for deployment (feature 18). Provider
+endpoint stability (ProtonDB summary endpoint and AWAY dataset shape) validates
+during the feature spec.
 
 ## 11. Recommendations
 
@@ -678,7 +682,9 @@ It displays:
 - Clickable coverage counts open accessible dialogs with up to ten affected
   game titles linking to their game details. The dialog can expand into a
   paginated list for additional games.
-- Three latest play-next recommendations and three latest buy recommendations;
+- The latest play-next run's stored roles (two best-fit picks, one qualified
+  out-of-the-box pick, one change-of-pace pick) and the latest buy run's stored
+  roles (best-fit and deal picks per the documented deal-saturation rule);
   these remain the latest explicitly generated runs.
 - Up to five games recently played on Steam, showing last-played date and
   accumulated playtime. Recent activity may include games not yet imported into

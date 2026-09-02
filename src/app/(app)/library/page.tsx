@@ -1,14 +1,13 @@
 import Link from "next/link";
+import { Copy } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { Button } from "@/components/ui/button";
 import { CreateGameDialog } from "@/components/games/CreateGameDialog";
-import { UpdateRecommendationsButton } from "@/components/recommendations/UpdateRecommendationsButton";
 import { LibraryFilters } from "@/components/games/LibraryFilters";
 import { ViewSwitch } from "@/components/games/ViewSwitch";
 import { LibraryGameCard } from "@/components/games/LibraryGameCard";
 import { LibraryHealthStrip } from "@/components/games/LibraryHealthStrip";
 import { DuplicatesList } from "@/components/games/DuplicatesList";
-import { RawgBatchEnrichmentPanel } from "@/components/games/RawgBatchEnrichmentPanel";
-import { getLatestRawgBatchStatus } from "@/lib/rawg-batch-runner";
 import { loadTodayDataHealth } from "@/lib/today-data-health";
 import { fuzzyMatch } from "@/lib/fuzzy-match";
 import {
@@ -16,6 +15,7 @@ import {
   getSystemCollections,
 } from "@/lib/system-collections";
 import { availabilitySourcePresentation } from "@/lib/sources/known-sources";
+import { deriveCardTier } from "@/lib/protondb-tags";
 
 interface LibrarySearchParams {
   q?: string;
@@ -93,14 +93,13 @@ export default async function LibraryPage({
         : undefined
       : undefined;
 
-  const [manualCollections, systemCollections, latestRawgBatch, pendingUnresolvedDlc, alternativeSources, dataHealth, mainGameGames] = await Promise.all([
+  const [manualCollections, systemCollections, pendingUnresolvedDlc, alternativeSources, dataHealth, mainGameGames] = await Promise.all([
     prisma.collection.findMany({
       where: { isSystem: false },
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
     getSystemCollections(),
-    getLatestRawgBatchStatus(),
     prisma.unresolvedSteamDlc.count({ where: { status: "PENDING" } }),
     prisma.alternativeSource.findMany({
       where: { archivedAt: null },
@@ -187,6 +186,16 @@ export default async function LibraryPage({
         game: {
           include: {
             availability: { include: { alternativeSource: true } },
+            externalIds: {
+              where: { namespace: "STEAM_APP" },
+              select: { externalId: true },
+            },
+            compatSnapshots: {
+              where: { provider: "PROTONDB" },
+              orderBy: { fetchedAt: "desc" },
+              take: 1,
+              select: { result: true },
+            },
             baseGame: {
               select: { id: true, name: true },
             },
@@ -214,6 +223,17 @@ export default async function LibraryPage({
     })(),
   });
 
+  const entriesWithTiers = entries.map((entry) => ({
+    ...entry,
+    protonDbTier: deriveCardTier({
+      steamAppId: entry.game.externalIds[0]?.externalId ?? null,
+      isRomOnly:
+        entry.game.availability.some((a) => a.source === "ROM") &&
+        !entry.game.availability.some((a) => a.source === "STEAM"),
+      snapshotResult: entry.game.compatSnapshots[0]?.result ?? null,
+    }),
+  }));
+
   const mainGame = mainGameGames.find((game) => game.libraryEntry?.isMainGame === true) ?? null;
   const inProgressGames = mainGameGames.filter(
     (game) => game.libraryEntry?.playState === "IN_PROGRESS",
@@ -225,7 +245,7 @@ export default async function LibraryPage({
 
   return (
     <div data-view={view}>
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="technical-label text-muted-foreground">Owned Games Library</p>
           <h1 className="mt-2">
@@ -237,24 +257,29 @@ export default async function LibraryPage({
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {pendingUnresolvedDlc > 0 && (
-            <Link
-              href="/settings"
-              className="rounded-md bg-amber-500/15 px-2 py-1 text-sm font-medium text-amber-700 hover:underline dark:text-amber-300"
+            <Button
+              asChild
+              variant="secondary"
+              size="lg"
+              className="border-amber-500/40 bg-amber-500/10 text-amber-700 hover:bg-amber-500/15 hover:text-amber-800 dark:text-amber-300 dark:hover:text-amber-200"
             >
-              Review DLC ({pendingUnresolvedDlc})
-            </Link>
+              <Link href="/settings">Review DLC ({pendingUnresolvedDlc})</Link>
+            </Button>
           )}
-          <Link
-            href="/library?duplicates=true"
-            className="text-sm text-muted-foreground hover:underline"
+          <Button
+            asChild
+            variant="secondary"
+            size="lg"
           >
-            Review duplicates
-          </Link>
-          <UpdateRecommendationsButton />
+            <Link href="/library?duplicates=true">
+              <Copy aria-hidden />
+              Review duplicates
+            </Link>
+          </Button>
           <CreateGameDialog alternativeSources={alternativeSources.map((alternative) => ({
             ...alternative,
             iconName: availabilitySourcePresentation("OTHER_PLATFORM", alternative.name).iconName,
-          }))} />
+          }))} triggerSize="lg" />
         </div>
       </div>
 
@@ -266,10 +291,6 @@ export default async function LibraryPage({
           mainGame={mainGame ? { id: mainGame.id, name: mainGame.name } : null}
         />
       </div>
-
-      <RawgBatchEnrichmentPanel
-        initialBatch={latestRawgBatch?.data ?? null}
-      />
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <LibraryFilters
@@ -327,7 +348,7 @@ export default async function LibraryPage({
               ? "space-y-3"
               : "grid gap-4 sm:grid-cols-2 lg:grid-cols-3"}
           >
-            {entries.map((entry) => (
+            {entriesWithTiers.map((entry) => (
               <LibraryGameCard
                 key={entry.id}
                 entry={entry}

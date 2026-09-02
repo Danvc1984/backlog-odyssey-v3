@@ -3,6 +3,8 @@ import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
 import { formatDescriptionPreview } from "@/lib/cover-presentation";
 import { WishlistCover } from "@/components/wishlist/WishlistCover";
 import { LibraryInterestRating } from "./LibraryInterestRating";
+import { ProtonDbTag } from "./ProtonDbTag";
+import type { ProtonDbCardTier } from "@/lib/protondb-tags";
 import { cn } from "@/lib/utils";
 
 export interface LibraryGameCardEntry {
@@ -14,6 +16,7 @@ export interface LibraryGameCardEntry {
   replayCandidate: boolean;
   hidden: boolean;
   createdAt: Date;
+  protonDbTier: ProtonDbCardTier | null;
   game: {
     id: string;
     name: string;
@@ -236,11 +239,14 @@ function CardBody({
       )}
       {includeControls && (
         <div className="flex items-center justify-between gap-3">
-          <LibraryInterestRating
-            gameId={entry.game.id}
-            gameName={entry.game.name}
-            interest={entry.interest}
-          />
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <LibraryInterestRating
+              gameId={entry.game.id}
+              gameName={entry.game.name}
+              interest={entry.interest}
+            />
+            {entry.protonDbTier && <ProtonDbTag tier={entry.protonDbTier} />}
+          </div>
           <MockActions gameId={entry.game.id} />
         </div>
       )}
@@ -287,6 +293,7 @@ export function LibraryGameCard({
                   gameName={entry.game.name}
                   interest={entry.interest}
                 />
+                {entry.protonDbTier && <ProtonDbTag tier={entry.protonDbTier} />}
               </div>
               <MockActions gameId={entry.game.id} />
             </div>

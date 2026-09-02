@@ -32,7 +32,7 @@ export function WishlistImportResultPanel({
   };
 
   return (
-    <div className="relative rounded-lg border border-border/70 bg-card/80 p-3 text-sm shadow-sm" role="status">
+    <div className="relative rounded-xl border border-warning/40 bg-warning/5 p-4 text-sm shadow-card" role="status">
       <Button
         type="button"
         variant="ghost"
@@ -43,7 +43,10 @@ export function WishlistImportResultPanel({
       >
         <X aria-hidden />
       </Button>
-      <p className="pr-7 font-medium">
+      <p className="technical-label text-warning-text">
+        Steam import
+      </p>
+      <p className="mt-2 pr-7 font-medium">
         {enrichmentProgress ? "Enriching imported games with RAWG" : "Steam wishlist import complete"}
       </p>
       <p className="mt-1 text-xs text-muted-foreground">
@@ -118,7 +121,7 @@ export function ImportSteamWishlistButton() {
 
   return (
     <div className="flex min-w-52 flex-col items-end gap-2">
-      <Button type="button" variant="outline" size="sm" onClick={() => void importWishlist()} disabled={busy}>
+      <Button type="button" variant="secondary" size="lg" onClick={() => void importWishlist()} disabled={busy}>
         {busy ? <RefreshCw aria-hidden className="animate-spin" /> : <Download aria-hidden />}
         {enriching
           ? `Enriching ${enrichmentProgress?.completed ?? 0}/${enrichmentProgress?.total ?? 0}...`

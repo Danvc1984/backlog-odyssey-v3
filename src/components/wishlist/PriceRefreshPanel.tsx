@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
 import { updatePrices } from "@/actions/prices";
 import { Button } from "@/components/ui/button";
+import { formatMexicoTimestamp } from "@/lib/format-times";
 
 export interface PriceRefreshRunSummary {
   id: string;
@@ -33,18 +34,9 @@ function readCounts(value: unknown): CountBucket {
   return { ...fallback, ...(value as Partial<CountBucket>) };
 }
 
-function formatDate(value: string | Date | null): string | null {
-  if (!value) return null;
-  const date = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(date.getTime())
-    ? null
-    : date.toLocaleString("es-MX", { timeZone: "America/Mexico_City" });
-}
-
-export function PriceRefreshPanel({ initialRun }: { initialRun: PriceRefreshRunSummary | null }) {
+export function PriceRefreshPanel() {
   const router = useRouter();
   const [running, setRunning] = useState(false);
-  const [run, setRun] = useState<PriceRefreshRunSummary | null>(initialRun);
 
   const refresh = async () => {
     setRunning(true);
@@ -58,45 +50,33 @@ export function PriceRefreshPanel({ initialRun }: { initialRun: PriceRefreshRunS
       return;
     }
     if (result.data) {
-      setRun(result.data as PriceRefreshRunSummary);
+      const nextRun = result.data as PriceRefreshRunSummary;
+      const nextCounts = readCounts(nextRun.counts);
+      const details = [
+        `${nextCounts.refreshed} refreshed`,
+        `${nextCounts.notFound} not found`,
+        `${nextCounts.noOffers} without offers`,
+        `${nextCounts.failed} failed`,
+        `${nextCounts.identityRequired} need Steam identity`,
+        formatMexicoTimestamp(nextRun.finishedAt),
+      ].filter((detail): detail is string => Boolean(detail)).join(", ");
+      toast.success("Price refresh finished", {
+        description: nextCounts.conversionUnavailable
+          ? `${details}. Some prices could not be converted to MXN.`
+          : details,
+      });
+    } else {
+      toast.success("Price refresh finished");
     }
-    toast.success("Price refresh finished");
     router.refresh();
   };
 
-  const counts = run ? readCounts(run.counts) : null;
-  const finished = formatDate(run?.finishedAt ?? null);
-
   return (
     <div className="flex flex-col items-end gap-1.5">
-      <Button type="button" variant="outline" size="sm" onClick={() => void refresh()} disabled={running}>
+      <Button type="button" variant="secondary" size="lg" onClick={() => void refresh()} disabled={running}>
         <RefreshCw aria-hidden className={running ? "animate-spin" : ""} />
         {running ? "Refreshing prices..." : "Update prices"}
       </Button>
-      {counts && (
-        <p className="text-xs text-muted-foreground">
-          {run?.status === "SUCCESS" ? "" : `${run?.status}: `}
-          {counts.refreshed} refreshed
-          {counts.notFound > 0 && `, ${counts.notFound} not found`}
-          {counts.noOffers > 0 && `, ${counts.noOffers} without offers`}
-          {counts.failed > 0 && `, ${counts.failed} failed`}
-          {counts.identityRequired > 0 && `, ${counts.identityRequired} need Steam identity`}
-          {finished && ` · ${finished}`}
-        </p>
-      )}
-      {counts?.conversionUnavailable && (
-        <p className="max-w-72 text-right text-xs text-amber-300">
-          Some ITAD prices could not be converted to MXN. Source currencies remain shown.
-        </p>
-      )}
-      <a
-        href="https://isthereanydeal.com"
-        target="_blank"
-        rel="noreferrer"
-        className="text-xs text-muted-foreground underline-offset-4 hover:underline"
-      >
-        Prices via IsThereAnyDeal
-      </a>
     </div>
   );
 }

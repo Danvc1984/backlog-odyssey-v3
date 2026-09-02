@@ -27,7 +27,7 @@ export function UpdateRecommendationsButton() {
   };
 
   return (
-    <Button type="button" variant="outline" size="sm" onClick={() => void update()} disabled={running}>
+    <Button type="button" variant="secondary" size="lg" onClick={() => void update()} disabled={running}>
       <RefreshCw aria-hidden className={running ? "animate-spin" : ""} />
       {running ? "Updating..." : "Update recommendations"}
     </Button>

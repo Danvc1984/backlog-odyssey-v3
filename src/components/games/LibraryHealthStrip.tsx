@@ -1,23 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { updatePlayState } from "@/actions/game-detail";
-import type { TodayDataHealth } from "@/lib/today-data-health";
+import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import type { TodayDataHealth } from "@/lib/today-data-health";
 
 export interface MainGamePick {
   id: string;
   name: string;
 }
-
-const NO_MAIN_GAME = "__none__";
 
 const TILE_CLASSES = {
   signal: "border-signal/40 bg-signal/5",
@@ -46,57 +46,74 @@ function Tile({
   );
 }
 
-function SuggestMainGame({
+function MainGamePicker({
+  mainGame,
   candidates,
   onPick,
+  onClear,
 }: {
+  mainGame: MainGamePick | null;
   candidates: readonly MainGamePick[];
-  onPick: (id: string) => Promise<void>;
+  onPick: (id: string) => Promise<boolean>;
+  onClear: (id: string) => Promise<boolean>;
 }) {
+  const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [selectedGame, setSelectedGame] = useState(mainGame);
 
-  const pick = async (id: string) => {
+  const choose = async (game: MainGamePick | null, action: () => Promise<boolean>) => {
     setBusy(true);
     try {
-      await onPick(id);
+      if (await action()) {
+        setSelectedGame(game);
+        setOpen(false);
+      }
     } finally {
       setBusy(false);
     }
   };
 
-  const [first, ...rest] = candidates;
-
   return (
-    <div className="mt-1.5 space-y-2">
-      {first && (
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void pick(first.id)}
-          className="w-full truncate rounded-[8px] border border-signal/40 bg-signal/10 px-2 py-1.5 text-left text-sm font-medium text-signal-strong transition-colors hover:bg-signal/15 disabled:opacity-50"
-          title={first.name}
-        >
-          Set main: {first.name}
-        </button>
-      )}
-      {rest.length > 0 && (
-        <ul className="space-y-1">
-          {rest.map((game) => (
-            <li key={game.id}>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void pick(game.id)}
-                className="w-full truncate rounded-[8px] px-2 py-1 text-left text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
-                title={game.name}
-              >
-                {game.name}
-              </button>
-            </li>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button type="button" variant="secondary" className="mt-1.5 w-full justify-between" disabled={busy}>
+          <span className="truncate">{selectedGame?.name ?? "Choose main game"}</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Choose main game</DialogTitle>
+          <DialogDescription>
+            Select the game to keep in the spotlight on Today.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-2">
+          {mainGame && (
+            <Button
+              type="button"
+              variant="secondary"
+              className="justify-start"
+              disabled={busy}
+              onClick={() => void choose(null, () => onClear(selectedGame?.id ?? ""))}
+            >
+              Clear main game
+            </Button>
+          )}
+          {candidates.map((game) => (
+            <Button
+              key={game.id}
+              type="button"
+              variant={game.id === selectedGame?.id ? "default" : "secondary"}
+              className="justify-start"
+              disabled={busy}
+              onClick={() => void choose(game, () => onPick(game.id))}
+            >
+              {game.name}
+            </Button>
           ))}
-        </ul>
-      )}
-    </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -109,43 +126,29 @@ export function LibraryHealthStrip({
   games: readonly MainGamePick[];
   mainGame: MainGamePick | null;
 }) {
-  const [busy, setBusy] = useState(false);
-  const [changed, setChanged] = useState(false);
-
-  useEffect(() => {
-    if (!changed) return;
-    window.location.reload();
-  }, [changed]);
-
   const setMainGame = useCallback(
     async (id: string) => {
-      setBusy(true);
-      try {
-        if (id === NO_MAIN_GAME) {
-          if (mainGame) {
-            const result = await updatePlayState(mainGame.id, { isMainGame: false });
-            if (!result.success) {
-              toast.error(result.error ?? "Failed to clear main game");
-            } else {
-              toast.success("Main game cleared");
-              setChanged(true);
-            }
-          }
-          return;
-        }
-        const result = await updatePlayState(id, { isMainGame: true });
-        if (!result.success) {
-          toast.error(result.error ?? "Failed to set main game");
-        } else {
-          toast.success("Main game updated");
-          setChanged(true);
-        }
-      } finally {
-        setBusy(false);
+      const result = await updatePlayState(id, { isMainGame: true });
+      if (!result.success) {
+        toast.error(result.error ?? "Failed to set main game");
+        return false;
+      } else {
+        toast.success("Main game updated");
+        return true;
       }
     },
-    [mainGame],
+    [],
   );
+
+  const clearMainGame = useCallback(async (id: string) => {
+    const result = await updatePlayState(id, { isMainGame: false });
+    if (!result.success) {
+      toast.error(result.error ?? "Failed to clear main game");
+      return false;
+    }
+    toast.success("Main game cleared");
+    return true;
+  }, []);
 
   const inProgress = games.filter((game) => game.id !== mainGame?.id);
 
@@ -171,43 +174,15 @@ export function LibraryHealthStrip({
       />
       <article className={`rounded-lg border p-4 ${TILE_CLASSES.neutral}`}>
         <div className="technical-label text-muted-foreground">Main game</div>
-        {mainGame ? (
+        {mainGame || inProgress.length > 0 ? (
           <>
-            <div className="mt-1.5">
-              <Select
-                value={mainGame.id}
-                onValueChange={(next) => {
-                  if (next === NO_MAIN_GAME) {
-                    void setMainGame(NO_MAIN_GAME);
-                  } else {
-                    void setMainGame(next);
-                  }
-                }}
-              >
-                <SelectTrigger className="w-full" aria-label="Main game" disabled={busy}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NO_MAIN_GAME}>Clear main game</SelectItem>
-                  {[mainGame, ...inProgress].map((game) => (
-                    <SelectItem key={game.id} value={game.id}>
-                      {game.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">In the spotlight on Today</p>
-          </>
-        ) : inProgress.length > 0 ? (
-          <>
-            <SuggestMainGame
-              candidates={inProgress}
+            <MainGamePicker
+              mainGame={mainGame}
+              candidates={[...(mainGame ? [mainGame] : []), ...inProgress]}
               onPick={(id) => setMainGame(id)}
+              onClear={(id) => clearMainGame(id)}
             />
-            <p className="mt-2 text-xs text-muted-foreground">
-              Choose a game in progress to pin it on Today
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">In the spotlight on Today</p>
           </>
         ) : (
           <p className="mt-1.5 text-xs text-muted-foreground">

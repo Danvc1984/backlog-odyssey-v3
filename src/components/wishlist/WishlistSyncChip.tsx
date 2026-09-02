@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { formatMexicoTimestamp } from "@/lib/format-times";
 
 interface WishlistImportSummary {
   at: string;
@@ -37,10 +38,9 @@ export async function WishlistSyncChip() {
   const summary = parseSummary(connection?.counts);
   if (!summary) return null;
 
-  const date = new Date(summary.at);
-  const formattedDate = Number.isNaN(date.getTime()) ? summary.at : date.toLocaleString();
+  const formattedDate = formatMexicoTimestamp(summary.at) ?? summary.at;
   return (
-    <div className="rounded-full border border-border/70 bg-muted/40 px-3 py-1 text-xs text-muted-foreground" role="status">
+    <div className="inline-flex min-h-9 items-center rounded-[8px] border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground" role="status">
       Last import: {summary.created} created, {summary.queuedReviews} reviews, {summary.enriched} enriched · {formattedDate}
     </div>
   );

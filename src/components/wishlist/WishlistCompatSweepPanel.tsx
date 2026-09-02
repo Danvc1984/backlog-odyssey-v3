@@ -9,6 +9,7 @@ import {
   type WishlistCompatSweepRunView,
 } from "@/actions/wishlist-compatibility";
 import { Button } from "@/components/ui/button";
+import { formatMexicoTimestamp } from "@/lib/format-times";
 
 interface SweepCountBucket {
   total: number;
@@ -23,14 +24,6 @@ function readCounts(value: unknown): SweepCountBucket {
     return fallback;
   }
   return { ...fallback, ...(value as Partial<SweepCountBucket>) };
-}
-
-function formatDate(value: string | Date | null): string | null {
-  if (!value) return null;
-  const date = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(date.getTime())
-    ? null
-    : date.toLocaleString("es-MX", { timeZone: "America/Mexico_City" });
 }
 
 export function WishlistCompatSweepPanel({
@@ -65,14 +58,14 @@ export function WishlistCompatSweepPanel({
   };
 
   const counts = run ? readCounts(run.counts) : null;
-  const finished = formatDate(run?.finishedAt ?? null);
+  const finished = formatMexicoTimestamp(run?.finishedAt ?? null);
 
   return (
     <div className="flex flex-col items-end gap-1.5">
       <Button
         type="button"
-        variant="outline"
-        size="sm"
+        variant="secondary"
+        size="lg"
         onClick={() => void sweep()}
         disabled={running}
       >
