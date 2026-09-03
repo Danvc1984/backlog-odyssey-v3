@@ -7,6 +7,11 @@ import {
   type CompatBatchCounts,
 } from "@/lib/compat-batch";
 import { runCompatJob } from "@/lib/compat-job-runner";
+import {
+  claimReadyEnrichmentJobs,
+  readSyncRunBatch,
+  refreshSyncRunBatch,
+} from "@/lib/enrichment-batch-runner";
 
 const compatBatchSelect = {
   id: true,
@@ -89,36 +94,30 @@ function populatedBatchView(batch: CompatBatchRecord | null): CompatBatchView | 
   return view.counts.total > 0 ? view : null;
 }
 
-async function readCompatBatch(batchId: string): Promise<CompatBatchRecord | null> {
-  return prisma.syncRun.findFirst({
-    where: { id: batchId, provider: "PROTONDB" },
-    select: compatBatchSelect,
-  });
-}
-
 async function refreshCompatBatch(batchId: string): Promise<CompatBatchRunResult | null> {
-  const batch = await readCompatBatch(batchId);
+  const batch = await readSyncRunBatch<CompatBatchRecord>("PROTONDB", batchId, compatBatchSelect);
   if (!batch) return null;
 
-  const summary = compatBatchSummary(
-    batch.enrichmentJobs.filter((job) => job.game.libraryEntry?.hidden !== true),
-  );
-  const updated = await prisma.syncRun.update({
-    where: { id: batch.id },
-    data: {
+  const updated = await refreshSyncRunBatch<CompatBatchRecord, ReturnType<typeof compatBatchSummary>>(
+    "PROTONDB",
+    batch,
+    compatBatchSelect,
+    (currentBatch) => compatBatchSummary(
+      currentBatch.enrichmentJobs.filter((job) => job.game.libraryEntry?.hidden !== true),
+    ),
+    (summary) => ({
       status: summary.status,
       counts: { ...summary.counts } as Prisma.InputJsonObject,
       finishedAt: summary.isTerminal ? batch.finishedAt ?? new Date() : null,
-    },
-    select: compatBatchSelect,
-  });
+    }),
+  );
   return { success: true, data: batchView(updated), error: null };
 }
 
 export async function getCompatBatchStatus(
   batchId: string,
 ): Promise<CompatBatchRunResult | null> {
-  const batch = await readCompatBatch(batchId);
+  const batch = await readSyncRunBatch<CompatBatchRecord>("PROTONDB", batchId, compatBatchSelect);
   const view = populatedBatchView(batch);
   return view ? { success: true, data: view, error: null } : null;
 }
@@ -167,7 +166,7 @@ export async function getLatestCompatBatchStatus(): Promise<CompatBatchRunResult
 export async function runCompatBatch(
   batchId: string,
 ): Promise<CompatBatchRunResult | null> {
-  const batch = await readCompatBatch(batchId);
+  const batch = await readSyncRunBatch<CompatBatchRecord>("PROTONDB", batchId, compatBatchSelect);
   if (!batch) return null;
   if (batch.status !== "RUNNING") {
     const view = populatedBatchView(batch);
@@ -175,20 +174,7 @@ export async function runCompatBatch(
   }
 
   const now = new Date();
-  const readyJobs = await prisma.enrichmentJob.findMany({
-    where: {
-      syncRunId: batch.id,
-      provider: "PROTONDB",
-      game: { libraryEntry: { is: { hidden: false } } },
-      OR: [
-        { status: "QUEUED" },
-        { status: "RETRY_WAIT", nextAttemptAt: { lte: now } },
-      ],
-    },
-    orderBy: [{ nextAttemptAt: "asc" }, { createdAt: "asc" }],
-    select: { id: true },
-    take: COMPAT_BATCH_CONCURRENCY,
-  });
+  const readyJobs = await claimReadyEnrichmentJobs("PROTONDB", batch.id, now, COMPAT_BATCH_CONCURRENCY);
 
   await Promise.all(readyJobs.map((job) => runCompatJob(job.id)));
   return refreshCompatBatch(batch.id);

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { WishlistEntryActions } from "./WishlistEntryActions";
 import type { WishlistOffersView } from "@/types/wishlist-offers";
-import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
 import { formatDescriptionPreview } from "@/lib/cover-presentation";
+import type { WishlistCardMetadataView } from "@/lib/card-metadata-view";
 import { WishlistCover } from "./WishlistCover";
 import { WishlistInterestRating } from "./WishlistInterestRating";
 import { ProtonDbTag } from "@/components/games/ProtonDbTag";
@@ -32,16 +32,10 @@ interface WishlistCardProps {
     protonDbTier: ProtonDbCardTier | null;
     steamAppId: string | null;
     steamAppIdProvenance: string | null;
-    baseGame: {
-      id: string;
-      name: string;
-      metadataSnapshots: { payload: unknown; sourceUrl: string | null; fetchedAt: Date }[];
-    } | null;
-    metadataSnapshot: {
-      payload: unknown;
-      sourceUrl: string | null;
-      fetchedAt: Date;
-    } | null;
+    metadata: WishlistCardMetadataView | null;
+    metadataGenres: string[];
+    hasOwnMetadata: boolean;
+    hasInheritedMetadata: boolean;
   };
 }
 
@@ -50,16 +44,11 @@ export function WishlistCard({
   baseGames,
   variant = "focus",
 }: WishlistCardProps & { variant?: "focus" | "list" }) {
-  const ownMetadata = parseRawgMetadataPayload(entry.metadataSnapshot?.payload);
-  const inheritedMetadata = parseRawgMetadataPayload(
-    entry.baseGame?.metadataSnapshots[0]?.payload,
-  );
-  const metadata = ownMetadata ?? inheritedMetadata;
-  const imageUrl = metadata?.backgroundImageUrls[0] ?? null;
+  const imageUrl = entry.metadata?.imageUrl ?? null;
   const coverTitle = entry.type === "DLC" ? `${entry.name} (DLC)` : entry.name;
   const selectedOffer = entry.offerView.selected;
-  const descriptionPreview = metadata?.description
-    ? formatDescriptionPreview(metadata.description)
+  const descriptionPreview = entry.metadata?.description
+    ? formatDescriptionPreview(entry.metadata.description)
     : null;
 
   if (variant === "list") {
@@ -127,7 +116,7 @@ export function WishlistCard({
           <WishlistEntryActions entry={entry} baseGames={baseGames} />
         </div>
 
-        {entry.type === "BASE_GAME" && !ownMetadata && (
+        {entry.type === "BASE_GAME" && !entry.hasOwnMetadata && !entry.hasInheritedMetadata && (
           <p className="text-xs text-muted-foreground">
             RAWG metadata is not available yet. Use Edit to search and choose a match.
           </p>
@@ -150,7 +139,7 @@ export function WishlistCard({
           </Link>
         )}
 
-        {metadata && (
+        {entry.metadata && (
           <div className="space-y-2 text-sm">
             {descriptionPreview && (
               <div className="hidden sm:block">
@@ -161,16 +150,16 @@ export function WishlistCard({
                 </p>
               </div>
             )}
-            {metadata.genres.length > 0 && (
+            {entry.metadataGenres.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
-                {metadata.genres.map((genre) => (
+                {entry.metadataGenres.map((genre) => (
                   <span key={genre} className="rounded-md border border-border px-2 py-0.5 text-xs">
                     {genre}
                   </span>
                 ))}
               </div>
             )}
-            {!ownMetadata && inheritedMetadata && (
+            {entry.hasInheritedMetadata && (
               <p className="text-xs text-muted-foreground">Metadata inherited from the base game.</p>
             )}
           </div>

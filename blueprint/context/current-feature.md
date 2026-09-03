@@ -1,6 +1,3 @@
-# Feature: (none in progress)
+# Nothing in progress
 
-**Status:** stub
-
-Run `/feature` to spec a planned feature, `/fix` for an ad-hoc bug or change,
-or `/rollback` to reverse a completed feature.
+Run `/feature` for a planned feature, `/fix` for an ad-hoc bug or change, or `/rollback` for a safe reversal of a completed feature.

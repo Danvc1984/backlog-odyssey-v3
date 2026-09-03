@@ -16,6 +16,7 @@ import {
 } from "@/lib/system-collections";
 import { availabilitySourcePresentation } from "@/lib/sources/known-sources";
 import { deriveCardTier } from "@/lib/protondb-tags";
+import { libraryCardMetadataView } from "@/lib/card-metadata-view";
 
 interface LibrarySearchParams {
   q?: string;
@@ -223,16 +224,28 @@ export default async function LibraryPage({
     })(),
   });
 
-  const entriesWithTiers = entries.map((entry) => ({
-    ...entry,
-    protonDbTier: deriveCardTier({
-      steamAppId: entry.game.externalIds[0]?.externalId ?? null,
-      isRomOnly:
-        entry.game.availability.some((a) => a.source === "ROM") &&
-        !entry.game.availability.some((a) => a.source === "STEAM"),
-      snapshotResult: entry.game.compatSnapshots[0]?.result ?? null,
-    }),
-  }));
+  const entriesWithTiers = entries.map((entry) => {
+    const { metadataSnapshots, ...game } = entry.game;
+    const metadata = metadataSnapshots
+      .map((snapshot) => libraryCardMetadataView(snapshot.payload))
+      .find((view) => view !== null) ?? null;
+
+    return {
+      ...entry,
+      game: {
+        ...game,
+        metadata,
+        metadataReady: metadataSnapshots.length > 0,
+      },
+      protonDbTier: deriveCardTier({
+        steamAppId: entry.game.externalIds[0]?.externalId ?? null,
+        isRomOnly:
+          entry.game.availability.some((a) => a.source === "ROM") &&
+          !entry.game.availability.some((a) => a.source === "STEAM"),
+        snapshotResult: entry.game.compatSnapshots[0]?.result ?? null,
+      }),
+    };
+  });
 
   const mainGame = mainGameGames.find((game) => game.libraryEntry?.isMainGame === true) ?? null;
   const inProgressGames = mainGameGames.filter(

@@ -12,8 +12,13 @@ import {
 import { resolveItadIds } from "./itad-identity";
 import { fetchSteamStorePrices, type SteamStorePrice } from "./steam-api";
 import { fetchUsdToMxnRate } from "./exchange-rate";
+import {
+  finalizeRun,
+  recoverAbandonedRun,
+  startSingleRun,
+} from "./run-record-lifecycle";
 
-export const ABANDONED_RUN_MS = 15 * 60 * 1000;
+export { ABANDONED_RUN_MS } from "./run-record-lifecycle";
 
 export interface PriceRefreshCounts {
   total: number;
@@ -39,25 +44,10 @@ export type StartPriceRefreshResult =
   | { ok: true; runId: string; entries: EligibleEntry[] }
   | { ok: false; reason: "already-running"; runId: string };
 
-async function recoverAbandonedRuns(now: Date): Promise<void> {
-  const cutoff = new Date(now.getTime() - ABANDONED_RUN_MS);
-  const abandoned = await prisma.priceRefresh.findFirst({
-    where: { status: "RUNNING", requestedAt: { lt: cutoff } },
-    select: { id: true },
-  });
-  if (!abandoned) {
-    return;
-  }
-  await prisma.priceRefresh.updateMany({
-    where: { id: abandoned.id, status: "RUNNING" },
-    data: { status: "FAILED", finishedAt: now },
-  });
-}
-
 export async function startPriceRefresh(
   now: Date = new Date(),
 ): Promise<StartPriceRefreshResult> {
-  await recoverAbandonedRuns(now);
+  await recoverAbandonedRun(prisma.priceRefresh, now, "requestedAt");
 
   const entries = await prisma.wishlistEntry.findMany({
     where: { steamAppId: { not: null }, steamAppIdProvenance: { not: null } },
@@ -68,28 +58,19 @@ export async function startPriceRefresh(
     entry.steamAppId ? [{ id: entry.id, name: entry.name, steamAppId: entry.steamAppId }] : [],
   );
 
-  try {
-    const run = await prisma.priceRefresh.create({
-      data: {
-        status: "RUNNING",
-        country: "MX",
-        counts: emptyCounts(eligible.length) as unknown as Prisma.InputJsonValue,
-      },
-      select: { id: true },
-    });
-    return { ok: true, runId: run.id, entries: eligible };
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      const active = await prisma.priceRefresh.findFirst({
-        where: { status: "RUNNING" },
-        select: { id: true },
-      });
-      if (active) {
-        return { ok: false, reason: "already-running", runId: active.id };
-      }
-    }
-    throw error;
+  const started = await startSingleRun(
+    prisma.priceRefresh,
+    {
+      status: "RUNNING",
+      country: "MX",
+      counts: emptyCounts(eligible.length) as unknown as Prisma.InputJsonValue,
+    },
+    { status: "RUNNING" },
+  );
+  if (!started.ok) {
+    return started;
   }
+  return { ok: true, runId: started.runId, entries: eligible };
 }
 
 export function refreshStatusFromCounts(counts: PriceRefreshCounts) {
@@ -107,14 +88,7 @@ export async function finalizePriceRefresh(
   runId: string,
   counts: PriceRefreshCounts,
 ): Promise<void> {
-  await prisma.priceRefresh.update({
-    where: { id: runId },
-    data: {
-      status: refreshStatusFromCounts(counts),
-      counts: counts as unknown as Prisma.InputJsonValue,
-      finishedAt: new Date(),
-    },
-  });
+  await finalizeRun(prisma.priceRefresh, runId, counts, refreshStatusFromCounts);
 }
 
 function parseDate(value: string | null): Date | null {

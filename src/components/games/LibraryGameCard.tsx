@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
 import { formatDescriptionPreview } from "@/lib/cover-presentation";
 import { WishlistCover } from "@/components/wishlist/WishlistCover";
 import { LibraryInterestRating } from "./LibraryInterestRating";
 import { ProtonDbTag } from "./ProtonDbTag";
 import type { ProtonDbCardTier } from "@/lib/protondb-tags";
+import type { LibraryCardMetadataView } from "@/lib/card-metadata-view";
 import { cn } from "@/lib/utils";
 
 export interface LibraryGameCardEntry {
@@ -22,7 +22,8 @@ export interface LibraryGameCardEntry {
     name: string;
     type: string;
     baseGame: { id: string; name: string } | null;
-    metadataSnapshots: { id: string; payload?: unknown }[];
+    metadata: LibraryCardMetadataView | null;
+    metadataReady: boolean;
     _count: { dlcs: number; collections: number };
     availability: {
       id: string;
@@ -32,44 +33,17 @@ export interface LibraryGameCardEntry {
   };
 }
 
-interface CoverArtMeta {
-  genres: string[];
-  description: string | null;
-  developers: string[];
-  releaseDate: string | null;
-  rating: number | null;
-  metacriticScore: number | null;
-  playtimeHours: number | null;
-  esrbName: string | null;
-}
-
-function extractCoverArtMeta(snapshots: readonly { payload?: unknown }[]): CoverArtMeta {
-  for (const snapshot of snapshots) {
-    const payload = parseRawgMetadataPayload(snapshot.payload);
-    if (payload) {
-      return {
-        genres: payload.genres,
-        description: payload.description,
-        developers: payload.developers,
-        releaseDate: payload.releaseDate,
-        rating: payload.rating,
-        metacriticScore: payload.metacriticScore,
-        playtimeHours: payload.playtimeHours,
-        esrbName: payload.esrbRating?.name ?? null,
-      };
-    }
-  }
-  return {
-    genres: [],
-    description: null,
-    developers: [],
-    releaseDate: null,
-    rating: null,
-    metacriticScore: null,
-    playtimeHours: null,
-    esrbName: null,
-  };
-}
+const EMPTY_COVER_ART_META: LibraryCardMetadataView = {
+  imageUrl: null,
+  genres: [],
+  description: null,
+  developers: [],
+  releaseDate: null,
+  rating: null,
+  metacriticScore: null,
+  playtimeHours: null,
+  esrbName: null,
+};
 
 function formatPlaytime(hours: number): string {
   const totalMinutes = Math.round(hours * 60);
@@ -80,9 +54,7 @@ function formatPlaytime(hours: number): string {
 }
 
 function Cover({ entry, compact }: { entry: LibraryGameCardEntry; compact: boolean }) {
-  const imageUrl = entry.game.metadataSnapshots
-    .map((snapshot) => parseRawgMetadataPayload(snapshot.payload)?.backgroundImageUrls[0] ?? null)
-    .find((value): value is string => value !== null) ?? null;
+  const imageUrl = entry.game.metadata?.imageUrl ?? null;
 
   return (
     <WishlistCover
@@ -117,7 +89,7 @@ function MockActions({ gameId }: { gameId: string }) {
 
 function CardMeta({ entry }: { entry: LibraryGameCardEntry }) {
   const notEmpty: string[] = [];
-  const metaReady = entry.game.metadataSnapshots.length > 0;
+  const metaReady = entry.game.metadataReady;
   if (entry.game.type === "BASE_GAME" && entry.game._count.dlcs > 0) {
     notEmpty.push(`${entry.game._count.dlcs} DLC`);
   }
@@ -222,7 +194,7 @@ function CardBody({
   variant: "grid" | "list";
   includeControls?: boolean;
 }) {
-  const meta = extractCoverArtMeta(entry.game.metadataSnapshots);
+  const meta = entry.game.metadata ?? EMPTY_COVER_ART_META;
   const descriptionPreview = meta.description
     ? formatDescriptionPreview(meta.description)
     : null;

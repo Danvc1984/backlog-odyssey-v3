@@ -801,36 +801,28 @@ function maxSteamValues(
   };
 }
 
-export function planMergeMutations(input: {
+interface MergePlannerContext {
   gameA: MergeGraphGame;
   gameB: MergeGraphGame;
   plan: ResolvedMergePlan;
-}): MergeMutationPlan {
-  const { gameA, gameB, plan } = input;
-  const survivor = plan.survivorId === gameA.id ? gameA : gameB;
-  const discarded = plan.survivorId === gameA.id ? gameB : gameA;
-  const records: MergeSnapshotRecord[] = [];
+  survivor: MergeGraphGame;
+  discarded: MergeGraphGame;
+  pushMove: (model: SnapshotModel, row: Record<string, unknown>) => void;
+  pushDelete: (model: SnapshotModel, row: Record<string, unknown>) => void;
+}
 
+function createSnapshotPushers(records: MergeSnapshotRecord[]) {
   const snapshotWishlist = (action: "update" | "delete", row: Record<string, unknown>) => {
     const { offers, refreshes, ...clean } = row;
     records.push({ model: "WishlistEntry", action, row: rowToJsonSafe(clean) });
     if (action !== "delete") return;
     for (const offer of Array.isArray(offers) ? offers : []) {
-      records.push({
-        model: "DealOffer",
-        action,
-        row: rowToJsonSafe(offer as Record<string, unknown>),
-      });
+      records.push({ model: "DealOffer", action, row: rowToJsonSafe(offer as Record<string, unknown>) });
     }
     for (const refresh of Array.isArray(refreshes) ? refreshes : []) {
-      records.push({
-        model: "PriceRefresh",
-        action,
-        row: rowToJsonSafe(refresh as Record<string, unknown>),
-      });
+      records.push({ model: "PriceRefresh", action, row: rowToJsonSafe(refresh as Record<string, unknown>) });
     }
   };
-
   const pushMove = (model: SnapshotModel, row: Record<string, unknown>) => {
     if (model === "WishlistEntry") {
       snapshotWishlist("update", row);
@@ -845,222 +837,272 @@ export function planMergeMutations(input: {
     }
     records.push({ model, action: "delete", row: rowToJsonSafe(row) });
   };
+  return { pushMove, pushDelete };
+}
 
-  const libraryEntry = survivor.libraryEntry
-    ? {
-        rowId: survivor.libraryEntry.id,
-        original: survivor.libraryEntry,
-        data: plan.personalValues as Record<string, unknown>,
-      }
-    : null;
-  if (libraryEntry) pushMove("LibraryEntry", libraryEntry.original);
-
-  const externalIdMoves: MoveDirective[] = [];
-  const externalIdDeletes: MoveDirective[] = [];
-  const keepIds = new Set(plan.externalKeep.map((keep) => keep.rowId));
-  const deleteIds = new Set(plan.externalDeleteRowIds);
-  for (const row of [...gameA.externalIds, ...gameB.externalIds]) {
-    if (deleteIds.has(row.id)) {
-      externalIdDeletes.push({ id: row.id, row });
-      pushDelete("ExternalGameId", row);
-    } else if (keepIds.has(row.id)) {
-      if (row.gameId === discarded.id) {
-        externalIdMoves.push({ id: row.id, row });
-        pushMove("ExternalGameId", row);
+function planOneToOneMutations(
+  context: MergePlannerContext,
+  key: string,
+  survivorRow: OneToOneRow | null,
+  discardedRow: OneToOneRow | null,
+  model: SnapshotModel,
+  moves: MoveDirective[],
+  deletes: MoveDirective[],
+) {
+  const keepSide = context.plan.oneToOneKeep[key];
+  if (keepSide) {
+    const keepRow = keepSide === "a" ? context.gameA : context.gameB;
+    const keepId = keepRow.id === context.survivor.id ? survivorRow?.id : discardedRow?.id;
+    if (survivorRow && survivorRow.id !== keepId) {
+      deletes.push({ id: survivorRow.id, row: { ...survivorRow } });
+      context.pushDelete(model, survivorRow);
+    }
+    if (discardedRow) {
+      if (discardedRow.id === keepId) {
+        moves.push({ id: discardedRow.id, row: { ...discardedRow } });
+        context.pushMove(model, discardedRow);
+      } else {
+        deletes.push({ id: discardedRow.id, row: { ...discardedRow } });
+        context.pushDelete(model, discardedRow);
       }
     }
+    return;
   }
+  if (discardedRow) {
+    moves.push({ id: discardedRow.id, row: { ...discardedRow } });
+    context.pushMove(model, discardedRow);
+  }
+}
 
-  const availabilityMoves: MoveDirective[] = [];
-  const availabilityDeletes: MoveDirective[] = [];
-  const availabilityMerges: MergeMutationPlan["availabilityMerges"] = [];
-  const survivorAvailabilityByKey = new Map(
-    survivor.availability
+function planLibraryMutations(context: MergePlannerContext) {
+  if (!context.survivor.libraryEntry) return null;
+  const libraryEntry = {
+    rowId: context.survivor.libraryEntry.id,
+    original: context.survivor.libraryEntry,
+    data: context.plan.personalValues as Record<string, unknown>,
+  };
+  context.pushMove("LibraryEntry", libraryEntry.original);
+  return libraryEntry;
+}
+
+function planExternalIdMutations(context: MergePlannerContext) {
+  const moves: MoveDirective[] = [];
+  const deletes: MoveDirective[] = [];
+  const keepIds = new Set(context.plan.externalKeep.map((keep) => keep.rowId));
+  const deleteIds = new Set(context.plan.externalDeleteRowIds);
+  for (const row of [...context.gameA.externalIds, ...context.gameB.externalIds]) {
+    if (deleteIds.has(row.id)) {
+      deletes.push({ id: row.id, row });
+      context.pushDelete("ExternalGameId", row);
+    } else if (keepIds.has(row.id) && row.gameId === context.discarded.id) {
+      moves.push({ id: row.id, row });
+      context.pushMove("ExternalGameId", row);
+    }
+  }
+  return { moves, deletes };
+}
+
+function planAvailabilityMutations(context: MergePlannerContext) {
+  const moves: MoveDirective[] = [];
+  const deletes: MoveDirective[] = [];
+  const merges: MergeMutationPlan["availabilityMerges"] = [];
+  const survivorByKey = new Map(
+    context.survivor.availability
       .map((row) => [availabilityRowKey(row), row] as const)
       .filter((entry) => entry[0] !== null),
   );
-  for (const row of discarded.availability) {
+  for (const row of context.discarded.availability) {
     const key = availabilityRowKey(row);
-    const duplicate = key ? survivorAvailabilityByKey.get(key) : undefined;
+    const duplicate = key ? survivorByKey.get(key) : undefined;
     if (!duplicate) {
-      availabilityMoves.push({ id: row.id, row });
-      pushMove("GameAvailability", row);
+      moves.push({ id: row.id, row });
+      context.pushMove("GameAvailability", row);
       continue;
     }
     if (row.source === "STEAM") {
-      availabilityMerges.push({
+      merges.push({
         rowId: duplicate.id,
         original: { ...duplicate },
         data: maxSteamValues(duplicate, row) as Record<string, unknown>,
       });
-      pushMove("GameAvailability", duplicate);
+      context.pushMove("GameAvailability", duplicate);
     } else if (!duplicate.displayName && row.displayName) {
-      availabilityMerges.push({
+      merges.push({
         rowId: duplicate.id,
         original: { ...duplicate },
         data: { displayName: row.displayName },
       });
-      pushMove("GameAvailability", duplicate);
+      context.pushMove("GameAvailability", duplicate);
     }
-    availabilityDeletes.push({ id: row.id, row });
-    pushDelete("GameAvailability", row);
+    deletes.push({ id: row.id, row });
+    context.pushDelete("GameAvailability", row);
   }
+  return { moves, deletes, merges };
+}
 
-  const collectionMoves: JoinMoveDirective[] = [];
-  const collectionDeletes: JoinMoveDirective[] = [];
-  const survivorCollections = new Set(survivor.collections.map((row) => row.collectionId));
-  for (const row of discarded.collections) {
+function planCollectionMutations(context: MergePlannerContext) {
+  const moves: JoinMoveDirective[] = [];
+  const deletes: JoinMoveDirective[] = [];
+  const survivorCollections = new Set(context.survivor.collections.map((row) => row.collectionId));
+  for (const row of context.discarded.collections) {
     if (survivorCollections.has(row.collectionId)) {
-      collectionDeletes.push({ key: row.collectionId, row });
-      pushDelete("CollectionMembership", row);
+      deletes.push({ key: row.collectionId, row });
+      context.pushDelete("CollectionMembership", row);
     } else {
-      collectionMoves.push({ key: row.collectionId, row });
-      pushMove("CollectionMembership", row);
+      moves.push({ key: row.collectionId, row });
+      context.pushMove("CollectionMembership", row);
     }
   }
+  return { moves, deletes };
+}
 
-  const tagMoves: JoinMoveDirective[] = [];
-  const tagDeletes: JoinMoveDirective[] = [];
-  const survivorTags = new Set(survivor.tags.map((row) => row.tagId));
-  for (const row of discarded.tags) {
+function planTagMutations(context: MergePlannerContext) {
+  const moves: JoinMoveDirective[] = [];
+  const deletes: JoinMoveDirective[] = [];
+  const survivorTags = new Set(context.survivor.tags.map((row) => row.tagId));
+  for (const row of context.discarded.tags) {
     if (survivorTags.has(row.tagId)) {
-      tagDeletes.push({ key: row.tagId, row });
-      pushDelete("GameTag", row);
+      deletes.push({ key: row.tagId, row });
+      context.pushDelete("GameTag", row);
     } else {
-      tagMoves.push({ key: row.tagId, row });
-      pushMove("GameTag", row);
+      moves.push({ key: row.tagId, row });
+      context.pushMove("GameTag", row);
     }
   }
+  return { moves, deletes };
+}
 
-  const metadataMoves: MoveDirective[] = [];
-  const metadataDeletes: MoveDirective[] = [];
-  const survivorMetadata = new Map(
-    survivor.metadataSnapshots.map((row) => [row.provider, row]),
-  );
-  for (const row of discarded.metadataSnapshots) {
+function planMetadataMutations(context: MergePlannerContext) {
+  const moves: MoveDirective[] = [];
+  const deletes: MoveDirective[] = [];
+  const survivorMetadata = new Map(context.survivor.metadataSnapshots.map((row) => [row.provider, row]));
+  for (const row of context.discarded.metadataSnapshots) {
     const existing = survivorMetadata.get(row.provider);
     if (!existing) {
-      metadataMoves.push({ id: row.id, row });
-      pushMove("MetadataSnapshot", row);
-      continue;
-    }
-    if (row.fetchedAt.getTime() > existing.fetchedAt.getTime()) {
-      metadataMoves.push({ id: row.id, row });
-      metadataDeletes.push({ id: existing.id, row: { ...existing } });
-      pushMove("MetadataSnapshot", row);
-      pushDelete("MetadataSnapshot", existing);
+      moves.push({ id: row.id, row });
+      context.pushMove("MetadataSnapshot", row);
+    } else if (row.fetchedAt.getTime() > existing.fetchedAt.getTime()) {
+      moves.push({ id: row.id, row });
+      deletes.push({ id: existing.id, row: { ...existing } });
+      context.pushMove("MetadataSnapshot", row);
+      context.pushDelete("MetadataSnapshot", existing);
     } else {
-      metadataDeletes.push({ id: row.id, row });
-      pushDelete("MetadataSnapshot", row);
+      deletes.push({ id: row.id, row });
+      context.pushDelete("MetadataSnapshot", row);
     }
   }
+  return { moves, deletes };
+}
 
-  const resolveOneToOne = (
-    key: string,
-    survivorRow: OneToOneRow | null,
-    discardedRow: OneToOneRow | null,
-    model: SnapshotModel,
-    moves: MoveDirective[],
-    deletes: MoveDirective[],
-  ) => {
-    const keepSide = plan.oneToOneKeep[key];
-    if (keepSide) {
-      const keepRow = keepSide === "a" ? gameA : gameB;
-      const keepId =
-        keepRow.id === survivor.id
-          ? survivorRow?.id
-          : discardedRow?.id;
-      if (survivorRow && survivorRow.id !== keepId) {
-        deletes.push({ id: survivorRow.id, row: { ...survivorRow } });
-        pushDelete(model, survivorRow);
-      }
-      if (discardedRow) {
-        if (discardedRow.id === keepId) {
-          moves.push({ id: discardedRow.id, row: { ...discardedRow } });
-          pushMove(model, discardedRow);
-        } else {
-          deletes.push({ id: discardedRow.id, row: { ...discardedRow } });
-          pushDelete(model, discardedRow);
-        }
-      }
-      return;
-    }
-    if (discardedRow) {
-      moves.push({ id: discardedRow.id, row: { ...discardedRow } });
-      pushMove(model, discardedRow);
-    }
-  };
-
-  const wishlistMoves: MoveDirective[] = discarded.wishlistDlcs.map((row) => {
-    pushMove("WishlistEntry", row);
+function planWishlistMutations(context: MergePlannerContext) {
+  const moves: MoveDirective[] = context.discarded.wishlistDlcs.map((row) => {
+    context.pushMove("WishlistEntry", row);
     return { id: row.id, row };
   });
-  const wishlistDeletes: MoveDirective[] = [];
+  return { moves, deletes: [] as MoveDirective[] };
+}
 
-  const compatMoves: MoveDirective[] = [];
-  const compatDeletes: MoveDirective[] = [];
-  const compatProviders = new Set([
-    ...survivor.compatSnapshots.map((row) => row.provider),
-    ...discarded.compatSnapshots.map((row) => row.provider),
+function planCompatMutations(context: MergePlannerContext) {
+  const moves: MoveDirective[] = [];
+  const deletes: MoveDirective[] = [];
+  const providers = new Set([
+    ...context.survivor.compatSnapshots.map((row) => row.provider),
+    ...context.discarded.compatSnapshots.map((row) => row.provider),
   ]);
-  for (const provider of compatProviders) {
-    resolveOneToOne(
+  for (const provider of providers) {
+    planOneToOneMutations(
+      context,
       provider,
-      survivor.compatSnapshots.find((row) => row.provider === provider) ?? null,
-      discarded.compatSnapshots.find((row) => row.provider === provider) ?? null,
+      context.survivor.compatSnapshots.find((row) => row.provider === provider) ?? null,
+      context.discarded.compatSnapshots.find((row) => row.provider === provider) ?? null,
       "CompatibilitySnapshot",
-      compatMoves,
-      compatDeletes,
+      moves,
+      deletes,
     );
   }
+  return { moves, deletes };
+}
 
-  const envMoves: MoveDirective[] = [];
-  const envDeletes: MoveDirective[] = [];
+function planEnvMutations(context: MergePlannerContext) {
+  const moves: MoveDirective[] = [];
+  const deletes: MoveDirective[] = [];
   const environments = new Set([
-    ...survivor.envCompat.map((row) => row.environment),
-    ...discarded.envCompat.map((row) => row.environment),
+    ...context.survivor.envCompat.map((row) => row.environment),
+    ...context.discarded.envCompat.map((row) => row.environment),
   ]);
   for (const environment of environments) {
-    resolveOneToOne(
+    planOneToOneMutations(
+      context,
       environment,
-      survivor.envCompat.find((row) => row.environment === environment) ?? null,
-      discarded.envCompat.find((row) => row.environment === environment) ?? null,
+      context.survivor.envCompat.find((row) => row.environment === environment) ?? null,
+      context.discarded.envCompat.find((row) => row.environment === environment) ?? null,
       "EnvironmentCompatibility",
-      envMoves,
-      envDeletes,
+      moves,
+      deletes,
     );
   }
+  return { moves, deletes };
+}
 
-  const dlcMoves: MoveDirective[] = discarded.dlcs.map((row) => {
-    pushMove("Game", row);
+function planDlcMutations(context: MergePlannerContext) {
+  const moves = context.discarded.dlcs.map((row) => {
+    context.pushMove("Game", row);
     return { id: row.id, row };
   });
+  return moves;
+}
 
-  const duplicateMoves: MoveDirective[] = [];
-  const duplicateDeletes: MoveDirective[] = [];
+function planDuplicateMutations(context: MergePlannerContext) {
+  const moves: MoveDirective[] = [];
+  const deletes: MoveDirective[] = [];
   const existingPairIds = new Set(
-    [...survivor.duplicatesA, ...survivor.duplicatesB].map((row) => {
+    [...context.survivor.duplicatesA, ...context.survivor.duplicatesB].map((row) => {
       const other = "gameBId" in row ? row.gameBId : row.gameAId;
-      return orderedPair(survivor.id, other).join(":");
+      return orderedPair(context.survivor.id, other).join(":");
     }),
   );
   const promotedDuplicateIds = new Set<string>();
-  for (const row of [...discarded.duplicatesA, ...discarded.duplicatesB]) {
+  for (const row of [...context.discarded.duplicatesA, ...context.discarded.duplicatesB]) {
     const other = "gameBId" in row ? row.gameBId : row.gameAId;
-    if (other === survivor.id) {
-      pushDelete("PossibleDuplicate", row);
+    if (other === context.survivor.id) {
+      context.pushDelete("PossibleDuplicate", row);
       continue;
     }
-    const pairKey = orderedPair(survivor.id, other).join(":");
+    const pairKey = orderedPair(context.survivor.id, other).join(":");
     if (existingPairIds.has(pairKey) || promotedDuplicateIds.has(pairKey)) {
-      duplicateDeletes.push({ id: row.id, row });
-      pushDelete("PossibleDuplicate", row);
+      deletes.push({ id: row.id, row });
+      context.pushDelete("PossibleDuplicate", row);
       continue;
     }
-    duplicateMoves.push({ id: row.id, row });
+    moves.push({ id: row.id, row });
     promotedDuplicateIds.add(pairKey);
-    pushMove("PossibleDuplicate", row);
+    context.pushMove("PossibleDuplicate", row);
   }
+  return { moves, deletes };
+}
+
+export function planMergeMutations(input: {
+  gameA: MergeGraphGame;
+  gameB: MergeGraphGame;
+  plan: ResolvedMergePlan;
+}): MergeMutationPlan {
+  const { gameA, gameB, plan } = input;
+  const survivor = plan.survivorId === gameA.id ? gameA : gameB;
+  const discarded = plan.survivorId === gameA.id ? gameB : gameA;
+  const records: MergeSnapshotRecord[] = [];
+  const { pushMove, pushDelete } = createSnapshotPushers(records);
+  const context = { gameA, gameB, plan, survivor, discarded, pushMove, pushDelete };
+  const libraryEntry = planLibraryMutations(context);
+  const external = planExternalIdMutations(context);
+  const availability = planAvailabilityMutations(context);
+  const collections = planCollectionMutations(context);
+  const tags = planTagMutations(context);
+  const metadata = planMetadataMutations(context);
+  const wishlist = planWishlistMutations(context);
+  const compat = planCompatMutations(context);
+  const env = planEnvMutations(context);
+  const dlcMoves = planDlcMutations(context);
+  const duplicate = planDuplicateMutations(context);
 
   const survivorGameRow = {
     id: survivor.id,
@@ -1089,43 +1131,34 @@ export function planMergeMutations(input: {
   };
   pushDelete("Game", discardedGameDirective.row);
 
-  const affectedGameIds = [
-    survivor.id,
-    discarded.id,
-    ...dlcMoves.map((move) => move.id),
-  ];
-
+  const affectedGameIds = [survivor.id, discarded.id, ...dlcMoves.map((move) => move.id)];
   return {
     survivorId: survivor.id,
     discardedId: discarded.id,
     finalName: plan.finalName,
     libraryEntry,
-    externalIdMoves,
-    externalIdDeletes,
-    availabilityMoves,
-    availabilityDeletes,
-    availabilityMerges,
-    collectionMoves,
-    collectionDeletes,
-    tagMoves,
-    tagDeletes,
-    metadataMoves,
-    metadataDeletes,
-    wishlistMoves,
-    wishlistDeletes,
-    compatMoves,
-    compatDeletes,
-    envMoves,
-    envDeletes,
+    externalIdMoves: external.moves,
+    externalIdDeletes: external.deletes,
+    availabilityMoves: availability.moves,
+    availabilityDeletes: availability.deletes,
+    availabilityMerges: availability.merges,
+    collectionMoves: collections.moves,
+    collectionDeletes: collections.deletes,
+    tagMoves: tags.moves,
+    tagDeletes: tags.deletes,
+    metadataMoves: metadata.moves,
+    metadataDeletes: metadata.deletes,
+    wishlistMoves: wishlist.moves,
+    wishlistDeletes: wishlist.deletes,
+    compatMoves: compat.moves,
+    compatDeletes: compat.deletes,
+    envMoves: env.moves,
+    envDeletes: env.deletes,
     dlcMoves,
-    duplicateMoves,
-    duplicateDeletes,
+    duplicateMoves: duplicate.moves,
+    duplicateDeletes: duplicate.deletes,
     discardedGame: discardedGameDirective,
     affectedGameIds,
-    snapshot: {
-      survivorId: survivor.id,
-      discardedId: discarded.id,
-      records,
-    },
+    snapshot: { survivorId: survivor.id, discardedId: discarded.id, records },
   };
 }

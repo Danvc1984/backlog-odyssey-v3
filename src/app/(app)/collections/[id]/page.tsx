@@ -11,6 +11,7 @@ import { CollectionListControls } from "@/components/games/CollectionListControl
 import { LibraryGameCard, type LibraryGameCardEntry } from "@/components/games/LibraryGameCard";
 import { StatusPill } from "@/components/ui/detail-card";
 import { deriveCardTier } from "@/lib/protondb-tags";
+import { libraryCardMetadataView } from "@/lib/card-metadata-view";
 
 interface CollectionSearchParams {
   q?: string;
@@ -51,6 +52,11 @@ function toLibraryEntry(entry: {
     entry.game.availability.some((availability) => availability.source === "ROM") &&
     !entry.game.availability.some((availability) => availability.source === "STEAM");
 
+  const { metadataSnapshots } = entry.game;
+  const metadata = metadataSnapshots
+    .map((snapshot) => libraryCardMetadataView(snapshot.payload))
+    .find((view) => view !== null) ?? null;
+
   return {
     id: entry.id,
     interest: entry.interest,
@@ -70,7 +76,8 @@ function toLibraryEntry(entry: {
       name: entry.game.name,
       type: entry.game.type,
       baseGame: entry.game.baseGame,
-      metadataSnapshots: entry.game.metadataSnapshots,
+      metadata,
+      metadataReady: metadataSnapshots.length > 0,
       _count: entry.game._count,
       availability: entry.game.availability,
     },

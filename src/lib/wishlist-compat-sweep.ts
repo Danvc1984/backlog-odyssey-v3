@@ -7,7 +7,11 @@ import {
   WISHLIST_COMPAT_FRESHNESS_DAYS,
 } from "@/lib/wishlist-compatibility";
 import { runWishlistCompatibilityRefresh } from "@/lib/wishlist-compatibility-runner";
-import { ABANDONED_RUN_MS } from "./price-refresh";
+import {
+  finalizeRun,
+  recoverAbandonedRun,
+  startSingleRun,
+} from "./run-record-lifecycle";
 
 const WISHLIST_COMPAT_CONCURRENCY = 5;
 
@@ -60,21 +64,6 @@ export function emptySweepCounts(total = 0, upToDate = 0): WishlistCompatSweepCo
   return { total, refreshed: 0, upToDate, failed: 0 };
 }
 
-async function recoverAbandonedRuns(now: Date): Promise<void> {
-  const cutoff = new Date(now.getTime() - ABANDONED_RUN_MS);
-  const abandoned = await prisma.wishlistCompatSweep.findFirst({
-    where: { status: "RUNNING", requestedAt: { lt: cutoff } },
-    select: { id: true },
-  });
-  if (!abandoned) {
-    return;
-  }
-  await prisma.wishlistCompatSweep.updateMany({
-    where: { id: abandoned.id, status: "RUNNING" },
-    data: { status: "FAILED", finishedAt: now },
-  });
-}
-
 export type StartWishlistCompatSweepResult =
   | { ok: true; runId: string; total: number; upToDate: number; refreshIds: string[] }
   | { ok: false; reason: "already-running"; runId: string };
@@ -82,7 +71,7 @@ export type StartWishlistCompatSweepResult =
 export async function startWishlistCompatSweep(
   now: Date = new Date(),
 ): Promise<StartWishlistCompatSweepResult> {
-  await recoverAbandonedRuns(now);
+  await recoverAbandonedRun(prisma.wishlistCompatSweep, now, "requestedAt");
 
   const entries = await prisma.wishlistEntry.findMany({
     where: {
@@ -134,27 +123,18 @@ export async function startWishlistCompatSweep(
   }
 
   const counts = emptySweepCounts(entries.length, upToDate);
-  try {
-    const run = await prisma.wishlistCompatSweep.create({
-      data: {
-        status: "RUNNING",
-        counts: counts as unknown as Prisma.InputJsonValue,
-      },
-      select: { id: true },
-    });
-    return { ok: true, runId: run.id, total: entries.length, upToDate, refreshIds };
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      const active = await prisma.wishlistCompatSweep.findFirst({
-        where: { status: "RUNNING" },
-        select: { id: true },
-      });
-      if (active) {
-        return { ok: false, reason: "already-running", runId: active.id };
-      }
-    }
-    throw error;
+  const started = await startSingleRun(
+    prisma.wishlistCompatSweep,
+    {
+      status: "RUNNING",
+      counts: counts as unknown as Prisma.InputJsonValue,
+    },
+    { status: "RUNNING" },
+  );
+  if (!started.ok) {
+    return started;
   }
+  return { ok: true, runId: started.runId, total: entries.length, upToDate, refreshIds };
 }
 
 export async function processWishlistCompatSweepEntries(
@@ -184,14 +164,7 @@ export async function finalizeWishlistCompatSweep(
   runId: string,
   counts: WishlistCompatSweepCounts,
 ): Promise<void> {
-  await prisma.wishlistCompatSweep.update({
-    where: { id: runId },
-    data: {
-      status: sweepStatusFromCounts(counts),
-      counts: counts as unknown as Prisma.InputJsonValue,
-      finishedAt: new Date(),
-    },
-  });
+  await finalizeRun(prisma.wishlistCompatSweep, runId, counts, sweepStatusFromCounts);
 }
 
 export type RunWishlistCompatSweepResult =

@@ -9,6 +9,8 @@ import { buildEntryOfferView } from "@/lib/offer-selection";
 import { wishlistWhere } from "@/lib/wishlist-search";
 import { getWishlistCompatibilityEligibility } from "@/lib/wishlist-compatibility";
 import { deriveCardTier } from "@/lib/protondb-tags";
+import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
+import { wishlistCardMetadataView } from "@/lib/card-metadata-view";
 
 interface WishlistSearchParams {
   type?: string;
@@ -76,7 +78,20 @@ export default async function WishlistPage({
     }),
   ]);
 
-  const entriesWithOfferViews = entries.map(({ offers, targetPriceMxn, compatSnapshots, ...entry }) => {
+  const entriesWithOfferViews = entries.map(({
+    offers,
+    targetPriceMxn,
+    compatSnapshots,
+    metadataSnapshot,
+    baseGame,
+    ...entry
+  }) => {
+    const ownPayload = parseRawgMetadataPayload(metadataSnapshot?.payload);
+    const inheritedPayload = parseRawgMetadataPayload(baseGame?.metadataSnapshots[0]?.payload);
+    const ownMetadata = wishlistCardMetadataView(metadataSnapshot?.payload);
+    const inheritedMetadata = wishlistCardMetadataView(baseGame?.metadataSnapshots[0]?.payload);
+    const metadata = ownMetadata ?? inheritedMetadata;
+    const metadataPayload = ownPayload ?? inheritedPayload;
     const eligibility = getWishlistCompatibilityEligibility({
       type: entry.type,
       steamAppId: entry.steamAppId,
@@ -84,6 +99,10 @@ export default async function WishlistPage({
     });
     return {
       ...entry,
+      metadata,
+      metadataGenres: metadataPayload?.genres ?? [],
+      hasOwnMetadata: ownMetadata !== null,
+      hasInheritedMetadata: ownMetadata === null && inheritedMetadata !== null,
       protonDbTier: eligibility.eligible
         ? deriveCardTier({
             steamAppId: eligibility.steamAppId,

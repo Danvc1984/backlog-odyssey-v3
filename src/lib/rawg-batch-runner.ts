@@ -8,6 +8,11 @@ import {
   type RawgBatchCounts,
 } from "@/lib/rawg-batch";
 import { runRawgEnrichmentJob } from "@/lib/rawg-job-runner";
+import {
+  claimReadyEnrichmentJobs,
+  readSyncRunBatch,
+  refreshSyncRunBatch,
+} from "@/lib/enrichment-batch-runner";
 
 const rawgBatchSelect = {
   id: true,
@@ -174,39 +179,32 @@ function batchView(batch: RawgBatchRecord): RawgBatchView {
   };
 }
 
-async function readRawgBatch(batchId: string): Promise<RawgBatchRecord | null> {
-  return prisma.syncRun.findFirst({
-    where: { id: batchId, provider: "RAWG" },
-    select: rawgBatchSelect,
-  });
-}
-
 async function refreshRawgBatch(batchId: string): Promise<RawgBatchRunResult | null> {
-  const batch = await readRawgBatch(batchId);
+  const batch = await readSyncRunBatch<RawgBatchRecord>("RAWG", batchId, rawgBatchSelect);
   if (!batch) {
     return null;
   }
 
-  const summary = rawgBatchSummary(
-    batch.enrichmentJobs.filter((job) => job.game.libraryEntry?.hidden !== true),
-  );
-  const finishedAt = summary.isTerminal ? batch.finishedAt ?? new Date() : null;
-  const updated = await prisma.syncRun.update({
-    where: { id: batch.id },
-    data: {
+  const updated = await refreshSyncRunBatch<RawgBatchRecord, ReturnType<typeof rawgBatchSummary>>(
+    "RAWG",
+    batch,
+    rawgBatchSelect,
+    (currentBatch) => rawgBatchSummary(
+      currentBatch.enrichmentJobs.filter((job) => job.game.libraryEntry?.hidden !== true),
+    ),
+    (summary) => ({
       status: summary.status,
       counts: summary.counts as Prisma.InputJsonValue,
-      finishedAt,
-    },
-    select: rawgBatchSelect,
-  });
+      finishedAt: summary.isTerminal ? batch.finishedAt ?? new Date() : null,
+    }),
+  );
   return addPendingRawgFollowUps(batchView(updated));
 }
 
 export async function getRawgBatchStatus(
   batchId: string,
 ): Promise<RawgBatchRunResult | null> {
-  const batch = await readRawgBatch(batchId);
+  const batch = await readSyncRunBatch<RawgBatchRecord>("RAWG", batchId, rawgBatchSelect);
   return batch ? addPendingRawgFollowUps(batchView(batch)) : null;
 }
 
@@ -267,7 +265,7 @@ export async function getLatestRawgBatchStatus(): Promise<RawgBatchRunResult | n
 export async function runRawgCatalogBatch(
   batchId: string,
 ): Promise<RawgBatchRunResult | null> {
-  const batch = await readRawgBatch(batchId);
+  const batch = await readSyncRunBatch<RawgBatchRecord>("RAWG", batchId, rawgBatchSelect);
   if (!batch) {
     return null;
   }
@@ -276,20 +274,7 @@ export async function runRawgCatalogBatch(
   }
 
   const now = new Date();
-  const readyJobs = await prisma.enrichmentJob.findMany({
-    where: {
-      syncRunId: batch.id,
-      provider: "RAWG",
-      game: { libraryEntry: { is: { hidden: false } } },
-      OR: [
-        { status: "QUEUED" },
-        { status: "RETRY_WAIT", nextAttemptAt: { lte: now } },
-      ],
-    },
-    orderBy: [{ nextAttemptAt: "asc" }, { createdAt: "asc" }],
-    select: { id: true },
-    take: RAWG_BATCH_CONCURRENCY,
-  });
+  const readyJobs = await claimReadyEnrichmentJobs("RAWG", batch.id, now, RAWG_BATCH_CONCURRENCY);
 
   if (readyJobs.length > 0) {
     await Promise.all(readyJobs.map((job) => runRawgEnrichmentJob(job.id)));
