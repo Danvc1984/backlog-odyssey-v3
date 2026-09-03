@@ -1,5 +1,3 @@
-"use client"
-
 import { icons, type LucideIcon } from "lucide-react"
 import { FALLBACK_SOURCE_ICON } from "@/lib/sources/known-sources"
 

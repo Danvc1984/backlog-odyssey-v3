@@ -46,7 +46,6 @@ export interface RecommendationItemCardProps {
   runId?: string;
   role?: RecommendationRole | null;
   imageUrl?: string | null;
-  size?: "large" | "compact";
   rotate?: {
     pending: boolean;
     exhausted: boolean;
@@ -64,7 +63,6 @@ export function RecommendationItemCard({
   runId,
   role,
   imageUrl,
-  size = "large",
   rotate,
 }: RecommendationItemCardProps) {
   const [dismissed, setDismissed] = useState(false);
@@ -121,8 +119,7 @@ export function RecommendationItemCard({
         <p className="technical-label text-muted-foreground">{rankLabel}</p>
 {copy && (
         <p
-          className="mt-2 overflow-hidden text-sm leading-6 text-muted-foreground"
-          style={{ display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: 2 }}
+          className="mt-2 line-clamp-2 overflow-hidden text-sm leading-6 text-muted-foreground"
         >
           {copy}
         </p>

@@ -33,5 +33,5 @@ export function recommendationCopy({
     reasons.push(factor.label);
   }
   if (reasons.length === 0) return null;
-  return `${opener} — ${reasons.join(" · ")}.`;
+  return `${opener}: ${reasons.join(" · ")}.`;
 }

@@ -32,8 +32,6 @@ import { TodayOperations } from "@/components/today/TodayOperations";
 import { formatMexicoTimestamp } from "@/lib/format-times";
 import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
 import { SectionCard } from "@/components/ui/detail-card";
-import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
 
 const PLAY_ROLE_GROUPS = [
   { label: "Best fit", roles: ["BEST_FIT_1", "BEST_FIT_2"] },

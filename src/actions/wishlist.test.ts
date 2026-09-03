@@ -114,6 +114,17 @@ describe("createWishlistEntry", () => {
     expect(interest.error).toBe("Invalid input");
     expect(mockCreate).not.toHaveBeenCalled();
   });
+
+  it("rejects a malformed Steam App ID", async () => {
+    const result = await createWishlistEntry({
+      name: "Game",
+      type: "BASE_GAME",
+      steamAppId: "portal-two",
+    });
+
+    expect(result).toEqual({ success: false, data: null, error: "Invalid input" });
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
 });
 
 describe("wishlist CRUD", () => {
@@ -186,6 +197,13 @@ describe("wishlist CRUD", () => {
     expect(deleted.success).toBe(true);
     expect(mockDelete).toHaveBeenCalledWith({ where: { id: "wish-1" } });
     expect(invalid.success).toBe(false);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a malformed Steam App ID on update", async () => {
+    const result = await updateWishlistEntry({ id: "wish-1", steamAppId: "portal-two" });
+
+    expect(result).toEqual({ success: false, data: null, error: "Invalid input" });
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 

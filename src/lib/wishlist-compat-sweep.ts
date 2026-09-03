@@ -7,6 +7,7 @@ import {
   WISHLIST_COMPAT_FRESHNESS_DAYS,
 } from "@/lib/wishlist-compatibility";
 import { runWishlistCompatibilityRefresh } from "@/lib/wishlist-compatibility-runner";
+import { ABANDONED_RUN_MS } from "./price-refresh";
 
 const WISHLIST_COMPAT_CONCURRENCY = 5;
 
@@ -54,8 +55,6 @@ export function sweepStatusFromCounts(
   if (counts.failed > 0) return "PARTIAL";
   return "SUCCESS";
 }
-
-export const ABANDONED_RUN_MS = 15 * 60 * 1000;
 
 export function emptySweepCounts(total = 0, upToDate = 0): WishlistCompatSweepCounts {
   return { total, refreshed: 0, upToDate, failed: 0 };

@@ -123,7 +123,7 @@ describe("syncSteamPlaytime", () => {
 
     expect(result).toEqual({
       success: false,
-      data: { synced: 0, skipped: 0, failed: 1 },
+      data: null,
       error: "Steam API returned no owned games",
     });
     expect(createSyncRun).toHaveBeenCalled();

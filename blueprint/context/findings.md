@@ -105,39 +105,44 @@
 **Suggested fix:** Move timer restore into an `afterEach` (or try/finally) for the affected describe block.
 **Resolution:** Moved fake-timer restoration to `afterEach` in `rotateRecommendationRole` and removed the trailing restore from the cooldown test. Recommendations tests and the full suite pass.
 
-### F-29 [P3] open - Small cleanups: unused imports, duplicate constant export, unneeded client directive
+### F-29 [P3] fixed - Small cleanups: unused imports, duplicate constant export, unneeded client directive
 
 **File:** src/app/(app)/today/page.tsx:35
 **Found:** 2026-09-03 by /audit (scope: full; lens: quality)
 **Why it matters:** Five unused imports/vars reported by lint (today/page.tsx:35-36, CompatibilitySection.tsx:10, MetadataSection.tsx:2, RecommendationItemCard.tsx:67); `ABANDONED_RUN_MS` exported identically from two files with no cross-import (price-refresh.ts:16, wishlist-compat-sweep.ts:56); `SourceIcon.tsx` is pure presentational but marked `'use client'` (src/components/sources/SourceIcon.tsx:1). All trivial, all noise in review.
 **Suggested fix:** One cleanup pass: delete the five unused bindings, keep a single source for `ABANDONED_RUN_MS`, drop the directive.
+**Resolution:** Removed the unused bindings, centralized `ABANDONED_RUN_MS` in `price-refresh.ts`, and removed the unnecessary client directive from `SourceIcon.tsx`. Lint and typecheck pass.
 
-### F-30 [P3] open - steam-sync returns success:false with non-null data
+### F-30 [P3] fixed - steam-sync returns success:false with non-null data
 
 **File:** src/actions/steam-sync.ts:62
 **Found:** 2026-09-03 by /audit (scope: full; lens: quality)
 **Why it matters:** Sole deviation from the `{ success, data: null, error }` action contract; every other failure path returns `data: null`. Callers keying on `data` on failure can be surprised.
 **Suggested fix:** Return `data: null` and keep the counts in the SyncRun record (already persisted) or a diagnostics field.
+**Resolution:** The no-owned-games failure now returns `data: null`; counts remain persisted on the FAILED `SyncRun` row. The focused sync test passes.
 
-### F-31 [P3] open - Line clamping implemented with inline styles in four card components
+### F-31 [P3] fixed - Line clamping implemented with inline styles in four card components
 
 **File:** src/components/wishlist/WishlistCard.tsx:159
 **Found:** 2026-09-03 by /audit (scope: full; lens: quality)
 **Why it matters:** `-webkit-line-clamp` is applied via inline `style` objects in WishlistCard.tsx:159, LibraryGameCard.tsx:189, PlayNextRailCard.tsx:118, RecommendationItemCard.tsx:125, while the standard says no inline styles and Tailwind ships `line-clamp-*` utilities.
 **Suggested fix:** Replace with `line-clamp-2` / `line-clamp-3` classes.
+**Resolution:** Replaced the four inline clamp style objects with the equivalent Tailwind `line-clamp-2` and `line-clamp-3` classes. Build passes.
 
-### F-32 [P3] open - Wishlist create/update accepts any non-empty steamAppId string
+### F-32 [P3] fixed - Wishlist create/update accepts any non-empty steamAppId string
 
 **File:** src/actions/wishlist.ts:21
 **Found:** 2026-09-03 by /audit (scope: full; lens: quality)
 **Why it matters:** The manual-entry schemas validate `steamAppId` as `z.string().trim().min(1)` (lines 21, 35), while the identity flow enforces `/^\d{1,10}$/` (src/actions/wishlist-identity.ts:36). Downstream uses are URL-encoded (no injection), but malformed IDs can enter the same column through two doors.
 **Suggested fix:** Reuse the identity flow's regex in the create/update schemas.
+**Resolution:** Create and update now enforce the same 1-10 digit Steam App ID regex as the identity flow, with focused rejection tests.
 
-### F-33 [P3] open - Em dash in generated recommendation copy
+### F-33 [P3] fixed - Em dash in generated recommendation copy
 
 **File:** src/lib/recommendations/recommendation-copy.ts:36
 **Found:** 2026-09-03 by /audit (scope: full; lens: quality)
 **Suggested fix:** Switch the separator to `": "` and update the four test assertions.
+**Resolution:** Changed the generated separator to `": "` and updated all four copy assertions. The full test suite passes.
 
 ### F-34 [P3] fixed - Pure-function tests live in the actions-layer catalog-operations test file
 

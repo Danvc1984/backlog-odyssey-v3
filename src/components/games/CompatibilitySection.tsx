@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { refreshGameCompatibility, setCompatOverride } from "@/actions/compatibility";
 import { deriveWindowsFallback, type AntiCheatStatus } from "@/lib/compat-fallback";
 import { Button } from "@/components/ui/button";
-import { SectionCard, StatusPill } from "@/components/ui/detail-card";
+import { SectionCard } from "@/components/ui/detail-card";
 import { Input } from "@/components/ui/input";
 import {
   Select,

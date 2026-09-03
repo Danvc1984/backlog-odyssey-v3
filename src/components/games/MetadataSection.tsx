@@ -1,5 +1,5 @@
 import type { RawgMetadataPayload } from "@/lib/rawg-types";
-import { SectionCard, StatusPill } from "@/components/ui/detail-card";
+import { SectionCard } from "@/components/ui/detail-card";
 import { ExternalLink } from "lucide-react";
 
 function externalUrl(value: string | null): string | null {

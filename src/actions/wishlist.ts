@@ -18,7 +18,7 @@ const createWishlistEntrySchema = z
     baseGameId: z.string().trim().min(1).optional(),
     interest: interestSchema.optional(),
     notes: z.string().optional().nullable(),
-    steamAppId: z.string().trim().min(1).optional().nullable(),
+    steamAppId: z.string().trim().regex(/^\d{1,10}$/).optional().nullable(),
   })
   .strict();
 
@@ -32,7 +32,7 @@ const updateWishlistEntrySchema = z
       .optional()
       .nullable(),
     notes: z.string().optional().nullable(),
-    steamAppId: z.string().trim().min(1).optional().nullable(),
+    steamAppId: z.string().trim().regex(/^\d{1,10}$/).optional().nullable(),
     baseGameId: z.string().trim().min(1).optional(),
   })
   .strict();

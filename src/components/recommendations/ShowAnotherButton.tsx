@@ -21,7 +21,6 @@ interface ShowAnotherButtonProps {
   negative: unknown;
   caveats: unknown;
   imageUrl?: string | null;
-  size?: "large" | "compact";
 }
 
 interface CardSlot {
@@ -45,7 +44,6 @@ export function ShowAnotherButton({
   negative,
   caveats,
   imageUrl,
-  size = "large",
 }: ShowAnotherButtonProps) {
   const [pending, setPending] = useState(false);
   const [exhausted, setExhausted] = useState(false);
@@ -90,7 +88,6 @@ export function ShowAnotherButton({
       runId={runId}
       role={role}
       imageUrl={imageUrl}
-      size={size}
       rotate={{ pending, exhausted, onRotate: () => void rotate() }}
     />
   );

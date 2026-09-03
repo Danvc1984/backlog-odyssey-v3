@@ -59,7 +59,7 @@ export async function syncSteamPlaytime() {
           diagnostics: { error: "Steam API returned no owned games" },
         },
       });
-      return { success: false as const, data: counts, error: "Steam API returned no owned games" };
+      return { success: false as const, data: null, error: "Steam API returned no owned games" };
     }
 
     const identities = new Map<string, string>();

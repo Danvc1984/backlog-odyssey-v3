@@ -155,8 +155,7 @@ export function WishlistCard({
             {descriptionPreview && (
               <div className="hidden sm:block">
                 <p
-                  className="overflow-hidden leading-6 text-muted-foreground"
-                  style={{ display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: 3 }}
+                  className="line-clamp-3 overflow-hidden leading-6 text-muted-foreground"
                 >
                   {descriptionPreview}
                 </p>

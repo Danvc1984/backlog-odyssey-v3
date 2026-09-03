@@ -11,7 +11,7 @@ describe("recommendationCopy", () => {
         positive: [],
         caveats: [{ factor: "preference", label: "high interest" }],
       }),
-    ).toBe("A direct best fit for your rotation — high interest.");
+    ).toBe("A direct best fit for your rotation: high interest.");
   });
 
   it("caps the reasons at two and favors caveats first", () => {
@@ -27,7 +27,7 @@ describe("recommendationCopy", () => {
         ],
       }),
     ).toBe(
-      "A change of pace when you want a deliberate reset — runs well on Bazzite · short session.",
+      "A change of pace when you want a deliberate reset: runs well on Bazzite · short session.",
     );
   });
 
@@ -39,7 +39,7 @@ describe("recommendationCopy", () => {
         positive: [{ factor: "offer_discount", label: "fresh 20% discount", points: 12 }],
         caveats: [],
       }),
-    ).toBe("A deal worth acting on now — fresh 20% discount.");
+    ).toBe("A deal worth acting on now: fresh 20% discount.");
   });
 
   it("falls back to a kind-based opener without a role", () => {
@@ -50,7 +50,7 @@ describe("recommendationCopy", () => {
         positive: [],
         caveats: [{ factor: "target_hit", label: "under your target price" }],
       }),
-    ).toBe("Recommended for your wallet right now — under your target price.");
+    ).toBe("Recommended for your wallet right now: under your target price.");
   });
 
   it("returns null when there is nothing to say", () => {

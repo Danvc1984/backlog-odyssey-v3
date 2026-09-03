@@ -114,8 +114,7 @@ export function PlayNextRailCard({ runId, role, itemId, gameId, name, rank, scor
       </div>
       {copy && (
         <p
-          className="mt-2 overflow-hidden text-sm leading-6 text-muted-foreground"
-          style={{ display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: 2 }}
+          className="mt-2 line-clamp-2 overflow-hidden text-sm leading-6 text-muted-foreground"
         >
           {copy}
         </p>
