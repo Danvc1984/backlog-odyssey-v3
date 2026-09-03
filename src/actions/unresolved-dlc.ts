@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { ActionError, friendlyActionError } from "@/lib/action-error";
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
@@ -24,7 +25,7 @@ export async function getUnresolvedSteamDlcs() {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to load unresolved DLC",
+      error: friendlyActionError(err, "Failed to load unresolved DLC"),
     };
   }
 }
@@ -42,15 +43,15 @@ export async function linkUnresolvedDlc(input: unknown) {
       const unresolved = await tx.unresolvedSteamDlc.findUnique({
         where: { id: parsed.data.unresolvedId },
       });
-      if (!unresolved) throw new Error("Unresolved DLC not found");
+      if (!unresolved) throw new ActionError("Unresolved DLC not found");
 
       const baseGame = await tx.game.findUnique({
         where: { id: parsed.data.targetBaseGameId },
         select: { id: true, type: true },
       });
-      if (!baseGame) throw new Error("Base game not found");
+      if (!baseGame) throw new ActionError("Base game not found");
       if (baseGame.type !== "BASE_GAME") {
-        throw new Error("DLC parent must be a base game");
+        throw new ActionError("DLC parent must be a base game");
       }
 
       if (unresolved.source === "WISHLIST_IMPORT") {
@@ -105,7 +106,7 @@ export async function linkUnresolvedDlc(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to link unresolved DLC",
+      error: friendlyActionError(err, "Failed to link unresolved DLC"),
     };
   }
 }
@@ -122,12 +123,12 @@ export async function resolveUnresolvedDlcWithNewBase(input: unknown) {
       const unresolved = await tx.unresolvedSteamDlc.findUnique({
         where: { id: parsed.data.unresolvedId },
       });
-      if (!unresolved) throw new Error("Unresolved DLC not found");
+      if (!unresolved) throw new ActionError("Unresolved DLC not found");
       if (unresolved.source === "WISHLIST_IMPORT") {
-        throw new Error("Wishlist DLC needs an existing catalog base game");
+        throw new ActionError("Wishlist DLC needs an existing catalog base game");
       }
       if (!unresolved.steamBaseAppId) {
-        throw new Error("Steam base game identity is unavailable");
+        throw new ActionError("Steam base game identity is unavailable");
       }
 
       const baseGame = await tx.game.create({
@@ -196,7 +197,7 @@ async function updateUnresolvedStatus(input: unknown, status: "PENDING" | "DISCA
     where: { id: parsed.data.unresolvedId },
     select: { id: true },
   });
-  if (!item) throw new Error("Unresolved DLC not found");
+  if (!item) throw new ActionError("Unresolved DLC not found");
   const updated = await prisma.unresolvedSteamDlc.update({
     where: { id: item.id },
     data: { status, discardedAt: status === "DISCARDED" ? new Date() : null },
@@ -212,7 +213,7 @@ export async function discardUnresolvedDlc(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to discard unresolved DLC",
+      error: friendlyActionError(err, "Failed to discard unresolved DLC"),
     };
   }
 }
@@ -225,7 +226,7 @@ export async function restoreUnresolvedDlc(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to restore unresolved DLC",
+      error: friendlyActionError(err, "Failed to restore unresolved DLC"),
     };
   }
 }

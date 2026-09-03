@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { friendlyActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { parseSteamAppIdInput } from "@/lib/steam-identity";
@@ -75,7 +76,7 @@ export async function setCatalogSteamAppId(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to save Steam identity",
+      error: friendlyActionError(err, "Failed to save Steam identity"),
     };
   }
 }

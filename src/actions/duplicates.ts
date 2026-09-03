@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { friendlyActionError } from "@/lib/action-error";
 import { requireUser } from "@/lib/auth-guard";
 import { normalizeName } from "@/lib/duplicate-utils";
 
@@ -133,7 +134,7 @@ export async function detectDuplicates(input?: { includeDismissed?: boolean }) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to detect duplicates",
+      error: friendlyActionError(err, "Failed to detect duplicates"),
     };
   }
 }
@@ -170,7 +171,7 @@ export async function dismissDuplicate(duplicateId: string) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to dismiss duplicate",
+      error: friendlyActionError(err, "Failed to dismiss duplicate"),
     };
   }
 }

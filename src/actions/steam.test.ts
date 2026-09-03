@@ -44,12 +44,12 @@ describe("disconnectSteam", () => {
     expect(mockDelete).not.toHaveBeenCalled();
   });
 
-  it("surfaces database errors", async () => {
+  it("uses a friendly fallback for database errors", async () => {
     mockFindUnique.mockRejectedValue(new Error("DB connection lost"));
 
     const result = await disconnectSteam();
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe("DB connection lost");
+    expect(result.error).toBe("Failed to disconnect Steam");
   });
 });

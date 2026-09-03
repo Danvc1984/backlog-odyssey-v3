@@ -2,6 +2,7 @@
 
 import { fetchOwnedGames, type OwnedGame } from "@/lib/steam-api";
 import { requireUser } from "@/lib/auth-guard";
+import { friendlyActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
 import { lastPlayedDate } from "@/lib/steam-utils";
 import {
@@ -215,7 +216,7 @@ export async function importSteamGames() {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to import Steam games",
+      error: friendlyActionError(err, "Failed to import Steam games"),
     };
   }
 }

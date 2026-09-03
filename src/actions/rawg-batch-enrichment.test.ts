@@ -50,7 +50,7 @@ describe("RAWG catalog batch action", () => {
     await expect(startRawgCatalogEnrichment({})).resolves.toEqual({
       success: false,
       data: null,
-      error: "Unauthorized",
+      error: "Failed to queue RAWG catalog enrichment",
     });
     expect(transaction).not.toHaveBeenCalled();
   });

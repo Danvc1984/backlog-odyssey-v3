@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { ActionError, friendlyActionError } from "@/lib/action-error";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
@@ -195,7 +196,7 @@ export async function proposeMerge(input: { duplicateId: string }) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to build merge proposal",
+      error: friendlyActionError(err, "Failed to build merge proposal"),
     };
   }
 }
@@ -234,29 +235,29 @@ async function loadReviewedPair(tx: Prisma.TransactionClient, duplicateId: strin
   const duplicate = await tx.possibleDuplicate.findUnique({
     where: { id: duplicateId },
   });
-  if (!duplicate) throw new Error("Duplicate not found");
-  if (duplicate.gameAId === duplicate.gameBId) throw new Error("Duplicate pair is invalid");
-  if (duplicate.status !== "OPEN") throw new Error("Duplicate has already been reviewed");
+  if (!duplicate) throw new ActionError("Duplicate not found");
+  if (duplicate.gameAId === duplicate.gameBId) throw new ActionError("Duplicate pair is invalid");
+  if (duplicate.status !== "OPEN") throw new ActionError("Duplicate has already been reviewed");
 
   const gameIds = [duplicate.gameAId, duplicate.gameBId];
   const pending = await tx.catalogOperation.findFirst({
     where: { state: "PENDING", affectedGameIds: { hasSome: gameIds } },
   });
   if (pending) {
-    throw new Error("A recent catalog operation still involves these games");
+    throw new ActionError("A recent catalog operation still involves these games");
   }
 
   const games = await tx.game.findMany({
     where: { id: { in: gameIds } },
     include: GAME_GRAPH_INCLUDE,
   });
-  if (games.length !== 2) throw new Error("Duplicate references a missing game");
+  if (games.length !== 2) throw new ActionError("Duplicate references a missing game");
   const byId = new Map(games.map((game) => [game.id, game]));
   const gameA = byId.get(duplicate.gameAId);
   const gameB = byId.get(duplicate.gameBId);
-  if (!gameA || !gameB) throw new Error("Duplicate references a missing game");
+  if (!gameA || !gameB) throw new ActionError("Duplicate references a missing game");
   if (gameA.type !== "BASE_GAME" || gameB.type !== "BASE_GAME") {
-    throw new Error("Duplicate references a non-base game");
+    throw new ActionError("Duplicate references a non-base game");
   }
   return { gameA, gameB };
 }
@@ -391,7 +392,7 @@ async function executeMergeTransaction(
     externalIds: input.externalIds as MergeExecutionChoices["externalIds"],
     oneToOne: input.oneToOne as MergeExecutionChoices["oneToOne"],
   });
-  if (!resolved.ok) throw new Error(resolved.message);
+  if (!resolved.ok) throw new ActionError(resolved.message);
 
   const mutationPlan = planMergeMutations({ gameA, gameB, plan: resolved.plan });
   await applyMergeMutations(tx, mutationPlan);
@@ -449,7 +450,7 @@ export async function executeMerge(input: z.infer<typeof executeMergeSchema>) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to merge games",
+      error: friendlyActionError(err, "Failed to merge games"),
     };
   }
 }
@@ -527,7 +528,7 @@ export async function previewDelete(input: z.infer<typeof gameIdSchema>) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to preview deletion",
+      error: friendlyActionError(err, "Failed to preview deletion"),
     };
   }
 }
@@ -540,7 +541,7 @@ async function executeDeleteTransaction(
     where: { id: input.gameId },
     include: GAME_GRAPH_INCLUDE,
   });
-  if (!root) throw new Error("Game not found");
+  if (!root) throw new ActionError("Game not found");
 
   const subtreeIds = new Set([root.id]);
   let frontier = [root.id];
@@ -561,7 +562,7 @@ async function executeDeleteTransaction(
     where: { id: { in: [...subtreeIds] } },
     include: GAME_GRAPH_INCLUDE,
   });
-  if (graphs.length !== subtreeIds.size) throw new Error("Game not found");
+  if (graphs.length !== subtreeIds.size) throw new ActionError("Game not found");
   const rootGraph = graphs.find((game) => game.id === root.id) as MergeGraphGame;
   const descendants = graphs
     .filter((game) => game.id !== root.id)
@@ -573,7 +574,7 @@ async function executeDeleteTransaction(
     where: { state: "PENDING", affectedGameIds: { hasSome: plan.affectedGameIds } },
   });
   if (pending) {
-    throw new Error("A recent catalog operation still involves this game");
+    throw new ActionError("A recent catalog operation still involves this game");
   }
 
   await tx.game.delete({ where: { id: root.id } });
@@ -624,7 +625,7 @@ export async function executeDelete(input: z.infer<typeof gameIdSchema>) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to delete game",
+      error: friendlyActionError(err, "Failed to delete game"),
     };
   }
 }
@@ -807,7 +808,7 @@ export async function getActiveOperations() {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to load operations",
+      error: friendlyActionError(err, "Failed to load operations"),
     };
   }
 }
@@ -819,20 +820,20 @@ async function undoOperationTransaction(
   const operation = await tx.catalogOperation.findUnique({
     where: { id: input.operationId },
   });
-  if (!operation) throw new Error("Operation not found");
-  if (operation.userId !== input.userId) throw new Error("Operation not found");
+  if (!operation) throw new ActionError("Operation not found");
+  if (operation.userId !== input.userId) throw new ActionError("Operation not found");
 
   const now = new Date();
 
   if (operation.state === "UNDONE" || operation.state === "COMPLETED") {
-    throw new Error("This operation has already finished");
+    throw new ActionError("This operation has already finished");
   }
   if (operation.state === "EXPIRED" || isOperationExpired(operation.expiresAt, now)) {
     await tx.catalogOperation.update({
       where: { id: operation.id },
       data: { state: "EXPIRED", snapshot: Prisma.DbNull },
     });
-    throw new Error("The undo window has expired");
+    throw new ActionError("The undo window has expired");
   }
 
   const overlapping = await tx.catalogOperation.findFirst({
@@ -843,14 +844,14 @@ async function undoOperationTransaction(
     },
   });
   if (overlapping) {
-    throw new Error("A newer operation now involves these games");
+    throw new ActionError("A newer operation now involves these games");
   }
 
   const envelope = parseSnapshotEnvelope<
     MergeSnapshotPayload | { gameId: string; records: MergeSnapshotPayload["records"] }
   >(operation.snapshot);
   if (!envelope) {
-    throw new Error("Operation snapshot is no longer available");
+    throw new ActionError("Operation snapshot is no longer available");
   }
   const payload =
     envelope.type === "MERGE"
@@ -892,7 +893,7 @@ export async function undoOperation(input: z.infer<typeof operationIdSchema>) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to undo operation",
+      error: friendlyActionError(err, "Failed to undo operation"),
     };
   }
 }

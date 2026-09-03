@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { friendlyActionError } from "@/lib/action-error";
 import { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
@@ -66,7 +67,7 @@ export async function searchWishlistRawg(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to search wishlist on RAWG",
+      error: friendlyActionError(err, "Failed to search wishlist on RAWG"),
     };
   }
 }
@@ -225,7 +226,7 @@ export async function fillWishlistRawgMetadata(input: unknown) {
       success: false as const,
       data: null,
       error:
-        err instanceof Error ? err.message : "Failed to load RAWG metadata for this wish",
+        friendlyActionError(err, "Failed to load RAWG metadata for this wish"),
     };
   }
 }
@@ -254,7 +255,7 @@ export async function removeWishlistMetadata(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to remove wishlist metadata",
+      error: friendlyActionError(err, "Failed to remove wishlist metadata"),
     };
   }
 }

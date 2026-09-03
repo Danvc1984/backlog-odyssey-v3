@@ -83,13 +83,13 @@ describe("createCollection", () => {
     });
   });
 
-  it("surfaces database errors", async () => {
+  it("uses a friendly fallback for database errors", async () => {
     mockCreate.mockRejectedValue(new Error("DB connection lost"));
 
     const result = await createCollection({ name: "RPG" });
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe("DB connection lost");
+    expect(result.error).toBe("Failed to create collection");
   });
 });
 

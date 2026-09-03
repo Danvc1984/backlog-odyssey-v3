@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { friendlyActionError } from "@/lib/action-error";
 import { requireUser } from "@/lib/auth-guard";
 
 export async function disconnectSteam() {
@@ -19,7 +20,7 @@ export async function disconnectSteam() {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to disconnect Steam",
+      error: friendlyActionError(err, "Failed to disconnect Steam"),
     };
   }
 }

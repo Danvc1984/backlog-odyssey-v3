@@ -703,6 +703,6 @@ describe("addTagToGame", () => {
     const result = await addTagToGame("game-1", { tagName: "RPG" });
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe("DB connection lost");
+    expect(result.error).toBe("Failed to add tag");
   });
 });

@@ -83,7 +83,7 @@ describe("refreshWishlistCompatibility", () => {
     await expect(refreshWishlistCompatibility({ wishlistEntryId: "wish-1" })).resolves.toEqual({
       success: false,
       data: null,
-      error: "Unauthorized",
+      error: "Failed to refresh wishlist compatibility",
     });
     expect(runWishlistCompatibilityRefresh).not.toHaveBeenCalled();
   });
@@ -119,7 +119,7 @@ describe("startWishlistCompatibilitySweep", () => {
 
     const result = await startWishlistCompatibilitySweep();
 
-    expect(result).toEqual({ success: false, data: null, error: "Unauthorized" });
+    expect(result).toEqual({ success: false, data: null, error: "Failed to run compatibility sweep" });
     expect(runWishlistCompatSweep).not.toHaveBeenCalled();
   });
 

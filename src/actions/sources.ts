@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { friendlyActionError } from "@/lib/action-error";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
@@ -40,7 +41,7 @@ function friendlyError(err: unknown, fallback: string) {
   if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
     return "A source with that name already exists";
   }
-  return err instanceof Error ? err.message : fallback;
+  return friendlyActionError(err, fallback);
 }
 
 export async function createAlternativeSource(input: unknown) {
@@ -166,7 +167,7 @@ export async function setAlternativeSourceArchived(
       success: false as const,
       data: null,
       error:
-        err instanceof Error ? err.message : "Failed to update source archive state",
+        friendlyActionError(err, "Failed to update source archive state"),
     };
   }
 }
@@ -211,7 +212,7 @@ export async function deleteAlternativeSource(id: string) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to remove source",
+      error: friendlyActionError(err, "Failed to remove source"),
     };
   }
 }

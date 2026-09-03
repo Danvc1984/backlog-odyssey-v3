@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { friendlyActionError } from "@/lib/action-error";
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
@@ -37,7 +38,7 @@ export async function getWishlistImportReviews() {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to load wishlist import reviews",
+      error: friendlyActionError(err, "Failed to load wishlist import reviews"),
     };
   }
 }
@@ -137,7 +138,7 @@ export async function linkWishlistImportReview(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to link wishlist import review",
+      error: friendlyActionError(err, "Failed to link wishlist import review"),
     };
   }
 }
@@ -192,7 +193,7 @@ export async function createWishlistImportReviewAsNew(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to create wishlist entry from review",
+      error: friendlyActionError(err, "Failed to create wishlist entry from review"),
     };
   }
 }
@@ -226,7 +227,7 @@ export async function ignoreWishlistImportReview(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to ignore wishlist import review",
+      error: friendlyActionError(err, "Failed to ignore wishlist import review"),
     };
   }
 }

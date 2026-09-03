@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { ActionError, friendlyActionError } from "@/lib/action-error";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
@@ -113,9 +114,9 @@ export async function createWishlistEntry(input: unknown) {
           where: { id: baseGameId },
           select: { id: true, type: true },
         });
-        if (!parent) throw new Error("Base game not found");
+        if (!parent) throw new ActionError("Base game not found");
         if (parent.type !== "BASE_GAME") {
-          throw new Error("DLC parent must be a base game");
+          throw new ActionError("DLC parent must be a base game");
         }
       }
 
@@ -142,7 +143,7 @@ export async function createWishlistEntry(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to create wishlist entry",
+      error: friendlyActionError(err, "Failed to create wishlist entry"),
     };
   }
 }
@@ -205,7 +206,7 @@ export async function updateWishlistEntry(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to update wishlist entry",
+      error: friendlyActionError(err, "Failed to update wishlist entry"),
     };
   }
 }
@@ -224,7 +225,7 @@ export async function deleteWishlistEntry(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to delete wishlist entry",
+      error: friendlyActionError(err, "Failed to delete wishlist entry"),
     };
   }
 }
@@ -251,7 +252,7 @@ export async function getWishlistEntries(input: unknown = {}) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to load wishlist entries",
+      error: friendlyActionError(err, "Failed to load wishlist entries"),
     };
   }
 }
@@ -279,9 +280,9 @@ export async function acquireWishlistBaseGame(input: unknown) {
         where: { id: parsed.data.wishlistEntryId },
         include: { metadataSnapshot: true },
       });
-      if (!wishlist) throw new Error("Wishlist entry not found");
+      if (!wishlist) throw new ActionError("Wishlist entry not found");
       if (wishlist.type !== "BASE_GAME") {
-        throw new Error("Only base-game wishes can be acquired as base games");
+        throw new ActionError("Only base-game wishes can be acquired as base games");
       }
 
       const rawgId = wishlist.metadataSnapshot
@@ -298,7 +299,7 @@ export async function acquireWishlistBaseGame(input: unknown) {
           select: { id: true },
         });
         if (existingIdentity) {
-          throw new Error("RAWG game identity is already attached to another catalog game");
+        throw new ActionError("RAWG game identity is already attached to another catalog game");
         }
       }
 
@@ -357,7 +358,7 @@ export async function acquireWishlistBaseGame(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to acquire wishlist base game",
+      error: friendlyActionError(err, "Failed to acquire wishlist base game"),
     };
   }
 }
@@ -375,12 +376,12 @@ export async function acquireWishlistDlc(input: unknown) {
         where: { id: parsed.data.wishlistEntryId },
         include: { baseGame: { select: { id: true, type: true } } },
       });
-      if (!wishlist) throw new Error("Wishlist entry not found");
+      if (!wishlist) throw new ActionError("Wishlist entry not found");
       if (wishlist.type !== "DLC") {
-        throw new Error("Only DLC wishes can be acquired as DLC");
+        throw new ActionError("Only DLC wishes can be acquired as DLC");
       }
       if (!wishlist.baseGame || wishlist.baseGame.type !== "BASE_GAME") {
-        throw new Error("DLC parent must be a base game");
+        throw new ActionError("DLC parent must be a base game");
       }
 
       const alternativeSourceId =
@@ -437,7 +438,7 @@ export async function acquireWishlistDlc(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to acquire wishlist DLC",
+      error: friendlyActionError(err, "Failed to acquire wishlist DLC"),
     };
   }
 }

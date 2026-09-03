@@ -301,7 +301,7 @@ describe("recommendation tune and preset actions", () => {
     await expect(listKnownGenreTagValues()).resolves.toMatchObject({
       success: false,
       data: null,
-      error: "catalog unavailable",
+      error: "Failed to list known values",
     });
 
     gameFindMany.mockResolvedValue([{ metadataSnapshots: [] }]);
@@ -411,7 +411,7 @@ describe("saveTasteSetup", () => {
 
     const result = await saveTasteSetup({ picks: [{ gameId: "game-played", answer: "PLAYED" }] });
 
-    expect(result).toMatchObject({ success: false, data: null, error: "event unavailable" });
+    expect(result).toMatchObject({ success: false, data: null, error: "Failed to save taste setup" });
     expect(rebuildRecommendationProfile).not.toHaveBeenCalled();
   });
 });
@@ -549,7 +549,7 @@ describe("updateRecommendations", () => {
 
     const result = await updateRecommendations();
 
-    expect(result).toEqual({ success: false, data: null, error: "Unauthorized" });
+    expect(result).toEqual({ success: false, data: null, error: "Failed to update recommendations" });
     expect(transaction).not.toHaveBeenCalled();
   });
 
@@ -1064,7 +1064,7 @@ describe("dismissRecommendation", () => {
 
     const result = await dismissRecommendation({ gameId: "game-1", kind: "PLAY_NEXT" });
 
-    expect(result).toEqual({ success: false, data: null, error: "Unauthorized" });
+    expect(result).toEqual({ success: false, data: null, error: "Failed to dismiss recommendation" });
     expect(feedbackCreate).not.toHaveBeenCalled();
   });
 });

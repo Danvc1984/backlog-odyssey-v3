@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { ActionError, friendlyActionError } from "@/lib/action-error";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
@@ -57,7 +58,7 @@ export async function updatePersonalFields(
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to update fields",
+      error: friendlyActionError(err, "Failed to update fields"),
     };
   }
 }
@@ -91,7 +92,7 @@ export async function updateGameName(
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to update game name",
+      error: friendlyActionError(err, "Failed to update game name"),
     };
   }
 }
@@ -187,9 +188,7 @@ export async function updateGameAvailability(
       success: false as const,
       data: null,
       error:
-        err instanceof Error
-          ? err.message
-          : "Failed to update availability",
+        friendlyActionError(err, "Failed to update availability"),
     };
   }
 }
@@ -292,7 +291,7 @@ export async function addGameAvailability(
       data: null,
       error:
         availabilityConflictError(err) ??
-        (err instanceof Error ? err.message : "Failed to add availability"),
+        (friendlyActionError(err, "Failed to add availability")),
     };
   }
 }
@@ -348,7 +347,7 @@ export async function removeGameAvailability(availabilityId: string) {
       success: false as const,
       data: null,
       error:
-        err instanceof Error ? err.message : "Failed to remove availability",
+        friendlyActionError(err, "Failed to remove availability"),
     };
   }
 }
@@ -382,7 +381,7 @@ export async function updatePlayState(
       select: { playState: true },
     });
     if (!current) {
-      throw new Error("Library entry not found");
+      throw new ActionError("Library entry not found");
     }
 
     const updateData = {
@@ -420,7 +419,7 @@ export async function updatePlayState(
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to update play state",
+      error: friendlyActionError(err, "Failed to update play state"),
     };
   }
 }
@@ -476,7 +475,7 @@ export async function addTagToGame(gameId: string, input: AddTagToGameInput) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to add tag",
+      error: friendlyActionError(err, "Failed to add tag"),
     };
   }
 }

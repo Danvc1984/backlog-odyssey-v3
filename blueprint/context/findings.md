@@ -61,12 +61,14 @@
 **Suggested fix:** Generate a random per-connect token, store it (or sign it into `state` carried through the round trip), and require it to match in the callback before upserting.
 **Resolution:** Added a cryptographically random state nonce, HttpOnly/Secure/SameSite=Lax cookie binding, timing-safe callback validation, and cookie clearing on success or error. Manual verification confirmed the normal Steam connection redirect and rejection after editing `state`.
 
-### F-23 [P3] open - Server actions return raw error messages to the client
+### F-23 [P3] fixed - Server actions return raw error messages to the client
 
 **File:** src/actions/prices.ts:50
 **Found:** 2026-09-03 by /audit (scope: full; lens: quality)
 **Why it matters:** Catch blocks across actions return `err instanceof Error ? err.message : ...`, surfacing Prisma/internal error text in toasts (representatives: prices.ts:50, recommendations.ts:1156, steam.ts:22). Standards say user-friendly error messages; single-user app limits the leak, but internal messages reach the UI.
 **Suggested fix:** Map known error classes to friendly messages and log the raw error server-side; keep `lastErrorMessage` on run records as the diagnostic surface.
+
+**Resolution:** Added `ActionError` and `friendlyActionError`, converted user-facing domain throws, and replaced raw action error returns with unchanged friendly fallbacks while preserving run-record diagnostics. Awaiting `/audit` re-review.
 
 ### F-24 [P3] fixed - Wishlist detail serializes the full RAWG payload into a client component for two fields
 

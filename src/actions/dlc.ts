@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { ActionError, friendlyActionError } from "@/lib/action-error";
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 
@@ -29,10 +30,10 @@ export async function createDlc(input: CreateDlcInput) {
       });
 
       if (!baseGame) {
-        throw new Error("Base game not found");
+        throw new ActionError("Base game not found");
       }
       if (baseGame.type !== "BASE_GAME") {
-        throw new Error("DLC parent must be a base game");
+        throw new ActionError("DLC parent must be a base game");
       }
 
       return tx.game.create({
@@ -51,7 +52,7 @@ export async function createDlc(input: CreateDlcInput) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to create DLC",
+      error: friendlyActionError(err, "Failed to create DLC"),
     };
   }
 }

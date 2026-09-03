@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { ActionError, friendlyActionError } from "@/lib/action-error";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
@@ -61,7 +62,7 @@ async function writeConfirmedIdentity(
 ) {
   const conflict = await findConflictingEntry(client, input.steamAppId, input.wishlistEntryId);
   if (conflict) {
-    throw new Error(identityConflictMessage(input.steamAppId, conflict.name));
+    throw new ActionError(identityConflictMessage(input.steamAppId, conflict.name));
   }
   return client.wishlistEntry.update({
     where: { id: input.wishlistEntryId },
@@ -106,7 +107,7 @@ export async function setWishlistIdentity(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to save Steam identity",
+      error: friendlyActionError(err, "Failed to save Steam identity"),
     };
   }
 }
@@ -129,7 +130,7 @@ export async function removeWishlistIdentity(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to remove Steam identity",
+      error: friendlyActionError(err, "Failed to remove Steam identity"),
     };
   }
 }
@@ -160,7 +161,7 @@ export async function confirmSteamImportIdentity(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to confirm imported identity",
+      error: friendlyActionError(err, "Failed to confirm imported identity"),
     };
   }
 }
@@ -240,7 +241,7 @@ export async function confirmRawgSuggestedIdentity(input: unknown) {
       success: false as const,
       data: null,
       error:
-        err instanceof Error ? err.message : "Failed to confirm the suggested identity",
+        friendlyActionError(err, "Failed to confirm the suggested identity"),
     };
   }
 }
@@ -284,7 +285,7 @@ export async function dismissRawgIdentitySuggestion(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to dismiss the suggestion",
+      error: friendlyActionError(err, "Failed to dismiss the suggestion"),
     };
   }
 }

@@ -1,3 +1,4 @@
+import { ActionError } from "@/lib/action-error";
 import type { Prisma, RecommendationEventKind } from "@/generated/prisma/client";
 
 export const EVENT_RETENTION_DAYS: Record<RecommendationEventKind, number> = {
@@ -48,7 +49,7 @@ function targetData(input: RecommendationEventTarget): { gameId?: string; wishli
     (target): target is string => typeof target === "string" && target.trim() !== "",
   );
   if (targets.length !== 1) {
-    throw new Error("Exactly one event target is required");
+    throw new ActionError("Exactly one event target is required");
   }
   return input.gameId ? { gameId: input.gameId } : { wishlistEntryId: input.wishlistEntryId };
 }

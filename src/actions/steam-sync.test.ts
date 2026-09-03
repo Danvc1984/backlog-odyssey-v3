@@ -162,7 +162,7 @@ describe("syncSteamPlaytime", () => {
     expect(result).toEqual({
       success: false,
       data: null,
-      error: "chunk 2 exploded",
+      error: "Failed to sync Steam playtime",
     });
     expect(availabilityCalls).toBe(51);
     expect(updateSyncRun).toHaveBeenCalledWith(expect.objectContaining({
@@ -183,7 +183,7 @@ describe("syncSteamPlaytime", () => {
     expect(result).toEqual({
       success: false,
       data: null,
-      error: "availability update failed",
+      error: "Failed to sync Steam playtime",
     });
   });
 

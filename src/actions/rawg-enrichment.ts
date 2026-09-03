@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { friendlyActionError } from "@/lib/action-error";
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
@@ -155,7 +156,7 @@ export async function requestRawgMatchReview(input: RequestRawgMatchReviewInput)
     return {
       success: false as const,
       data: null,
-      error: error instanceof Error ? error.message : "Failed to search RAWG matches",
+      error: friendlyActionError(error, "Failed to search RAWG matches"),
     };
   }
 }
@@ -238,7 +239,7 @@ export async function requestRawgEnrichment(
     return {
       success: false as const,
       data: null,
-      error: error instanceof Error ? error.message : "Failed to queue RAWG enrichment",
+      error: friendlyActionError(error, "Failed to queue RAWG enrichment"),
     };
   }
 }
@@ -302,7 +303,7 @@ export async function selectRawgMatch(input: SelectRawgMatchInput) {
     return {
       success: false as const,
       data: null,
-      error: error instanceof Error ? error.message : "Failed to select RAWG match",
+      error: friendlyActionError(error, "Failed to select RAWG match"),
     };
   }
 }
@@ -354,7 +355,7 @@ export async function cancelRawgEnrichment(input: CancelRawgEnrichmentInput) {
     return {
       success: false as const,
       data: null,
-      error: error instanceof Error ? error.message : "Failed to cancel RAWG enrichment",
+      error: friendlyActionError(error, "Failed to cancel RAWG enrichment"),
     };
   }
 }
@@ -429,7 +430,7 @@ export async function loadMoreRawgCandidates(
     return {
       success: false as const,
       data: null,
-      error: error instanceof Error ? error.message : "Failed to load more RAWG matches",
+      error: friendlyActionError(error, "Failed to load more RAWG matches"),
     };
   }
 }
@@ -478,7 +479,7 @@ export async function applyRawgTitle(input: ApplyRawgTitleInput) {
     return {
       success: false as const,
       data: null,
-      error: error instanceof Error ? error.message : "Failed to apply RAWG title",
+      error: friendlyActionError(error, "Failed to apply RAWG title"),
     };
   }
 }

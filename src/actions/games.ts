@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { ActionError, friendlyActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { getOrCreateUnspecifiedSource } from "@/lib/sources/store";
@@ -36,8 +37,8 @@ export async function createGame(input: CreateGameInput) {
           where: { id: parsed.data.alternativeSourceId },
           select: { id: true, archivedAt: true },
         });
-        if (!source) throw new Error("Alternative source not found");
-        if (source.archivedAt) throw new Error("This source is archived and cannot be selected");
+        if (!source) throw new ActionError("Alternative source not found");
+        if (source.archivedAt) throw new ActionError("This source is archived and cannot be selected");
       }
       const created = await tx.game.create({
         data: {
@@ -68,7 +69,7 @@ export async function createGame(input: CreateGameInput) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to create game",
+      error: friendlyActionError(err, "Failed to create game"),
     };
   }
 }

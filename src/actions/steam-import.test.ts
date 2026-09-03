@@ -338,7 +338,7 @@ describe("importSteamGames", () => {
     expect(result).toEqual({
       success: false,
       data: null,
-      error: "chunk 2 exploded",
+      error: "Failed to import Steam games",
     });
     expect(createCalls).toBe(51);
     expect(updateConnection).not.toHaveBeenCalled();

@@ -1,6 +1,7 @@
 "use server";
 
 import { requireUser } from "@/lib/auth-guard";
+import { friendlyActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
 import { fetchOwnedGames } from "@/lib/steam-api";
 import { lastPlayedDate } from "@/lib/steam-utils";
@@ -125,7 +126,7 @@ export async function syncSteamPlaytime() {
             finishedAt: new Date(),
             counts: jsonCounts({ ...emptyCounts(), failed: 1 }),
             diagnostics: {
-              error: err instanceof Error ? err.message : "Failed to sync Steam playtime",
+              error: friendlyActionError(err, "Failed to sync Steam playtime"),
             },
           },
         });
@@ -137,7 +138,7 @@ export async function syncSteamPlaytime() {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to sync Steam playtime",
+      error: friendlyActionError(err, "Failed to sync Steam playtime"),
     };
   }
 }

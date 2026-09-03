@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { friendlyActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { COMPAT_JOB_MAX_ATTEMPTS, compatJobSelect, toCompatJobView } from "@/lib/compat-job";
@@ -61,7 +62,7 @@ export async function refreshGameCompatibility(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: error instanceof Error ? error.message : "Failed to refresh compatibility",
+      error: friendlyActionError(error, "Failed to refresh compatibility"),
     };
   }
 }
@@ -92,7 +93,7 @@ export async function setCompatOverride(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: error instanceof Error ? error.message : "Failed to save compatibility override",
+      error: friendlyActionError(error, "Failed to save compatibility override"),
     };
   }
 }

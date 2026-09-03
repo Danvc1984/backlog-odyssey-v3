@@ -1,6 +1,7 @@
 "use server";
 
 import { Prisma } from "@/generated/prisma/client";
+import { friendlyActionError } from "@/lib/action-error";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth-guard";
 import { compatBatchSummary } from "@/lib/compat-batch";
@@ -152,7 +153,7 @@ export async function startCompatibilitySweep(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: error instanceof Error ? error.message : "Failed to queue compatibility sweep",
+      error: friendlyActionError(error, "Failed to queue compatibility sweep"),
     };
   }
 }

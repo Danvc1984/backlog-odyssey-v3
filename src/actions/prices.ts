@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { friendlyActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { getItadConfig } from "@/lib/itad-config";
@@ -47,7 +48,7 @@ export async function updatePrices(input: unknown = {}) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to refresh prices",
+      error: friendlyActionError(err, "Failed to refresh prices"),
     };
   }
 }
@@ -68,7 +69,7 @@ export async function getLatestPriceRefresh(input: unknown = {}) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to load price refresh status",
+      error: friendlyActionError(err, "Failed to load price refresh status"),
     };
   }
 }

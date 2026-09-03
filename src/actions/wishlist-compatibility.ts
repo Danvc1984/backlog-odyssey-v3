@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { friendlyActionError } from "@/lib/action-error";
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { runWishlistCompatSweep } from "@/lib/wishlist-compat-sweep";
@@ -36,7 +37,7 @@ export async function refreshWishlistCompatibility(
     return {
       success: false,
       data: null,
-      error: error instanceof Error ? error.message : "Failed to refresh wishlist compatibility",
+      error: friendlyActionError(error, "Failed to refresh wishlist compatibility"),
     };
   }
 }
@@ -62,7 +63,7 @@ export async function startWishlistCompatibilitySweep() {
     return {
       success: false as const,
       data: null,
-      error: error instanceof Error ? error.message : "Failed to run compatibility sweep",
+      error: friendlyActionError(error, "Failed to run compatibility sweep"),
     };
   }
 }

@@ -128,7 +128,7 @@ describe("RAWG enrichment actions", () => {
     expect(result).toEqual({
       success: false,
       data: null,
-      error: "Unauthorized",
+      error: "Failed to queue RAWG enrichment",
     });
     expect(findGame).not.toHaveBeenCalled();
   });

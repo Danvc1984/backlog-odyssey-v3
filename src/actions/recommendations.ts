@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { ActionError, friendlyActionError } from "@/lib/action-error";
 import { Prisma, RecommendationRole } from "@/generated/prisma/client";
 import { requireUser } from "@/lib/auth-guard";
 import { parseAntiCheatEvidence } from "@/lib/compat-evidence";
@@ -759,7 +760,7 @@ export async function updateRecommendations() {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to update recommendations",
+      error: friendlyActionError(err, "Failed to update recommendations"),
     };
   }
 }
@@ -906,7 +907,7 @@ export async function rotateRecommendationRole(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to rotate recommendation",
+      error: friendlyActionError(err, "Failed to rotate recommendation"),
     };
   }
 }
@@ -958,7 +959,7 @@ export async function startPlayingFromRecommendation(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to start playing from recommendation",
+      error: friendlyActionError(err, "Failed to start playing from recommendation"),
     };
   }
 }
@@ -995,7 +996,7 @@ export async function dismissRecommendation(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to dismiss recommendation",
+      error: friendlyActionError(err, "Failed to dismiss recommendation"),
     };
   }
 }
@@ -1025,7 +1026,7 @@ export async function recordRunExposure(input: unknown) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to record exposure",
+      error: friendlyActionError(err, "Failed to record exposure"),
     };
   }
 }
@@ -1042,7 +1043,7 @@ export async function setRecommendationPreference(input: unknown) {
     });
     return { success: true as const, data: row, error: null };
   } catch (err) {
-    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to set preference" };
+    return { success: false as const, data: null, error: friendlyActionError(err, "Failed to set preference") };
   }
 }
 
@@ -1064,7 +1065,7 @@ export async function saveTuneState(input: unknown) {
     });
     return { success: true as const, data: state, error: null };
   } catch (err) {
-    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to save tune" };
+    return { success: false as const, data: null, error: friendlyActionError(err, "Failed to save tune") };
   }
 }
 
@@ -1081,7 +1082,7 @@ export async function clearTuneState(input: unknown) {
     });
     return { success: true as const, data: state, error: null };
   } catch (err) {
-    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to clear tune" };
+    return { success: false as const, data: null, error: friendlyActionError(err, "Failed to clear tune") };
   }
 }
 
@@ -1097,7 +1098,7 @@ export async function saveRecommendationPreset(input: unknown) {
     });
     return { success: true as const, data: preset, error: null };
   } catch (err) {
-    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to save preset" };
+    return { success: false as const, data: null, error: friendlyActionError(err, "Failed to save preset") };
   }
 }
 
@@ -1107,7 +1108,7 @@ export async function listRecommendationPresets() {
     const presets = await prisma.recommendationPreset.findMany({ orderBy: { name: "asc" } });
     return { success: true as const, data: presets, error: null };
   } catch (err) {
-    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to list presets" };
+    return { success: false as const, data: null, error: friendlyActionError(err, "Failed to list presets") };
   }
 }
 
@@ -1119,7 +1120,7 @@ export async function deleteRecommendationPreset(input: unknown) {
     await prisma.recommendationPreset.deleteMany({ where: { id: parsed.data.id } });
     return { success: true as const, data: { id: parsed.data.id }, error: null };
   } catch (err) {
-    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to delete preset" };
+    return { success: false as const, data: null, error: friendlyActionError(err, "Failed to delete preset") };
   }
 }
 
@@ -1140,7 +1141,7 @@ export async function loadRecommendationPreset(input: unknown) {
     });
     return { success: true as const, data: state, error: null };
   } catch (err) {
-    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to load preset" };
+    return { success: false as const, data: null, error: friendlyActionError(err, "Failed to load preset") };
   }
 }
 
@@ -1168,7 +1169,7 @@ export async function listKnownGenreTagValues() {
     knownValuesCache = { data, expiresAt: Date.now() + KNOWN_VALUES_CACHE_TTL_MS };
     return { success: true as const, data, error: null };
   } catch (err) {
-    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to list known values" };
+    return { success: false as const, data: null, error: friendlyActionError(err, "Failed to list known values") };
   }
 }
 
@@ -1195,7 +1196,7 @@ export async function saveTasteSetup(input: unknown) {
       for (const pick of parsed.data.picks) {
         const row = byId.get(pick.gameId);
         if (!row || row.type !== "BASE_GAME" || !row.libraryEntry || row.libraryEntry.hidden || row.libraryEntry.isMainGame) {
-          throw new Error("Taste setup pick is not an eligible owned base game");
+          throw new ActionError("Taste setup pick is not an eligible owned base game");
         }
       }
 
@@ -1238,7 +1239,7 @@ export async function saveTasteSetup(input: unknown) {
 
     return { success: true as const, data, error: null };
   } catch (err) {
-    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to save taste setup" };
+    return { success: false as const, data: null, error: friendlyActionError(err, "Failed to save taste setup") };
   }
 }
 
@@ -1250,7 +1251,7 @@ export async function removeRecommendationPreference(input: unknown) {
     await prisma.recommendationPreference.deleteMany({ where: { id: parsed.data.id } });
     return { success: true as const, data: { id: parsed.data.id }, error: null };
   } catch (err) {
-    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to remove preference" };
+    return { success: false as const, data: null, error: friendlyActionError(err, "Failed to remove preference") };
   }
 }
 
@@ -1261,7 +1262,7 @@ export async function rebuildRecommendationProfileAction() {
     const payload = await rebuildRecommendationProfile(prisma as unknown as Prisma.TransactionClient, rebuiltAt);
     return { success: true as const, data: { payload, rebuiltAt }, error: null };
   } catch (err) {
-    return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to rebuild recommendation profile" };
+    return { success: false as const, data: null, error: friendlyActionError(err, "Failed to rebuild recommendation profile") };
   }
 }
 
@@ -1291,7 +1292,7 @@ export async function restartRecommendations() {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to restart recommendations",
+      error: friendlyActionError(err, "Failed to restart recommendations"),
     };
   }
 }

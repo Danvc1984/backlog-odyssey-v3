@@ -1,6 +1,7 @@
 "use server";
 
 import { Prisma } from "@/generated/prisma/client";
+import { friendlyActionError } from "@/lib/action-error";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
@@ -153,9 +154,7 @@ export async function startRawgCatalogEnrichment(input: unknown) {
       success: false as const,
       data: null,
       error:
-        error instanceof Error
-          ? error.message
-          : "Failed to queue RAWG catalog enrichment",
+        friendlyActionError(error, "Failed to queue RAWG catalog enrichment"),
     };
   }
 }

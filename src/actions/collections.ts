@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { friendlyActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 
@@ -42,7 +43,7 @@ export async function createCollection(input: CollectionInput) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to create collection",
+      error: friendlyActionError(err, "Failed to create collection"),
     };
   }
 }
@@ -88,7 +89,7 @@ export async function updateCollection(
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to update collection",
+      error: friendlyActionError(err, "Failed to update collection"),
     };
   }
 }
@@ -107,7 +108,7 @@ export async function deleteCollection(collectionId: string) {
     return {
       success: false as const,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to delete collection",
+      error: friendlyActionError(err, "Failed to delete collection"),
     };
   }
 }

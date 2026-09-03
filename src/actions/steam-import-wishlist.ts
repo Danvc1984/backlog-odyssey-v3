@@ -1,6 +1,7 @@
 "use server";
 
 import { Prisma } from "@/generated/prisma/client";
+import { friendlyActionError } from "@/lib/action-error";
 import { requireUser } from "@/lib/auth-guard";
 import { normalizeName } from "@/lib/duplicate-utils";
 import { prisma } from "@/lib/prisma";
@@ -384,7 +385,7 @@ export async function importSteamWishlist(): Promise<
     return {
       success: false,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to import Steam wishlist",
+      error: friendlyActionError(err, "Failed to import Steam wishlist"),
     };
   }
 }
@@ -428,7 +429,7 @@ export async function enrichImportedWishlist(
     return {
       success: false,
       data: null,
-      error: err instanceof Error ? err.message : "Failed to enrich imported wishlist",
+      error: friendlyActionError(err, "Failed to enrich imported wishlist"),
     };
   }
 }
