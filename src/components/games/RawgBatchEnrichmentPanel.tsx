@@ -100,6 +100,7 @@ export function RawgBatchEnrichmentPanel({
   );
   const [error, setError] = useState<string | null>(null);
   const reportedTerminalBatchId = useRef<string | null>(null);
+  const lastKnownStatus = useRef<RawgBatchView["status"] | null>(null);
 
   const requestBatch = useCallback(async (batchId: string, method: "GET" | "POST") => {
     const response = await fetch(
@@ -114,6 +115,7 @@ export function RawgBatchEnrichmentPanel({
   }, []);
 
   const showBatch = useCallback((latest: RawgBatchView) => {
+    lastKnownStatus.current = latest.status;
     setBatch(shouldShowBatch(latest) ? latest : null);
     if (latest.isTerminal && reportedTerminalBatchId.current !== latest.id) {
       reportedTerminalBatchId.current = latest.id;
@@ -154,8 +156,11 @@ export function RawgBatchEnrichmentPanel({
       if (inFlight) return;
       inFlight = true;
       try {
-        const latest = await refreshBatch(activeBatchId);
-        if (!cancelled && latest.status === "RUNNING") {
+        const shouldRefresh = lastKnownStatus.current !== "RUNNING";
+        const latest = shouldRefresh
+          ? await refreshBatch(activeBatchId)
+          : await runBatch(activeBatchId);
+        if (!cancelled && shouldRefresh && latest.status === "RUNNING") {
           await runBatch(latest.id);
         }
       } catch (caught) {

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { WishlistEntryActions } from "@/components/wishlist/WishlistEntryActions";
 import { WishlistIdentity } from "@/components/wishlist/WishlistIdentity";
+import { wishlistIdentitySnapshotView } from "@/lib/wishlist-identity-view";
 import { WishlistOfferAlternatives } from "@/components/wishlist/WishlistOfferAlternatives";
 import { WishlistOfferSection } from "@/components/wishlist/WishlistOfferSection";
 import { WishlistCompatibilityBlock } from "@/components/wishlist/WishlistCompatibilityBlock";
@@ -269,10 +270,17 @@ export default async function WishlistDetailPage({
             provenance={entry.steamAppIdProvenance}
             snapshot={
               entry.metadataSnapshot
-                ? {
-                    payload: entry.metadataSnapshot.payload,
-                    fetchedAt: entry.metadataSnapshot.fetchedAt,
-                  }
+                ? (() => {
+                    const snapshot = wishlistIdentitySnapshotView(
+                      entry.metadataSnapshot.payload,
+                    );
+                    return snapshot
+                      ? {
+                          ...snapshot,
+                          fetchedAt: entry.metadataSnapshot.fetchedAt,
+                        }
+                      : null;
+                  })()
                 : null
             }
           />

@@ -263,6 +263,9 @@ describe("RAWG catalog batch runner", () => {
     const result = await getRawgBatchStatus("batch-1");
 
     expect(result).toMatchObject({ success: true, data: { id: "batch-1" } });
+    expect(result?.data?.pendingAwaitingMatchGames).toEqual([]);
+    expect(result?.data?.pendingFailedGames).toEqual([]);
+    expect(findPendingBatches).not.toHaveBeenCalled();
     expect(findJobs).not.toHaveBeenCalled();
     expect(runRawgEnrichmentJob).not.toHaveBeenCalled();
   });
@@ -427,7 +430,7 @@ describe("RAWG catalog batch runner", () => {
   });
 
   it("combines pending games from older and newer RAWG batches without duplicates", async () => {
-    findBatch.mockResolvedValue(batch({ id: "batch-new" }));
+    findBatch.mockResolvedValue(batch({ id: "batch-new", status: "PARTIAL" }));
     findPendingBatches.mockResolvedValue([
       {
           enrichmentJobs: [

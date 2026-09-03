@@ -6,7 +6,8 @@ export interface WishlistSuggestionInput {
 }
 
 export interface WishlistSnapshotInput {
-  payload: unknown;
+  storeLink: WishlistStoreLink;
+  storeLinkDismissedAt: number | null;
   fetchedAt: Date | string;
 }
 
@@ -50,6 +51,18 @@ function dismissedAtFromSnapshotPayload(payload: unknown): number | null {
   return Number.isNaN(time) ? null : time;
 }
 
+export function wishlistIdentitySnapshotView(
+  payload: unknown,
+): Omit<WishlistSnapshotInput, "fetchedAt"> | null {
+  const storeLink = storeLinkFromSnapshotPayload(payload);
+  if (!storeLink) return null;
+
+  return {
+    storeLink,
+    storeLinkDismissedAt: dismissedAtFromSnapshotPayload(payload),
+  };
+}
+
 export function wishlistIdentitySuggestion(
   entry: WishlistSuggestionInput,
   snapshot: WishlistSnapshotInput | null,
@@ -61,17 +74,11 @@ export function wishlistIdentitySuggestion(
     return { suggestion: null, dismissed: false };
   }
 
-  const suggestion = storeLinkFromSnapshotPayload(snapshot.payload);
-  if (!suggestion) {
-    return { suggestion: null, dismissed: false };
-  }
-
-  const dismissedAtMs = dismissedAtFromSnapshotPayload(snapshot.payload);
   const fetchedAtMs = new Date(snapshot.fetchedAt).getTime();
   const dismissed =
-    dismissedAtMs !== null &&
+    snapshot.storeLinkDismissedAt !== null &&
     !Number.isNaN(fetchedAtMs) &&
-    dismissedAtMs > fetchedAtMs;
+    snapshot.storeLinkDismissedAt > fetchedAtMs;
 
-  return { suggestion, dismissed };
+  return { suggestion: snapshot.storeLink, dismissed };
 }

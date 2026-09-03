@@ -127,6 +127,9 @@ async function readPendingRawgFollowUps(): Promise<RawgPendingFollowUps> {
 async function addPendingRawgFollowUps(
   view: RawgBatchView,
 ): Promise<RawgBatchRunResult> {
+  if (!view.isTerminal) {
+    return { success: true, data: { ...view, ...emptyPendingFollowUps }, error: null };
+  }
   return { success: true, data: { ...view, ...(await readPendingRawgFollowUps()) }, error: null };
 }
 

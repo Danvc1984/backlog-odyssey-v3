@@ -8,6 +8,8 @@ import {
 } from "@/lib/wishlist-compatibility";
 import { runWishlistCompatibilityRefresh } from "@/lib/wishlist-compatibility-runner";
 
+const WISHLIST_COMPAT_CONCURRENCY = 5;
+
 export interface WishlistCompatSweepCounts {
   total: number;
   refreshed: number;
@@ -161,14 +163,20 @@ export async function processWishlistCompatSweepEntries(
 ): Promise<{ refreshed: number; failed: number }> {
   let refreshed = 0;
   let failed = 0;
-  for (const id of refreshIds) {
-    try {
-      const result = await runWishlistCompatibilityRefresh(id);
-      if (result.success) refreshed += 1;
-      else failed += 1;
-    } catch {
-      failed += 1;
-    }
+  for (let index = 0; index < refreshIds.length; index += WISHLIST_COMPAT_CONCURRENCY) {
+    const chunk = refreshIds.slice(index, index + WISHLIST_COMPAT_CONCURRENCY);
+    const results = await Promise.all(
+      chunk.map(async (id) => {
+        try {
+          const result = await runWishlistCompatibilityRefresh(id);
+          return result.success ? "refreshed" : "failed";
+        } catch {
+          return "failed";
+        }
+      }),
+    );
+    refreshed += results.filter((result) => result === "refreshed").length;
+    failed += results.filter((result) => result === "failed").length;
   }
   return { refreshed, failed };
 }

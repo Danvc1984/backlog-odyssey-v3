@@ -70,6 +70,7 @@ export function CompatibilitySweepPanel({
   const [error, setError] = useState<string | null>(null);
   const [dismissedGameIds, setDismissedGameIds] = useState<Set<string>>(new Set());
   const reportedTerminalBatchId = useRef<string | null>(null);
+  const lastKnownStatus = useRef<CompatBatchView["status"] | null>(null);
 
   const requestBatch = useCallback(async (batchId: string, method: "GET" | "POST") => {
     const response = await fetch(
@@ -84,6 +85,7 @@ export function CompatibilitySweepPanel({
   }, []);
 
   const showBatch = useCallback((latest: CompatBatchView) => {
+    lastKnownStatus.current = latest.status;
     setBatch(latest);
     if (latest.isTerminal && reportedTerminalBatchId.current !== latest.id) {
       reportedTerminalBatchId.current = latest.id;
@@ -122,8 +124,13 @@ export function CompatibilitySweepPanel({
       if (inFlight) return;
       inFlight = true;
       try {
-        const latest = await refreshBatch(activeBatchId);
-        if (!cancelled && latest.status === "RUNNING") await runBatch(latest.id);
+        const shouldRefresh = lastKnownStatus.current !== "RUNNING";
+        const latest = shouldRefresh
+          ? await refreshBatch(activeBatchId)
+          : await runBatch(activeBatchId);
+        if (!cancelled && shouldRefresh && latest.status === "RUNNING") {
+          await runBatch(latest.id);
+        }
       } catch (caught) {
         if (!cancelled) {
           setError(caught instanceof Error ? caught.message : "Failed to update compatibility sweep");

@@ -11,7 +11,10 @@ import {
   setWishlistIdentity,
 } from "@/actions/wishlist-identity";
 import { parseSteamAppIdInput } from "@/lib/steam-identity";
-import { wishlistIdentitySuggestion } from "@/lib/wishlist-identity-view";
+import {
+  wishlistIdentitySuggestion,
+  type WishlistSnapshotInput,
+} from "@/lib/wishlist-identity-view";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -26,7 +29,7 @@ interface WishlistIdentityProps {
   entryName: string;
   steamAppId: string | null;
   provenance: string | null;
-  snapshot: { payload: unknown; fetchedAt: Date } | null;
+  snapshot: WishlistSnapshotInput | null;
 }
 
 export function WishlistIdentity({

@@ -12,6 +12,7 @@ import { runWishlistCompatibilityRefresh } from "./wishlist-compatibility-runner
 import {
   classifyWishlistCompatEntry,
   emptySweepCounts,
+  processWishlistCompatSweepEntries,
   startWishlistCompatSweep,
   runWishlistCompatSweep,
   sweepStatusFromCounts,
@@ -260,7 +261,7 @@ describe("runWishlistCompatSweep", () => {
     );
   });
 
-  it("isolates per-entry failures while refreshing sequentially in selection order", async () => {
+  it("isolates per-entry failures while refreshing in selection order", async () => {
     const calls: string[] = [];
     mockEntryFindMany.mockResolvedValue([sweepEntry("w1"), sweepEntry("w2"), sweepEntry("w3")]);
     vi.mocked(runWishlistCompatibilityRefresh).mockImplementation(async (id: string) => {
@@ -346,5 +347,26 @@ describe("runWishlistCompatSweep", () => {
 
     expect(result).toEqual({ ok: false, reason: "already-running", runId: "sweep-active" });
     expect(runWishlistCompatibilityRefresh).not.toHaveBeenCalled();
+  });
+
+  it("runs at most five refreshes at once before starting the next chunk", async () => {
+    let releaseFirstChunk: (() => void) | undefined;
+    const firstChunk = new Promise<void>((resolve) => {
+      releaseFirstChunk = resolve;
+    });
+    const calls: string[] = [];
+    vi.mocked(runWishlistCompatibilityRefresh).mockImplementation(async (id: string) => {
+      calls.push(id);
+      if (id === "w1") await firstChunk;
+      return { success: true, data: null, error: null };
+    });
+
+    const processing = processWishlistCompatSweepEntries(["w1", "w2", "w3", "w4", "w5", "w6"]);
+    await vi.waitFor(() => expect(calls).toHaveLength(5));
+    expect(calls).not.toContain("w6");
+
+    releaseFirstChunk?.();
+    await expect(processing).resolves.toEqual({ refreshed: 6, failed: 0 });
+    expect(calls).toEqual(["w1", "w2", "w3", "w4", "w5", "w6"]);
   });
 });
