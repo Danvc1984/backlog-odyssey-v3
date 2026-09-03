@@ -67,7 +67,7 @@
   the cheapest 8-10 offers with visible alternatives and MX activation
   warnings; display-only historical lows; inline MXN targets; 48-hour
   freshness; bounded retries; clear partial failures; opportunity badges
-  without automatic recommendation runs. Vercel Cron activation deferred to 18.
+   without automatic recommendation runs. Vercel Cron activation deferred to 19.
   - [x] 10b-a. **Price identity and provenance** - three provenance-tracked
     identity paths (Steam import auto-confirm, manual Steam URL/AppID paste,
     RAWG store-link suggest-and-confirm extending only the wishlist snapshot),
@@ -276,7 +276,7 @@
 
 ## Personalization and operations
 
-- [ ] 14. **Global visual foundation and full-app UI review** - Apply the
+- [x] 14. **Global visual foundation and full-app UI review** - Apply the
   approved prototype direction across the existing app without changing product
   rules, provider boundaries, schemas, jobs, recommendation ranking, or price
   behavior. The outcome is full dark/light/system parity, token consistency,

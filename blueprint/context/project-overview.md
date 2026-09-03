@@ -57,7 +57,7 @@ The exact checked state is owned by blueprint/build-plan.md.
 13. **[x] 14e: Library and Wishlist header action rework** - Homogenized header
     actions, operation statuses, follow-up sections, and ProtonDB compatibility
     tags on game cards in both views.
-14. **[ ] 14f: Acceptance and accessibility** - Cross-app states, mobile,
+14. **[x] 14f: Acceptance and accessibility** - Cross-app states, mobile,
     keyboard, focus, contrast, reduced motion/data, and final visual review.
 15. **[x] 15: Detail, collection, and supporting route composition** - Shared
     treatment for Today (re-passed to match the Library/Wishlist visual
@@ -245,13 +245,10 @@ freshness, and operations are supporting sections.
 
 ## Next workflow action
 
-The next unchecked item is **Feature 15: Detail, collection, and supporting
-route composition**, which re-passes Today to match the Library/Wishlist visual
-state and applies the shared system to Game Detail, Wishlist Detail,
-Collections, Settings, and their dialogs/forms. Run `$feature 15` to produce
-its reviewed implementation spec. If the UI direction needs another review,
-`$prototype` remains available for throwaway HTML/CSS mockups before
-implementation.
+The next unchecked item is **Feature 16: Wallhaven global background** - an
+optional cached SFW pool with deterministic daily rotation, shuffle,
+attribution, fallback, and reduced-data hard-off. Run `$feature 16` to produce
+its reviewed implementation spec.
 
 This overview is generated from the two plans and does not authorize code
 changes.
