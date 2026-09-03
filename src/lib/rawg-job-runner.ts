@@ -16,6 +16,13 @@ import {
   type RawgJobRecord,
 } from "@/lib/rawg-job-view";
 import type { RawgProviderError } from "@/lib/rawg-types";
+import {
+  isRetryableJobProviderError,
+  jobClaimWhere,
+  jobRetryUpdateData,
+  jobSuccessUpdateData,
+  jobTerminalUpdateData,
+} from "@/lib/enrichment-job-shared";
 
 const runnerJobSelect = {
   ...rawgJobSelect,
@@ -59,18 +66,6 @@ function safeProviderError(error: RawgProviderError): string {
   }
 }
 
-function isRetryableProviderError(error: RawgProviderError): boolean {
-  return (
-    error.category === "NETWORK" ||
-    (error.category === "HTTP" &&
-      (error.status === 429 || (error.status !== undefined && error.status >= 500)))
-  );
-}
-
-function retryDelay(attempt: number): number {
-  return 1000 * 2 ** Math.max(0, attempt - 1);
-}
-
 async function readJob(jobId: string): Promise<RunnerJob | null> {
   return prisma.enrichmentJob.findFirst({
     where: { id: jobId, provider: "RAWG" },
@@ -96,15 +91,7 @@ async function updateFailedJob(
 ): Promise<RawgJobRunResult> {
   const updated = await prisma.enrichmentJob.update({
     where: { id: job.id },
-    data: {
-      status: "FAILED",
-      stage: "FAILED",
-      progress,
-      nextAttemptAt: null,
-      lastErrorCode: code,
-      lastErrorMessage: message,
-      finishedAt: new Date(),
-    },
+    data: jobTerminalUpdateData({ progress, code, message }),
     select: rawgJobSelect,
   });
   return { success: true, data: toRawgEnrichmentJobView(updated), error: null };
@@ -115,18 +102,15 @@ async function handleUnavailable(
   error: RawgProviderError,
 ): Promise<RawgJobRunResult> {
   const message = safeProviderError(error);
-  if (isRetryableProviderError(error) && job.attempt < job.maxAttempts) {
+  if (isRetryableJobProviderError(error) && job.attempt < job.maxAttempts) {
     const updated = await prisma.enrichmentJob.update({
       where: { id: job.id },
-      data: {
-        status: "RETRY_WAIT",
-        stage: "RETRYING",
+      data: jobRetryUpdateData({
         progress: rawgJobProgress("RETRYING"),
-        nextAttemptAt: new Date(Date.now() + retryDelay(job.attempt)),
-        lastErrorCode: error.category,
-        lastErrorMessage: message,
-        finishedAt: null,
-      },
+        attempt: job.attempt,
+        code: error.category,
+        message,
+      }),
       select: rawgJobSelect,
     });
     return { success: true, data: toRawgEnrichmentJobView(updated), error: null };
@@ -140,21 +124,7 @@ export async function runRawgEnrichmentJob(
 ): Promise<RawgJobRunResult | null> {
   const now = new Date();
   const claimed = await prisma.enrichmentJob.updateMany({
-    where: {
-      id: jobId,
-      provider: "RAWG",
-      game: {
-        OR: [
-          { libraryEntry: { is: null } },
-          { libraryEntry: { is: { hidden: false } } },
-        ],
-      },
-      attempt: { lt: RAWG_JOB_MAX_ATTEMPTS },
-      OR: [
-        { status: "QUEUED" },
-        { status: "RETRY_WAIT", nextAttemptAt: { lte: now } },
-      ],
-    },
+    where: jobClaimWhere({ jobId, provider: "RAWG", maxAttempts: RAWG_JOB_MAX_ATTEMPTS, now }),
     data: {
       status: "RUNNING",
       stage: "MATCHING",
@@ -255,14 +225,8 @@ export async function runRawgEnrichmentJob(
   const updated = await prisma.enrichmentJob.update({
     where: { id: job.id },
     data: {
-      status: "SUCCEEDED",
-      stage: "COMPLETE",
-      progress: rawgJobProgress("COMPLETE"),
+      ...jobSuccessUpdateData({ progress: rawgJobProgress("COMPLETE") }),
       candidatePayload: Prisma.DbNull,
-      nextAttemptAt: null,
-      lastErrorCode: null,
-      lastErrorMessage: null,
-      finishedAt: new Date(),
     },
     select: rawgJobSelect,
   });

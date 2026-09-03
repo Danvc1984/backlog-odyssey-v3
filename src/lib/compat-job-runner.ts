@@ -12,6 +12,13 @@ import {
   type CompatJobRecord,
   type CompatJobView,
 } from "@/lib/compat-job";
+import {
+  isRetryableJobProviderError,
+  jobClaimWhere,
+  jobRetryUpdateData,
+  jobSuccessUpdateData,
+  jobTerminalUpdateData,
+} from "@/lib/enrichment-job-shared";
 
 const runnerJobSelect = {
   ...compatJobSelect,
@@ -48,15 +55,6 @@ function isProviderError(value: unknown): value is ProviderError {
   return typeof value === "object" && value !== null && "category" in value;
 }
 
-function retryable(error: ProviderError): boolean {
-  return error.category === "NETWORK" ||
-    (error.category === "HTTP" && (error.status === 429 || (error.status !== undefined && error.status >= 500)));
-}
-
-function retryDelay(attempt: number): number {
-  return 1000 * 2 ** Math.max(0, attempt - 1);
-}
-
 function errorMessage(error: ProviderError): string {
   switch (error.category) {
     case "NETWORK":
@@ -83,15 +81,7 @@ async function updateTerminal(
 ): Promise<CompatJobRunResult> {
   const updated = await prisma.enrichmentJob.update({
     where: { id: job.id },
-    data: {
-      status: "FAILED",
-      stage: "FAILED",
-      progress,
-      nextAttemptAt: null,
-      lastErrorCode: code,
-      lastErrorMessage: message,
-      finishedAt: new Date(),
-    },
+    data: jobTerminalUpdateData({ progress, code, message }),
     select: compatJobSelect,
   });
   return { success: true, data: toCompatJobView(updated), error: null };
@@ -102,18 +92,15 @@ async function handleProviderError(
   error: ProviderError,
 ): Promise<CompatJobRunResult> {
   const message = errorMessage(error);
-  if (retryable(error) && job.attempt < job.maxAttempts) {
+  if (isRetryableJobProviderError(error) && job.attempt < job.maxAttempts) {
     const updated = await prisma.enrichmentJob.update({
       where: { id: job.id },
-      data: {
-        status: "RETRY_WAIT",
-        stage: "RETRYING",
+      data: jobRetryUpdateData({
         progress: 50,
-        nextAttemptAt: new Date(Date.now() + retryDelay(job.attempt)),
-        lastErrorCode: error.category,
-        lastErrorMessage: message,
-        finishedAt: null,
-      },
+        attempt: job.attempt,
+        code: error.category,
+        message,
+      }),
       select: compatJobSelect,
     });
     return { success: true, data: toCompatJobView(updated), error: null };
@@ -187,18 +174,7 @@ export async function getCompatJobStatus(jobId: string): Promise<CompatJobRunRes
 export async function runCompatJob(jobId: string): Promise<CompatJobRunResult | null> {
   const now = new Date();
   const claimed = await prisma.enrichmentJob.updateMany({
-    where: {
-      id: jobId,
-      provider: "PROTONDB",
-      game: {
-        OR: [
-          { libraryEntry: { is: null } },
-          { libraryEntry: { is: { hidden: false } } },
-        ],
-      },
-      attempt: { lt: COMPAT_JOB_MAX_ATTEMPTS },
-      OR: [{ status: "QUEUED" }, { status: "RETRY_WAIT", nextAttemptAt: { lte: now } }],
-    },
+    where: jobClaimWhere({ jobId, provider: "PROTONDB", maxAttempts: COMPAT_JOB_MAX_ATTEMPTS, now }),
     data: {
       status: "RUNNING",
       stage: "MATCHING",
@@ -237,15 +213,7 @@ export async function runCompatJob(jobId: string): Promise<CompatJobRunResult | 
 
   const updated = await prisma.enrichmentJob.update({
     where: { id: job.id },
-    data: {
-      status: "SUCCEEDED",
-      stage: "COMPLETE",
-      progress: 100,
-      nextAttemptAt: null,
-      lastErrorCode: null,
-      lastErrorMessage: null,
-      finishedAt: new Date(),
-    },
+    data: jobSuccessUpdateData({ progress: 100 }),
     select: compatJobSelect,
   });
   return { success: true, data: toCompatJobView(updated), error: null };

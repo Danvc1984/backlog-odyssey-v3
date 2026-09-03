@@ -15,12 +15,6 @@
 **Suggested fix:** When it bites: select only card fields (strip payloads to needed keys) and cap or paginate lists. Track until measured.
 **Resolution:** Re-checked 2026-09-03 by /audit (scope: full; lens: performance): code unchanged, still unbounded (`wishlist/page.tsx:43`, `library/page.tsx:175`). Same payload-scan pattern confirmed in more places (today/page.tsx:136,163; collections/[id]/page.tsx:119; detail payload to client in wishlist/[id]/page.tsx:270, tracked as F-20/F-24). Still unverified at runtime.
 
-### F-17 [P2] open - RAWG and compatibility pipelines duplicate runner, batch, and action scaffolding
-
-**File:** src/lib/rawg-job-runner.ts:70 (vs src/lib/compat-job-runner.ts:56)
-**Found:** 2026-09-03 by /audit (scope: full; lens: quality)
-**Why it matters:** The RAWG and compatibility enrichment pipelines are parallel implementations of the same machinery: identical `retryDelay` and retryable-error predicates (rawg-job-runner.ts:62-72 vs compat-job-runner.ts:51-58), same claim-`updateMany`/RETRY_WAIT/terminal-update shapes, near-identical batch runners (`rawg-batch-runner.ts` vs `compat-batch-runner.ts`), ~85% line-for-line batch-start actions (`src/actions/rawg-batch-enrichment.ts:47-161` vs `compat-batch-enrichment.ts:50-158`), and run-record lifecycle copy-paste (`price-refresh.ts` vs `wishlist-compat-sweep.ts`, including a duplicated `ABANDONED_RUN_MS`). A retry or claim bug fixed in one pipeline will predictably be missed in the other.
-**Suggested fix:** Extract one shared job-runner and one batch-sweep skeleton parameterized by provider and eligibility; share the run-record lifecycle helpers. Smallest useful first step: the identical job-runner helpers (retryDelay, retryable predicate, claim, terminal updates).
 
 ### F-18 [P2] open - updateRecommendations spans roughly 320 lines inside a 1282-line action module
 
@@ -67,21 +61,21 @@
 **Why it matters:** Catch blocks across actions return `err instanceof Error ? err.message : ...`, surfacing Prisma/internal error text in toasts (representatives: prices.ts:50, recommendations.ts:1156, steam.ts:22). Standards say user-friendly error messages; single-user app limits the leak, but internal messages reach the UI.
 **Suggested fix:** Map known error classes to friendly messages and log the raw error server-side; keep `lastErrorMessage` on run records as the diagnostic surface.
 
-### F-24 [P3] open - Wishlist detail serializes the full RAWG payload into a client component for two fields
+### F-24 [P3] fixed - Wishlist detail serializes the full RAWG payload into a client component for two fields
 
 **File:** src/app/(app)/wishlist/[id]/page.tsx:270
 **Found:** 2026-09-03 by /audit (scope: full; lens: performance)
 **Why it matters:** `WishlistIdentity` (client component) receives the whole multi-KB snapshot payload but only reads `storeLink` and `storeLinkDismissedAt` (via src/lib/wishlist-identity-view.ts). Every detail view ships the full payload in the RSC flight data.
 **Suggested fix:** Extract `{ storeLink, storeLinkDismissedAt, fetchedAt }` server-side and pass that object.
 
-### F-25 [P3] open - Batch poll loop re-reads the full job list twice per 2-second tick
+### F-25 [P3] fixed - Batch poll loop re-reads the full job list twice per 2-second tick
 
 **File:** src/components/games/RawgBatchEnrichmentPanel.tsx:148
 **Found:** 2026-09-03 by /audit (scope: full; lens: performance)
 **Why it matters:** While a batch runs, the client polls every 2s (GET, plus POST); each status read loads all enrichment jobs with joined game rows, and the RAWG side also rescans all pending follow-up batches (rawg-batch-runner.ts:87-125) twice per tick. Bounded at personal scale; grows with library size and poll duration.
 **Suggested fix:** Longer interval plus a counts-based status payload; run the pending-follow-ups rescan only when the batch turns terminal.
 
-### F-26 [P3] open - Wishlist compatibility sweep runs strictly serial per entry
+### F-26 [P3] fixed - Wishlist compatibility sweep runs strictly serial per entry
 
 **File:** src/lib/wishlist-compat-sweep.ts:159
 **Found:** 2026-09-03 by /audit (scope: full; lens: performance)
@@ -136,10 +130,3 @@
 **Found:** 2026-09-03 by /audit (scope: full; lens: quality)
 **Why it matters:** User-facing copy uses `" — "` as the separator (line 36) and the test suite locks the character in. The writing standard bans em dashes in generated content; trivial to keep consistent.
 **Suggested fix:** Switch the separator to `": "` and update the four test assertions.
-
-### F-34 [P3] open - Pure-function tests live in the actions-layer catalog-operations test file
-
-**File:** src/actions/catalog-operations.test.ts:91
-**Found:** 2026-09-03 by /audit (scope: full; lens: tests; test-count assessment)
-**Why it matters:** The actions test imports both the actions and the lib planning functions, so the describes at lines 91-378 (suggestSurvivor, resolvePersonalFields, planExternalIdUnion, planOneToOneConflicts, buildMergeProposal) test `src/lib/catalog-operations.ts` one layer below the file's name. No case duplication with `src/lib/catalog-operations.test.ts` (different functions), so it is placement drift, not redundancy. Both files misstate what they cover.
-**Suggested fix:** When touching this area (e.g., alongside an F-17-style cleanup), relocate those describes into `src/lib/catalog-operations.test.ts`. Pure relocation, no behavior change; not worth a standalone pass.
