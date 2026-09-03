@@ -52,6 +52,15 @@ import { buildCalibrationFactor, calibratedInterest } from "@/lib/recommendation
 import { filterStaleExposures } from "@/lib/recommendations/exposure";
 import { updatePlayState } from "@/actions/game-detail";
 
+const KNOWN_VALUES_CACHE_TTL_MS = 10 * 60 * 1000;
+type KnownGenreTagValues = { genres: string[]; tags: string[] };
+let knownValuesCache: { data: KnownGenreTagValues; expiresAt: number } | null = null;
+
+export async function resetKnownGenreTagValuesCache() {
+  await requireUser();
+  knownValuesCache = null;
+}
+
 const dismissRecommendationSchema = z
   .object({
     gameId: z.string().trim().min(1).optional(),
@@ -1138,6 +1147,10 @@ export async function loadRecommendationPreset(input: unknown) {
 export async function listKnownGenreTagValues() {
   try {
     await requireUser();
+    if (knownValuesCache && knownValuesCache.expiresAt > Date.now()) {
+      return { success: true as const, data: knownValuesCache.data, error: null };
+    }
+
     const [games, wishlistEntries] = await Promise.all([
       prisma.game.findMany({
         select: { metadataSnapshots: { where: { provider: "RAWG" }, orderBy: { fetchedAt: "desc" }, take: 1, select: { payload: true } } },
@@ -1151,7 +1164,9 @@ export async function listKnownGenreTagValues() {
       for (const genre of parsed?.genres ?? []) if (genre) genres.add(genre);
       for (const tag of parsed?.tags ?? []) if (tag) tags.add(tag);
     }
-    return { success: true as const, data: { genres: [...genres].sort(), tags: [...tags].sort() }, error: null };
+    const data = { genres: [...genres].sort(), tags: [...tags].sort() };
+    knownValuesCache = { data, expiresAt: Date.now() + KNOWN_VALUES_CACHE_TTL_MS };
+    return { success: true as const, data, error: null };
   } catch (err) {
     return { success: false as const, data: null, error: err instanceof Error ? err.message : "Failed to list known values" };
   }

@@ -57,6 +57,7 @@ import {
   listRecommendationPresets,
   deleteRecommendationPreset,
   listKnownGenreTagValues,
+  resetKnownGenreTagValuesCache,
   loadRecommendationPreset,
   saveTasteSetup,
 } from "./recommendations";
@@ -123,9 +124,10 @@ function txFactory() {
   };
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.clearAllMocks();
   vi.mocked(requireUser).mockResolvedValue({} as never);
+  await resetKnownGenreTagValuesCache();
 transaction.mockImplementation(async (callback: (tx: ReturnType<typeof txFactory>) => unknown) =>
       callback(txFactory()),
     );
@@ -262,6 +264,53 @@ describe("recommendation tune and preset actions", () => {
       data: { genres: ["Action", "Puzzle", "RPG"], tags: ["Co-op", "Story"] },
       error: null,
     });
+  });
+
+  it("uses the cached values until the TTL expires", async () => {
+    gameFindMany.mockResolvedValue([{ metadataSnapshots: [{ payload: { genres: ["RPG"], tags: [] } }] }]);
+    wishlistFindMany.mockResolvedValue([]);
+
+    await listKnownGenreTagValues();
+    await listKnownGenreTagValues();
+
+    expect(gameFindMany).toHaveBeenCalledTimes(1);
+    expect(wishlistFindMany).toHaveBeenCalledTimes(1);
+  });
+
+  it("refetches values after the TTL expires", async () => {
+    vi.useFakeTimers();
+    try {
+      gameFindMany.mockResolvedValue([{ metadataSnapshots: [{ payload: { genres: ["RPG"], tags: [] } }] }]);
+      wishlistFindMany.mockResolvedValue([]);
+
+      await listKnownGenreTagValues();
+      vi.advanceTimersByTime(10 * 60 * 1000);
+      await listKnownGenreTagValues();
+
+      expect(gameFindMany).toHaveBeenCalledTimes(2);
+      expect(wishlistFindMany).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("does not cache failures", async () => {
+    gameFindMany.mockRejectedValueOnce(new Error("catalog unavailable"));
+    wishlistFindMany.mockResolvedValue([]);
+
+    await expect(listKnownGenreTagValues()).resolves.toMatchObject({
+      success: false,
+      data: null,
+      error: "catalog unavailable",
+    });
+
+    gameFindMany.mockResolvedValue([{ metadataSnapshots: [] }]);
+    await expect(listKnownGenreTagValues()).resolves.toMatchObject({
+      success: true,
+      data: { genres: [], tags: [] },
+      error: null,
+    });
+    expect(gameFindMany).toHaveBeenCalledTimes(2);
   });
 });
 

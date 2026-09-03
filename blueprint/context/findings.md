@@ -36,19 +36,21 @@
 **Why it matters:** `planMergeMutations` (lines 804-1131) plans the entire merge mutation set in one function, and the module mixes snapshot envelopes, TTL/state, personal-field resolution, merge planning, and delete planning. Merge is the most destructive operation in the app; its planning code should be the easiest to read.
 **Suggested fix:** Extract per-relationship planners (external IDs, availability, tags, collections, wishlist) into small functions beside it; no behavior change.
 
-### F-20 [P2] open - Today page transfers full RAWG payloads for the whole library on every render
+### F-20 [P2] fixed - Today page transfers full RAWG payloads for the whole library on every render
 
 **File:** src/app/(app)/today/page.tsx:136
 **Found:** 2026-09-03 by /audit (scope: full; lens: performance)
 **Why it matters:** The hottest route loads every visible base game with its full `metadataSnapshots.payload` (today/page.tsx:136-153) but uses only `backgroundImageUrls[0]` (154-161); `listKnownGenreTagValues` (src/actions/recommendations.ts:1138-1158) additionally rescans every game and wishlist payload to rebuild genre/tag sets on every render; `wishlistEntry.findMany` (today/page.tsx:163) pulls all offer rows. Pattern confirmed statically; magnitude not measured at runtime (single-user library tempers it, but this scales with library size on the post-login landing page). Same pattern exists in collections/[id]/page.tsx:119.
 **Suggested fix:** Select only the fields the hero cards need (e.g., a payload projection or stored cover URL), cache the genre/tag set (revalidate on enrichment), and `Promise.all` independent queries.
+**Resolution:** Restricted the Today hero query to visible main/in-progress base games, added a ten-minute memo for genre/tag suggestions, and grouped independent Today queries into a parallel wave. Manual `/today` verification confirmed the spotlight, offers, recommendation sections, and tune suggestions remain available.
 
-### F-21 [P3] open - Today page runs roughly 14 sequential awaits on its hot path
+### F-21 [P3] fixed - Today page runs roughly 14 sequential awaits on its hot path
 
 **File:** src/app/(app)/today/page.tsx:59
 **Found:** 2026-09-03 by /audit (scope: full; lens: performance)
 **Why it matters:** From `latestPlayNextRun` (59) through `activityCatalogRows` (214), nearly all independent queries are awaited in sequence; per-query latency adds up on every Today render. Only the activity rows truly depend on prior work.
 **Suggested fix:** Group independent queries into 2-3 `Promise.all` waves; keep the activity-dependency chain last.
+**Resolution:** Grouped independent Today data loads into one `Promise.all` wave and kept the dependent activity catalog lookup as the only second wave. Manual `/today` verification confirmed the rendered flow remains functional.
 
 ### F-22 [P3] fixed - Steam OpenID connect flow has no state or nonce binding
 

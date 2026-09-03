@@ -56,48 +56,64 @@ function storedTune(value: unknown): TuneContext | null {
 }
 
 export default async function TodayPage() {
-  const latestPlayNextRun = await prisma.recommendationRun.findFirst({
-    where: { kind: "PLAY_NEXT" },
-    orderBy: { createdAt: "desc" },
-    include: {
-      items: {
-        orderBy: { rank: "asc" },
-        include: {
-          game: {
-            select: {
-              name: true,
-              metadataSnapshots: {
-                where: { provider: "RAWG" },
-                orderBy: { fetchedAt: "desc" },
-                take: 1,
-                select: { payload: true },
+  const [
+    latestPlayNextRun,
+    latestBuyRun,
+    tuneState,
+    knownValuesResult,
+    presetsResult,
+    alternativeSources,
+    tasteGames,
+    tasteEventCount,
+    todayGames,
+    dataHealth,
+    wishlistEntries,
+    todayOperations,
+    steamActivityView,
+  ] = await Promise.all([
+    prisma.recommendationRun.findFirst({
+      where: { kind: "PLAY_NEXT" },
+      orderBy: { createdAt: "desc" },
+      include: {
+        items: {
+          orderBy: { rank: "asc" },
+          include: {
+            game: {
+              select: {
+                name: true,
+                metadataSnapshots: {
+                  where: { provider: "RAWG" },
+                  orderBy: { fetchedAt: "desc" },
+                  take: 1,
+                  select: { payload: true },
+                },
               },
             },
           },
         },
       },
-    },
-  });
-  const latestBuyRun = await prisma.recommendationRun.findFirst({
-    where: { kind: "BUY" },
-    orderBy: { createdAt: "desc" },
-    include: {
-      items: {
-        where: { wishlistEntryId: { not: null } },
-        orderBy: { rank: "asc" },
-        include: {
-          wishlistEntry: {
-            select: {
-              name: true,
-              metadataSnapshot: { select: { payload: true } },
-              baseGame: {
-                select: {
-                  name: true,
-                  metadataSnapshots: {
-                    where: { provider: "RAWG" },
-                    orderBy: { fetchedAt: "desc" },
-                    take: 1,
-                    select: { payload: true },
+    }),
+    prisma.recommendationRun.findFirst({
+      where: { kind: "BUY" },
+      orderBy: { createdAt: "desc" },
+      include: {
+        items: {
+          where: { wishlistEntryId: { not: null } },
+          orderBy: { rank: "asc" },
+          include: {
+            wishlistEntry: {
+              select: {
+                name: true,
+                metadataSnapshot: { select: { payload: true } },
+                baseGame: {
+                  select: {
+                    name: true,
+                    metadataSnapshots: {
+                      where: { provider: "RAWG" },
+                      orderBy: { fetchedAt: "desc" },
+                      take: 1,
+                      select: { payload: true },
+                    },
                   },
                 },
               },
@@ -105,52 +121,68 @@ export default async function TodayPage() {
           },
         },
       },
-    },
-  });
-  const tuneState = await prisma.recommendationTuneState.findUnique({
-    where: { id: 1 },
-    select: { playTune: true, buyTune: true },
-  });
-  const knownValuesResult = await listKnownGenreTagValues();
+    }),
+    prisma.recommendationTuneState.findUnique({
+      where: { id: 1 },
+      select: { playTune: true, buyTune: true },
+    }),
+    listKnownGenreTagValues(),
+    listRecommendationPresets(),
+    prisma.alternativeSource.findMany({
+      where: { archivedAt: null },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+    loadPickableTasteSetupGames(prisma),
+    prisma.recommendationEvent.count({
+      where: { kind: "TASTE_SETUP_ANSWER" },
+    }),
+    prisma.game.findMany({
+      where: {
+        type: "BASE_GAME",
+        libraryEntry: {
+          is: {
+            hidden: false,
+            OR: [{ isMainGame: true }, { playState: "IN_PROGRESS" }],
+          },
+        },
+      },
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        libraryEntry: { select: { isMainGame: true, playState: true } },
+        metadataSnapshots: {
+          where: { provider: "RAWG" },
+          orderBy: { fetchedAt: "desc" },
+          take: 1,
+          select: { payload: true },
+        },
+      },
+    }),
+    loadTodayDataHealth(prisma),
+    prisma.wishlistEntry.findMany({
+      select: {
+        id: true,
+        name: true,
+        targetPriceMxn: true,
+        offers: { orderBy: [{ price: { sort: "asc", nulls: "last" } }] },
+      },
+    }),
+    loadTodayOperations(prisma),
+    refreshSteamActivityCacheIfStale(),
+  ]);
   const knownValues = knownValuesResult.success
     ? knownValuesResult.data
     : { genres: [], tags: [] };
-  const presetsResult = await listRecommendationPresets();
   const presets = presetsResult.success
     ? presetsResult.data.map((preset) => ({ id: preset.id, name: preset.name }))
     : [];
-  const alternativeSources = await prisma.alternativeSource.findMany({
-    where: { archivedAt: null },
-    orderBy: { name: "asc" },
-    select: { id: true, name: true },
-  });
-  const tasteGames = await loadPickableTasteSetupGames(prisma);
-  const tasteEventCount = await prisma.recommendationEvent.count({
-    where: { kind: "TASTE_SETUP_ANSWER" },
-  });
   const initialTastePicks = selectInitialTasteSetupPicks(tasteGames);
   const showTasteSetup = shouldShowTasteSetup(
     tasteEventCount,
     tasteGames.length,
   );
-  const todayGames = await prisma.game.findMany({
-    where: {
-      type: "BASE_GAME",
-      libraryEntry: { is: { hidden: false } },
-    },
-    orderBy: { name: "asc" },
-    select: {
-      id: true,
-      name: true,
-      libraryEntry: { select: { isMainGame: true, playState: true } },
-      metadataSnapshots: {
-        where: { provider: "RAWG" },
-        orderBy: { fetchedAt: "desc" },
-        take: 1,
-        select: { payload: true },
-      },
-    },
-  });
   const heroGames = todayGames.map((game) => ({
     id: game.id,
     name: game.name,
@@ -159,15 +191,6 @@ export default async function TodayPage() {
       parseRawgMetadataPayload(game.metadataSnapshots[0]?.payload)
         ?.backgroundImageUrls[0] ?? null,
   }));
-  const dataHealth = await loadTodayDataHealth(prisma);
-  const wishlistEntries = await prisma.wishlistEntry.findMany({
-    select: {
-      id: true,
-      name: true,
-      targetPriceMxn: true,
-      offers: { orderBy: [{ price: { sort: "asc", nulls: "last" } }] },
-    },
-  });
   const todayOffers = rankTodayOffers(
     wishlistEntries.map(({ id, name, targetPriceMxn, offers }) => ({
       wishlistEntryId: id,
@@ -177,7 +200,6 @@ export default async function TodayPage() {
     })),
     new Date(),
   );
-  const todayOperations = await loadTodayOperations(prisma);
   const playContext = latestPlayNextRun?.context as
     | { rerank?: { mode?: string }; tune?: { thinPool?: boolean } }
     | null
@@ -202,33 +224,31 @@ export default async function TodayPage() {
   const coldStart = playContext?.rerank?.mode === "COLD_START";
   const hasPlayRoles = items.some((item) => item.role !== null);
   const hasBuyRoles = buyItems.some((item) => item.role !== null);
-  const steamActivityView = await refreshSteamActivityCacheIfStale();
   const activityAppIds = [
     ...steamActivityView.imported,
     ...steamActivityView.unimported,
   ]
     .map((entry) => entry.steamAppId)
     .filter((appId): appId is string => Boolean(appId));
-  const activityCatalogRows =
-    activityAppIds.length > 0
-      ? await prisma.externalGameId.findMany({
-          where: { namespace: "STEAM_APP", externalId: { in: activityAppIds } },
-          select: {
-            externalId: true,
-            game: {
-              select: {
-                id: true,
-                metadataSnapshots: {
-                  where: { provider: "RAWG" },
-                  orderBy: { fetchedAt: "desc" },
-                  take: 1,
-                  select: { payload: true },
-                },
+  const activityCatalogRows = activityAppIds.length > 0
+    ? await prisma.externalGameId.findMany({
+        where: { namespace: "STEAM_APP", externalId: { in: activityAppIds } },
+        select: {
+          externalId: true,
+          game: {
+            select: {
+              id: true,
+              metadataSnapshots: {
+                where: { provider: "RAWG" },
+                orderBy: { fetchedAt: "desc" },
+                take: 1,
+                select: { payload: true },
               },
             },
           },
-        })
-      : [];
+        },
+      })
+    : [];
   const activityCatalog = new Map(
     activityCatalogRows.map((row) => [
       row.externalId,
