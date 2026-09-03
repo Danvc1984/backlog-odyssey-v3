@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/auth-guard", () => ({ requireUser: vi.fn() }));
@@ -1346,6 +1346,10 @@ describe("updateRecommendations buy re-ranking", () => {
 });
 
 describe("rotateRecommendationRole", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   function playRun(batches: Record<string, Array<{ id: string; score: number }>>) {
     runFindUnique.mockResolvedValue({
       id: "run-play",
@@ -1460,7 +1464,6 @@ describe("rotateRecommendationRole", () => {
     expect(now - cutoff).toBe(EXPOSURE_COOLDOWN_DAYS * DAY);
     expect(result.success).toBe(true);
     expect(result.data).toMatchObject({ rotated: true, item: { gameId: "game-old" } });
-    vi.useRealTimers();
   });
 
   it("returns rotated false without mutating when the role batch is drained by cooldown", async () => {

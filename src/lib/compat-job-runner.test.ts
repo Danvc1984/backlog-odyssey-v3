@@ -89,6 +89,95 @@ describe("compatibility job runner", () => {
     expect(transaction).not.toHaveBeenCalled();
   });
 
+  it("makes an exhausted retry terminal", async () => {
+    findFirst.mockResolvedValue(job({ attempt: 3, status: "RETRY_WAIT" }));
+    vi.mocked(lookupProtonDb).mockResolvedValue({ category: "NETWORK", message: "offline" });
+
+    const result = await runCompatJob("job-1");
+
+    expect(result).toMatchObject({
+      success: true,
+      data: { status: "FAILED", lastErrorCode: "NETWORK", nextAttemptAt: null },
+    });
+    expect(update).toHaveBeenLastCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ status: "FAILED", nextAttemptAt: null }),
+    }));
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["HTTP", 404],
+    ["MALFORMED_RESPONSE", 200],
+  ] as const)("makes non-retryable %s failures terminal", async (category, status) => {
+    vi.mocked(lookupProtonDb).mockResolvedValue({ category, status, message: "provider detail" });
+
+    const result = await runCompatJob("job-1");
+
+    expect(result).toMatchObject({
+      success: true,
+      data: { status: "FAILED", lastErrorCode: category, nextAttemptAt: null },
+    });
+    expect(update).toHaveBeenLastCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ status: "FAILED", nextAttemptAt: null }),
+    }));
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it("returns the current status when another claimant wins the race", async () => {
+    updateMany.mockResolvedValue({ count: 0 });
+    findFirst.mockResolvedValue(job({ status: "RUNNING", progress: 25 }));
+
+    const result = await runCompatJob("job-1");
+
+    expect(result).toMatchObject({ success: true, data: { status: "RUNNING" } });
+    expect(updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        id: "job-1",
+        provider: "PROTONDB",
+        game: {
+          OR: [
+            { libraryEntry: { is: null } },
+            { libraryEntry: { is: { hidden: false } } },
+          ],
+        },
+        attempt: { lt: 3 },
+      }),
+    }));
+    expect(lookupProtonDb).not.toHaveBeenCalled();
+    expect(lookupAway).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it("returns PERSISTENCE_FAILED when saving compatibility evidence fails", async () => {
+    transaction.mockRejectedValueOnce(new Error("database unavailable"));
+
+    const result = await runCompatJob("job-1");
+
+    expect(result).toMatchObject({
+      success: true,
+      data: { status: "FAILED", lastErrorCode: "PERSISTENCE_FAILED" },
+    });
+    expect(transaction).toHaveBeenCalledTimes(1);
+    expect(update).toHaveBeenLastCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ status: "FAILED", stage: "FAILED", progress: 75 }),
+    }));
+  });
+
+  it("uses the first provider error when AWAY fails after ProtonDB succeeds", async () => {
+    vi.mocked(lookupAway).mockResolvedValue({ category: "HTTP", status: 404, message: "missing" });
+
+    const result = await runCompatJob("job-1");
+
+    expect(result).toMatchObject({
+      success: true,
+      data: { status: "FAILED", lastErrorCode: "HTTP", nextAttemptAt: null },
+    });
+    expect(lookupProtonDb).toHaveBeenCalledWith("620");
+    expect(lookupAway).toHaveBeenCalledWith("620");
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
   it("fails without provider calls when the game has no Steam identity", async () => {
     findFirst.mockResolvedValue(job({ game: { id: "game-1", name: "Manual ROM", externalIds: [] } }));
 

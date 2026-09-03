@@ -15,6 +15,13 @@
 **Suggested fix:** When it bites: select only card fields (strip payloads to needed keys) and cap or paginate lists. Track until measured.
 **Resolution:** Re-checked 2026-09-03 by /audit (scope: full; lens: performance): code unchanged, still unbounded (`wishlist/page.tsx:43`, `library/page.tsx:175`). Same payload-scan pattern confirmed in more places (today/page.tsx:136,163; collections/[id]/page.tsx:119; detail payload to client in wishlist/[id]/page.tsx:270, tracked as F-20/F-24). Still unverified at runtime.
 
+### F-17 [P2] open - RAWG and compatibility pipelines duplicate runner, batch, and action scaffolding
+
+**File:** src/lib/rawg-job-runner.ts:70 (vs src/lib/compat-job-runner.ts:56)
+**Found:** 2026-09-03 by /audit (scope: full; lens: quality)
+**Why it matters:** The RAWG and compatibility enrichment pipelines are parallel implementations of the same machinery: identical `retryDelay` and retryable-error predicates, same claim-`updateMany`/RETRY_WAIT/terminal-update shapes, near-identical batch runners (`rawg-batch-runner.ts` vs `compat-batch-runner.ts`), ~85% line-for-line batch-start actions (`src/actions/rawg-batch-enrichment.ts:47-161` vs `compat-batch-enrichment.ts:50-158`), and run-record lifecycle copy-paste (`price-refresh.ts` vs `wishlist-compat-sweep.ts`, including a duplicated `ABANDONED_RUN_MS`). A retry or claim bug fixed in one pipeline will predictably be missed in the other.
+**Suggested fix:** Extract one shared job-runner and one batch-sweep skeleton parameterized by provider and eligibility; share the run-record lifecycle helpers. Smallest useful first step: the identical job-runner helpers (retryDelay, retryable predicate, claim, terminal updates).
+**Resolution:** 2026-09-03 by /fix (commit 79863d1): the job-runner layer is deduplicated - `src/lib/enrichment-job-shared.ts` now owns `jobRetryDelay`, the retryable predicate, the claim where-shape, and the RETRY_WAIT/terminal/SUCCEEDED update-data builders used by both runners, with its own unit tests. Remaining open scope: batch-start actions (~85% line-for-line), batch runners, and the price-refresh/wishlist-compat-sweep run-record lifecycle including the duplicated `ABANDONED_RUN_MS`.
 
 ### F-18 [P2] open - updateRecommendations spans roughly 320 lines inside a 1282-line action module
 
@@ -82,19 +89,21 @@
 **Why it matters:** The sweep awaits each entry's refresh (two parallel provider calls each) one at a time, so the calling action blocks for N × provider latency. Batch runners cap concurrency at 5; this path has none.
 **Suggested fix:** Reuse the existing small-concurrency pattern (e.g., chunks of 5) from the batch runners.
 
-### F-27 [P3] open - compat-job-runner retry and exhaustion branches lack tests
+### F-27 [P3] fixed - compat-job-runner retry and exhaustion branches lack tests
 
 **File:** src/lib/compat-job-runner.test.ts:1
 **Found:** 2026-09-03 by /audit (scope: full; lens: tests)
 **Why it matters:** 3 tests / 10 assertions cover a 252-line runner whose retry state machine is exactly where wrong-answer bugs live. Untested: attempt exhaustion going terminal instead of RETRY_WAIT (compat-job-runner.ts:105), non-retryable errors going terminal, claim failure returning current status (:214), and PERSISTENCE_FAILED (:234).
 **Suggested fix:** Add focused tests for the exhaustion matrix (retryable + max attempts, non-retryable, claim-loss, persistence failure), mirroring the stronger rawg-job-runner coverage where applicable.
+**Resolution:** Added focused coverage for retry exhaustion, non-retryable provider errors, claim loss and claim filters, persistence failure, and provider error precedence. Full Vitest suite passes with 1030 tests.
 
-### F-28 [P3] open - Fake timers restored as a trailing statement in recommendations tests
+### F-28 [P3] fixed - Fake timers restored as a trailing statement in recommendations tests
 
 **File:** src/actions/recommendations.test.ts:1414
 **Found:** 2026-09-03 by /audit (scope: full; lens: tests)
 **Why it matters:** `vi.useRealTimers()` is the last line of the test (1414), not an `afterEach`. Any failure before it leaks frozen fake timers into the rest of the file, producing cascading failures that mask real regressions. `src/lib/itad-retry.test.ts:11-13` shows the correct pattern.
 **Suggested fix:** Move timer restore into an `afterEach` (or try/finally) for the affected describe block.
+**Resolution:** Moved fake-timer restoration to `afterEach` in `rotateRecommendationRole` and removed the trailing restore from the cooldown test. Recommendations tests and the full suite pass.
 
 ### F-29 [P3] open - Small cleanups: unused imports, duplicate constant export, unneeded client directive
 
@@ -128,5 +137,12 @@
 
 **File:** src/lib/recommendations/recommendation-copy.ts:36
 **Found:** 2026-09-03 by /audit (scope: full; lens: quality)
-**Why it matters:** User-facing copy uses `" — "` as the separator (line 36) and the test suite locks the character in. The writing standard bans em dashes in generated content; trivial to keep consistent.
 **Suggested fix:** Switch the separator to `": "` and update the four test assertions.
+
+### F-34 [P3] fixed - Pure-function tests live in the actions-layer catalog-operations test file
+
+**File:** src/actions/catalog-operations.test.ts:91
+**Found:** 2026-09-03 by /audit (scope: full; lens: tests; test-count assessment)
+**Why it matters:** The actions test imports both the actions and the lib planning functions, so the describes at lines 91-378 (suggestSurvivor, resolvePersonalFields, planExternalIdUnion, planOneToOneConflicts, buildMergeProposal) test `src/lib/catalog-operations.ts` one layer below the file's name. No case duplication with `src/lib/catalog-operations.test.ts` (different functions), so it is placement drift, not redundancy. Both files misstate what they cover.
+**Suggested fix:** When touching this area (e.g., alongside an F-17-style cleanup), relocate those describes into `src/lib/catalog-operations.test.ts`. Pure relocation, no behavior change; not worth a standalone pass.
+**Resolution:** 2026-09-03 by /fix (commit 79863d1): the five pure-function describes were relocated verbatim into `src/lib/catalog-operations.test.ts` (312 lines out of the actions test, 330 in), which now hosts them.
