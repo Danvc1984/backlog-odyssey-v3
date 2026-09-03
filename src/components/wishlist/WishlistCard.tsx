@@ -70,7 +70,7 @@ export function WishlistCard({
             id={entry.id}
             title={coverTitle}
             imageUrl={imageUrl}
-            className="h-20 w-20 shrink-0 sm:h-24 sm:w-24"
+            className="aspect-[4/3] w-28 shrink-0 sm:w-32"
             showTitle={false}
           />
           <div className="min-w-0 flex-1">

@@ -103,7 +103,7 @@ export function PlayNextRailCard({ runId, role, itemId, gameId, name, rank, scor
           id={slot.gameId}
           title={slot.name}
           imageUrl={imageUrl ?? null}
-          className="h-32"
+          className="aspect-[16/10]"
         />
       </Link>
       <div className="flex flex-1 flex-col p-4">

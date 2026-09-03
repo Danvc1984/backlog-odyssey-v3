@@ -114,7 +114,7 @@ export function RecommendationItemCard({
           id={coverId}
           title={name}
           imageUrl={imageUrl ?? null}
-          className={size === "compact" ? "h-32" : "h-52"}
+          className="aspect-[16/10]"
         />
       </Link>
       <div className="flex flex-1 flex-col p-4">

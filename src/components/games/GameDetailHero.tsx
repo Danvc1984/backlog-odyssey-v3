@@ -33,7 +33,7 @@ export function GameDetailHero({
         title={name}
         imageUrl={imageUrl}
         hideLabel
-        className="min-h-64 lg:min-h-full"
+        className="aspect-[16/10] min-h-64 lg:min-h-full"
       />
       <div className="flex min-w-0 flex-col justify-between gap-5 p-6 md:p-8">
         <h1

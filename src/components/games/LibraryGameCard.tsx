@@ -90,7 +90,7 @@ function Cover({ entry, compact }: { entry: LibraryGameCardEntry; compact: boole
       title={entry.game.name}
       imageUrl={imageUrl}
       href={`/games/${entry.game.id}`}
-      className={compact ? "h-24 w-24 shrink-0" : "h-40"}
+      className={compact ? "aspect-[4/3] w-32 shrink-0" : "aspect-[16/10]"}
       showTitle={!compact}
     />
   );

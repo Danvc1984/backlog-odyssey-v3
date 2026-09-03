@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { gradientFor } from "@/lib/cover-gradient";
 import { resolveDetailArt } from "@/lib/detail-art";
 import { useVisualPreferences } from "@/components/preferences/VisualPreferencesProvider";
+import { ArtworkBackdrop } from "@/components/ui/artwork-backdrop";
 import { cn } from "@/lib/utils";
 
 export function DetailHeroArt({
@@ -31,21 +31,13 @@ export function DetailHeroArt({
   if (presentation.kind === "artwork" && presentation.imageUrl) {
     return (
       <div className={cn(baseClassName, "bg-card")}>
-        <Image
-          src={presentation.imageUrl}
-          alt=""
-          fill
-          sizes="(min-width: 1280px) 33vw, 100vw"
-          className="object-cover"
-          loading="lazy"
-          unoptimized
-        />
+        <ArtworkBackdrop src={presentation.imageUrl} />
         <div
-          className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"
+          className="absolute inset-0 z-30 bg-gradient-to-t from-black/80 via-black/20 to-transparent"
           aria-hidden="true"
         />
         {!hideLabel && (
-          <span className="absolute inset-x-5 bottom-4 text-base font-bold text-white drop-shadow-sm">
+          <span className="absolute inset-x-5 bottom-4 z-40 text-base font-bold text-white drop-shadow-sm">
             {title}
           </span>
         )}
