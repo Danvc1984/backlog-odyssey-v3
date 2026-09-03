@@ -66,14 +66,14 @@ export function CreateDlcDialog({ baseGameId }: { baseGameId: string }) {
           Add purchased DLC
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Add purchased DLC</DialogTitle>
           <DialogDescription>
             Add a DLC entry attached to this base game.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="grid gap-4">
+        <form onSubmit={handleSubmit} className="grid gap-5">
           <div className="grid gap-2">
             <Label htmlFor="dlc-name">Name</Label>
             <Input

@@ -150,7 +150,7 @@ export function AddWishlistDialog({
           <DialogTitle>Add to wishlist</DialogTitle>
           <DialogDescription>Save a base game or a DLC for a catalog game.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="grid gap-4">
+        <form onSubmit={handleSubmit} className="grid gap-5">
           <div className="grid gap-2">
             <Label htmlFor="wishlist-type">Type</Label>
             <Select value={type} onValueChange={(value) => setType(value as typeof type)}>

@@ -1,4 +1,5 @@
 import type { RecommendationProfilePayload } from "@/lib/recommendations/profile";
+import { SectionCard } from "@/components/ui/detail-card";
 import { RebuildRecommendationProfileButton } from "./RebuildRecommendationProfileButton";
 import { RecommendationPreferenceControls } from "./RecommendationPreferenceControls";
 import { RestartRecommendationsAction } from "./RestartRecommendationsSection";
@@ -96,21 +97,18 @@ export function RecommendationProfileSection({
 }: RecommendationProfileSectionProps) {
   const payload = profile?.payload as RecommendationProfilePayload | undefined;
   return (
-    <section className="mt-6 rounded-lg border border-border p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-3">
-        <div>
-          <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Recommendations
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Remove recommendation runs, dismissals, event history, learned profile, preferences, tune state, and presets. Your games, wishlist, offers, and provider data stay unchanged.
-          </p>
-        </div>
+    <SectionCard
+      eyebrow="Recommendations"
+      title="Profile"
+      id="recommendation-profile-heading"
+      description="Remove recommendation runs, dismissals, event history, learned profile, preferences, tune state, and presets. Your games, wishlist, offers, and provider data stay unchanged."
+      aside={
         <div className="flex flex-wrap items-center justify-end gap-2">
           <RebuildRecommendationProfileButton />
           <RestartRecommendationsAction />
         </div>
-      </div>
+      }
+    >
       <RecommendationPreferenceControls profile={payload} preferences={preferences} />
       {profile && (
         <p className="mt-2 text-xs text-muted-foreground">
@@ -125,6 +123,6 @@ export function RecommendationProfileSection({
           will build from that.
         </p>
       )}
-    </section>
+    </SectionCard>
   );
 }

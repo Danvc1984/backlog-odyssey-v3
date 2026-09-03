@@ -288,7 +288,7 @@
     inversion; update typography, surfaces, buttons, cards, desktop sidebar,
     and mobile bottom navigation; add non-migrating visual-preference controls
     only for theme, reduced motion, and reduced data, leaving the broader
-    Settings and export scope to 17.
+    Settings and export scope to 18.
   - [x] 14b. **Today decision dashboard** - Redesign Today around its existing
     data and business logic: a split first viewport with `Currently playing`
     and `Featured offers` carousels, a larger Play Next section with a dominant
@@ -305,13 +305,8 @@
   - [x] 14d. **Wishlist browsing surfaces** - signal grid, focus/list
     alternatives, and entry-card composition for offers, identity,
     staleness, target, and interest over unchanged queries and actions
-  - [x] 14e. **Header action rework for Library and Wishlist**  - style and update the header actions for each of the targeted pages so that these actions and their statuses and followup sections all follow a similar design philosofy to what we have before them; additionally add protondb compatibility tags to the game cards in both views.
-  - [ ] 14f. **Detail, collection, and supporting route composition** - Apply
-    the shared design system to Today,Game Detail, Wishlist Detail, Collections, settings and their dialogs/forms. Review order and operability of actions available in the setting; Reuse existing RAWG artwork with contrast overlays when
-    available, use abstract local fallbacks otherwise or in reduced-data mode,
-    and preserve current detail actions, read-only evidence boundaries, and
-    destructive confirmations. Dynamic per-game palettes remain feature 16.
-  - [ ] 14g. **Cross-app states, accessibility, and visual acceptance** -
+  - [x] 14e. **Header action rework for Library and Wishlist**  - style and update the header actions for each of the targeted pages so that these actions and their statuses and followup sections all follow a similar design philosophy to what we have before them; additionally add protondb compatibility tags to the game cards in both views.
+  - [x] 14f. **Cross-app states, accessibility, and visual acceptance** -
     Finish visual Settings controls, loading/empty/error/stale/operation
     states, keyboard/focus/target/contrast treatment, reduced-motion and
     reduced-data behavior, mobile review, and token-consistency cleanup.
@@ -319,22 +314,32 @@
     light, and system modes, then run the existing automated checks. Wallhaven,
     new providers, migrations, queues, and background work remain out of scope.
 
-- [ ] 15. **Wallhaven global background** - SFW keyword-pool caching (~10
+- [x] 15. **Detail, collection, and supporting route composition** - Apply
+  the shared design system to the remaining surfaces, leading with Today so it
+  matches the Library/Wishlist visual state, then Game Detail, Wishlist Detail,
+  Collections, settings and their dialogs/forms. Review order and operability
+  of actions available in the settings; Reuse existing RAWG artwork with
+  contrast overlays when available, use abstract local fallbacks otherwise or
+  in reduced-data mode, and preserve current detail actions, read-only
+  evidence boundaries, and destructive confirmations. Dynamic per-game palettes
+  remain feature 17.
+
+- [ ] 16. **Wallhaven global background** - SFW keyword-pool caching (~10
   candidates), deterministic daily rotation with shuffle, desktop-oriented
   display, reduced-data hard-off, staleness-triggered queued refresh,
   fallback, and attribution
 
-- [ ] 16. **Game-detail dynamic themes** - server-side dominant-color
+- [ ] 17. **Game-detail dynamic themes** - server-side dominant-color
   derivation during RAWG enrichment stored in the replaceable snapshot,
   applied read-only to detail pages with contrast overlays, accessibility
   safeguards, and deterministic fallback
 
-- [ ] 17. **Settings and manual export** - sessions, the visual/accessibility
+- [ ] 18. **Settings and manual export** - sessions, the visual/accessibility
   preference area introduced by 14, Wallhaven controls, manual provider
   refresh/retry controls including the global compatibility sweep, queue
   progress, wishlist-import diagnostics, and personal-data-only JSON export
 
-- [ ] 18. **Deployment and CI readiness** - Vercel/Supabase environment
+- [ ] 19. **Deployment and CI readiness** - Vercel/Supabase environment
   review, Vercel Cron daily price-refresh at 06:00 UTC-6 with `CRON_SECRET`,
   queue overlap protection, production build,
   smoke test, one reproducible Verify command, and automatic checks when

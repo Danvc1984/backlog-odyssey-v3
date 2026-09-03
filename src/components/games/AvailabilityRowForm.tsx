@@ -61,7 +61,7 @@ export function AvailabilityRowForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-3 p-4">
+    <form onSubmit={handleSubmit} className="grid gap-4 p-4">
       <div className="grid gap-2">
         <Label htmlFor={`availability-source-${availabilityId}`}>Source</Label>
         <Select

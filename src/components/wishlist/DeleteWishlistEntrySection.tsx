@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
 import { deleteWishlistEntry } from "@/actions/wishlist";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,16 +14,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { EditWishlistDialog } from "./EditWishlistDialog";
-import { AcquireWishlistDialog } from "./AcquireWishlistDialog";
+import { SectionCard } from "@/components/ui/detail-card";
 
-interface WishlistEntryActionsProps {
-  entry: { id: string; name: string; type: string; baseGameId: string | null; interest: number | null; gameExperience: string | null };
-  baseGames: { id: string; name: string }[];
-  showDelete?: boolean;
-}
-
-export function WishlistEntryActions({ entry, baseGames, showDelete = true }: WishlistEntryActionsProps) {
+export function DeleteWishlistEntrySection({
+  entryId,
+  entryName,
+}: {
+  entryId: string;
+  entryName: string;
+}) {
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -33,22 +31,24 @@ export function WishlistEntryActions({ entry, baseGames, showDelete = true }: Wi
   const remove = async () => {
     setDeleting(true);
     setError(null);
-    const result = await deleteWishlistEntry({ id: entry.id });
+    const result = await deleteWishlistEntry({ id: entryId });
     setDeleting(false);
     if (!result.success) {
       setError(result.error ?? "Failed to delete wishlist entry");
       return;
     }
     setConfirmOpen(false);
-    toast.success(`Removed "${entry.name}" from wishlist`);
-    router.refresh();
+    toast.success(`Removed "${entryName}" from wishlist`);
+    router.push("/wishlist");
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <AcquireWishlistDialog entry={entry} />
-      <EditWishlistDialog entry={entry} baseGames={baseGames} />
-      {showDelete && (
+    <SectionCard
+      eyebrow="Danger zone"
+      title="Remove from wishlist"
+      description="Permanently remove this entry and its locally stored wishlist data."
+      tone="danger"
+      aside={
         <Dialog
           open={confirmOpen}
           onOpenChange={(open) => {
@@ -57,15 +57,15 @@ export function WishlistEntryActions({ entry, baseGames, showDelete = true }: Wi
           }}
         >
           <DialogTrigger asChild>
-            <Button type="button" variant="ghost" size="icon-sm" disabled={deleting} aria-label={`Delete ${entry.name}`}>
-              <Trash2 />
+            <Button type="button" variant="destructive" size="sm" disabled={deleting}>
+              Remove entry
             </Button>
           </DialogTrigger>
           <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Delete wishlist entry?</DialogTitle>
+              <DialogTitle>Remove wishlist entry?</DialogTitle>
               <DialogDescription>
-                This will permanently remove &quot;{entry.name}&quot; from your wishlist. This action cannot be undone.
+                This will permanently remove &quot;{entryName}&quot; from your wishlist. This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             {error && <p className="text-sm text-destructive">{error}</p>}
@@ -74,12 +74,16 @@ export function WishlistEntryActions({ entry, baseGames, showDelete = true }: Wi
                 Cancel
               </Button>
               <Button type="button" variant="destructive" onClick={() => void remove()} disabled={deleting}>
-                {deleting ? "Deleting..." : "Delete wishlist entry"}
+                {deleting ? "Removing..." : "Remove entry"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      )}
-    </div>
+      }
+    >
+      <p className="text-sm text-muted-foreground">
+        This only affects the wishlist entry. Your catalog games and provider records stay unchanged.
+      </p>
+    </SectionCard>
   );
 }

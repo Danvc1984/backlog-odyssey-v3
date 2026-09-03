@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { RefreshCw } from "lucide-react";
 import type { RecommendationRole } from "@/generated/prisma/client";
 import { rotateRecommendationRole } from "@/actions/recommendations";
 import {
@@ -21,6 +20,8 @@ interface ShowAnotherButtonProps {
   positive: unknown;
   negative: unknown;
   caveats: unknown;
+  imageUrl?: string | null;
+  size?: "large" | "compact";
 }
 
 interface CardSlot {
@@ -43,6 +44,8 @@ export function ShowAnotherButton({
   positive,
   negative,
   caveats,
+  imageUrl,
+  size = "large",
 }: ShowAnotherButtonProps) {
   const [pending, setPending] = useState(false);
   const [exhausted, setExhausted] = useState(false);
@@ -76,28 +79,19 @@ export function ShowAnotherButton({
   };
 
   return (
-    <div className="flex flex-col gap-2">
-      <RecommendationItemCard
-        target={slot.target}
-        name={slot.name}
-        rank={rank}
-        score={slot.score}
-        positive={slot.positive}
-        negative={slot.negative}
-        caveats={slot.caveats}
-        runId={runId}
-      />
-      {!exhausted && (
-        <button
-          type="button"
-          onClick={() => void rotate()}
-          disabled={pending}
-          className="inline-flex items-center gap-1 self-end rounded-md border border-border px-2 py-1 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
-        >
-          <RefreshCw aria-hidden className={pending ? "animate-spin" : ""} />
-          {pending ? "Rotating..." : "Show another"}
-        </button>
-      )}
-    </div>
+    <RecommendationItemCard
+      target={slot.target}
+      name={slot.name}
+      rank={rank}
+      score={slot.score}
+      positive={slot.positive}
+      negative={slot.negative}
+      caveats={slot.caveats}
+      runId={runId}
+      role={role}
+      imageUrl={imageUrl}
+      size={size}
+      rotate={{ pending, exhausted, onRotate: () => void rotate() }}
+    />
   );
 }

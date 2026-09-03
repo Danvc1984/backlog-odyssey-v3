@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { useVisualPreferences } from "@/components/preferences/VisualPreferencesProvider";
 import type { DataSetting, MotionSetting } from "@/lib/visual-preferences";
 import { cn } from "@/lib/utils";
+import { SectionCard } from "@/components/ui/detail-card";
 
 interface Option<T extends string> {
   value: T;
@@ -119,13 +120,13 @@ export function AppearanceSection() {
   const dataValue: DataSetting = hasHydrated ? data : "system";
 
   return (
-    <section className="mt-6 rounded-lg border border-border p-4">
-      <div className="border-b border-border pb-3">
-        <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Appearance
-        </h2>
-      </div>
-      <div className="mt-4 grid gap-4">
+    <SectionCard
+      eyebrow="Interface"
+      title="Appearance"
+      id="appearance-heading"
+      description="Choose how the app looks and how much motion or imagery it uses."
+    >
+      <div className="grid gap-4">
         <SettingRow
           title="Theme"
           description="Match the operating system or pin a specific mode."
@@ -148,6 +149,6 @@ export function AppearanceSection() {
           }
         />
       </div>
-    </section>
+    </SectionCard>
   );
 }

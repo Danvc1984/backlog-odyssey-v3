@@ -54,21 +54,22 @@ The exact checked state is owned by blueprint/build-plan.md.
 12. **[x] 14d: Wishlist surfaces** - Shared system plus approved focus/list,
     signal grid, and entry-card offer, identity, staleness, target, and
     interest composition.
-13. **[ ] 14e: Library and Wishlist header action rework** - Homogenized header
+13. **[x] 14e: Library and Wishlist header action rework** - Homogenized header
     actions, operation statuses, follow-up sections, and ProtonDB compatibility
     tags on game cards in both views.
-14. **[ ] 14f: Detail, collection, and supporting routes** - Shared treatment
-    for Today, Game Detail, Wishlist Detail, Collections, Settings, dialogs,
-    forms, safe image overlays, and deterministic fallbacks.
-15. **[ ] 14g: Acceptance and accessibility** - Cross-app states, mobile,
+14. **[ ] 14f: Acceptance and accessibility** - Cross-app states, mobile,
     keyboard, focus, contrast, reduced motion/data, and final visual review.
-16. **[ ] 15: Wallhaven background** - Optional cached SFW pool, daily
+15. **[x] 15: Detail, collection, and supporting route composition** - Shared
+    treatment for Today (re-passed to match the Library/Wishlist visual
+    state), Game Detail, Wishlist Detail, Collections, Settings, dialogs,
+    forms, safe image overlays, and deterministic fallbacks.
+16. **[ ] 16: Wallhaven background** - Optional cached SFW pool, daily
     deterministic rotation, shuffle, attribution, fallback, reduced-data off.
-17. **[ ] 16: Per-game themes** - Server-derived RAWG palette data, read-only
+17. **[ ] 17: Per-game themes** - Server-derived RAWG palette data, read-only
     game-detail use, contrast safeguards, deterministic fallback.
-18. **[ ] 17: Settings and export** - Sessions, provider/queue controls,
+18. **[ ] 18: Settings and export** - Sessions, provider/queue controls,
     diagnostics, Wallhaven, visual preferences, and manual JSON export.
-19. **[ ] 18: Deployment and CI readiness** - Vercel/Supabase, Cron, smoke
+19. **[ ] 19: Deployment and CI readiness** - Vercel/Supabase, Cron, smoke
     tests, Verify command, and automatic checks.
 
 ## Data model and ownership
@@ -81,7 +82,7 @@ boundaries.
 - User, Account, and Session provide one-user Google authentication.
 - AppSettings holds fixed environment context and later app controls. Feature 14
   visual preferences use a non-migrating mechanism; provider/export controls
-  remain Feature 17.
+  remain Feature 18.
 - SteamConnection, SyncRun, EnrichmentJob, PriceRefresh, and sweep/run records
   persist status, retry timing, counts, and safe diagnostics.
 - SteamRecentActivityCache holds a 24-hour narrow activity result. It may show
@@ -121,7 +122,7 @@ boundaries.
   state, and presets are recommendation-owned. Reset removes these only,
   preserving catalog and provider data.
 - PersonalTag, GameTag, Collection, and CollectionMembership organize games.
-  WallpaperState, introduced in Feature 15, stores URLs and selection only,
+  WallpaperState, introduced in Feature 16, stores URLs and selection only,
   never image binaries.
 
 ## Product rules
@@ -152,7 +153,7 @@ boundaries.
   evidence. A single 180-day freshness rule keeps stale values visible and
   warns recommendations instead of excluding a game.
 - A global compatibility sweep is already available from Settings as part of the
-  shipped catalog and wishlist flows; Feature 17 may expand or relabel those
+  shipped catalog and wishlist flows; Feature 18 may expand or relabel those
   controls. Scheduled rescheduling waits for deployment.
 - Play Next considers non-hidden, non-main base games that are not started or
   replay-flagged played/abandoned games. In-progress titles belong to Today;
@@ -218,7 +219,7 @@ freshness, and operations are supporting sections.
 - /wishlist/[id] - metadata, identity/provenance, offers, target, notes,
   interest, acquire/edit/delete, compatibility, and fill-only enrichment.
 - /collections and /collections/[id] - collections and existing forms/dialogs,
-  restyled in Feature 14f.
+  restyled in Feature 15.
 - /settings - sessions, recommendation profile/reset, provider and queue
   controls, wishlist diagnostics, visual preferences, Wallhaven, and export.
 
@@ -230,7 +231,7 @@ freshness, and operations are supporting sections.
   pnpm typecheck, and pnpm test.
 - Provider keys stay server-side. Production validates environment, database
   migration, queue/scheduler behavior, and smoke tests.
-- Feature 18 configures Vercel Cron and CRON_SECRET to enqueue daily price
+- Feature 19 configures Vercel Cron and CRON_SECRET to enqueue daily price
   refresh at 06:00 UTC-6. Claims must be atomic, calls idempotent, and retry
   history visible.
 - Feature 14 acceptance covers primary routes on desktop/mobile and dark/light/
@@ -239,15 +240,18 @@ freshness, and operations are supporting sections.
 
 ## Open questions and plan gaps
 
-- Wallhaven rate limits and keyword defaults validate in Feature 15; exact
-  Vercel/Supabase scheduler configuration validates in Feature 18.
+- Wallhaven rate limits and keyword defaults validate in Feature 16; exact
+  Vercel/Supabase scheduler configuration validates in Feature 19.
 
 ## Next workflow action
 
-The next unchecked item is **Feature 14e: Library and Wishlist header action
-rework**. Run `$feature 14e` to produce its reviewed implementation spec. If
-the UI direction needs another review, `$prototype` remains available for
-throwaway HTML/CSS mockups before implementation.
+The next unchecked item is **Feature 15: Detail, collection, and supporting
+route composition**, which re-passes Today to match the Library/Wishlist visual
+state and applies the shared system to Game Detail, Wishlist Detail,
+Collections, Settings, and their dialogs/forms. Run `$feature 15` to produce
+its reviewed implementation spec. If the UI direction needs another review,
+`$prototype` remains available for throwaway HTML/CSS mockups before
+implementation.
 
 This overview is generated from the two plans and does not authorize code
 changes.

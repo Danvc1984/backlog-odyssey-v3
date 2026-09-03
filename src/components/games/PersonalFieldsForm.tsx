@@ -101,7 +101,7 @@ export function PersonalFieldsForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4">
+    <form onSubmit={handleSubmit} className="grid gap-5">
       <div className="grid gap-2">
         <Label htmlFor="priority">Priority</Label>
         <p className="text-xs text-muted-foreground">{PERSONAL_FIELD_HELP.priority}</p>

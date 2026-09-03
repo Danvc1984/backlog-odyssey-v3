@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AddWishlistDialog } from "@/components/wishlist/AddWishlistDialog";
 import { CreateDlcDialog } from "./CreateDlcDialog";
+import { SectionCard, StatusPill } from "@/components/ui/detail-card";
 
 interface DlcItem {
   id: string;
@@ -29,20 +30,20 @@ export function DlcSection({
   const hasDlcs = dlcs.length > 0 || wishlistDlcs.length > 0;
 
   return (
-    <section>
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          DLC
-        </h2>
-        <div className="flex flex-wrap justify-end gap-2">
-          <CreateDlcDialog baseGameId={baseGameId} />
-          <AddWishlistDialog
-            baseGames={baseGames}
-            initialType="DLC"
-            initialBaseGameId={baseGameId}
-            triggerLabel="Add wishlist DLC"
-          />
-        </div>
+    <SectionCard
+      eyebrow="Related content"
+      title="DLC & expansions"
+      description="Attached catalog content stays close to its base game."
+      status={<StatusPill>{dlcs.length + wishlistDlcs.length} linked</StatusPill>}
+    >
+      <div className="mb-4 flex flex-wrap justify-end gap-2">
+        <CreateDlcDialog baseGameId={baseGameId} />
+        <AddWishlistDialog
+          baseGames={baseGames}
+          initialType="DLC"
+          initialBaseGameId={baseGameId}
+          triggerLabel="Add wishlist DLC"
+        />
       </div>
       {!hasDlcs ? (
         <p className="text-sm text-muted-foreground">
@@ -84,6 +85,6 @@ export function DlcSection({
           </Link>
         </p>
       )}
-    </section>
+    </SectionCard>
   );
 }

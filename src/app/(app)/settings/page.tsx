@@ -56,15 +56,18 @@ export default async function SettingsPage() {
   ]);
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Settings</h1>
-      <section className="mt-6">
-        <SteamConnectionCard
-          connected={Boolean(steamConnection)}
-          steamId64={steamConnection?.steamId64 ?? null}
-        />
-      </section>
-
+    <div className="space-y-6">
+      <div>
+        <p className="technical-label text-muted-foreground">Platform settings</p>
+        <h1 className="mt-2">Settings</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+          Control account connections, visual preferences, provider maintenance, and recommendation behavior.
+        </p>
+      </div>
+      <SteamConnectionCard
+        connected={Boolean(steamConnection)}
+        steamId64={steamConnection?.steamId64 ?? null}
+      />
       <AppearanceSection />
 
       <CompatibilitySweepPanel

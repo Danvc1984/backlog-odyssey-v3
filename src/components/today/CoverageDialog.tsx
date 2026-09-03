@@ -11,6 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import type { CoverageTitle } from "@/lib/today-data-health";
+import { StatusPill } from "@/components/ui/detail-card";
 
 interface CoverageDialogProps {
   label: string;
@@ -28,9 +29,12 @@ export function CoverageDialog({ label, basis, titles }: CoverageDialogProps) {
         <button
           type="button"
           disabled={titles.length === 0}
-          className="rounded-md border border-border px-3 py-2 text-left text-sm hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex w-full items-center justify-between gap-3 rounded-md border border-border bg-muted/20 px-3 py-2 text-left text-sm hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <span className="font-medium">{titles.length}</span>{" "}{label}
+          <span className="font-medium">{label}</span>
+          <StatusPill tone={titles.length === 0 ? "ok" : "warning"}>
+            {titles.length === 0 ? "ready" : `review · ${titles.length}`}
+          </StatusPill>
         </button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">

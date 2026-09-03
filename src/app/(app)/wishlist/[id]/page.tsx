@@ -14,9 +14,11 @@ import { buildEntryOfferView } from "@/lib/offer-selection";
 import { getWishlistCompatibilityEligibility } from "@/lib/wishlist-compatibility";
 import { parseAntiCheatEvidence } from "@/lib/compat-evidence";
 import { parseProtonDbSummary } from "@/lib/protondb-api";
-import { GAME_EXPERIENCE_LABELS } from "@/lib/personal-field-help";
 import { RecommendationRoleLabel } from "@/components/recommendations/RecommendationRoleLabel";
 import { CalibrationNote } from "@/components/recommendations/CalibrationNote";
+import { SectionCard, StatusPill } from "@/components/ui/detail-card";
+import { WishlistDetailHero } from "@/components/wishlist/WishlistDetailHero";
+import { DeleteWishlistEntrySection } from "@/components/wishlist/DeleteWishlistEntrySection";
 
 export default async function WishlistDetailPage({
   params,
@@ -30,6 +32,7 @@ export default async function WishlistDetailPage({
       select: {
         id: true,
         name: true,
+        createdAt: true,
         type: true,
         baseGameId: true,
         interest: true,
@@ -100,10 +103,16 @@ export default async function WishlistDetailPage({
   const ownSnapshot = entry.metadataSnapshot;
   const inheritedSnapshot = entry.baseGame?.metadataSnapshots[0] ?? null;
   const ownMetadata = parseRawgMetadataPayload(ownSnapshot?.payload);
-  const inheritedMetadata = parseRawgMetadataPayload(inheritedSnapshot?.payload);
+  const inheritedMetadata = parseRawgMetadataPayload(
+    inheritedSnapshot?.payload,
+  );
   const metadata = ownMetadata ?? inheritedMetadata;
   const resolvedSnapshot = ownMetadata ? ownSnapshot : inheritedSnapshot;
-  const offerView = buildEntryOfferView(entry.offers, entry.targetPriceMxn, new Date());
+  const offerView = buildEntryOfferView(
+    entry.offers,
+    entry.targetPriceMxn,
+    new Date(),
+  );
   const steamStoreIsSelected = offerView.selected?.shop === "Steam Store";
   const alternatives = steamStoreIsSelected
     ? offerView.alternatives
@@ -132,115 +141,30 @@ export default async function WishlistDetailPage({
 
   return (
     <div className="space-y-6">
-      <Link
-        href="/wishlist"
-        className="text-sm text-muted-foreground hover:text-foreground"
-      >
-        &larr; Back to wishlist
-      </Link>
+      <p className="technical-label text-muted-foreground">
+        <Link
+          href="/wishlist"
+          className="hover:text-foreground hover:underline"
+        >
+          Wishlist
+        </Link>
+        <span aria-hidden="true"> / </span>
+        <span>{entry.name}</span>
+      </p>
 
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            {entry.type === "DLC" ? "DLC" : "Base game"}
-          </p>
-          <h1 className="mt-1 text-2xl font-semibold">{entry.name}</h1>
-          {entry.baseGame && (
-            <p className="mt-2 text-sm text-muted-foreground">
-              DLC for{" "}
-              <Link
-                href={`/games/${entry.baseGame.id}`}
-                className="text-primary hover:underline"
-              >
-                {entry.baseGame.name}
-              </Link>
-            </p>
-          )}
-        </div>
-        <div className="grid justify-items-end gap-2">
-          <span className="shrink-0 text-sm" aria-label={`${entry.interest ?? 0} of 5 stars`}>
-            {entry.interest
-              ? `${"★".repeat(entry.interest)}${"☆".repeat(5 - entry.interest)}`
-              : "No rating"}
-          </span>
-          <CalibrationNote interest={entry.interest} dismissalCount={buyDismissalCount} />
-          <WishlistEntryActions
-            entry={{
-              id: entry.id,
-              name: entry.name,
-              type: entry.type,
-              baseGameId: entry.baseGameId,
-              interest: entry.interest,
-              gameExperience: entry.gameExperience,
-            }}
-            baseGames={baseGames}
-          />
-        </div>
-      </div>
-
-      {entry.gameExperience && (
-        <p className="text-sm text-muted-foreground">
-          Game experience: {GAME_EXPERIENCE_LABELS[entry.gameExperience as keyof typeof GAME_EXPERIENCE_LABELS] ?? entry.gameExperience}
-        </p>
-      )}
-
-      <WishlistIdentity
-        entryId={entry.id}
-        entryName={entry.name}
-        steamAppId={entry.steamAppId}
-        provenance={entry.steamAppIdProvenance}
-        snapshot={
-          entry.metadataSnapshot
-            ? {
-                payload: entry.metadataSnapshot.payload,
-                fetchedAt: entry.metadataSnapshot.fetchedAt,
-              }
-            : null
-        }
-      />
-
-      <section
-        id="offers"
-        tabIndex={-1}
-        className="scroll-mt-6 space-y-3 rounded-lg outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
-      >
-        <WishlistOfferSection
-          offerView={offerView}
-          hasConfirmedIdentity={entry.steamAppId !== null}
-        />
-        <WishlistOfferAlternatives alternatives={alternatives} />
-      </section>
-
-      {buyItem && buyItem.wishlistEntryId === entry.id && (
-        <div>
-          <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Buy recommendation
-          </h2>
-          <RecommendationRoleLabel role={buyItem.role} kind="BUY" />
-          <RecommendationItemCard
-            target={{ kind: "BUY", wishlistEntryId: entry.id }}
-            runId={latestBuyRun?.id}
-            name={entry.name}
-            rank={buyItem.rank}
-            score={buyItem.score}
-            positive={buyItem.positive}
-            negative={buyItem.negative}
-            caveats={buyItem.caveats}
-          />
-        </div>
-      )}
-
-      <WishlistCompatibilityBlock
-        wishlistEntryId={entry.id}
-        eligibility={eligibility}
-        protonDb={protonDb ? { tier: protonDb.tier } : null}
-        antiCheat={antiCheat}
-        environments={entry.envCompat.map((row) => ({
-          environment: row.environment,
-          status: row.status,
-          source: row.source,
-        }))}
-        latestSnapshotAt={latestCompatAt}
+      <WishlistDetailHero
+        id={entry.id}
+        name={entry.name}
+        type={entry.type}
+        imageUrl={metadata?.backgroundImageUrls[0] ?? null}
+        interest={entry.interest}
+        gameExperience={entry.gameExperience}
+        addedAt={entry.createdAt.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })}
+        baseGame={entry.baseGame}
       />
 
       {metadata ? (
@@ -258,7 +182,8 @@ export default async function WishlistDetailPage({
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">
-          RAWG metadata is not available yet. Use Edit to search and choose a match.
+          RAWG metadata is not available yet. Use Edit to search and choose a
+          match.
         </p>
       )}
 
@@ -266,7 +191,117 @@ export default async function WishlistDetailPage({
         <WishlistRawgFillButton wishlistEntryId={entry.id} />
       )}
 
-      {entry.notes && <p className="text-sm text-muted-foreground">{entry.notes}</p>}
+      <SectionCard
+        eyebrow="Current offers"
+        title="Offers"
+        id="offers"
+        description="Prices are shown only when the store identity is confirmed."
+        status={
+          <StatusPill>
+            {entry.steamAppId ? "Identity confirmed" : "Unavailable"}
+          </StatusPill>
+        }
+        className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
+      >
+        {entry.steamAppId ? (
+          <div className="space-y-3">
+            <WishlistOfferSection offerView={offerView} hasConfirmedIdentity />
+            <WishlistOfferAlternatives alternatives={alternatives} />
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Confirm a store identity above to see current offers.
+          </p>
+        )}
+      </SectionCard>
+
+      {buyItem && buyItem.wishlistEntryId === entry.id && (
+        <SectionCard
+          eyebrow="Recommendation"
+          title="Buy recommendation"
+          description="The current recommendation for this wishlist entry."
+          status={<StatusPill tone="opportunity">Best opportunity</StatusPill>}
+          tone="opportunity"
+        >
+          <RecommendationRoleLabel role={buyItem.role} kind="BUY" />
+          <RecommendationItemCard
+            target={{ kind: "BUY", wishlistEntryId: entry.id }}
+            runId={latestBuyRun?.id}
+            name={entry.name}
+            rank={buyItem.rank}
+            score={buyItem.score}
+            positive={buyItem.positive}
+            negative={buyItem.negative}
+            caveats={buyItem.caveats}
+            imageUrl={metadata?.backgroundImageUrls[0] ?? null}
+          />
+        </SectionCard>
+      )}
+
+      <WishlistCompatibilityBlock
+        wishlistEntryId={entry.id}
+        eligibility={eligibility}
+        protonDb={protonDb ? { tier: protonDb.tier } : null}
+        antiCheat={antiCheat}
+        environments={entry.envCompat.map((row) => ({
+          environment: row.environment,
+          status: row.status,
+          source: row.source,
+        }))}
+        latestSnapshotAt={latestCompatAt}
+      />
+
+      <SectionCard
+        eyebrow="Wishlist entry"
+        title="Identity and actions"
+        description="Store identity and wishlist choices stay explicit."
+        status={
+          <StatusPill>
+            {entry.steamAppId ? "Confirmed" : "Needs identity"}
+          </StatusPill>
+        }
+      >
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <WishlistIdentity
+            entryId={entry.id}
+            entryName={entry.name}
+            steamAppId={entry.steamAppId}
+            provenance={entry.steamAppIdProvenance}
+            snapshot={
+              entry.metadataSnapshot
+                ? {
+                    payload: entry.metadataSnapshot.payload,
+                    fetchedAt: entry.metadataSnapshot.fetchedAt,
+                  }
+                : null
+            }
+          />
+          <div className="grid justify-items-end gap-2">
+            <CalibrationNote
+              interest={entry.interest}
+              dismissalCount={buyDismissalCount}
+            />
+            <WishlistEntryActions
+              entry={{
+                id: entry.id,
+                name: entry.name,
+                type: entry.type,
+                baseGameId: entry.baseGameId,
+                interest: entry.interest,
+                gameExperience: entry.gameExperience,
+              }}
+              baseGames={baseGames}
+              showDelete={false}
+            />
+          </div>
+        </div>
+      </SectionCard>
+
+      {entry.notes && (
+        <p className="text-sm text-muted-foreground">{entry.notes}</p>
+      )}
+
+      <DeleteWishlistEntrySection entryId={entry.id} entryName={entry.name} />
     </div>
   );
 }

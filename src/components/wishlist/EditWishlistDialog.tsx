@@ -113,7 +113,7 @@ export function EditWishlistDialog({ entry, baseGames }: EditWishlistDialogProps
           <DialogTitle>Edit wishlist entry</DialogTitle>
           <DialogDescription>Update local wishlist details.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="grid gap-4">
+        <form onSubmit={handleSubmit} className="grid gap-5">
           <div className="grid gap-2">
             <Label htmlFor={`edit-wishlist-name-${entry.id}`}>
               {entry.type === "BASE_GAME" ? "Name and RAWG match" : "Name"}

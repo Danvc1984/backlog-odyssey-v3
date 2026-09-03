@@ -1,9 +1,7 @@
-# Feature: (none in progress)
+# Feature: Detail, collection, and supporting route composition
 
-**Status:** stub
-
-Run `/feature` to spec a planned feature, `/fix` for an ad-hoc bug or change,
-or `/rollback` to reverse a completed feature.
+**From build-plan:** feature 15
+**Status:** in progress
 
 ## Goal
 
@@ -260,12 +258,3 @@ Vitest gate is on; the logic-bearing pieces ship tests:
   `TodaySummary`, `RecentSteamActivity`, `CoverageDialog`, `TodayOperations`,
   role-based Play Next and Buy) and the 12c-f tune/run components; the re-pass
   restyles and regroups them under the shared card language. It does not
-  rebuild recommendation, offer, or activity logic.
-- Artwork keeps readable overlays per the overview's artwork rule; field-level
-  data on top of art must stay legible in dark and light.
-- Preserve the current empty/loading/error/stale/operation states on every
-  surface; restyle only.
-- Do not move or reorder server actions, add queries, add providers, or touch
-  privacy/read-only evidence blocks. Game Detail's hero actions anchor to
-  existing sections; they never mutate state directly.
-- Respect the writing standard: no em dashes in code, comments, or docs.

@@ -17,13 +17,17 @@ function Chip({ label, className, sourceNames }: { label: string; className: str
   );
 }
 
-export function factorChip(factor: ExplanationFactor): React.ReactNode {
+export function factorChip(
+  factor: ExplanationFactor,
+  options: { showPoints?: boolean } = {},
+): React.ReactNode {
+  const { showPoints = true } = options;
   const className =
     factor.points >= 0
       ? POSITIVE_CLASS
       : NEGATIVE_CLASS;
   const points =
-    factor.points !== 0 ? ` ${factor.points > 0 ? "+" : ""}${factor.points}` : "";
+    showPoints && factor.points !== 0 ? ` ${factor.points > 0 ? "+" : ""}${factor.points}` : "";
   return <Chip key={`${factor.factor}-${factor.label}`} label={`${factor.label}${points}`} className={className} sourceNames={factor.sourceNames} />;
 }
 

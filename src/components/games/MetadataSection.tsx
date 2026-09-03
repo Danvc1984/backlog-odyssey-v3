@@ -1,11 +1,15 @@
 import type { RawgMetadataPayload } from "@/lib/rawg-types";
+import { SectionCard, StatusPill } from "@/components/ui/detail-card";
+import { ExternalLink } from "lucide-react";
 
 function externalUrl(value: string | null): string | null {
   if (!value) return null;
 
   try {
     const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : null;
+    return url.protocol === "http:" || url.protocol === "https:"
+      ? url.toString()
+      : null;
   } catch {
     return null;
   }
@@ -55,30 +59,22 @@ export function MetadataSection({
   const website = externalUrl(payload?.website ?? null);
 
   return (
-    <section aria-labelledby="rawg-metadata-heading" className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2
-          id="rawg-metadata-heading"
-          className="text-sm font-medium uppercase tracking-wider text-muted-foreground"
-        >
-          RAWG metadata
-        </h2>
-        <span className="rounded-md border border-border px-2 py-0.5 text-xs font-medium">
-          Provider data
-        </span>
-      </div>
-
+    <SectionCard
+      eyebrow="Metadata"
+      title="Game details"
+      id="rawg-metadata-heading"
+    >
       {!payload ? (
         <div className="rounded-lg border border-dashed border-border p-4">
-          <p className="text-sm font-medium">No RAWG metadata yet.</p>
+          <p className="text-sm font-medium">No metadata yet.</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Metadata will appear here after this game is matched with RAWG.
+            Metadata will appear here after this game is matched.
           </p>
         </div>
       ) : (
         <div className="space-y-5 rounded-lg border border-border p-4">
           {payload.description && (
-            <p className="max-w-3xl whitespace-pre-line text-sm leading-6 text-muted-foreground">
+            <p className="whitespace-pre-line text-sm leading-6 text-muted-foreground">
               {payload.description}
             </p>
           )}
@@ -87,56 +83,76 @@ export function MetadataSection({
             <Field label="Released" value={payload.releaseDate} />
             <Field
               label="Rating"
-              value={payload.rating === null ? null : `${payload.rating.toFixed(1)} / 5`}
+              value={
+                payload.rating === null
+                  ? null
+                  : `${payload.rating.toFixed(1)} / 5`
+              }
             />
             <Field
               label="Metacritic"
-              value={payload.metacriticScore === null ? null : `${payload.metacriticScore} / 100`}
+              value={
+                payload.metacriticScore === null
+                  ? null
+                  : `${payload.metacriticScore} / 100`
+              }
             />
             <Field
               label="Playtime"
-              value={payload.playtimeHours === null ? null : `${payload.playtimeHours} hours`}
+              value={
+                payload.playtimeHours === null
+                  ? null
+                  : `${payload.playtimeHours} hours`
+              }
             />
             <Field label="ESRB" value={payload.esrbRating?.name ?? null} />
             <Values label="Genres" values={payload.genres} />
-            <Values label="Tags" values={payload.tags} />
-            <Values label="Series" values={(payload.seriesGames ?? []).map((game) => game.name)} />
+            <Values
+              label="Alternative names"
+              values={payload.alternativeNames}
+            />
             <Values label="Developers" values={payload.developers} />
             <Values label="Publishers" values={payload.publishers} />
-            <Values label="Alternative names" values={payload.alternativeNames} />
+            <Values label="Tags" values={payload.tags} />
+            <Values
+              label="Series"
+              values={(payload.seriesGames ?? []).map((game) => game.name)}
+            />
           </dl>
-
-          {website && (
-            <a
-              href={website}
-              target="_blank"
-              rel="noreferrer"
-              className="text-sm text-primary underline-offset-4 hover:underline"
-            >
-              Visit official website
-            </a>
-          )}
-
-          <div className="border-t border-border pt-3 text-xs text-muted-foreground">
-            <p>
-              Data provided by RAWG
-              {fetchedAt ? `, fetched ${fetchedAt.toLocaleDateString("en-US")}` : ""}.
-            </p>
-            {source ? (
+          <div className="flex flex-col gap-3 border-t border-border pt-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+            {website && (
               <a
-                href={source}
+                href={website}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-1 inline-block underline-offset-4 hover:underline"
+                className="text-sm text-primary underline-offset-4 hover:underline sm:shrink-0"
               >
-                View source on RAWG
+                Visit official website
               </a>
-            ) : (
-              <p className="mt-1">RAWG source link unavailable.</p>
             )}
+
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 sm:justify-end">
+              <span>
+                Last updated{fetchedAt ? ` ${fetchedAt.toLocaleDateString("en-US")}` : ""}.
+              </span>
+              {source ? (
+                <a
+                  href={source}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline-offset-4 hover:underline"
+                >
+                  <span className="inline-flex items-center gap-1">
+                    RAWG <ExternalLink aria-hidden="true" className="size-3" />
+                  </span>
+                </a>
+              ) : (
+                <span>Source link unavailable.</span>
+              )}
+            </div>
           </div>
         </div>
       )}
-    </section>
+    </SectionCard>
   );
 }

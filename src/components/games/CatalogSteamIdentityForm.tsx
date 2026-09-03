@@ -28,14 +28,14 @@ export function CatalogSteamIdentityForm({ gameId, gameName }: { gameId: string;
   };
 
   return (
-    <div className="space-y-2 rounded-lg border border-border p-3">
+    <div className="space-y-3 rounded-lg border border-border p-3">
       <div>
         <h3 className="text-sm font-medium">Link Steam identity</h3>
         <p className="text-xs text-muted-foreground">
           Add a Steam store URL or bare App ID to enable compatibility evidence.
         </p>
       </div>
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex flex-col gap-3 sm:flex-row">
         <Input
           value={identityInput}
           onChange={(event) => setIdentityInput(event.target.value)}

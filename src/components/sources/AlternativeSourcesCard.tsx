@@ -14,6 +14,7 @@ import {
   resolveSourcePresentation,
 } from "@/lib/sources/known-sources";
 import { Button } from "@/components/ui/button";
+import { SectionCard } from "@/components/ui/detail-card";
 import { Input } from "@/components/ui/input";
 import { SourceIcon } from "@/components/sources/SourceIcon";
 import {
@@ -134,24 +135,13 @@ export function AlternativeSourcesCard({ sources }: AlternativeSourcesCardProps)
   };
 
   return (
-    <section
-      className="mt-6 rounded-lg border border-border p-4"
-      aria-labelledby="alternative-sources-heading"
+    <SectionCard
+      eyebrow="Catalog configuration"
+      title="Alternative sources"
+      id="alternative-sources-heading"
+      description="Reusable stores behind Other platform availability rows. Archived sources keep their references but stop appearing in quick picks."
     >
-      <div className="border-b border-border pb-3">
-        <h2
-          id="alternative-sources-heading"
-          className="text-sm font-medium uppercase tracking-wider text-muted-foreground"
-        >
-          Alternative sources
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Reusable stores behind Other platform availability rows. Archived
-          sources keep their references but stop appearing in quick picks.
-        </p>
-      </div>
-
-      <div className="mt-4 flex flex-wrap items-end gap-2">
+      <div className="flex flex-wrap items-end gap-2">
         <label className="text-xs">
           New source
           <Input
@@ -266,7 +256,7 @@ export function AlternativeSourcesCard({ sources }: AlternativeSourcesCardProps)
         </ul>
       )}
       <Dialog open={removing !== null} onOpenChange={(open) => !open && setRemoving(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Remove alternative source?</DialogTitle>
             <DialogDescription>
@@ -283,6 +273,6 @@ export function AlternativeSourcesCard({ sources }: AlternativeSourcesCardProps)
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </section>
+    </SectionCard>
   );
 }

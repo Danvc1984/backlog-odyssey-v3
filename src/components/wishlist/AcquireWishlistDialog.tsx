@@ -89,7 +89,7 @@ export function AcquireWishlistDialog({
             Remove &quot;{entry.name}&quot; from the wishlist and add it to your catalog.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="grid gap-4">
+        <form onSubmit={handleSubmit} className="grid gap-5">
           <div className="grid gap-2">
             <Label htmlFor={`acquire-source-${entry.id}`}>Source</Label>
             <Select value={source} onValueChange={(value) => setSource(value as AcquisitionSource)}>

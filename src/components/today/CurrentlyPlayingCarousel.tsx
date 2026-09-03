@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Carousel } from "@/components/today/Carousel";
-import { gradientFor } from "@/lib/cover-gradient";
+import { DetailHeroArt } from "@/components/ui/detail-hero-art";
 
 interface CurrentlyPlayingGame {
   id: string;
@@ -18,7 +18,14 @@ function playStateLabel(playState: string): string {
 function GameSlide({ game }: { game: CurrentlyPlayingGame }) {
   const isMainGame = game.libraryEntry?.isMainGame === true;
   return (
-    <article className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradientFor(game.id)} p-6 text-white shadow-card`}>
+    <article className="relative overflow-hidden rounded-2xl bg-card p-6 text-white shadow-card">
+      <DetailHeroArt
+        id={game.id}
+        title={game.name}
+        imageUrl={null}
+        hideLabel
+        className="absolute inset-0 h-full"
+      />
       <div className="absolute inset-0 bg-black/20" aria-hidden="true" />
       <div className="relative min-h-52 max-w-2xl">
         <div className="flex flex-wrap gap-2 text-xs font-medium uppercase tracking-wider">

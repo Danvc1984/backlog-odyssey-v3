@@ -38,7 +38,7 @@ export function GameNameForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-2 sm:max-w-xl">
+    <form onSubmit={handleSubmit} className="grid gap-3 sm:max-w-xl">
       <Label htmlFor="game-name">Game name</Label>
       <div className="flex flex-col gap-2 sm:flex-row">
         <Input

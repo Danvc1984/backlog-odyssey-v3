@@ -11,6 +11,7 @@ import {
   resolveUnresolvedDlcWithNewBase,
 } from "@/actions/unresolved-dlc";
 import { Button } from "@/components/ui/button";
+import { SectionCard, StatusPill } from "@/components/ui/detail-card";
 import {
   Dialog,
   DialogContent,
@@ -139,28 +140,22 @@ export function UnresolvedDlcReviewCard({
   };
 
   return (
-    <section className="mt-6 rounded-lg border border-border p-4" aria-labelledby="unresolved-dlc-heading">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-3">
-        <div>
-          <h2
-            id="unresolved-dlc-heading"
-            className="text-sm font-medium uppercase tracking-wider text-muted-foreground"
-          >
-            Unresolved Steam DLC
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Review DLC whose base game is not in the catalog.
-          </p>
-        </div>
-        <span className="rounded-md bg-muted px-2 py-1 text-xs font-medium">
+    <SectionCard
+      eyebrow="Manual review"
+      title="Unresolved Steam DLC"
+      id="unresolved-dlc-heading"
+      description="Review DLC whose base game is not in the catalog."
+      status={
+        <StatusPill tone={pendingItems.length > 0 ? "warning" : "neutral"}>
           {pendingItems.length} pending
-        </span>
-      </div>
+        </StatusPill>
+      }
+    >
 
       {pendingItems.length === 0 && discardedItems.length === 0 ? (
-        <p className="mt-4 text-sm text-muted-foreground">No unresolved Steam DLC.</p>
+        <p className="text-sm text-muted-foreground">No unresolved Steam DLC.</p>
       ) : (
-        <div className="mt-4 grid gap-4">
+        <div className="grid gap-4">
           {pendingItems.map((item) => (
             <div key={item.id} className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -293,6 +288,6 @@ export function UnresolvedDlcReviewCard({
           )}
         </DialogContent>
       </Dialog>
-    </section>
+    </SectionCard>
   );
 }

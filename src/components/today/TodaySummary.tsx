@@ -36,13 +36,24 @@ export function TodayDataHealth({
   abandoned: number;
 }) {
   return (
-    <section className="rounded-xl border border-border bg-card p-4">
-      <p className="technical-label text-muted-foreground">Data health</p>
-      <div className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
-        <p><span className="font-medium text-foreground">{activeBacklog.playedBefore}</span> of {activeBacklog.total} played through</p>
-        <p><span className="font-medium text-foreground">{activeBacklog.inProgress}</span> in progress</p>
-        <p><span className="font-medium text-foreground">{abandoned}</span> abandoned</p>
+    <div className="grid gap-3 sm:grid-cols-3">
+      <div>
+        <p className="technical-label text-muted-foreground">Backlog progress</p>
+        <p className="mt-2 text-3xl font-bold tracking-tight">
+          {activeBacklog.playedBefore} / {activeBacklog.total}
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">played through</p>
       </div>
-    </section>
+      <div>
+        <p className="technical-label text-muted-foreground">In progress</p>
+        <p className="mt-2 text-3xl font-bold tracking-tight">{activeBacklog.inProgress}</p>
+        <p className="mt-1 text-xs text-muted-foreground">active campaigns</p>
+      </div>
+      <div>
+        <p className="technical-label text-muted-foreground">Abandoned</p>
+        <p className="mt-2 text-3xl font-bold tracking-tight">{abandoned}</p>
+        <p className="mt-1 text-xs text-muted-foreground">set aside</p>
+      </div>
+    </div>
   );
 }

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { refreshGameCompatibility, setCompatOverride } from "@/actions/compatibility";
 import { deriveWindowsFallback, type AntiCheatStatus } from "@/lib/compat-fallback";
 import { Button } from "@/components/ui/button";
+import { SectionCard, StatusPill } from "@/components/ui/detail-card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -160,28 +161,46 @@ export function CompatibilitySection({
   };
 
   return (
-    <section className="space-y-3" aria-label="Compatibility">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Compatibility</h2>
-          {age !== null && (
-            <p className={`mt-1 text-xs ${age > 150 ? "text-amber-300" : "text-muted-foreground"}`}>
-              Updated {age} days ago
-            </p>
+    <SectionCard
+      eyebrow="Playability"
+      title="Compatibility"
+      id="compatibility-heading"
+      description="Bazzite first, Windows fallback when needed."
+      aside={
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span className={age !== null && age > 150 ? "text-warning-text" : undefined}>
+            Evidence updated {age === null ? "never" : `${age} days ago`}
+          </span>
+          {!isRomOnly && hasSteamIdentity && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => void refresh()}
+              disabled={refreshing}
+              aria-label="Refresh compatibility evidence"
+              title="Refresh compatibility evidence"
+            >
+              <RefreshCw aria-hidden className={refreshing ? "animate-spin" : ""} />
+            </Button>
           )}
+        </div>
+      }
+    >
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
+          <ProtonDbTier protonDb={protonDb} />
           {protonDbUrl && (
-            <a className="mt-1 block text-xs text-primary underline-offset-4 hover:underline" href={protonDbUrl} target="_blank" rel="noreferrer">
+            <a className="text-xs text-primary underline-offset-4 hover:underline" href={protonDbUrl} target="_blank" rel="noreferrer">
               View this game on ProtonDB
             </a>
           )}
+          {antiCheat ? (
+            <Badge label={`AWAY: ${antiCheat.status}`} className={AWAY_CLASSES[antiCheat.status]} />
+          ) : (
+            <Badge label="No anti-cheat evidence" className="border-border bg-muted/40 text-muted-foreground" />
+          )}
         </div>
-        {!isRomOnly && hasSteamIdentity && (
-          <Button type="button" variant="outline" size="sm" onClick={() => void refresh()} disabled={refreshing}>
-            <RefreshCw aria-hidden className={refreshing ? "animate-spin" : ""} />
-            {refreshing ? "Refreshing..." : "Refresh"}
-          </Button>
-        )}
-      </div>
 
       {isRomOnly ? (
         <p className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground">
@@ -195,12 +214,10 @@ export function CompatibilitySection({
               <p className="text-xs text-muted-foreground">{override ? "Primary: Bazzite personal override" : "Primary: ProtonDB"}</p>
               {antiCheat ? (
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  <span>Secondary: anti-cheat</span>
-                  <Badge label={`AWAY: ${antiCheat.status}`} className={AWAY_CLASSES[antiCheat.status]} />
                   {antiCheat.anticheats.length > 0 && <span>{antiCheat.anticheats.join(", ")}</span>}
                   {awayUrl && <a className="text-primary underline-offset-4 hover:underline" href={awayUrl} target="_blank" rel="noreferrer">View AWAY game page</a>}
                 </div>
-              ) : <p className="text-xs text-muted-foreground">Secondary: anti-cheat evidence unavailable</p>}
+              ) : null}
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:flex-col sm:items-end">
               <Badge label={STATUS_LABELS[bazziteStatus]} className={STATUS_CLASSES[bazziteStatus]} />
@@ -264,6 +281,7 @@ export function CompatibilitySection({
           </div>
         </div>
       )}
-    </section>
+      </div>
+    </SectionCard>
   );
 }

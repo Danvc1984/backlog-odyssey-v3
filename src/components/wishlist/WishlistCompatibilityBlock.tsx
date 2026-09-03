@@ -4,6 +4,7 @@ import { PROTONDB_APP_URL } from "@/lib/protondb-api";
 import type { AntiCheatEvidence } from "@/lib/compat-evidence";
 import type { WishlistCompatibilityEligibility } from "@/lib/wishlist-compatibility";
 import { WishlistCompatRefreshButton } from "@/components/wishlist/WishlistCompatRefreshButton";
+import { SectionCard } from "@/components/ui/detail-card";
 
 type Status =
   | "READY"
@@ -115,16 +116,17 @@ export function WishlistCompatibilityBlock({
 }: WishlistCompatibilityBlockProps) {
   if (!eligibility.eligible) {
     return (
-      <section>
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Compatibility
-        </h2>
+      <SectionCard
+        eyebrow="Playability"
+        title="Compatibility"
+        description="Compatibility evidence for this wishlist entry."
+      >
         <p className="text-sm text-muted-foreground">
           {eligibility.reason === "DLC"
             ? "Compatibility follows the owned base game."
             : "Compatibility appears once this wish has a confirmed Steam App ID."}
         </p>
-      </section>
+      </SectionCard>
     );
   }
 
@@ -135,20 +137,16 @@ export function WishlistCompatibilityBlock({
   const appId = encodeURIComponent(eligibility.steamAppId);
 
   return (
-    <section>
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Compatibility
-        </h2>
+    <SectionCard
+      eyebrow="Playability"
+      title="Compatibility"
+      description="Compatibility evidence for this wishlist entry."
+      aside={
         <div className="flex items-center gap-1.5">
           {age !== null && (
             <span
               className={`text-xs ${stale ? "text-amber-300" : "text-muted-foreground"}`}
-              title={
-                stale
-                  ? "Older than the 180-day evidence window"
-                  : undefined
-              }
+              title={stale ? "Older than the 180-day evidence window" : undefined}
             >
               Evidence updated {age} {age === 1 ? "day" : "days"} ago
               {stale ? " - older than the 180-day window" : ""}
@@ -156,12 +154,12 @@ export function WishlistCompatibilityBlock({
           )}
           <WishlistCompatRefreshButton wishlistEntryId={wishlistEntryId} />
         </div>
-      </div>
-
+      }
+    >
       {!hasEvidence ? (
         <p className="text-sm text-muted-foreground">Compatibility details not found.</p>
       ) : (
-        <div className="space-y-3 rounded-lg border border-border p-4">
+        <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             {protonDb ? (
               <Badge
@@ -224,6 +222,6 @@ export function WishlistCompatibilityBlock({
           </div>
         </div>
       )}
-    </section>
+    </SectionCard>
   );
 }

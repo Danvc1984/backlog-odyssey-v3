@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { X } from "lucide-react";
 import { startCompatibilitySweep } from "@/actions/compat-batch-enrichment";
 import { Button } from "@/components/ui/button";
+import { SectionCard } from "@/components/ui/detail-card";
 import type { CompatBatchView } from "@/lib/compat-batch-runner";
 import {
   WishlistCompatSweepPanel,
@@ -168,22 +169,13 @@ export function CompatibilitySweepPanel({
   ) ?? [];
 
   return (
-    <section className="mt-6 rounded-lg border border-border p-4" aria-labelledby="compatibility-sweep-heading">
-      <div className="border-b border-border pb-3">
-        <div>
-          <h2
-            id="compatibility-sweep-heading"
-            className="text-sm font-medium uppercase tracking-wider text-muted-foreground"
-          >
-            Enrichment and compatibility
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Enrich RAWG metadata and refresh ProtonDB and AWAY evidence by library domain.
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-4">
+    <SectionCard
+      eyebrow="Provider maintenance"
+      title="Enrichment and compatibility"
+      id="compatibility-sweep-heading"
+      description="Enrich RAWG metadata and refresh ProtonDB and AWAY evidence by library domain."
+    >
+      <div>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h3 className="text-sm font-medium">Catalog games</h3>
@@ -263,6 +255,6 @@ export function CompatibilitySweepPanel({
       </div>
 
       <WishlistCompatSweepPanel initialRun={initialWishlistRun} />
-    </section>
+    </SectionCard>
   );
 }

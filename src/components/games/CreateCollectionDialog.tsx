@@ -69,14 +69,14 @@ export function CreateCollectionDialog() {
           New collection
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>New collection</DialogTitle>
           <DialogDescription>
             Group games together, e.g. &quot;Cozy games&quot; or &quot;Local co-op&quot;.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="grid gap-4">
+        <form onSubmit={handleSubmit} className="grid gap-5">
           <div className="grid gap-2">
             <Label htmlFor="name">Name</Label>
             <Input

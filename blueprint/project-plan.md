@@ -490,8 +490,8 @@ Freshness uses a single **180-day window** across all evidence types. Stale
 evidence keeps its values, shows its age, and produces a visible
 recommendation warning - never a penalty. Refresh triggers are the post-RAWG
 automatic queue and per-game manual refresh. A global compatibility sweep is
-already available from Settings; feature 17 may expand or relabel those
-controls. Scheduled rescheduling waits for deployment (feature 18). Provider
+already available from Settings; feature 18 may expand or relabel those
+controls. Scheduled rescheduling waits for deployment (feature 19). Provider
 endpoint stability (ProtonDB summary endpoint and AWAY dataset shape) validates
 during the feature spec.
 
@@ -752,13 +752,13 @@ These controls use a non-migrating visual-preference mechanism. Reduced motion
 disables carousel auto-advance and nonessential animation. Reduced data uses
 token-only fallbacks instead of remote artwork. These visual preferences are
 part of the feature-14 foundation; sessions, provider controls, queue
-operations, diagnostics, and JSON export remain feature 17.
+operations, diagnostics, and JSON export remain feature 18.
 
 Existing RAWG artwork may appear in cards, carousels, and page moments only
 behind readable contrast overlays. Missing artwork and reduced-data mode use
 the deterministic abstract fallback system. Feature 14 does not derive or
 persist per-game palettes; that server-side enrichment concern remains feature
-16.
+17.
 
 Feature 14 changes presentation and small interaction composition only. It does
 not add providers, migrations, queue work, background work,
@@ -804,11 +804,12 @@ Recent Steam activity, data-health coverage, provider freshness, and background
 operations remain lower-priority supporting sections. All existing empty,
 fresh, stale-on-error, and operation states stay explicit.
 
-### Feature-14 delivery and acceptance
+### Visual delivery order
 
-Feature 14 is intentionally split into 14a through 14g, with each part
-independently reviewable and preserving the relevant existing behavior before
-the next part begins:
+The visual work is delivered in the build-plan order: feature 14 covers the
+first five surfaces (14a through 14e) plus the final cross-app acceptance
+(14f), each part independently reviewable and preserving the relevant existing
+behavior before the next part begins:
 
 - **14a - Theme tokens, modes, preferences, and app shell:** semantic tokens,
   dark/light/system parity, typography, surfaces, cards, responsive navigation,
@@ -825,12 +826,16 @@ the next part begins:
 - **14e - Library and Wishlist header action rework:** homogenized header
   actions, operation statuses, and follow-up sections across both pages, plus
   ProtonDB compatibility tags on game cards in both views.
-- **14f - Detail, collection, and supporting route composition:** shared visual
-  treatment for Today, Game Detail, Wishlist Detail, Collections, Settings,
-  dialogs, and forms, with safe artwork overlays and deterministic fallbacks.
-- **14g - Cross-app states, accessibility, and visual acceptance:** loading,
+- **14f - Cross-app states, accessibility, and visual acceptance:** loading,
   empty, error, stale, operation, keyboard, focus, target, contrast,
   reduced-motion, reduced-data, mobile, and full-route acceptance review.
+
+The remaining surfaces ship as feature 15:
+
+- **15 - Detail, collection, and supporting route composition:** a Today
+  re-pass to match the Library/Wishlist visual state, then game detail,
+  wishlist detail, collections, and settings with their dialogs and forms,
+  safe artwork overlays, and deterministic fallbacks.
 
 The final acceptance pass covers each primary route and its main flows on
 desktop and mobile, in dark, light, and system modes. It includes keyboard

@@ -10,6 +10,7 @@ import { importSteamGames } from "@/actions/steam-import";
 import { syncSteamPlaytime } from "@/actions/steam-sync";
 import { disconnectSteam } from "@/actions/steam";
 import { Import, RefreshCw, Unplug } from "lucide-react";
+import { SectionCard, StatusPill } from "@/components/ui/detail-card";
 
 export function SteamConnectionCard({
   connected,
@@ -86,18 +87,19 @@ export function SteamConnectionCard({
   };
 
   return (
-    <div id="steam-connection-card" className="rounded-lg border border-border p-4">
-      <div className="border-b border-border pb-3">
-        <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Steam connection
-        </h2>
-      </div>
-      <div className="mt-4 flex items-start justify-between gap-3">
+    <SectionCard
+      eyebrow="Account"
+      title="Steam connection"
+      id="steam-connection-card"
+      description={connected
+        ? `Linked to SteamID64 ${steamId64}`
+        : "Link your Steam account to sync owned games and playtime."}
+      status={<StatusPill tone={connected ? "ok" : "warning"}>{connected ? "Connected" : "Not connected"}</StatusPill>}
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {connected
-              ? `Linked to SteamID64 ${steamId64}`
-              : "Link your Steam account to sync owned games and playtime."}
+          <p className="text-sm text-muted-foreground">
+            Steam actions stay explicit and never run automatically.
           </p>
         </div>
         {connected ? (
@@ -140,6 +142,6 @@ export function SteamConnectionCard({
           </Link>
         )}
       </div>
-    </div>
+    </SectionCard>
   );
 }

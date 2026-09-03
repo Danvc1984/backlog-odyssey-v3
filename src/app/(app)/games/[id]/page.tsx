@@ -15,24 +15,14 @@ import { ParentBaseGameBanner } from "@/components/games/ParentBaseGameBanner";
 import { CatalogSteamIdentityForm } from "@/components/games/CatalogSteamIdentityForm";
 import { CompatibilitySection } from "@/components/games/CompatibilitySection";
 import { CalibrationNote } from "@/components/recommendations/CalibrationNote";
-import { caveatChip, factorChip } from "@/components/recommendations/FactorChips";
 import { rawgJobSelect, toRawgEnrichmentJobView } from "@/lib/rawg-job-view";
-import type { ExplanationFactor as ExplanationFactorShape, ExplanationCaveat as ExplanationCaveatShape } from "@/lib/recommendations/types";
 import { compatJobSelect } from "@/lib/compat-job";
 import { awayGameUrl } from "@/lib/away-api";
 import { parseProtonDbSummary, PROTONDB_APP_URL } from "@/lib/protondb-api";
 import { parseAntiCheatEvidence } from "@/lib/compat-evidence";
 import type { RawgMetadataPayload } from "@/lib/rawg-types";
-
-const TYPE_LABELS: Record<string, string> = {
-  BASE_GAME: "Base game",
-  DLC: "DLC",
-};
-
-const ORIGIN_LABELS: Record<string, string> = {
-  MANUAL: "Manual entry",
-  STEAM_IMPORT: "Steam import",
-};
+import { GameDetailHero } from "@/components/games/GameDetailHero";
+import { SectionCard, StatusPill } from "@/components/ui/detail-card";
 
 export default async function GameDetailPage({
   params,
@@ -40,7 +30,13 @@ export default async function GameDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [game, manualCollections, possibleDuplicate, latestPlayNextRun, playDismissalCount, savedSources] = await Promise.all([
+  const [
+    game,
+    manualCollections,
+    possibleDuplicate,
+    playDismissalCount,
+    savedSources,
+  ] = await Promise.all([
     prisma.game.findUnique({
       where: { id },
       include: {
@@ -101,16 +97,6 @@ export default async function GameDetailPage({
         gameB: { select: { name: true } },
       },
     }),
-    prisma.recommendationRun.findFirst({
-      where: { kind: "PLAY_NEXT" },
-      orderBy: { createdAt: "desc" },
-      include: {
-        items: {
-          where: { gameId: id },
-          select: { id: true, rank: true, score: true, positive: true, negative: true, caveats: true },
-        },
-      },
-    }),
     prisma.recommendationFeedback.count({
       where: { gameId: id, kind: "PLAY_NEXT" },
     }),
@@ -127,13 +113,14 @@ export default async function GameDetailPage({
     redirect(`/games/${game.baseGameId}`);
   }
 
-  const baseGames = game.type === "BASE_GAME"
-    ? await prisma.game.findMany({
-        where: { type: "BASE_GAME" },
-        select: { id: true, name: true },
-        orderBy: { name: "asc" },
-      })
-    : [];
+  const baseGames =
+    game.type === "BASE_GAME"
+      ? await prisma.game.findMany({
+          where: { type: "BASE_GAME" },
+          select: { id: true, name: true },
+          orderBy: { name: "asc" },
+        })
+      : [];
 
   const otherGameName = possibleDuplicate
     ? possibleDuplicate.gameAId === id
@@ -145,164 +132,128 @@ export default async function GameDetailPage({
     ? (rawgSnapshot.payload as unknown as RawgMetadataPayload)
     : null;
   const rawgJob = game.enrichmentJobs.find((job) => job.provider === "RAWG");
-  const compatJob = game.enrichmentJobs.find((job) => job.provider === "PROTONDB");
+  const compatJob = game.enrichmentJobs.find(
+    (job) => job.provider === "PROTONDB",
+  );
   const hasSteamIdentity = game.externalIds.length > 0;
   const steamAppId = game.externalIds[0]?.externalId ?? null;
-  const isRomOnly = game.availability.some((a) => a.source === "ROM") &&
+  const isRomOnly =
+    game.availability.some((a) => a.source === "ROM") &&
     !game.availability.some((a) => a.source === "STEAM");
-  const protonDbSnapshot = game.compatSnapshots.find((snapshot) => snapshot.provider === "PROTONDB");
-  const protonDb = steamAppId && protonDbSnapshot
-    ? parseProtonDbSummary(steamAppId, protonDbSnapshot.result)
-    : null;
-  const awaySnapshot = game.compatSnapshots.find((snapshot) => snapshot.provider === "ARE_WE_ANTICHEAT_YET");
+  const protonDbSnapshot = game.compatSnapshots.find(
+    (snapshot) => snapshot.provider === "PROTONDB",
+  );
+  const protonDb =
+    steamAppId && protonDbSnapshot
+      ? parseProtonDbSummary(steamAppId, protonDbSnapshot.result)
+      : null;
+  const awaySnapshot = game.compatSnapshots.find(
+    (snapshot) => snapshot.provider === "ARE_WE_ANTICHEAT_YET",
+  );
   const antiCheat = parseAntiCheatEvidence(awaySnapshot?.result);
   const latestSnapshotAt = game.compatSnapshots.reduce<Date | null>(
-    (latest, snapshot) => (!latest || snapshot.fetchedAt > latest ? snapshot.fetchedAt : latest),
+    (latest, snapshot) =>
+      !latest || snapshot.fetchedAt > latest ? snapshot.fetchedAt : latest,
     null,
   );
 
-  const recommendationItem = latestPlayNextRun?.items[0] ?? null;
-
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold">{game.name}</h1>
+      <p className="technical-label text-muted-foreground">
+        <a href="/library" className="hover:text-foreground hover:underline">
+          Owned Games Library
+        </a>
+        <span aria-hidden="true"> / </span>
+        <span>{game.name}</span>
+      </p>
+
+      <GameDetailHero
+        id={game.id}
+        name={game.name}
+        type={game.type}
+        origin={game.origin}
+        addedAt={game.createdAt.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })}
+        interest={game.libraryEntry?.interest ?? null}
+        isInLibrary={game.libraryEntry !== null}
+        imageUrl={
+          rawgPayload && Array.isArray(rawgPayload.backgroundImageUrls)
+            ? (rawgPayload.backgroundImageUrls[0] ?? null)
+            : null
+        }
+      />
+
+      <MetadataSection
+        payload={rawgPayload}
+        sourceUrl={rawgSnapshot?.sourceUrl ?? null}
+        fetchedAt={rawgSnapshot?.fetchedAt ?? null}
+      />
+
+      <span id="play-state" />
+      <SectionCard
+        eyebrow="Play status"
+        title="Play state"
+        id="play-state"
+        className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
+        description="Choose the state that best reflects where this game stands for you."
+        status={
+          <StatusPill>
+            {game.libraryEntry?.playState?.replaceAll("_", " ") ??
+              "Not in library"}
+          </StatusPill>
+        }
+      >
+        <PlayStateSection
+          gameId={game.id}
+          libraryEntry={
+            game.libraryEntry
+              ? {
+                  playState: game.libraryEntry.playState,
+                  isMainGame: game.libraryEntry.isMainGame,
+                  playSoon: game.libraryEntry.playSoon,
+                  replayCandidate: game.libraryEntry.replayCandidate,
+                  hidden: game.libraryEntry.hidden,
+                }
+              : null
+          }
+        />
+      </SectionCard>
+
+      <SectionCard
+        eyebrow="Catalog identity"
+        title="Name"
+        description="Keep the catalog name aligned with how you recognize this game."
+      >
         {game.type === "DLC" && (
-          <div className="mt-4">
+          <div className="mb-4">
             <ParentBaseGameBanner baseGame={game.baseGame} />
           </div>
         )}
-        <div className="mt-4">
-          <GameNameForm key={game.name} gameId={game.id} initialName={game.name} />
-        </div>
-      </div>
+        <GameNameForm
+          key={game.name}
+          gameId={game.id}
+          initialName={game.name}
+        />
+      </SectionCard>
 
       {otherGameName && <DuplicateWarning otherGameName={otherGameName} />}
 
-      <section>
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Metadata
-        </h2>
-        <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
-          <div>
-            <span className="text-muted-foreground">Type</span>
-            <span className="ml-2 rounded-md border border-border px-2 py-0.5 text-xs font-medium">
-              {TYPE_LABELS[game.type] ?? game.type}
-            </span>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Origin</span>
-            <span className="ml-2">{ORIGIN_LABELS[game.origin] ?? game.origin}</span>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Added</span>
-            <span className="ml-2">
-              {game.createdAt.toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })}
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start">
-        <MetadataSection
-          payload={rawgPayload}
-          sourceUrl={rawgSnapshot?.sourceUrl ?? null}
-          fetchedAt={rawgSnapshot?.fetchedAt ?? null}
-        />
-        <RawgEnrichmentPanel
-          gameId={game.id}
-          catalogName={game.name}
-          initialJob={
-            rawgJob ? toRawgEnrichmentJobView(rawgJob) : null
-          }
-          hasRawgSnapshot={game.metadataSnapshots.length > 0}
-          rawgTitle={rawgPayload?.title ?? null}
-        />
-      </div>
-
-      <CompatibilitySection
-        gameId={game.id}
-        gameName={game.name}
-        hasSteamIdentity={hasSteamIdentity}
-        isRomOnly={isRomOnly}
-        latestSnapshotAt={latestSnapshotAt}
-        protonDb={protonDb ? {
-          status: protonDb.status,
-          tier: protonDb.tier,
-        } : null}
-        protonDbUrl={steamAppId ? `${PROTONDB_APP_URL}/${encodeURIComponent(steamAppId)}` : null}
-        antiCheat={antiCheat}
-        awayUrl={antiCheat && steamAppId ? awayGameUrl(steamAppId) : null}
-        override={game.libraryEntry?.compatOverrideStatus ? {
-          status: game.libraryEntry.compatOverrideStatus,
-          reason: game.libraryEntry.compatOverrideReason,
-        } : null}
-        job={compatJob ? {
-          status: compatJob.status,
-          progress: compatJob.progress,
-          lastErrorMessage: compatJob.lastErrorMessage,
-        } : null}
-      />
-
-      <section>
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Availability
-        </h2>
-        {game.externalIds[0] ? (
-          <p className="mb-3 inline-flex rounded-md border border-border px-2 py-1 text-xs text-muted-foreground">
-            Steam App {game.externalIds[0].externalId} confirmed
-          </p>
-        ) : (
-          <div className="mb-3">
-            <CatalogSteamIdentityForm gameId={game.id} gameName={game.name} />
-          </div>
-        )}
-        <div className="rounded-lg border border-border">
-          <AvailabilityEditor
-            gameId={game.id}
-            rows={game.availability}
-            savedSources={savedSources}
-          />
-        </div>
-      </section>
-
-      {recommendationItem && (
-        <section>
-          <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Latest recommendation
-          </h2>
-          <div className="rounded-lg border border-border p-4">
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="text-base font-medium">#{recommendationItem.rank}</span>
-              <span className="rounded-md border border-border px-2 py-0.5 text-xs font-medium">
-                {recommendationItem.score} pts
-              </span>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {[recommendationItem.positive, recommendationItem.negative].flatMap((value) =>
-                Array.isArray(value) ? (value as unknown[]).filter(
-                  (factor): factor is ExplanationFactorShape =>
-                    typeof factor === "object" && factor !== null && typeof (factor as ExplanationFactorShape).label === "string",
-                ).map((factor) => factorChip(factor)) : [],
-              )}
-              {Array.isArray(recommendationItem.caveats) &&
-                (recommendationItem.caveats as unknown[]).filter(
-                  (caveat): caveat is ExplanationCaveatShape =>
-                    typeof caveat === "object" && caveat !== null && typeof (caveat as ExplanationCaveatShape).label === "string",
-                ).map((caveat) => caveatChip(caveat))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      <section>
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Personal fields
-        </h2>
+      <span id="personal-fields" />
+      <SectionCard
+        eyebrow="Personal"
+        title="Profile"
+        id="personal-fields"
+        className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
+        description="Your preferences and notes for this game."
+        status={
+          <StatusPill>
+            {game.libraryEntry ? "Saved" : "Not in library"}
+          </StatusPill>
+        }
+      >
         <PersonalFieldsForm
           gameId={game.id}
           libraryEntry={
@@ -322,12 +273,94 @@ export default async function GameDetailPage({
           interest={game.libraryEntry?.interest ?? null}
           dismissalCount={playDismissalCount}
         />
-      </section>
+      </SectionCard>
 
-      <section>
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Tags
-        </h2>
+      <RawgEnrichmentPanel
+        gameId={game.id}
+        catalogName={game.name}
+        initialJob={rawgJob ? toRawgEnrichmentJobView(rawgJob) : null}
+        hasRawgSnapshot={game.metadataSnapshots.length > 0}
+        rawgTitle={rawgPayload?.title ?? null}
+      />
+
+      <CompatibilitySection
+        gameId={game.id}
+        gameName={game.name}
+        hasSteamIdentity={hasSteamIdentity}
+        isRomOnly={isRomOnly}
+        latestSnapshotAt={latestSnapshotAt}
+        protonDb={
+          protonDb
+            ? {
+                status: protonDb.status,
+                tier: protonDb.tier,
+              }
+            : null
+        }
+        protonDbUrl={
+          steamAppId
+            ? `${PROTONDB_APP_URL}/${encodeURIComponent(steamAppId)}`
+            : null
+        }
+        antiCheat={antiCheat}
+        awayUrl={antiCheat && steamAppId ? awayGameUrl(steamAppId) : null}
+        override={
+          game.libraryEntry?.compatOverrideStatus
+            ? {
+                status: game.libraryEntry.compatOverrideStatus,
+                reason: game.libraryEntry.compatOverrideReason,
+              }
+            : null
+        }
+        job={
+          compatJob
+            ? {
+                status: compatJob.status,
+                progress: compatJob.progress,
+                lastErrorMessage: compatJob.lastErrorMessage,
+              }
+            : null
+        }
+      />
+
+      <SectionCard
+        eyebrow="Where it lives"
+        title="Availability"
+        id="availability"
+        description="Sources and identity stay explicit and editable."
+        status={
+          <StatusPill>
+            {game.availability.length} source
+            {game.availability.length === 1 ? "" : "s"}
+          </StatusPill>
+        }
+      >
+        {game.externalIds[0] ? (
+          <p className="mb-3 inline-flex rounded-md border border-border px-2 py-1 text-xs text-muted-foreground">
+            Steam App {game.externalIds[0].externalId} confirmed
+          </p>
+        ) : (
+          <div className="mb-3">
+            <CatalogSteamIdentityForm gameId={game.id} gameName={game.name} />
+          </div>
+        )}
+        <AvailabilityEditor
+          gameId={game.id}
+          rows={game.availability}
+          savedSources={savedSources}
+        />
+      </SectionCard>
+
+      <SectionCard
+        eyebrow="Organization"
+        title="Tags"
+        description="Personal labels for browsing and tuning."
+        status={
+          <StatusPill>
+            {game.tags.length} tag{game.tags.length === 1 ? "" : "s"}
+          </StatusPill>
+        }
+      >
         <TagsSection
           gameId={game.id}
           initialTags={game.tags.map((gt) => ({
@@ -335,12 +368,19 @@ export default async function GameDetailPage({
             name: gt.tag.name,
           }))}
         />
-      </section>
+      </SectionCard>
 
-      <section>
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Collections
-        </h2>
+      <SectionCard
+        eyebrow="Organization"
+        title="Collections"
+        description="Personal structure for browsing and tuning."
+        status={
+          <StatusPill>
+            {game.collections.length} collection
+            {game.collections.length === 1 ? "" : "s"}
+          </StatusPill>
+        }
+      >
         <CollectionsSection
           gameId={game.id}
           initialCollections={game.collections.map((cm) => ({
@@ -350,7 +390,7 @@ export default async function GameDetailPage({
           }))}
           availableCollections={manualCollections}
         />
-      </section>
+      </SectionCard>
 
       {game.type === "BASE_GAME" && (
         <DlcSection
@@ -362,35 +402,16 @@ export default async function GameDetailPage({
         />
       )}
 
-      <section>
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Play state
-        </h2>
-        <PlayStateSection
-          gameId={game.id}
-          libraryEntry={
-            game.libraryEntry
-              ? {
-                  playState: game.libraryEntry.playState,
-                  isMainGame: game.libraryEntry.isMainGame,
-                  playSoon: game.libraryEntry.playSoon,
-                  replayCandidate: game.libraryEntry.replayCandidate,
-                  hidden: game.libraryEntry.hidden,
-                }
-              : null
-          }
-        />
-      </section>
-
-      <section className="flex items-center justify-between border-t border-border pt-6">
-        <div>
-          <h2 className="text-sm font-semibold">Delete {game.name}</h2>
-          <p className="text-sm text-muted-foreground">
-            Removes this game and its attached records. You can undo it shortly after.
-          </p>
+      <SectionCard
+        eyebrow="Danger zone"
+        title={`Delete ${game.name}`}
+        description="Removes this game and its attached records. You can undo it shortly after."
+        tone="danger"
+      >
+        <div className="flex justify-end">
+          <DeleteGameDialog gameId={game.id} />
         </div>
-        <DeleteGameDialog gameId={game.id} />
-      </section>
+      </SectionCard>
     </div>
   );
 }

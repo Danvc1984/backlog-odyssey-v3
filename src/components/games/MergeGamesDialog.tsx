@@ -391,7 +391,7 @@ export function MergeGamesDialog({ duplicateId }: { duplicateId: string }) {
                 <Button type="button" variant="ghost" onClick={() => setConfirming(false)}>
                   Back to editing
                 </Button>
-                <Button type="button" onClick={submitMerge} disabled={submitting}>
+                <Button type="button" variant="destructive" onClick={submitMerge} disabled={submitting}>
                   {submitting ? "Merging..." : "Confirm merge"}
                 </Button>
               </>

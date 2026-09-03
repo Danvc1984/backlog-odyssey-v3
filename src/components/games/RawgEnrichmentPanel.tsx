@@ -12,6 +12,7 @@ import {
   selectRawgMatch,
 } from "@/actions/rawg-enrichment";
 import { Button } from "@/components/ui/button";
+import { SectionCard, StatusPill } from "@/components/ui/detail-card";
 import type { RawgEnrichmentJobView } from "@/lib/rawg-job-view";
 
 interface RawgEnrichmentPanelProps {
@@ -297,16 +298,14 @@ export function RawgEnrichmentPanel({
   const canStart = !job || job.status === "SUCCEEDED" || job.status === "FAILED";
 
   return (
-    <section className="rounded-lg border border-border p-4" aria-labelledby="rawg-enrichment-heading">
+    <SectionCard
+      eyebrow="Maintenance"
+      title="Enrichment"
+      id="rawg-enrichment-heading"
+      description="Refresh matched game information without changing your catalog name automatically."
+      status={<StatusPill tone={job?.status === "FAILED" ? "danger" : job ? "warning" : "neutral"}>{job?.status?.replaceAll("_", " ") ?? "Ready"}</StatusPill>}
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 id="rawg-enrichment-heading" className="text-sm font-medium">
-            RAWG enrichment
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Load replaceable RAWG metadata without changing your catalog name automatically.
-          </p>
-        </div>
         <div className="flex flex-wrap gap-2">
           {canStart && !pendingOverwrite && !hasRawgSnapshot && (
             <Button type="button" size="sm" disabled={running} onClick={() => void startEnrichment(false)}>
@@ -434,6 +433,6 @@ export function RawgEnrichmentPanel({
       )}
 
       {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
-    </section>
+    </SectionCard>
   );
 }

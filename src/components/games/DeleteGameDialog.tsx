@@ -118,7 +118,7 @@ export function DeleteGameDialog({ gameId }: { gameId: string }) {
           Delete
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Delete this game?</DialogTitle>
           <DialogDescription>
@@ -168,7 +168,7 @@ export function DeleteGameDialog({ gameId }: { gameId: string }) {
         )}
 
         <DialogFooter>
-          <Button type="button" onClick={handleDelete} disabled={deleting || !preview}>
+          <Button type="button" variant="destructive" onClick={handleDelete} disabled={deleting || !preview}>
             {deleting ? "Deleting..." : "Delete game"}
           </Button>
         </DialogFooter>
