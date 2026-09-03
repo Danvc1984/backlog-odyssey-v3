@@ -1,9 +1,35 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import {
   buildSteamOpenIdUrl,
+  createStateNonce,
   extractSteamId64,
+  statesMatch,
   verifySteamOpenIdResponse,
 } from "./steam-openid";
+
+describe("createStateNonce", () => {
+  it("creates a cryptographically random hex nonce", () => {
+    const nonce = createStateNonce();
+
+    expect(nonce).toMatch(/^[0-9a-f]{64}$/);
+    expect(createStateNonce()).not.toBe(nonce);
+  });
+});
+
+describe("statesMatch", () => {
+  it("matches equal states", () => {
+    expect(statesMatch("state-123", "state-123")).toBe(true);
+  });
+
+  it("rejects mismatched states", () => {
+    expect(statesMatch("state-123", "state-456")).toBe(false);
+  });
+
+  it("rejects missing states", () => {
+    expect(statesMatch(null, "state-123")).toBe(false);
+    expect(statesMatch("state-123", undefined)).toBe(false);
+  });
+});
 
 describe("buildSteamOpenIdUrl", () => {
   it("points at the Steam OpenID login endpoint", () => {

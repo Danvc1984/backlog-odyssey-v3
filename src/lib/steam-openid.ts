@@ -1,6 +1,25 @@
+import { randomBytes, timingSafeEqual } from "node:crypto";
+
 const OPENID_ENDPOINT = "https://steamcommunity.com/openid/login";
 const OPENID_NS = "http://specs.openid.net/auth/2.0";
 const IDENTIFIER_SELECT = "http://specs.openid.net/auth/2.0/identifier_select";
+
+export function createStateNonce(): string {
+  return randomBytes(32).toString("hex");
+}
+
+export function statesMatch(
+  expectedState: string | null | undefined,
+  receivedState: string | null | undefined,
+): boolean {
+  if (!expectedState || !receivedState) return false;
+
+  const expected = Buffer.from(expectedState);
+  const received = Buffer.from(receivedState);
+  return (
+    expected.length === received.length && timingSafeEqual(expected, received)
+  );
+}
 
 export function buildSteamOpenIdUrl(returnUrl: string, realm: string): string {
   const params = new URLSearchParams({
