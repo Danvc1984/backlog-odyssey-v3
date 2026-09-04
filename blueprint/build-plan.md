@@ -345,7 +345,7 @@
     page, semantic tokens untouched, contrast overlays, deterministic
     fallback without artwork or under reduced data, re-derivation on
     re-enrichment
-  - [ ] 17c. **Screenshots section** - dedicated bottom carousel-style
+  - [x] 17c. **Screenshots section** - dedicated bottom carousel-style
     section on game detail showing up to six screenshots with manual
     navigation, reduced-motion manual mode, reduced-data token fallback,
     and existing RAWG attribution

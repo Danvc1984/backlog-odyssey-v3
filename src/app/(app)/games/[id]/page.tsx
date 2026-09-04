@@ -11,6 +11,7 @@ import { GameNameForm } from "@/components/games/GameNameForm";
 import { MetadataSection } from "@/components/games/MetadataSection";
 import { RawgEnrichmentPanel } from "@/components/games/RawgEnrichmentPanel";
 import { DlcSection } from "@/components/games/DlcSection";
+import { ScreenshotsSection } from "@/components/games/ScreenshotsSection";
 import { ParentBaseGameBanner } from "@/components/games/ParentBaseGameBanner";
 import { CatalogSteamIdentityForm } from "@/components/games/CatalogSteamIdentityForm";
 import { CompatibilitySection } from "@/components/games/CompatibilitySection";
@@ -21,6 +22,7 @@ import { awayGameUrl } from "@/lib/away-api";
 import { parseProtonDbSummary, PROTONDB_APP_URL } from "@/lib/protondb-api";
 import { parseAntiCheatEvidence } from "@/lib/compat-evidence";
 import type { RawgMetadataPayload } from "@/lib/rawg-types";
+import { resolvePageScreenshots } from "@/lib/screenshot-view";
 import { GameDetailHero } from "@/components/games/GameDetailHero";
 import { GameThemeScope } from "@/components/games/GameThemeScope";
 import { SectionCard, StatusPill } from "@/components/ui/detail-card";
@@ -134,6 +136,7 @@ export default async function GameDetailPage({
     ? (rawgSnapshot.payload as unknown as RawgMetadataPayload)
     : null;
   const rawgJob = game.enrichmentJobs.find((job) => job.provider === "RAWG");
+  const screenshots = resolvePageScreenshots(rawgPayload);
   const compatJob = game.enrichmentJobs.find(
     (job) => job.provider === "PROTONDB",
   );
@@ -404,6 +407,13 @@ export default async function GameDetailPage({
           wishlistDlcs={game.wishlistDlcs}
         />
       )}
+
+      <ScreenshotsSection
+        id={game.id}
+        title={game.name}
+        screenshots={screenshots}
+        sourceUrl={rawgSnapshot?.sourceUrl ?? rawgPayload?.rawgUrl ?? null}
+      />
 
       <SectionCard
         eyebrow="Danger zone"

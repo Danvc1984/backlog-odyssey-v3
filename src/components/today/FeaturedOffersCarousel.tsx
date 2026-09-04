@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Carousel } from "@/components/today/Carousel";
+import { Carousel } from "@/components/ui/Carousel";
 import type { TodayOfferView } from "@/lib/today-offers";
 
 function formatDate(value: string): string {

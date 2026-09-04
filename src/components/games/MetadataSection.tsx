@@ -1,19 +1,7 @@
 import type { RawgMetadataPayload } from "@/lib/rawg-types";
+import { externalUrl } from "@/lib/external-url";
 import { SectionCard } from "@/components/ui/detail-card";
 import { ExternalLink } from "lucide-react";
-
-function externalUrl(value: string | null): string | null {
-  if (!value) return null;
-
-  try {
-    const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:"
-      ? url.toString()
-      : null;
-  } catch {
-    return null;
-  }
-}
 
 function Field({ label, value }: { label: string; value: string | null }) {
   if (!value) return null;
