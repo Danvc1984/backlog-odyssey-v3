@@ -6,6 +6,7 @@ import type { WallpaperCandidate } from "./wallpaper";
 
 export const WALLHAVEN_SEARCH_URL = "https://wallhaven.cc/api/v1/search";
 export const WALLHAVEN_PAGE_URL = "https://wallhaven.cc/w";
+const WALLHAVEN_MAX_CANDIDATES = 20;
 
 export function normalizeWallhavenQuery(keyword: string): string {
   return keyword
@@ -51,6 +52,7 @@ function providerError(
 export async function searchWallhaven(
   keyword: string,
   fetchFn: typeof fetch = fetch,
+  maxItems = 10,
 ): Promise<WallhavenSearchResult> {
   const url = new URL(WALLHAVEN_SEARCH_URL);
   url.searchParams.set("q", normalizeWallhavenQuery(keyword));
@@ -99,7 +101,8 @@ export async function searchWallhaven(
     return entry.success ? [toWallpaperCandidate(entry.data)] : [];
   });
 
-  return { ok: true, items: items.slice(0, 10) };
+  const limit = Math.min(WALLHAVEN_MAX_CANDIDATES, Math.max(1, Math.floor(maxItems)));
+  return { ok: true, items: items.slice(0, limit) };
 }
 
 function toWallpaperCandidate(entry: z.infer<typeof wallhavenEntrySchema>): WallpaperCandidate {

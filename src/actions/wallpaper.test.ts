@@ -11,6 +11,7 @@ import { shuffleWallpaper, setWallpaperEnabled } from "./wallpaper";
 const pool = {
   queryVersion: WALLPAPER_QUERY_VERSION,
   fetchedAt: "2026-09-03T12:00:00.000Z",
+  mode: "MAIN_GAME" as const,
   searched: [{ gameId: "game-1", name: "Portal 2" }],
   items: [
     {

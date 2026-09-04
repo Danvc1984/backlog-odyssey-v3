@@ -36,7 +36,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       select: {
         id: true,
         name: true,
-        libraryEntry: { select: { isMainGame: true, playState: true } },
+        libraryEntry: { select: { isMainGame: true, playState: true, updatedAt: true } },
       },
     }),
   ]);
@@ -44,9 +44,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const mainGame = catalogRows.find((row) => row.libraryEntry?.isMainGame === true) ?? null;
   const inProgressGames = catalogRows
     .filter((row) => row.libraryEntry?.playState === "IN_PROGRESS")
-    .map(({ id, name }): WallpaperGameReference => ({ id, name }));
+    .map(({ id, name, libraryEntry }): WallpaperGameReference => ({
+      id,
+      name,
+      updatedAt: libraryEntry!.updatedAt,
+    }));
   const searchPlan = buildSearchPlan(
-    mainGame ? { id: mainGame.id, name: mainGame.name } : null,
+    mainGame
+      ? { id: mainGame.id, name: mainGame.name, updatedAt: mainGame.libraryEntry!.updatedAt }
+      : null,
     inProgressGames,
   );
   const wallpaperEnabled = settings?.wallpaperEnabled ?? true;

@@ -4,7 +4,6 @@ import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
 import {
-  WALLPAPER_POOL_SIZE,
   WALLPAPER_QUERY_VERSION,
   buildSearchPlan,
   isPoolStale,
@@ -12,6 +11,7 @@ import {
   type WallpaperFreshnessState,
   type WallpaperGameReference,
   type WallpaperPool,
+  type WallpaperSearchPlan,
   type WallpaperSearchTerm,
 } from "./wallpaper";
 import { searchWallhaven, type WallhavenProviderError } from "./wallhaven-api";
@@ -29,7 +29,7 @@ export interface WallpaperRefreshResult {
 interface WallpaperCatalogRow {
   id: string;
   name: string;
-  libraryEntry: { isMainGame: boolean; playState: string } | null;
+  libraryEntry: { isMainGame: boolean; playState: string; updatedAt: Date } | null;
 }
 
 interface WallpaperStateRow extends WallpaperFreshnessState {
@@ -78,7 +78,7 @@ async function runWallpaperRefresh(now: Date): Promise<WallpaperRefreshResult> {
 
     await markAttempt(now);
     const outcome = await searchTerms(plan);
-    if (plan.length > 0 && !outcome.hadSuccessfulResponse) {
+    if (plan.terms.length > 0 && !outcome.hadSuccessfulResponse) {
       const error = formatDiagnostics(outcome.diagnostics) ?? "Wallhaven refresh failed";
       await recordError(now, error);
       return { success: false, status: "FAILED", searched: outcome.searched, itemCount: 0, error };
@@ -87,6 +87,7 @@ async function runWallpaperRefresh(now: Date): Promise<WallpaperRefreshResult> {
     const candidates: WallpaperPool = {
       queryVersion: WALLPAPER_QUERY_VERSION,
       fetchedAt: now.toISOString(),
+      mode: plan.mode,
       searched: outcome.searched,
       items: outcome.items,
     };
@@ -132,16 +133,18 @@ async function loadWallpaperGames(): Promise<{
     select: {
       id: true,
       name: true,
-      libraryEntry: { select: { isMainGame: true, playState: true } },
+      libraryEntry: { select: { isMainGame: true, playState: true, updatedAt: true } },
     },
   })) as WallpaperCatalogRow[];
 
   const mainGame = rows.find((row) => row.libraryEntry?.isMainGame === true) ?? null;
   return {
-    mainGame: mainGame ? { id: mainGame.id, name: mainGame.name } : null,
+    mainGame: mainGame
+      ? { id: mainGame.id, name: mainGame.name, updatedAt: mainGame.libraryEntry!.updatedAt }
+      : null,
     inProgressGames: rows
       .filter((row) => row.libraryEntry?.playState === "IN_PROGRESS")
-      .map(({ id, name }) => ({ id, name })),
+      .map(({ id, name, libraryEntry }) => ({ id, name, updatedAt: libraryEntry!.updatedAt })),
   };
 }
 
@@ -153,17 +156,17 @@ async function markAttempt(now: Date): Promise<void> {
   });
 }
 
-async function searchTerms(plan: readonly WallpaperSearchTerm[]): Promise<TermOutcome> {
+async function searchTerms(plan: WallpaperSearchPlan): Promise<TermOutcome> {
   const searched: WallpaperSearchTerm[] = [];
   const diagnostics: string[] = [];
   const resultBuckets: WallpaperPool["items"][] = [];
   let hadSuccessfulResponse = false;
 
-  for (const term of plan) {
+  for (const term of plan.terms) {
     searched.push(term);
     let result;
     try {
-      result = await searchWallhaven(term.name);
+      result = await searchWallhaven(term.name, undefined, plan.imagesPerTerm);
     } catch {
       result = {
         ok: false as const,
@@ -184,7 +187,7 @@ async function searchTerms(plan: readonly WallpaperSearchTerm[]): Promise<TermOu
   }
 
   const byId = new Map<string, WallpaperPool["items"][number]>();
-  for (let resultIndex = 0; byId.size < WALLPAPER_POOL_SIZE; resultIndex += 1) {
+  for (let resultIndex = 0; byId.size < plan.poolSize; resultIndex += 1) {
     let addedItem = false;
     for (const bucket of resultBuckets) {
       const item = bucket[resultIndex];
@@ -193,7 +196,7 @@ async function searchTerms(plan: readonly WallpaperSearchTerm[]): Promise<TermOu
       }
       byId.set(item.id, item);
       addedItem = true;
-      if (byId.size >= WALLPAPER_POOL_SIZE) {
+      if (byId.size >= plan.poolSize) {
         break;
       }
     }

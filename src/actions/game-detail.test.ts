@@ -511,6 +511,7 @@ describe("updatePlayState", () => {
   const mockTxUpdate = vi.fn();
   const mockTransaction = vi.fn();
   const mockFindUnique = vi.fn();
+  const mockWallpaperUpsert = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -530,7 +531,7 @@ describe("updatePlayState", () => {
     (prisma as unknown as { $transaction: typeof mockTransaction }).$transaction =
       mockTransaction;
     mockUpdate.mockResolvedValue({});
-    mockFindUnique.mockResolvedValue({ playState: "NOT_STARTED" });
+    mockFindUnique.mockResolvedValue({ playState: "NOT_STARTED", isMainGame: false });
     mockTransaction.mockImplementation(
       async (
         fn: (client: {
@@ -538,12 +539,14 @@ describe("updatePlayState", () => {
             updateMany: typeof mockUpdateMany;
             update: typeof mockTxUpdate;
           };
+          wallpaperState: { upsert: typeof mockWallpaperUpsert };
         }) => unknown,
       ) => fn({
         libraryEntry: {
           updateMany: mockUpdateMany,
           update: mockTxUpdate,
         },
+        wallpaperState: { upsert: mockWallpaperUpsert },
       }),
     );
     mockTxUpdate.mockResolvedValue({ gameId: "game-1", isMainGame: true });
@@ -597,9 +600,27 @@ describe("updatePlayState", () => {
       data: { isMainGame: true },
     });
     expect(mockUpdate).not.toHaveBeenCalled();
+    expect(mockWallpaperUpsert).toHaveBeenCalledWith({
+      where: { id: 1 },
+      create: {
+        id: 1,
+        candidates: expect.anything(),
+        selectedIdx: 0,
+        renderTarget: expect.anything(),
+        lastAttemptAt: null,
+        lastError: null,
+      },
+      update: {
+        candidates: expect.anything(),
+        selectedIdx: 0,
+        renderTarget: expect.anything(),
+        lastAttemptAt: null,
+        lastError: null,
+      },
+    });
   });
 
-  it("sets isMainGame false without a transaction", async () => {
+  it("does not clear the wallpaper pool when an already non-main game stays unset", async () => {
     await updatePlayState("game-1", { isMainGame: false });
 
     expect(mockUpdate).toHaveBeenCalledWith({
@@ -607,6 +628,28 @@ describe("updatePlayState", () => {
       data: { isMainGame: false },
     });
     expect(mockTransaction).not.toHaveBeenCalled();
+    expect(mockWallpaperUpsert).not.toHaveBeenCalled();
+  });
+
+  it("clears the wallpaper pool when unsetting the current main game", async () => {
+    mockFindUnique.mockResolvedValue({ playState: "IN_PROGRESS", isMainGame: true });
+
+    await updatePlayState("game-1", { isMainGame: false });
+
+    expect(mockTransaction).toHaveBeenCalledOnce();
+    expect(mockTxUpdate).toHaveBeenCalledWith({
+      where: { gameId: "game-1" },
+      data: { isMainGame: false },
+    });
+    expect(mockWallpaperUpsert).toHaveBeenCalledOnce();
+  });
+
+  it("does not clear the wallpaper pool when the current main game is selected again", async () => {
+    mockFindUnique.mockResolvedValue({ playState: "IN_PROGRESS", isMainGame: true });
+
+    await updatePlayState("game-1", { isMainGame: true });
+
+    expect(mockWallpaperUpsert).not.toHaveBeenCalled();
   });
 
   it("toggles candidate flags", async () => {

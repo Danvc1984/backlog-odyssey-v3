@@ -1,8 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { ActionError, friendlyActionError } from "@/lib/action-error";
 import { Prisma } from "@/generated/prisma/client";
+import { ActionError, friendlyActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { logRecommendationEvent, playStateTransitionKind } from "@/lib/recommendations/events";
@@ -378,7 +378,7 @@ export async function updatePlayState(
     const data = parsed.data;
     const current = await prisma.libraryEntry.findUnique({
       where: { gameId },
-      select: { playState: true },
+      select: { playState: true, isMainGame: true },
     });
     if (!current) {
       throw new ActionError("Library entry not found");
@@ -393,6 +393,9 @@ export async function updatePlayState(
       ...(data.hidden !== undefined && { hidden: data.hidden }),
       ...(data.isMainGame !== undefined && { isMainGame: data.isMainGame }),
     };
+    const shouldClearWallpaper =
+      (data.isMainGame === true && !current.isMainGame) ||
+      (data.isMainGame === false && current.isMainGame);
 
     if (data.isMainGame === true) {
       const entry = await prisma.$transaction(async (tx) => {
@@ -400,10 +403,27 @@ export async function updatePlayState(
           where: { isMainGame: true, gameId: { not: gameId } },
           data: { isMainGame: false },
         });
-        return tx.libraryEntry.update({
+        const updatedEntry = await tx.libraryEntry.update({
           where: { gameId },
           data: updateData,
         });
+        if (shouldClearWallpaper) {
+          await clearWallpaperPool(tx);
+        }
+        return updatedEntry;
+      });
+      await logPlayStateEvent(current.playState, data.playState, gameId);
+      return { success: true as const, data: entry, error: null };
+    }
+
+    if (shouldClearWallpaper) {
+      const entry = await prisma.$transaction(async (tx) => {
+        const updatedEntry = await tx.libraryEntry.update({
+          where: { gameId },
+          data: updateData,
+        });
+        await clearWallpaperPool(tx);
+        return updatedEntry;
       });
       await logPlayStateEvent(current.playState, data.playState, gameId);
       return { success: true as const, data: entry, error: null };
@@ -422,6 +442,29 @@ export async function updatePlayState(
       error: friendlyActionError(err, "Failed to update play state"),
     };
   }
+}
+
+async function clearWallpaperPool(
+  tx: Pick<typeof prisma, "wallpaperState">,
+): Promise<void> {
+  await tx.wallpaperState.upsert({
+    where: { id: 1 },
+    create: {
+      id: 1,
+      candidates: Prisma.JsonNull,
+      selectedIdx: 0,
+      renderTarget: Prisma.JsonNull,
+      lastAttemptAt: null,
+      lastError: null,
+    },
+    update: {
+      candidates: Prisma.JsonNull,
+      selectedIdx: 0,
+      renderTarget: Prisma.JsonNull,
+      lastAttemptAt: null,
+      lastError: null,
+    },
+  });
 }
 
 async function logPlayStateEvent(

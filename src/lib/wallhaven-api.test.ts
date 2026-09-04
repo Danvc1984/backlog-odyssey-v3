@@ -79,7 +79,7 @@ describe("searchWallhaven", () => {
     });
   });
 
-  it("caps a valid response at ten candidates", async () => {
+  it("honors the requested candidate cap", async () => {
     const result = await searchWallhaven(
       "Games",
       vi.fn().mockResolvedValue(response({ data: Array.from({ length: 12 }, (_, index) => entry(`game-${index}`)) })),
@@ -90,6 +90,13 @@ describe("searchWallhaven", () => {
       expect(result.items).toHaveLength(10);
       expect(result.items.at(-1)?.id).toBe("game-9");
     }
+
+    const expanded = await searchWallhaven(
+      "Games",
+      vi.fn().mockResolvedValue(response({ data: Array.from({ length: 12 }, (_, index) => entry(`game-${index}`)) })),
+      20,
+    );
+    expect(expanded).toMatchObject({ ok: true, items: Array.from({ length: 12 }, (_, index) => ({ id: `game-${index}` })) });
   });
 
   it.each([

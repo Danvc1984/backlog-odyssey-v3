@@ -28,6 +28,7 @@ const candidate = (id: string): WallpaperCandidate => ({
 const pool = (searched = [{ gameId: "main", name: "Main Game" }]) => ({
   queryVersion: WALLPAPER_QUERY_VERSION,
   fetchedAt: "2026-09-01T12:00:00.000Z",
+  mode: "MAIN_GAME" as const,
   searched,
   items: [candidate("old")],
 });
@@ -44,16 +45,20 @@ const state = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-const catalog = (...rows: Array<{ id: string; name: string; main?: boolean; inProgress?: boolean }>) =>
-  rows.map(({ id, name, main = false, inProgress = false }) => ({
+const catalog = (...rows: Array<{ id: string; name: string; main?: boolean; inProgress?: boolean; updatedAt?: Date }>) =>
+  rows.map(({ id, name, main = false, inProgress = false, updatedAt = now }) => ({
     id,
     name,
-    libraryEntry: { isMainGame: main, playState: inProgress ? "IN_PROGRESS" : "NOT_STARTED" },
+    libraryEntry: {
+      isMainGame: main,
+      playState: inProgress ? "IN_PROGRESS" : "NOT_STARTED",
+      updatedAt,
+    },
   }));
 
 describe("refreshWallpaperPool", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     (prisma as unknown as { wallpaperState: unknown; game: unknown }).wallpaperState = {
       findUnique,
       upsert,
@@ -97,7 +102,7 @@ describe("refreshWallpaperPool", () => {
     const result = await refreshWallpaperPool(now);
 
     expect(result).toMatchObject({ success: true, status: "REFRESHED", itemCount: 1 });
-    expect(searchWallhaven).toHaveBeenCalledWith("New Main");
+    expect(searchWallhaven).toHaveBeenCalledWith("New Main", undefined, 10);
   });
 
   it("refreshes when the main game changes position within the same source plan", async () => {
@@ -117,7 +122,7 @@ describe("refreshWallpaperPool", () => {
     const result = await refreshWallpaperPool(now);
 
     expect(result).toMatchObject({ success: true, status: "REFRESHED" });
-    expect(searchWallhaven).toHaveBeenNthCalledWith(1, "Total War: WARHAMMER III");
+    expect(searchWallhaven).toHaveBeenNthCalledWith(1, "Total War: WARHAMMER III", undefined, 10);
   });
 
   it("persists candidates and the searched source set after a successful refresh", async () => {
@@ -135,19 +140,18 @@ describe("refreshWallpaperPool", () => {
     const result = await refreshWallpaperPool(now);
     const finalWrite = upsert.mock.calls.at(-1)?.[0];
 
-    expect(result).toMatchObject({ success: true, status: "REFRESHED", itemCount: 2 });
-    expect(vi.mocked(searchWallhaven).mock.calls.map(([term]) => term)).toEqual(["Main Game", "Alpha", "Zulu"]);
+    expect(result).toMatchObject({ success: true, status: "REFRESHED", itemCount: 1 });
+    expect(vi.mocked(searchWallhaven).mock.calls.map(([term]) => term)).toEqual(["Main Game"]);
     expect(finalWrite).toMatchObject({
       update: {
         cachedAt: now,
-        lastError: "Zulu: no results",
+        lastError: null,
         candidates: {
           queryVersion: WALLPAPER_QUERY_VERSION,
           fetchedAt: now.toISOString(),
+          mode: "MAIN_GAME",
           searched: [
             { gameId: "main", name: "Main Game" },
-            { gameId: "alpha", name: "Alpha" },
-            { gameId: "zulu", name: "Zulu" },
           ],
         },
       },
@@ -170,6 +174,7 @@ describe("refreshWallpaperPool", () => {
         candidates: {
           queryVersion: WALLPAPER_QUERY_VERSION,
           fetchedAt: now.toISOString(),
+          mode: "IN_PROGRESS",
           searched: [],
           items: [],
         },
@@ -180,7 +185,7 @@ describe("refreshWallpaperPool", () => {
   it("advances past empty results and deduplicates candidates", async () => {
     findUnique.mockResolvedValue(null);
     findMany.mockResolvedValue(catalog(
-      { id: "main", name: "Main Game", main: true },
+      { id: "main", name: "Main Game", inProgress: true },
       { id: "next", name: "Next", inProgress: true },
     ));
     vi.mocked(searchWallhaven)
@@ -196,7 +201,7 @@ describe("refreshWallpaperPool", () => {
   it("searches every planned term while keeping the pool cap", async () => {
     findUnique.mockResolvedValue(null);
     findMany.mockResolvedValue(catalog(
-      { id: "main", name: "Main Game", main: true },
+      { id: "main", name: "Main Game", inProgress: true },
       { id: "next", name: "Next", inProgress: true },
     ));
     vi.mocked(searchWallhaven)
@@ -209,7 +214,7 @@ describe("refreshWallpaperPool", () => {
     const result = await refreshWallpaperPool(now);
     const finalWrite = upsert.mock.calls.at(-1)?.[0];
 
-    expect(result).toMatchObject({ success: true, itemCount: 10 });
+    expect(result).toMatchObject({ success: true, itemCount: 11 });
     expect(searchWallhaven).toHaveBeenCalledTimes(2);
     expect(finalWrite.update.candidates.items.map((item: WallpaperCandidate) => item.id)).toContain("next-only");
   });

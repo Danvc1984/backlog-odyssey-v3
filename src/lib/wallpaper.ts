@@ -1,11 +1,14 @@
 import { z } from "zod";
 
 export const DEFAULT_WALLPAPER_TIME_ZONE = "America/Mexico_City";
-export const WALLPAPER_POOL_SIZE = 10;
-export const WALLPAPER_MAX_SEARCHES_PER_REFRESH = 4;
+export const WALLPAPER_MAIN_POOL_SIZE = 10;
+export const WALLPAPER_IN_PROGRESS_POOL_SIZE = 20;
+export const WALLPAPER_MAX_IN_PROGRESS_GAMES = 6;
+export const WALLPAPER_MIN_IMAGES_PER_IN_PROGRESS_GAME = 3;
+export const WALLPAPER_MAX_SEARCHES_PER_REFRESH = WALLPAPER_MAX_IN_PROGRESS_GAMES;
 export const WALLPAPER_POOL_STALE_MS = 7 * 24 * 60 * 60 * 1000;
 export const WALLPAPER_REFRESH_THROTTLE_MS = 60 * 60 * 1000;
-export const WALLPAPER_QUERY_VERSION = 2;
+export const WALLPAPER_QUERY_VERSION = 3;
 
 export interface WallpaperCandidate {
   id: string;
@@ -25,8 +28,18 @@ export interface WallpaperSearchTerm {
 export interface WallpaperPool {
   queryVersion: number;
   fetchedAt: string;
+  mode: WallpaperPoolMode;
   searched: WallpaperSearchTerm[];
   items: WallpaperCandidate[];
+}
+
+export type WallpaperPoolMode = "MAIN_GAME" | "IN_PROGRESS";
+
+export interface WallpaperSearchPlan {
+  mode: WallpaperPoolMode;
+  terms: WallpaperSearchTerm[];
+  poolSize: number;
+  imagesPerTerm: number;
 }
 
 export interface WallpaperRenderTarget {
@@ -43,6 +56,7 @@ export interface WallpaperSelection {
 export interface WallpaperGameReference {
   id: string | null;
   name: string;
+  updatedAt: Date;
 }
 
 export interface WallpaperSelectionState {
@@ -75,8 +89,9 @@ const wallpaperSearchTermSchema = z.object({
 export const wallpaperPoolSchema = z.object({
   queryVersion: z.literal(WALLPAPER_QUERY_VERSION),
   fetchedAt: z.string().min(1).refine((value) => !Number.isNaN(Date.parse(value))),
+  mode: z.enum(["MAIN_GAME", "IN_PROGRESS"]),
   searched: z.array(wallpaperSearchTermSchema).max(WALLPAPER_MAX_SEARCHES_PER_REFRESH),
-  items: z.array(wallpaperCandidateSchema).max(WALLPAPER_POOL_SIZE),
+  items: z.array(wallpaperCandidateSchema).max(WALLPAPER_IN_PROGRESS_POOL_SIZE),
 });
 
 export const wallpaperRenderTargetSchema = z.object({
@@ -183,14 +198,14 @@ export function isWallpaperRefreshThrottled(
 
 export function isPoolStale(
   state: WallpaperFreshnessState | null,
-  currentSources: readonly WallpaperSearchTerm[],
+  currentPlan: WallpaperSearchPlan,
   now: Date,
 ): boolean {
   const storedPool = state ? parseWallpaperPool(state.candidates) : null;
   if (!state?.cachedAt || Number.isNaN(state.cachedAt.getTime()) || !storedPool) {
     return true;
   }
-  if (!sameSourcePlan(storedPool.searched, currentSources)) {
+  if (storedPool.mode !== currentPlan.mode || !sameSourcePlan(storedPool.searched, currentPlan.terms)) {
     return true;
   }
   if (state && isWallpaperRefreshThrottled(state.lastAttemptAt, now)) {
@@ -206,33 +221,37 @@ export function isPoolStale(
 export function buildSearchPlan(
   mainGame: WallpaperGameReference | null,
   inProgressGames: readonly WallpaperGameReference[],
-): WallpaperSearchTerm[] {
-  const plan: WallpaperSearchTerm[] = [];
-  const seenGames = new Set<string>();
-
+): WallpaperSearchPlan {
   if (mainGame) {
-    plan.push({ gameId: mainGame.id, name: mainGame.name });
-    seenGames.add(gameKey(mainGame));
+    return {
+      mode: "MAIN_GAME",
+      terms: [{ gameId: mainGame.id, name: mainGame.name }],
+      poolSize: WALLPAPER_MAIN_POOL_SIZE,
+      imagesPerTerm: WALLPAPER_MAIN_POOL_SIZE,
+    };
   }
 
-  const sortedInProgress = [...inProgressGames].sort((left, right) => {
+  const selectedGames = [...inProgressGames].sort((left, right) => {
+    const updatedAtOrder = right.updatedAt.getTime() - left.updatedAt.getTime();
+    if (updatedAtOrder) {
+      return updatedAtOrder;
+    }
     const nameOrder = left.name.localeCompare(right.name, "en", { sensitivity: "base" });
     return nameOrder || (left.id ?? "").localeCompare(right.id ?? "");
-  });
+  }).slice(0, WALLPAPER_MAX_IN_PROGRESS_GAMES);
+  const terms = selectedGames.map(({ id, name }) => ({ gameId: id, name }));
 
-  for (const game of sortedInProgress) {
-    const key = gameKey(game);
-    if (seenGames.has(key)) {
-      continue;
-    }
-    seenGames.add(key);
-    plan.push({ gameId: game.id, name: game.name });
-    if (plan.length >= WALLPAPER_MAX_SEARCHES_PER_REFRESH) {
-      break;
-    }
-  }
-
-  return plan.slice(0, WALLPAPER_MAX_SEARCHES_PER_REFRESH);
+  return {
+    mode: "IN_PROGRESS",
+    terms,
+    poolSize: WALLPAPER_IN_PROGRESS_POOL_SIZE,
+    imagesPerTerm: terms.length > 0
+      ? Math.max(
+        WALLPAPER_MIN_IMAGES_PER_IN_PROGRESS_GAME,
+        Math.floor(WALLPAPER_IN_PROGRESS_POOL_SIZE / terms.length),
+      )
+      : 0,
+  };
 }
 
 export function pickShuffleIndex(
@@ -270,10 +289,6 @@ function sameSourcePlan(
 
 function sourceKey(source: WallpaperSearchTerm): string {
   return source.gameId ? `id:${source.gameId}` : `name:${source.name.toLocaleLowerCase("en")}`;
-}
-
-function gameKey(game: WallpaperGameReference): string {
-  return game.id ? `id:${game.id}` : `name:${game.name.toLocaleLowerCase("en")}`;
 }
 
 function isValidIndex(value: number | null | undefined, length: number): value is number {

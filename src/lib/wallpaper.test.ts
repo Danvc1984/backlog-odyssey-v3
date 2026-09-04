@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  WALLPAPER_IN_PROGRESS_POOL_SIZE,
+  WALLPAPER_MAIN_POOL_SIZE,
   WALLPAPER_MAX_SEARCHES_PER_REFRESH,
   WALLPAPER_POOL_STALE_MS,
   WALLPAPER_QUERY_VERSION,
@@ -31,6 +33,7 @@ const candidate = (id: string): WallpaperCandidate => ({
 const pool = {
   queryVersion: WALLPAPER_QUERY_VERSION,
   fetchedAt: "2026-09-03T00:00:00.000Z",
+  mode: "MAIN_GAME" as const,
   searched: [{ gameId: "main", name: "Main Game" }],
   items: [candidate("one"), candidate("two"), candidate("three")],
 };
@@ -103,50 +106,95 @@ describe("wallpaper day and selection", () => {
 });
 
 describe("wallpaper freshness and search planning", () => {
-  const main: WallpaperGameReference = { id: "main", name: "Main Game" };
+  const main: WallpaperGameReference = {
+    id: "main",
+    name: "Main Game",
+    updatedAt: new Date("2026-09-03T12:00:00.000Z"),
+  };
   const inProgress: WallpaperGameReference[] = [
-    { id: "zulu", name: "Zulu" },
-    { id: "alpha", name: "alpha" },
+    { id: "zulu", name: "Zulu", updatedAt: new Date("2026-09-01T00:00:00.000Z") },
+    { id: "alpha", name: "alpha", updatedAt: new Date("2026-09-03T00:00:00.000Z") },
     main,
-    { id: "bravo", name: "Bravo" },
-    { id: "charlie", name: "Charlie" },
+    { id: "bravo", name: "Bravo", updatedAt: new Date("2026-09-02T00:00:00.000Z") },
+    { id: "charlie", name: "Charlie", updatedAt: new Date("2026-09-02T00:00:00.000Z") },
   ];
 
-  it("puts the main game first, sorts progress, excludes the main game, and caps terms", () => {
-    expect(buildSearchPlan(main, inProgress)).toEqual([
-      { gameId: "main", name: "Main Game" },
-      { gameId: "alpha", name: "alpha" },
-      { gameId: "bravo", name: "Bravo" },
-      { gameId: "charlie", name: "Charlie" },
+  it("uses only the main game for a ten-image pool", () => {
+    expect(buildSearchPlan(main, inProgress)).toEqual({
+      mode: "MAIN_GAME",
+      terms: [{ gameId: "main", name: "Main Game" }],
+      poolSize: WALLPAPER_MAIN_POOL_SIZE,
+      imagesPerTerm: WALLPAPER_MAIN_POOL_SIZE,
+    });
+  });
+
+  it("uses the most recently updated in-progress games with an equal quota", () => {
+    const noMainPlan = buildSearchPlan(null, inProgress);
+
+    expect(noMainPlan).toEqual({
+      mode: "IN_PROGRESS",
+      terms: [
+        { gameId: "main", name: "Main Game" },
+        { gameId: "alpha", name: "alpha" },
+        { gameId: "bravo", name: "Bravo" },
+        { gameId: "charlie", name: "Charlie" },
+        { gameId: "zulu", name: "Zulu" },
+      ],
+      poolSize: WALLPAPER_IN_PROGRESS_POOL_SIZE,
+      imagesPerTerm: 4,
+    });
+    expect(noMainPlan.terms).toHaveLength(Math.min(inProgress.length, WALLPAPER_MAX_SEARCHES_PER_REFRESH));
+
+    const sixGamePlan = buildSearchPlan(null, [
+      ...inProgress,
+      { id: "delta", name: "Delta", updatedAt: new Date("2026-09-01T00:00:00.000Z") },
+      { id: "echo", name: "Echo", updatedAt: new Date("2026-08-31T00:00:00.000Z") },
     ]);
-    expect(buildSearchPlan(null, inProgress)).toHaveLength(WALLPAPER_MAX_SEARCHES_PER_REFRESH);
-    expect(buildSearchPlan({ id: null, name: "Main Game" }, [{ id: null, name: "main game" }])).toEqual([
-      { gameId: null, name: "Main Game" },
-    ]);
+    expect(sixGamePlan.terms).toHaveLength(6);
+    expect(sixGamePlan.imagesPerTerm).toBe(3);
+    expect(sixGamePlan.terms.map((term) => term.gameId)).not.toContain("echo");
+  });
+
+  it.each([
+    [1, 20],
+    [2, 10],
+    [3, 6],
+    [4, 5],
+    [5, 4],
+    [6, 3],
+  ])("apportions %i in-progress games to %i images per game", (gameCount, imagesPerTerm) => {
+    const games = Array.from({ length: gameCount }, (_, index) => ({
+      id: `game-${index}`,
+      name: `Game ${index}`,
+      updatedAt: new Date(`2026-09-${String(6 - index).padStart(2, "0")}T00:00:00.000Z`),
+    }));
+
+    expect(buildSearchPlan(null, games)).toMatchObject({
+      mode: "IN_PROGRESS",
+      poolSize: WALLPAPER_IN_PROGRESS_POOL_SIZE,
+      imagesPerTerm,
+    });
   });
 
   it("detects age and ordered source changes, while throttling unchanged sources", () => {
     const now = new Date("2026-09-03T12:00:00.000Z");
-    const sources = [{ gameId: "main", name: "Main Game" }];
+    const plan = buildSearchPlan(main, inProgress);
     const fresh = { candidates: pool, cachedAt: new Date(now.getTime() - 1_000), lastAttemptAt: null };
 
-    expect(isPoolStale(fresh, sources, now)).toBe(false);
-    expect(isPoolStale({ ...fresh, cachedAt: new Date(now.getTime() - WALLPAPER_POOL_STALE_MS) }, sources, now)).toBe(true);
-    expect(isPoolStale({ ...fresh, candidates: { ...pool, searched: [{ gameId: "other", name: "Other" }] } }, sources, now)).toBe(true);
-    expect(isPoolStale({ ...fresh, lastAttemptAt: new Date(now.getTime() - WALLPAPER_REFRESH_THROTTLE_MS + 1) }, sources, now)).toBe(false);
+    expect(isPoolStale(fresh, plan, now)).toBe(false);
+    expect(isPoolStale({ ...fresh, cachedAt: new Date(now.getTime() - WALLPAPER_POOL_STALE_MS) }, plan, now)).toBe(true);
+    expect(isPoolStale({ ...fresh, candidates: { ...pool, searched: [{ gameId: "other", name: "Other" }] } }, plan, now)).toBe(true);
+    expect(isPoolStale({ ...fresh, lastAttemptAt: new Date(now.getTime() - WALLPAPER_REFRESH_THROTTLE_MS + 1) }, plan, now)).toBe(false);
     expect(isPoolStale({
       ...fresh,
       candidates: { ...pool, searched: [{ gameId: "other", name: "Other" }] },
       lastAttemptAt: new Date(now.getTime() - 1_000),
-    }, sources, now)).toBe(true);
-    const orderedSources = [
-      { gameId: "main", name: "Main Game" },
-      { gameId: "other", name: "Other" },
-    ];
+    }, plan, now)).toBe(true);
+    const noMainPlan = buildSearchPlan(null, [main]);
     expect(isPoolStale({
       ...fresh,
-      candidates: { ...pool, searched: [...orderedSources].reverse() },
-    }, orderedSources, now)).toBe(true);
+      candidates: { ...pool, mode: "IN_PROGRESS", searched: noMainPlan.terms },
+    }, plan, now)).toBe(true);
   });
 });
 
