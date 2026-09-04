@@ -53,7 +53,7 @@ export function WishlistCard({
 
   if (variant === "list") {
     return (
-      <article className={`overflow-hidden rounded-lg border border-border shadow-card ${entry.type === "DLC" ? "bg-primary/5" : "bg-card"}`}>
+      <article className="overflow-hidden rounded-lg border border-border bg-primary/5 shadow-card">
         <div className="flex items-center gap-3 p-3 sm:gap-4 sm:p-4">
           <WishlistCover
             id={entry.id}
@@ -100,7 +100,7 @@ export function WishlistCard({
   }
 
   return (
-    <article className={`overflow-hidden rounded-lg border border-border shadow-card ${entry.type === "DLC" ? "bg-primary/5" : "bg-card"}`}>
+    <article className="overflow-hidden rounded-lg border border-border bg-primary/5 shadow-card">
       <WishlistCover id={entry.id} title={coverTitle} imageUrl={imageUrl} />
       <div className="space-y-3 p-4">
         <div className="flex items-center justify-between gap-3">

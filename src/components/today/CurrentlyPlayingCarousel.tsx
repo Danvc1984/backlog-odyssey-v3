@@ -18,7 +18,7 @@ function playStateLabel(playState: string): string {
 function GameSlide({ game }: { game: CurrentlyPlayingGame }) {
   const isMainGame = game.libraryEntry?.isMainGame === true;
   return (
-    <article className="relative overflow-hidden rounded-2xl bg-card p-6 text-white shadow-card">
+    <article className="relative overflow-hidden rounded-2xl bg-primary/5 p-6 text-white shadow-card">
       <DetailHeroArt
         id={game.id}
         title={game.name}

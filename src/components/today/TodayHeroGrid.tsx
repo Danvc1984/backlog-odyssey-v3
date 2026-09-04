@@ -45,7 +45,7 @@ function Spotlight({ game }: { game: TodayHeroGame }) {
   return (
     <section
       aria-labelledby="today-focus-heading"
-      className="overflow-hidden rounded-2xl border border-border bg-card shadow-card"
+      className="overflow-hidden rounded-2xl border border-border bg-primary/5 shadow-card"
     >
       <div className="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <DetailHeroArt

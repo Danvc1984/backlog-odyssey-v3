@@ -97,7 +97,7 @@ export function PlayNextRailCard({ runId, role, itemId, gameId, name, rank, scor
     caveats: caveatChips,
   });
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-card">
+    <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-primary/5 shadow-card">
       <Link href={`/games/${slot.gameId}`} className="block">
         <DetailHeroArt
           id={slot.gameId}

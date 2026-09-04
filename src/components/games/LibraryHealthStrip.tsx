@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { updatePlayState } from "@/actions/game-detail";
 import { Button } from "@/components/ui/button";
@@ -126,6 +127,7 @@ export function LibraryHealthStrip({
   games: readonly MainGamePick[];
   mainGame: MainGamePick | null;
 }) {
+  const router = useRouter();
   const setMainGame = useCallback(
     async (id: string) => {
       const result = await updatePlayState(id, { isMainGame: true });
@@ -134,10 +136,11 @@ export function LibraryHealthStrip({
         return false;
       } else {
         toast.success("Main game updated");
+        router.refresh();
         return true;
       }
     },
-    [],
+    [router],
   );
 
   const clearMainGame = useCallback(async (id: string) => {
@@ -147,8 +150,9 @@ export function LibraryHealthStrip({
       return false;
     }
     toast.success("Main game cleared");
+    router.refresh();
     return true;
-  }, []);
+  }, [router]);
 
   const inProgress = games.filter((game) => game.id !== mainGame?.id);
 

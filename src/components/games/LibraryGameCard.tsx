@@ -248,7 +248,7 @@ export function LibraryGameCard({
 }) {
   if (variant === "list") {
     return (
-      <article className="overflow-hidden rounded-lg border border-border bg-card shadow-card">
+      <article className="overflow-hidden rounded-lg border border-border bg-primary/5 shadow-card">
         <div className="flex items-center gap-4 p-3 sm:p-4">
           <Cover entry={entry} compact />
           <div className="min-w-0 flex-1">
@@ -278,7 +278,7 @@ export function LibraryGameCard({
   }
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-card">
+    <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-primary/5 shadow-card">
       <Cover entry={entry} compact={false} />
       <CardBody entry={entry} variant="grid" />
     </article>

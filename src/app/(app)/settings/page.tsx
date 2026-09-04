@@ -13,6 +13,7 @@ import { getLatestWishlistCompatSweep } from "@/actions/wishlist-compatibility";
 export default async function SettingsPage() {
   const [
     steamConnection,
+    appSettings,
     unresolvedDlcs,
     baseGames,
     latestCompatBatch,
@@ -23,6 +24,7 @@ export default async function SettingsPage() {
     sources,
   ] = await Promise.all([
     prisma.steamConnection.findUnique({ where: { id: 1 } }),
+    prisma.appSettings.findUnique({ where: { id: 1 }, select: { wallpaperEnabled: true } }),
     prisma.unresolvedSteamDlc.findMany({
       select: {
         id: true,
@@ -68,7 +70,7 @@ export default async function SettingsPage() {
         connected={Boolean(steamConnection)}
         steamId64={steamConnection?.steamId64 ?? null}
       />
-      <AppearanceSection />
+      <AppearanceSection initialWallpaperEnabled={appSettings?.wallpaperEnabled ?? true} />
 
       <CompatibilitySweepPanel
         initialBatch={latestCompatBatch?.data ?? null}

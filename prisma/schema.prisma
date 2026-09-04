@@ -787,12 +787,14 @@ model RecommendationPreset {
 // ---------------------------------------------------------------------------
 
 model WallpaperState {
-  id           Int      @id @default(1)
-  candidates   Json?
-  selectedIdx  Int      @default(0)
-  renderTarget Json?
-  cachedAt     DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            Int      @id @default(1)
+  candidates    Json?
+  selectedIdx   Int      @default(0)
+  renderTarget  Json?
+  cachedAt      DateTime @default(now())
+  lastAttemptAt DateTime?
+  lastError     String?
+  updatedAt     DateTime @updatedAt
 }
 
 model SyncRun {

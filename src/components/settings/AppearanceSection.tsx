@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useState, useSyncExternalStore, useTransition, type ReactNode } from "react";
 import { useTheme } from "next-themes";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { setWallpaperEnabled } from "@/actions/wallpaper";
 import { useVisualPreferences } from "@/components/preferences/VisualPreferencesProvider";
 import type { DataSetting, MotionSetting } from "@/lib/visual-preferences";
 import { cn } from "@/lib/utils";
@@ -106,10 +109,29 @@ function useHasHydrated(): boolean {
   return useSyncExternalStore(subscribeHydration, getHydrationSnapshot, () => false);
 }
 
-export function AppearanceSection() {
+export function AppearanceSection({ initialWallpaperEnabled }: { initialWallpaperEnabled: boolean }) {
   const hasHydrated = useHasHydrated();
   const { theme, setTheme } = useTheme();
   const { motion, data, setMotion, setData } = useVisualPreferences();
+  const router = useRouter();
+  const [wallpaperEnabled, setWallpaperEnabledState] = useState(initialWallpaperEnabled);
+  const [wallpaperPending, startWallpaperTransition] = useTransition();
+
+  const toggleWallpaper = () => {
+    const next = !wallpaperEnabled;
+    setWallpaperEnabledState(next);
+    startWallpaperTransition(() => {
+      void (async () => {
+        const result = await setWallpaperEnabled(next);
+        if (!result.success) {
+          setWallpaperEnabledState(!next);
+          toast.error(result.error ?? "Failed to update wallpaper setting");
+          return;
+        }
+        router.refresh();
+      })();
+    });
+  };
 
   useEffect(() => {
     notifyHydrated();
@@ -146,6 +168,32 @@ export function AppearanceSection() {
           description="Scale back data-heavy content such as art and imagery."
           control={
             <SegmentedControl value={dataValue} options={dataOptions} onChange={setData} label="Data preference" />
+          }
+        />
+        <SettingRow
+          title="Desktop wallpaper"
+          description="Show a daily Wallhaven image behind the app on desktop screens."
+          control={
+            <button
+              type="button"
+              role="switch"
+              aria-checked={wallpaperEnabled}
+              aria-label="Enable desktop wallpaper"
+              onClick={toggleWallpaper}
+              disabled={wallpaperPending}
+              className={cn(
+                "inline-flex h-7 w-12 shrink-0 items-center rounded-full border p-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-60",
+                wallpaperEnabled ? "border-signal/50 bg-signal/20" : "border-border bg-input",
+              )}
+            >
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "size-5 rounded-full bg-foreground shadow-sm transition-transform",
+                  wallpaperEnabled ? "translate-x-5 bg-signal-strong" : "translate-x-0",
+                )}
+              />
+            </button>
           }
         />
       </div>

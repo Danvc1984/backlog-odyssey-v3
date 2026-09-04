@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -47,6 +48,7 @@ export function PlayStateSection({
   gameId: string;
   libraryEntry: PlayStateData | null;
 }) {
+  const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [values, setValues] = useState({
@@ -69,6 +71,13 @@ export function PlayStateSection({
 
     if (result.success) {
       toast.success("Play state updated");
+      if (
+        input.isMainGame !== undefined ||
+        input.playState !== undefined ||
+        input.hidden !== undefined
+      ) {
+        router.refresh();
+      }
       return true;
     }
     setError(result.error ?? "Failed to update play state");

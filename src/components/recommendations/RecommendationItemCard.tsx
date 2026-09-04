@@ -106,7 +106,7 @@ export function RecommendationItemCard({
   };
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-card">
+    <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-primary/5 shadow-card">
       <Link href={href} className="block">
         <DetailHeroArt
           id={coverId}

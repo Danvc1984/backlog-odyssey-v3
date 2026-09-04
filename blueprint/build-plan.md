@@ -324,7 +324,7 @@
   evidence boundaries, and destructive confirmations. Dynamic per-game palettes
   remain feature 17.
 
-- [ ] 16. **Wallhaven global background** - SFW keyword-pool caching (~10
+- [x] 16. **Wallhaven global background** - SFW keyword-pool caching (~10
   candidates), deterministic daily rotation with shuffle, desktop-oriented
   display, reduced-data hard-off, staleness-triggered queued refresh,
   fallback, and attribution
