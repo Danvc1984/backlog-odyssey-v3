@@ -40,7 +40,7 @@ export function StatusPill({
   return (
     <span
       className={cn(
-        "inline-flex w-fit items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 font-technical text-[10px] leading-4",
+        "game-theme-status-pill inline-flex w-fit items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 font-technical text-[10px] leading-4",
         STATUS_PILL_TONES[tone],
         className,
       )}
@@ -76,7 +76,11 @@ export function SectionCard({
   return (
     <section
       aria-labelledby={id}
-      className={cn("rounded-lg border shadow-card", CARD_TONES[tone], className)}
+      className={cn(
+        `game-theme-section-card game-theme-section-card--${tone} rounded-lg border shadow-card`,
+        CARD_TONES[tone],
+        className,
+      )}
     >
       <div className="p-5">
         <div className="mb-5 flex items-start justify-between gap-4">

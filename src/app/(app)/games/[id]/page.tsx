@@ -22,7 +22,9 @@ import { parseProtonDbSummary, PROTONDB_APP_URL } from "@/lib/protondb-api";
 import { parseAntiCheatEvidence } from "@/lib/compat-evidence";
 import type { RawgMetadataPayload } from "@/lib/rawg-types";
 import { GameDetailHero } from "@/components/games/GameDetailHero";
+import { GameThemeScope } from "@/components/games/GameThemeScope";
 import { SectionCard, StatusPill } from "@/components/ui/detail-card";
+import { resolvePagePalette } from "@/lib/game-theme";
 
 export default async function GameDetailPage({
   params,
@@ -158,7 +160,8 @@ export default async function GameDetailPage({
   );
 
   return (
-    <div className="space-y-8">
+    <GameThemeScope palette={resolvePagePalette(rawgPayload)}>
+      <div className="space-y-8">
       <p className="technical-label text-muted-foreground">
         <a href="/library" className="hover:text-foreground hover:underline">
           Owned Games Library
@@ -412,6 +415,7 @@ export default async function GameDetailPage({
           <DeleteGameDialog gameId={game.id} />
         </div>
       </SectionCard>
-    </div>
+      </div>
+    </GameThemeScope>
   );
 }

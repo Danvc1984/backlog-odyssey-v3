@@ -203,6 +203,64 @@
     letter-spacing: 0.1em;
     text-transform: uppercase;
   }
+
+  .game-theme-scope {
+    --primary: var(--game-accent);
+    --ring: var(--game-accent);
+    --signal: var(--game-accent);
+    --signal-strong: var(--game-accent);
+    --signal-text: var(--game-accent);
+  }
+
+  .game-theme-scope .game-detail-hero {
+    border-top-color: color-mix(
+      in oklab,
+      var(--game-accent, var(--border)) 28%,
+      var(--border)
+    );
+  }
+
+  .game-theme-scope .game-detail-hero__content {
+    background-image: linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--game-accent-dark, transparent) 14%, transparent),
+      color-mix(in oklab, var(--game-accent, transparent) 5%, transparent) 58%,
+      transparent
+    );
+  }
+
+  .game-theme-scope .game-detail-hero h1 {
+    color: var(--game-accent);
+  }
+
+  .game-theme-scope .game-theme-section-card {
+    border-top-color: color-mix(
+      in oklab,
+      var(--game-accent, var(--border)) 20%,
+      var(--border)
+    );
+  }
+
+  .dark .game-theme-scope .game-theme-section-card:not(.game-theme-section-card--danger) {
+    color: var(--game-accent);
+  }
+
+  .dark .game-theme-scope .game-detail-hero__meta .text-foreground {
+    color: var(--game-accent) !important;
+  }
+
+  .game-theme-scope .game-theme-status-pill {
+    border: 1px solid color-mix(
+      in oklab,
+      var(--game-accent-muted, var(--border)) 45%,
+      var(--border)
+    );
+  }
+
+  .game-theme-scope .shadow-glow {
+    box-shadow: none !important;
+  }
+
 }
 
 @media (prefers-reduced-motion: reduce) {

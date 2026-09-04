@@ -25,7 +25,7 @@ export function GameDetailHero({
 }: GameDetailHeroProps) {
   return (
     <section
-      className="grid overflow-hidden rounded-lg border border-border bg-card shadow-card lg:grid-cols-[minmax(15rem,0.8fr)_minmax(0,1.4fr)]"
+      className="game-detail-hero grid overflow-hidden rounded-lg border border-border bg-card shadow-card lg:grid-cols-[minmax(15rem,0.8fr)_minmax(0,1.4fr)]"
       aria-labelledby="game-detail-title"
     >
       <DetailHeroArt
@@ -35,7 +35,7 @@ export function GameDetailHero({
         hideLabel
         className="aspect-[16/10] min-h-64 lg:min-h-full"
       />
-      <div className="flex min-w-0 flex-col justify-between gap-5 p-6 md:p-8">
+      <div className="game-detail-hero__content flex min-w-0 flex-col justify-between gap-5 p-6 md:p-8">
         <h1
           id="game-detail-title"
           className="text-[clamp(2.25rem,5vw,4.5rem)] font-extrabold leading-[0.92] tracking-[-0.08em]"
@@ -52,7 +52,7 @@ export function GameDetailHero({
           )}
           <span className="technical-label text-muted-foreground">Added {addedAt}</span>
         </div>
-        <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
+        <div className="game-detail-hero__meta flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
           <span>
             <strong className="text-foreground">Type</strong> {type === "DLC" ? "DLC" : "Base game"}
           </span>

@@ -340,7 +340,7 @@
     single `page_size=6` screenshots call with hidden entries filtered,
     persisted in the replaceable RAWG snapshot with tolerant v1/v2
     parsing and backfill through the existing re-enrichment route
-  - [ ] 17b. **Game-detail theme application** - hero band plus decorative
+  - [x] 17b. **Game-detail theme application** - hero band plus decorative
     accent tints (headers, borders, chips, dividers) on the game detail
     page, semantic tokens untouched, contrast overlays, deterministic
     fallback without artwork or under reduced data, re-derivation on
