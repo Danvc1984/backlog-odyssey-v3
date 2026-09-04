@@ -3,9 +3,11 @@
 import { useEffect, useState, useSyncExternalStore, useTransition, type ReactNode } from "react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
+import { Shuffle } from "lucide-react";
 import { toast } from "sonner";
-import { setWallpaperEnabled } from "@/actions/wallpaper";
+import { setWallpaperEnabled, shuffleWallpaper } from "@/actions/wallpaper";
 import { useVisualPreferences } from "@/components/preferences/VisualPreferencesProvider";
+import { formatMexicoTimestamp } from "@/lib/format-times";
 import type { DataSetting, MotionSetting } from "@/lib/visual-preferences";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "@/components/ui/detail-card";
@@ -109,7 +111,15 @@ function useHasHydrated(): boolean {
   return useSyncExternalStore(subscribeHydration, getHydrationSnapshot, () => false);
 }
 
-export function AppearanceSection({ initialWallpaperEnabled }: { initialWallpaperEnabled: boolean }) {
+export function AppearanceSection({
+  initialWallpaperEnabled,
+  poolCachedAt,
+  lastError,
+}: {
+  initialWallpaperEnabled: boolean;
+  poolCachedAt: Date | null;
+  lastError: string | null;
+}) {
   const hasHydrated = useHasHydrated();
   const { theme, setTheme } = useTheme();
   const { motion, data, setMotion, setData } = useVisualPreferences();
@@ -132,6 +142,20 @@ export function AppearanceSection({ initialWallpaperEnabled }: { initialWallpape
       })();
     });
   };
+
+  const shuffle = () => {
+    startWallpaperTransition(async () => {
+      const result = await shuffleWallpaper();
+      if (!result.success) {
+        toast.error(result.error ?? "Failed to shuffle wallpaper");
+        return;
+      }
+      router.refresh();
+      toast.success("Wallpaper shuffled");
+    });
+  };
+
+  const cachedAtText = poolCachedAt ? formatMexicoTimestamp(poolCachedAt) : null;
 
   useEffect(() => {
     notifyHydrated();
@@ -174,28 +198,50 @@ export function AppearanceSection({ initialWallpaperEnabled }: { initialWallpape
           title="Desktop wallpaper"
           description="Show a daily Wallhaven image behind the app on desktop screens."
           control={
-            <button
-              type="button"
-              role="switch"
-              aria-checked={wallpaperEnabled}
-              aria-label="Enable desktop wallpaper"
-              onClick={toggleWallpaper}
-              disabled={wallpaperPending}
-              className={cn(
-                "inline-flex h-7 w-12 shrink-0 items-center rounded-full border p-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-60",
-                wallpaperEnabled ? "border-signal/50 bg-signal/20" : "border-border bg-input",
-              )}
-            >
-              <span
-                aria-hidden="true"
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={wallpaperEnabled}
+                aria-label="Enable desktop wallpaper"
+                onClick={toggleWallpaper}
+                disabled={wallpaperPending}
                 className={cn(
-                  "size-5 rounded-full bg-foreground shadow-sm transition-transform",
-                  wallpaperEnabled ? "translate-x-5 bg-signal-strong" : "translate-x-0",
+                  "inline-flex h-7 w-12 shrink-0 items-center rounded-full border p-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-60",
+                  wallpaperEnabled ? "border-signal/50 bg-signal/20" : "border-border bg-input",
                 )}
-              />
-            </button>
+              >
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "size-5 rounded-full bg-foreground shadow-sm transition-transform",
+                    wallpaperEnabled ? "translate-x-5 bg-signal-strong" : "translate-x-0",
+                  )}
+                />
+              </button>
+              <button
+                type="button"
+                onClick={shuffle}
+                disabled={wallpaperPending}
+                className="inline-flex h-8 items-center gap-1 rounded-md border border-border bg-input px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground disabled:cursor-wait disabled:opacity-60"
+              >
+                <Shuffle aria-hidden className="size-3.5" />
+                Shuffle now
+              </button>
+            </div>
           }
         />
+        {lastError ? (
+          <p className="text-xs text-warning">{lastError}</p>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            {wallpaperEnabled
+              ? cachedAtText
+                ? `Pool updated ${cachedAtText}`
+                : "Wallpaper pool not cached yet"
+              : "Wallpaper disabled."}
+          </p>
+        )}
       </div>
     </SectionCard>
   );

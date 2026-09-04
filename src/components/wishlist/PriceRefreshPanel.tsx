@@ -7,6 +7,7 @@ import { RefreshCw } from "lucide-react";
 import { updatePrices } from "@/actions/prices";
 import { Button } from "@/components/ui/button";
 import { formatMexicoTimestamp } from "@/lib/format-times";
+import { readCounts } from "@/lib/price-counts";
 
 export interface PriceRefreshRunSummary {
   id: string;
@@ -14,24 +15,6 @@ export interface PriceRefreshRunSummary {
   counts: unknown;
   requestedAt: string | Date;
   finishedAt: string | Date | null;
-}
-
-interface CountBucket {
-  total: number;
-  refreshed: number;
-  notFound: number;
-  noOffers: number;
-  failed: number;
-  identityRequired: number;
-  conversionUnavailable?: boolean;
-}
-
-function readCounts(value: unknown): CountBucket {
-  const fallback = { total: 0, refreshed: 0, notFound: 0, noOffers: 0, failed: 0, identityRequired: 0 };
-  if (typeof value !== "object" || value === null) {
-    return fallback;
-  }
-  return { ...fallback, ...(value as Partial<CountBucket>) };
 }
 
 export function PriceRefreshPanel() {

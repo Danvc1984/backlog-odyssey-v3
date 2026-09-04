@@ -359,7 +359,7 @@
   manual provider refresh/retry controls including the global compatibility
   sweep, queue progress, wishlist-import diagnostics, personal-data-only
   JSON export, and empty-schema-only import of that export
-  - [ ] 18a. **Settings surfaces** - Google session area, fixed environment
+  - [x] 18a. **Settings surfaces** - Google session area, fixed environment
     display, wishlist-import status and review access, Wallhaven controls,
     manual provider refresh/retry including the global compatibility
     sweep, and queue progress with retry
