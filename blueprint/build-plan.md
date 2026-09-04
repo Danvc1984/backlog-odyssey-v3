@@ -363,7 +363,7 @@
     display, wishlist-import status and review access, Wallhaven controls,
     manual provider refresh/retry including the global compatibility
     sweep, and queue progress with retry
-  - [ ] 18b. **Personal-data JSON export** - versioned export of catalog
+  - [x] 18b. **Personal-data JSON export** - versioned export of catalog
     and wishlist records, availability, external IDs, play states,
     personal fields, tags, collections, settings, manual overrides, and
     recommendation-owned decisions, excluding rebuildable provider

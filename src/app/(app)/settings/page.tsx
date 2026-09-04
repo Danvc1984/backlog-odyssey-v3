@@ -10,6 +10,7 @@ import { EnvironmentCard } from "@/components/settings/EnvironmentCard";
 import { WishlistImportStatusCard } from "@/components/settings/WishlistImportStatusCard";
 import { PriceStatusCard } from "@/components/settings/PriceStatusCard";
 import { EnrichmentQueueCard } from "@/components/settings/EnrichmentQueueCard";
+import { DataExportCard } from "@/components/settings/DataExportCard";
 import { getLatestCompatBatchStatus } from "@/lib/compat-batch-runner";
 import { RecommendationProfileSection } from "@/components/recommendations/RecommendationProfileSection";
 import { AlternativeSourcesCard } from "@/components/sources/AlternativeSourcesCard";
@@ -35,6 +36,9 @@ export default async function SettingsPage() {
     wallpaperState,
     latestPriceRefresh,
     enrichmentJobs,
+    exportGameCount,
+    exportWishlistCount,
+    exportRecommendationRunCount,
   ] = await Promise.all([
     prisma.steamConnection.findUnique({ where: { id: 1 } }),
     prisma.appSettings.findUnique({
@@ -99,6 +103,9 @@ export default async function SettingsPage() {
         game: { select: { id: true, name: true } },
       },
     }),
+    prisma.game.count(),
+    prisma.wishlistEntry.count(),
+    prisma.recommendationRun.count(),
   ]);
 
   return (
@@ -168,6 +175,11 @@ export default async function SettingsPage() {
       />
       <AlternativeSourcesCard sources={sources} />
       <UnresolvedDlcReviewCard items={unresolvedDlcs} baseGames={baseGames} />
+      <DataExportCard
+        gameCount={exportGameCount}
+        wishlistCount={exportWishlistCount}
+        recommendationRunCount={exportRecommendationRunCount}
+      />
     </div>
   );
 }
