@@ -57,6 +57,8 @@ export function toRawgMetadataPayload(
     },
     esrbRating: game.esrbRating,
     seriesGames: game.seriesGames,
+    palette: game.palette,
+    screenshots: game.screenshots,
   };
 }
 

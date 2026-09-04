@@ -34,6 +34,8 @@ const matchedGame = {
   stores: [],
   esrbRating: null,
   seriesGames: [],
+  screenshots: [],
+  palette: null,
 };
 
 const candidate = {

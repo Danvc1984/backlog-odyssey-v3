@@ -3,7 +3,13 @@ export type RawgMatchMethod =
   | "MANUAL_RAWG_SEARCH";
 
 export const RAWG_EXTERNAL_NAMESPACE = "RAWG_GAME" as const;
-export const RAWG_METADATA_SCHEMA_VERSION = 2 as const;
+export const RAWG_METADATA_SCHEMA_VERSION = 3 as const;
+
+export interface RawgPalette {
+  primary: string;
+  dark: string;
+  muted: string;
+}
 
 export type RawgProviderErrorCategory =
   | "CONFIGURATION"
@@ -35,6 +41,13 @@ export interface RawgSeriesEntry {
   released: string | null;
 }
 
+export interface RawgScreenshotEntry {
+  rawgId: number;
+  image: string;
+  width: number | null;
+  height: number | null;
+}
+
 export interface RawgStoreEntry {
   storeSlug: string | null;
   storeName: string | null;
@@ -63,6 +76,8 @@ export interface RawgGameDetails {
   stores: RawgStoreEntry[];
   esrbRating: RawgEsrbRating | null;
   seriesGames: RawgSeriesEntry[];
+  screenshots: RawgScreenshotEntry[];
+  palette: RawgPalette | null;
 }
 
 export interface RawgSearchCandidate {
@@ -123,6 +138,8 @@ export interface RawgMetadataPayload {
   attribution: RawgMetadataAttribution;
   esrbRating: RawgEsrbRating | null;
   seriesGames: RawgSeriesEntry[];
+  palette: RawgPalette | null;
+  screenshots: RawgScreenshotEntry[];
 }
 
 export interface WishlistStoreLink {

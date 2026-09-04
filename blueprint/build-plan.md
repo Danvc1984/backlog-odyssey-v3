@@ -335,7 +335,7 @@
   accent tints applied read-only on game detail and wishlist detail, a
   dedicated screenshots carousel section, contrast overlays, accessibility
   safeguards, and deterministic fallbacks
-  - [ ] 17a. **Version 3 snapshot: palettes and screenshots** - derived
+  - [x] 17a. **Version 3 snapshot: palettes and screenshots** - derived
     primary/dark/muted palette extraction from stored artwork plus a
     single `page_size=6` screenshots call with hidden entries filtered,
     persisted in the replaceable RAWG snapshot with tolerant v1/v2

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { extractPaletteFromImageBytes } from "./palette";
 import type {
   RawgEsrbRating,
   RawgGameDetails,
@@ -7,7 +8,9 @@ import type {
   RawgMatchResult,
   RawgNamedValue,
   RawgProviderError,
+  RawgPalette,
   RawgSearchCandidate,
+  RawgScreenshotEntry,
   RawgSeriesEntry,
   RawgStoreEntry,
 } from "./rawg-types";
@@ -16,6 +19,7 @@ const RAWG_API_BASE_URL = "https://api.rawg.io/api";
 const RAWG_WEB_BASE_URL = "https://rawg.io/games";
 export const RAWG_SEARCH_PAGE_SIZE = 5;
 const RAWG_SERIES_PAGE_CAP = 20;
+const RAWG_SCREENSHOTS_PAGE_CAP = 6;
 const RAWG_REQUEST_TIMEOUT_MS = 10_000;
 
 interface RawgHttpResponse {
@@ -161,6 +165,36 @@ function parseSeriesGames(value: unknown): RawgSeriesEntry[] {
   return entries.slice(0, RAWG_SERIES_PAGE_CAP);
 }
 
+function parseScreenshots(value: unknown): RawgScreenshotEntry[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const entries: RawgScreenshotEntry[] = [];
+  for (const item of value) {
+    if (
+      !isRecord(item) ||
+      !isPositiveInteger(item.id) ||
+      typeof item.image !== "string" ||
+      item.image.trim().length === 0
+    ) {
+      continue;
+    }
+    if (item.hidden === true) {
+      continue;
+    }
+
+    entries.push({
+      rawgId: item.id,
+      image: item.image,
+      width: nullableNumber(item.width),
+      height: nullableNumber(item.height),
+    });
+  }
+
+  return entries.slice(0, RAWG_SCREENSHOTS_PAGE_CAP);
+}
+
 function parseGame(value: unknown): RawgGameDetails | null {
   if (!isRecord(value)) {
     return null;
@@ -203,6 +237,8 @@ function parseGame(value: unknown): RawgGameDetails | null {
     stores: parseStores(game.stores),
     esrbRating: parseEsrbRating(game.esrb_rating),
     seriesGames: [],
+    screenshots: [],
+    palette: null,
   };
 }
 
@@ -321,6 +357,50 @@ async function fetchGameSeries(
   }
 }
 
+async function fetchGameScreenshots(
+  id: number,
+  apiKey: string,
+  fetchFn: typeof fetch,
+): Promise<RawgScreenshotEntry[]> {
+  try {
+    const params = new URLSearchParams({
+      key: apiKey,
+      page_size: String(RAWG_SCREENSHOTS_PAGE_CAP),
+    });
+    const url = `${RAWG_API_BASE_URL}/games/${encodeURIComponent(String(id))}/screenshots?${params}`;
+    const result = await requestJson(url, fetchFn);
+    if ("error" in result || !result.response.ok) {
+      return [];
+    }
+
+    const results = isRecord(result.payload)
+      ? (result.payload as RawgApiSearchResponse).results
+      : null;
+    return parseScreenshots(results);
+  } catch {
+    return [];
+  }
+}
+
+async function fetchImageBytes(
+  url: string,
+  fetchFn: typeof fetch,
+): Promise<Buffer | null> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), RAWG_REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetchFn(url, { cache: "no-store", signal: controller.signal });
+    if (!response.ok) {
+      return null;
+    }
+    return Buffer.from(await response.arrayBuffer());
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function fetchGame(
   id: number,
   apiKey: string,
@@ -345,7 +425,20 @@ async function fetchGame(
   }
 
   const seriesGames = await fetchGameSeries(game.id, apiKey, fetchFn);
-  return { ...game, seriesGames };
+  const screenshots = await fetchGameScreenshots(game.id, apiKey, fetchFn);
+  let palette: RawgPalette | null = null;
+  if (game.backgroundImage) {
+    const imageBytes = await fetchImageBytes(game.backgroundImage, fetchFn);
+    if (imageBytes) {
+      try {
+        palette = await extractPaletteFromImageBytes(imageBytes);
+      } catch {
+        palette = null;
+      }
+    }
+  }
+
+  return { ...game, seriesGames, screenshots, palette };
 }
 
 async function searchGames(

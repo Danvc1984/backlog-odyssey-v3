@@ -38,6 +38,8 @@ const game: RawgGameDetails = {
   stores: [],
   esrbRating: null,
   seriesGames: [],
+  screenshots: [],
+  palette: null,
 };
 
 const matched: RawgMatchResult = {
@@ -81,7 +83,7 @@ describe("RAWG metadata persistence", () => {
 
   it("maps normalized RAWG fields into the versioned payload", () => {
     expect(toRawgMetadataPayload(game, fetchedAt)).toEqual({
-      schemaVersion: 2,
+      schemaVersion: 3,
       rawgId: 123,
       rawgSlug: "portal-2",
       title: "Portal 2",
@@ -105,6 +107,8 @@ describe("RAWG metadata persistence", () => {
       },
       esrbRating: null,
       seriesGames: [],
+      palette: null,
+      screenshots: [],
     });
   });
 
@@ -145,7 +149,7 @@ describe("RAWG metadata persistence", () => {
         provider: "RAWG",
         sourceUrl: "https://rawg.io/games/portal-2",
         fetchedAt,
-        payload: expect.objectContaining({ schemaVersion: 2, rawgId: 123 }),
+        payload: expect.objectContaining({ schemaVersion: 3, rawgId: 123 }),
       }),
     });
   });

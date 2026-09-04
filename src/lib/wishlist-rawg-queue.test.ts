@@ -32,6 +32,8 @@ const rawgGame = {
   stores: [],
   esrbRating: null,
   seriesGames: [],
+  screenshots: [],
+  palette: null,
 };
 
 beforeEach(() => {

@@ -31,7 +31,7 @@ describe("parseRawgMetadataPayload", () => {
     expect(parseRawgMetadataPayload(validPayload)).toEqual(validPayload);
   });
 
-  it("passes through a version 2 payload with the new evidence fields", () => {
+  it("passes through a legacy version 2 payload without version 3 fields", () => {
     const v2Payload = {
       ...validPayload,
       schemaVersion: 2 as const,
@@ -40,6 +40,8 @@ describe("parseRawgMetadataPayload", () => {
     };
 
     expect(parseRawgMetadataPayload(v2Payload)).toEqual(v2Payload);
+    expect(v2Payload).not.toHaveProperty("palette");
+    expect(v2Payload).not.toHaveProperty("screenshots");
   });
 
   it("rejects non-object payloads", () => {

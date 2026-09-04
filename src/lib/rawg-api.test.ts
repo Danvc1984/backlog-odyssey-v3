@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { matchRawgGame, searchRawgCandidates } from "./rawg-api";
 
 vi.mock("server-only", () => ({}));
+vi.mock("./palette", () => ({ extractPaletteFromImageBytes: vi.fn() }));
+
+import { extractPaletteFromImageBytes } from "./palette";
 
 const detail = {
   id: 123,
@@ -46,6 +49,7 @@ describe("matchRawgGame", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubEnv("RAWG_API_KEY", "test-key");
+    vi.mocked(extractPaletteFromImageBytes).mockResolvedValue(null);
   });
 
   it("parses the stores array from game details", async () => {
@@ -80,7 +84,7 @@ describe("matchRawgGame", () => {
       matchRawgGame({ title: "Different title" }, { fetchFn: fetchMock }),
     ).resolves.toMatchObject({ outcome: "MATCHED", game: { id: 456 } });
 
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(5);
     const requestUrl = new URL(fetchMock.mock.calls[0][0] as string);
     expect(requestUrl.pathname).toBe("/api/games");
     expect(requestUrl.searchParams.get("search")).toBe("different title");
@@ -119,7 +123,7 @@ describe("matchRawgGame", () => {
       ),
     ).resolves.toMatchObject({ outcome: "MATCHED", matchMethod: "MANUAL_RAWG_SEARCH" });
 
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
     expect(new URL(fetchMock.mock.calls[0][0] as string).pathname).toBe("/api/games/123");
   });
 
@@ -238,7 +242,7 @@ describe("matchRawgGame", () => {
     await expect(
       matchRawgGame({ title: "Portal 2", selectedRawgId: 123 }, { fetchFn: fetchMock }),
     ).resolves.toMatchObject({ outcome: "MATCHED", matchMethod: "MANUAL_RAWG_SEARCH" });
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
   });
 
   it("parses the ESRB rating and series entries, skipping junk series rows", async () => {
@@ -291,6 +295,35 @@ describe("matchRawgGame", () => {
     ).resolves.toMatchObject({ outcome: "MATCHED", game: { esrbRating: null, seriesGames: [] } });
   });
 
+  it("derives a palette from downloaded background image bytes", async () => {
+    const palette = { primary: "#111111", dark: "#222222", muted: "#333333" };
+    vi.mocked(extractPaletteFromImageBytes).mockResolvedValue(palette);
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify(detail), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ results: [] }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ results: [] }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(new Uint8Array([1, 2, 3]), { status: 200 }));
+
+    await expect(
+      matchRawgGame({ title: "Portal 2", selectedRawgId: 123 }, { fetchFn: fetchMock }),
+    ).resolves.toMatchObject({ outcome: "MATCHED", game: { palette } });
+    expect(extractPaletteFromImageBytes).toHaveBeenCalledWith(expect.any(Buffer));
+    expect(new URL(fetchMock.mock.calls[3][0] as string).toString()).toBe(detail.background_image);
+  });
+
+  it("keeps the match usable when the background image cannot be fetched", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify(detail), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ results: [] }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ results: [] }), { status: 200 }))
+      .mockRejectedValueOnce(new Error("image unavailable"));
+
+    await expect(
+      matchRawgGame({ title: "Portal 2", selectedRawgId: 123 }, { fetchFn: fetchMock }),
+    ).resolves.toMatchObject({ outcome: "MATCHED", game: { id: 123, palette: null } });
+    expect(extractPaletteFromImageBytes).not.toHaveBeenCalled();
+  });
+
   it("caps the series list at 20 entries", async () => {
     const many = Array.from({ length: 25 }, (_, index) => ({
       id: index + 1,
@@ -305,6 +338,65 @@ describe("matchRawgGame", () => {
     const result = await matchRawgGame({ title: "Portal 2", selectedRawgId: 123 }, { fetchFn: fetchMock });
     expect(result).toMatchObject({ outcome: "MATCHED" });
     expect((result as { game: { seriesGames: unknown[] } }).game.seriesGames).toHaveLength(20);
+  });
+
+  it("parses visible screenshots, skips malformed and hidden rows, and caps at six", async () => {
+    const screenshots = Array.from({ length: 8 }, (_, index) => ({
+      id: index + 1,
+      image: `https://media.rawg.io/screenshot-${index + 1}.jpg`,
+      width: 1920,
+      height: 1080,
+    }));
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify(detail), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ results: [] }), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            results: [
+              screenshots[0],
+              { ...screenshots[1], hidden: true },
+              "junk",
+              { id: "bad", image: screenshots[2].image },
+              ...screenshots.slice(2),
+            ],
+          }),
+          { status: 200 },
+        ),
+      );
+
+    const result = await matchRawgGame({ title: "Portal 2", selectedRawgId: 123 }, { fetchFn: fetchMock });
+
+    expect(result).toMatchObject({
+      outcome: "MATCHED",
+      game: {
+        screenshots: screenshots
+          .filter((_, index) => index !== 1)
+          .slice(0, 6)
+          .map(({ id, image, width, height }) => ({ rawgId: id, image, width, height })),
+      },
+    });
+    const requestUrl = new URL(fetchMock.mock.calls[2][0] as string);
+    expect(requestUrl.pathname).toBe("/api/games/123/screenshots");
+    expect(requestUrl.searchParams.get("page_size")).toBe("6");
+  });
+
+  it.each([
+    ["a network failure", () => Promise.reject(new Error("offline"))],
+    ["a rate limit", () => Promise.resolve(new Response("rate limited", { status: 429 }))],
+    [
+      "a malformed payload",
+      () => Promise.resolve(new Response(JSON.stringify({ results: "not-an-array" }), { status: 200 })),
+    ],
+  ])("keeps details usable when the screenshots call hits %s", async (_label, screenshotResponse) => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify(detail), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ results: [] }), { status: 200 }))
+      .mockImplementationOnce(screenshotResponse);
+
+    await expect(
+      matchRawgGame({ title: "Portal 2", selectedRawgId: 123 }, { fetchFn: fetchMock }),
+    ).resolves.toMatchObject({ outcome: "MATCHED", game: { id: 123, screenshots: [] } });
   });
 
   it.each([
