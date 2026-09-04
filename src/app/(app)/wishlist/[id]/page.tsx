@@ -20,6 +20,10 @@ import { CalibrationNote } from "@/components/recommendations/CalibrationNote";
 import { SectionCard, StatusPill } from "@/components/ui/detail-card";
 import { WishlistDetailHero } from "@/components/wishlist/WishlistDetailHero";
 import { DeleteWishlistEntrySection } from "@/components/wishlist/DeleteWishlistEntrySection";
+import { GameThemeScope } from "@/components/games/GameThemeScope";
+import { ScreenshotsSection } from "@/components/games/ScreenshotsSection";
+import { resolvePagePalette } from "@/lib/game-theme";
+import { resolvePageScreenshots } from "@/lib/screenshot-view";
 
 export default async function WishlistDetailPage({
   params,
@@ -102,6 +106,8 @@ export default async function WishlistDetailPage({
   const buyItem = latestBuyRun?.items[0] ?? null;
 
   const ownSnapshot = entry.metadataSnapshot;
+  const themePayload = entry.metadataSnapshot?.payload ?? null;
+  const screenshots = resolvePageScreenshots(themePayload);
   const inheritedSnapshot = entry.baseGame?.metadataSnapshots[0] ?? null;
   const ownMetadata = parseRawgMetadataPayload(ownSnapshot?.payload);
   const inheritedMetadata = parseRawgMetadataPayload(
@@ -141,6 +147,7 @@ export default async function WishlistDetailPage({
   );
 
   return (
+    <GameThemeScope palette={resolvePagePalette(themePayload)}>
     <div className="space-y-6">
       <p className="technical-label text-muted-foreground">
         <Link
@@ -309,7 +316,15 @@ export default async function WishlistDetailPage({
         <p className="text-sm text-muted-foreground">{entry.notes}</p>
       )}
 
+      <ScreenshotsSection
+        id={entry.id}
+        title={entry.name}
+        screenshots={screenshots}
+        sourceUrl={entry.metadataSnapshot?.sourceUrl ?? ownMetadata?.rawgUrl ?? null}
+      />
+
       <DeleteWishlistEntrySection entryId={entry.id} entryName={entry.name} />
     </div>
+    </GameThemeScope>
   );
 }

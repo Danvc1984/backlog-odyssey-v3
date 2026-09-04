@@ -29,7 +29,7 @@ export function WishlistDetailHero({
 }) {
   return (
     <section
-      className="grid overflow-hidden rounded-lg border border-border bg-card shadow-card lg:grid-cols-[minmax(15rem,0.8fr)_minmax(0,1.4fr)]"
+      className="game-detail-hero grid overflow-hidden rounded-lg border border-border bg-card shadow-card lg:grid-cols-[minmax(15rem,0.8fr)_minmax(0,1.4fr)]"
       aria-labelledby="wishlist-detail-title"
     >
       <DetailHeroArt
@@ -39,7 +39,7 @@ export function WishlistDetailHero({
         hideLabel
         className="aspect-[16/10] min-h-64 lg:min-h-full"
       />
-      <div className="flex min-w-0 flex-col justify-between gap-8 p-6 md:p-8">
+      <div className="game-detail-hero__content flex min-w-0 flex-col justify-between gap-8 p-6 md:p-8">
         <div>
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <StatusPill tone="opportunity">{TYPE_LABELS[type] ?? type}</StatusPill>

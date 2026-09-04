@@ -329,7 +329,7 @@
   display, reduced-data hard-off, staleness-triggered queued refresh,
   fallback, and attribution
 
-- [ ] 17. **Game-detail dynamic themes and RAWG screenshots** - server-side
+- [x] 17. **Game-detail dynamic themes and RAWG screenshots** - server-side
   palette derivation and screenshot capture during RAWG enrichment stored
   in a version 3 replaceable snapshot, hero-band themes with decorative
   accent tints applied read-only on game detail and wishlist detail, a
@@ -349,7 +349,7 @@
     section on game detail showing up to six screenshots with manual
     navigation, reduced-motion manual mode, reduced-data token fallback,
     and existing RAWG attribution
-  - [ ] 17d. **Wishlist detail surfaces** - the same themed hero and
+  - [x] 17d. **Wishlist detail surfaces** - the same themed hero and
     decorative accents plus the screenshots section for base-game wishes
     with a snapshot, respecting fill-only enrichment and the absence of
     personal overrides
