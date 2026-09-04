@@ -329,18 +329,88 @@
   display, reduced-data hard-off, staleness-triggered queued refresh,
   fallback, and attribution
 
-- [ ] 17. **Game-detail dynamic themes** - server-side dominant-color
-  derivation during RAWG enrichment stored in the replaceable snapshot,
-  applied read-only to detail pages with contrast overlays, accessibility
-  safeguards, and deterministic fallback
+- [ ] 17. **Game-detail dynamic themes and RAWG screenshots** - server-side
+  palette derivation and screenshot capture during RAWG enrichment stored
+  in a version 3 replaceable snapshot, hero-band themes with decorative
+  accent tints applied read-only on game detail and wishlist detail, a
+  dedicated screenshots carousel section, contrast overlays, accessibility
+  safeguards, and deterministic fallbacks
+  - [ ] 17a. **Version 3 snapshot: palettes and screenshots** - derived
+    primary/dark/muted palette extraction from stored artwork plus a
+    single `page_size=6` screenshots call with hidden entries filtered,
+    persisted in the replaceable RAWG snapshot with tolerant v1/v2
+    parsing and backfill through the existing re-enrichment route
+  - [ ] 17b. **Game-detail theme application** - hero band plus decorative
+    accent tints (headers, borders, chips, dividers) on the game detail
+    page, semantic tokens untouched, contrast overlays, deterministic
+    fallback without artwork or under reduced data, re-derivation on
+    re-enrichment
+  - [ ] 17c. **Screenshots section** - dedicated bottom carousel-style
+    section on game detail showing up to six screenshots with manual
+    navigation, reduced-motion manual mode, reduced-data token fallback,
+    and existing RAWG attribution
+  - [ ] 17d. **Wishlist detail surfaces** - the same themed hero and
+    decorative accents plus the screenshots section for base-game wishes
+    with a snapshot, respecting fill-only enrichment and the absence of
+    personal overrides
 
-- [ ] 18. **Settings and manual export** - sessions, the visual/accessibility
-  preference area introduced by 14, Wallhaven controls, manual provider
-  refresh/retry controls including the global compatibility sweep, queue
-  progress, wishlist-import diagnostics, and personal-data-only JSON export
+- [ ] 18. **Settings, manual export, and restore** - sessions, the
+  visual/accessibility preference area introduced by 14, Wallhaven controls,
+  manual provider refresh/retry controls including the global compatibility
+  sweep, queue progress, wishlist-import diagnostics, personal-data-only
+  JSON export, and empty-schema-only import of that export
+  - [ ] 18a. **Settings surfaces** - Google session area, fixed environment
+    display, wishlist-import status and review access, Wallhaven controls,
+    manual provider refresh/retry including the global compatibility
+    sweep, and queue progress with retry
+  - [ ] 18b. **Personal-data JSON export** - versioned export of catalog
+    and wishlist records, availability, external IDs, play states,
+    personal fields, tags, collections, settings, manual overrides, and
+    recommendation-owned decisions, excluding rebuildable provider
+    snapshots
+  - [ ] 18c. **Empty-schema import and restore** - Zod-validated import
+    that refuses while the catalog or wishlist holds data, restores
+    personal data including recommendation events, profile, preferences,
+    presets, and dismissal counters in one all-or-nothing transaction, and
+    leaves provider snapshots to rebuild through manual enrichment actions
+    only
 
-- [ ] 19. **Deployment and CI readiness** - Vercel/Supabase environment
-  review, Vercel Cron daily price-refresh at 06:00 UTC-6 with `CRON_SECRET`,
-  queue overlap protection, production build,
+- [ ] 19. **Odyssey theme expansion** - two palette families (Dawn and
+  Sunset, light and dark each) with family-owned semantic hue mapping, a
+  Cinzel/Inter typography pairing, official brand icons, and a whole-app
+  Odyssey voice sweep on expressive surfaces, locked through a prototype
+  first
+  - [ ] 19a. **Prototype lock** - throwaway mockups validating the four
+    palettes and the Cinzel + Inter pairing against real Today, Library,
+    Wishlist, and detail surfaces before any application change; final
+    palette mapping and font call happen here
+  - [ ] 19b. **Family tokens and selector** - Dawn (cyan/purple) and
+    Sunset (orange/yellow) families in light and dark over the existing
+    token architecture, each family owning its interactive/deal/warning/
+    danger hue mapping with contrast validation, plus a Settings family
+    selector beside the light/dark/system control
+  - [ ] 19c. **Typography** - Cinzel display for headers and hero moments,
+    Inter body, unchanged technical monospace for evidence and freshness
+    labels
+  - [ ] 19d. **Brand icons** - official source icons in the code-owned
+    known-source catalog with the neutral fallback untouched for custom
+    sources
+  - [ ] 19e. **Odyssey voice sweep** - adventurous copy mixing subtle
+    allusion and named mythology across headers, empty states, buttons,
+    dashboard moments, and dialogs; statuses, errors, evidence labels,
+    field help, and caveats stay factual; navigation names unchanged
+  - [ ] 19f. **UI icon set swap (gated)** - replace general UI icons with
+    the owner-selected premium/custom set once provided; current icons
+    remain the fallback until then
+  - [ ] 19g. **Cross-app acceptance** - all four palettes across desktop
+    and mobile in light, dark, and system modes with keyboard, focus,
+    contrast, reduced-motion, and reduced-data review of every primary
+    route
+
+- [ ] 20. **Deployment and CI readiness** - Vercel/Supabase environment
+  review, Vercel Cron daily run at 06:00 UTC-6 with `CRON_SECRET` enqueueing
+  the price refresh plus a compatibility freshness sweep for catalog and
+  wishlist evidence older than the 180-day window, queue overlap protection,
+  production build,
   smoke test, one reproducible Verify command, and automatic checks when
   configured; final planned step but not an inflexible feature gate

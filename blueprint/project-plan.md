@@ -51,8 +51,10 @@ registration, and collaboration are outside the MVP.
   wishlist offers, and provider-operation status.
 - Global visual foundation, design tokens, and comprehensive full-app UI review.
 - Optional Wallhaven background.
-- Per-game detail themes based on RAWG metadata.
-- Settings and manual JSON export.
+- Per-game detail themes and RAWG screenshots on game and wishlist detail.
+- Dawn and Sunset palette families, Cinzel/Inter typography, official brand
+  icons, and an Odyssey voice pass over expressive copy.
+- Settings and manual JSON export with empty-schema restore.
 - Deployment and CI readiness as the final planned milestone, without making it
   an inflexible MVP gate.
 
@@ -264,8 +266,27 @@ Initial metadata:
 - Ratings and Metacritic as secondary context.
 - RAWG URL.
 
-Screenshots, videos, achievements, system requirements, franchises, series,
-and stores are deferred.
+Videos, achievements, system requirements, franchises, and stores are
+deferred.
+
+### Screenshots
+
+Screenshots arrive with the feature-17 enrichment pass alongside derived
+palettes:
+
+- Source: `GET /games/{id}/screenshots`, one call with `page_size=6`;
+  entries carrying the RAWG `hidden` flag are filtered out.
+- Up to six screenshots (id, image URL, width, height) persist in the
+  replaceable RAWG snapshot. No binaries are stored.
+- The snapshot contract bumps to version 3; parsing stays tolerant of v1
+  and v2 rows, and re-enrichment backfills screenshots and palettes
+  through the existing enrichment route. No dedicated backfill action.
+- Display is a dedicated carousel-style section near the bottom of the
+  catalog game detail page and the wishlist detail page (base-game
+  wishes), separate from the metadata block.
+- Reduced-data mode renders the section as a token-only placeholder with
+  zero image fetches; reduced motion keeps the carousel manual.
+- Attribution follows the existing RAWG images rule.
 
 RAWG attribution appears near RAWG data or images and in a
 `Powered by / Data and content providers` section. The key remains server-side
@@ -412,6 +433,9 @@ wishlist data in one place:
 - Name, base-game or DLC type, and the base-game link for DLC wishes.
 - Full RAWG metadata snapshot when present: description, genres, release
   date, playtimes, artwork, and the RAWG source link.
+- The RAWG screenshots carousel and derived-palette themed surfaces when a
+  snapshot with artwork exists (base-game wishes; DLC wishes carry the
+  owned base game's evidence instead).
 - Steam identity and provenance, including the add/edit/remove and
   RAWG-suggestion confirm affordances.
 - Offer block: selected offer, alternatives, target price, opportunity
@@ -491,7 +515,9 @@ evidence keeps its values, shows its age, and produces a visible
 recommendation warning - never a penalty. Refresh triggers are the post-RAWG
 automatic queue and per-game manual refresh. A global compatibility sweep is
 already available from Settings; feature 18 may expand or relabel those
-controls. Scheduled rescheduling waits for deployment (feature 19). Provider
+controls. The deployment feature's daily cron enqueues a compatibility
+freshness sweep for catalog and wishlist evidence older than the window,
+alongside the price refresh. Provider
 endpoint stability (ProtonDB summary endpoint and AWAY dataset shape) validates
 during the feature spec.
 
@@ -873,8 +899,61 @@ persisted in the replaceable snapshot, and applied read-only by the page
 under contrast overlays. Missing imagery or reduced-data mode uses the
 deterministic fallback; re-enrichment re-derives the palette.
 
-- Theme applies only to that detail page.
+- Theme applies to the catalog game detail page; wishlist detail reuses
+  the same themed treatment for base-game wishes.
 - The feature respects global theme and accessibility settings.
+
+### Theme families
+
+The application expands from one identity to two palette families, each in
+light and dark, giving four selectable palettes:
+
+- **Dawn** - cyan and purple tones; light and dark variants. Dawn refines
+  the existing feature-14 identity rather than replacing it.
+- **Sunset** - warm orange and yellow tones; light and dark variants.
+
+Rules:
+
+- Each family owns its hue mapping for the semantic roles - interactive,
+  deal/opportunity, warning, and danger. Roles stay stable app-wide; the
+  family decides which colors fill them, contrast-validated per palette.
+- Settings gains a family selector alongside the existing light/dark/system
+  mode control; the system preference resolves light/dark within the
+  selected family.
+- Feature 14's token architecture, accessibility rules, reduced-motion and
+  reduced-data behavior carry forward unchanged as the base.
+- Typography pairs Cinzel (display) with Inter (body), with the final
+  pairing confirmed at the prototype stage; technical monospace evidence
+  labels are unchanged.
+- `/prototype` runs before implementation to lock the four palettes against
+  real surfaces, as it did for feature 14.
+- Per-game detail themes compose as a decorative layer over whichever
+  family is active.
+
+### Odyssey voice
+
+A text-theming pass replaces generic and placeholder copy on expressive
+surfaces with a Homer's Odyssey voice - adventurous, mixing subtle allusion
+with named mythology (gods, creatures, places):
+
+- Expressive surfaces: page and section headers, empty states, buttons,
+  dashboard moments, and dialogs.
+- Operational text stays plain and factual: statuses, errors, provider
+  evidence labels, freshness and ages, personal-field helper text, and
+  price/compatibility caveats.
+- Navigation and section names keep their identity (Library, Today,
+  Wishlist); the voice lives in the copy, not the information architecture.
+- The sweep covers the whole app in one dedicated pass so the voice is
+  coherent instead of piecemeal.
+
+### Icons
+
+- Official brand icons replace the code-owned placeholder art for known
+  availability sources (Steam, GOG, Epic Games Store, and the rest of the
+  12e catalog); the neutral fallback icon for custom sources is unchanged.
+- A general UI icon set swap is the theme's final step and waits for the
+  owner's premium/custom icon choice; current icons remain the fallback
+  until then.
 
 ## 14. Settings, Export, and Operations
 
@@ -883,19 +962,31 @@ Settings includes:
 - Google session management.
 - Fixed environment display.
 - Steam wishlist-import status and review access.
-- Vercel Cron price-refresh status and diagnostics once deployment enables it.
-- The theme and accessibility preference area introduced by feature 14.
+- Vercel Cron status and diagnostics for the daily price refresh and
+  compatibility sweep once deployment enables it.
+- The theme and accessibility preference area introduced by feature 14,
+  extended with the Dawn/Sunset family selector.
 - Wallhaven enablement and refresh controls.
 - Reduced-data behavior.
 - Manual provider refresh controls.
 - Queue progress and retry controls.
 - JSON export of irreplaceable data only.
+- Manual import of that export into an empty schema only.
 
 Manual export includes catalog and wishlist records, availability, external IDs,
 play states, notes, interest, ratings, tags, collections, settings, manual
 overrides, and recommendation-related personal decisions. Rebuildable RAWG,
-price, and compatibility snapshots are excluded. Automatic encrypted off-site
-backups, rotation, and advanced restoration are future work.
+price, and compatibility snapshots are excluded.
+
+Manual import restores the same personal data and only into an empty catalog
+and wishlist: the action refuses with a clear explanation while any record
+exists, validates the file against the export schema version with Zod, and
+applies everything in one all-or-nothing transaction. Recommendation events,
+derived profiles, preferences, presets, and dismissal counters restore with
+their calibration behavior intact. Provider snapshots are never imported;
+after a restore, RAWG, price, and compatibility data rebuild only through
+the existing manual enrichment actions, never auto-queued. Automatic
+encrypted off-site backups, rotation, and advanced restoration are future work.
 
 ## 15. Tech
 
@@ -905,14 +996,16 @@ Vercel.
 
 The MVP uses a persistent PostgreSQL-backed queue for provider work. Price
 refreshes are manually initiated until deployment; the deployment/readiness
-feature configures Vercel Cron and `CRON_SECRET` to enqueue the same daily work.
+feature configures Vercel Cron and `CRON_SECRET` to enqueue the daily work:
+the price refresh plus a compatibility freshness sweep for catalog and
+wishlist evidence older than the 180-day window.
 The scheduler must tolerate duplicate invocations, avoid overlapping claims, and
 leave retry history visible.
 
 Deployment/CI is the final planned milestone, not a reason to block otherwise
 complete product work if an additional MVP feature is discovered first. The
-deployment feature configures Vercel Cron to run the daily price refresh at
-**06:00 UTC-6**.
+deployment feature configures Vercel Cron to run the daily work (price
+refresh plus compatibility freshness sweep) at **06:00 UTC-6**.
 
 ## 16. Possible Improvements After the MVP
 

@@ -17,8 +17,8 @@ are outside scope. Alternative stores remain manual availability sources unless
 they offer a supported account-library API.
 
 Personal intent and explicit catalog choices are authoritative. Provider data
-from Steam, RAWG, ITAD, ProtonDB, AWAY, and later Wallhaven is replaceable
-evidence: it never silently overwrites local data. Provider work is persistent,
+from Steam, RAWG, ITAD, ProtonDB, AWAY, and Wallhaven is replaceable evidence:
+it never silently overwrites local data. Provider work is persistent,
 asynchronous, rate-limited, retryable up to three times, and failures preserve
 the last usable data.
 
@@ -44,33 +44,30 @@ The exact checked state is owned by blueprint/build-plan.md.
    and inclusive source tuning.
 8. **[x] 13-13b: Today functional dashboard** - Progress, coverage, cached
    recent activity, latest explicit recommendations, offers, and operations.
-9. **[x] 14a: Theme, preferences, and shell** - Prototype tokens, dark/light/
-   system parity, non-migrating visual preferences, responsive shell.
-10. **[x] 14b: Today dashboard composition** - Existing data rendered as two
-    carousels, dominant Play Next, and lower operational context.
-11. **[x] 14c: Library surfaces** - Shared system plus approved grid/list,
-    filter chips, health strip, and catalog card parity without changing
-    queries or behavior.
-12. **[x] 14d: Wishlist surfaces** - Shared system plus approved focus/list,
-    signal grid, and entry-card offer, identity, staleness, target, and
-    interest composition.
-13. **[x] 14e: Library and Wishlist header action rework** - Homogenized header
-    actions, operation statuses, follow-up sections, and ProtonDB compatibility
-    tags on game cards in both views.
-14. **[x] 14f: Acceptance and accessibility** - Cross-app states, mobile,
-    keyboard, focus, contrast, reduced motion/data, and final visual review.
-15. **[x] 15: Detail, collection, and supporting route composition** - Shared
-    treatment for Today (re-passed to match the Library/Wishlist visual
-    state), Game Detail, Wishlist Detail, Collections, Settings, dialogs,
-    forms, safe image overlays, and deterministic fallbacks.
-16. **[ ] 16: Wallhaven background** - Optional cached SFW pool, daily
-    deterministic rotation, shuffle, attribution, fallback, reduced-data off.
-17. **[ ] 17: Per-game themes** - Server-derived RAWG palette data, read-only
-    game-detail use, contrast safeguards, deterministic fallback.
-18. **[ ] 18: Settings and export** - Sessions, provider/queue controls,
-    diagnostics, Wallhaven, visual preferences, and manual JSON export.
-19. **[ ] 19: Deployment and CI readiness** - Vercel/Supabase, Cron, smoke
-    tests, Verify command, and automatic checks.
+9. **[x] 14a-14f: Visual foundation** - Prototype-validated tokens, dark/light/
+   system parity, non-migrating visual preferences, Today/Library/Wishlist/
+   header rework, cross-app accessibility acceptance, and detail-route
+   composition in Feature 15.
+10. **[x] 15-16: Supporting routes and Wallhaven** - Shared treatment for Game
+    Detail, Wishlist Detail, Collections, and Settings, plus the optional
+    cached Wallhaven background with rotation, shuffle, attribution, fallback,
+    and reduced-data hard-off.
+11. **[ ] 17a-17d: Per-game themes and RAWG screenshots** - Version 3 snapshot
+    adding derived palettes and up to six screenshots, hero-band themes with
+    decorative accent tints on game detail and wishlist detail, a dedicated
+    screenshots carousel, and backfill through the existing re-enrichment
+    route.
+12. **[ ] 18a-18c: Settings, export, and restore** - Consolidated Settings
+    surfaces, versioned personal-data JSON export, and empty-schema-only
+    import in one all-or-nothing transaction.
+13. **[ ] 19a-19g: Odyssey theme expansion** - Dawn and Sunset palette families
+    (light and dark each) with family-owned semantic hue mapping, Cinzel/Inter
+    typography, official brand icons, and a whole-app Odyssey voice sweep on
+    expressive surfaces, locked through a prototype first; the general UI icon
+    swap waits for the owner's chosen set.
+14. **[ ] 20: Deployment and CI readiness** - Vercel/Supabase, Cron covering
+    prices plus the compatibility freshness sweep, smoke tests, Verify command,
+    and automatic checks.
 
 ## Data model and ownership
 
@@ -80,9 +77,10 @@ boundaries.
 ### Identity, operations, and catalog
 
 - User, Account, and Session provide one-user Google authentication.
-- AppSettings holds fixed environment context and later app controls. Feature 14
-  visual preferences use a non-migrating mechanism; provider/export controls
-  remain Feature 18.
+- AppSettings holds fixed environment context and app controls. Feature 14
+  visual preferences use a non-migrating mechanism and gain the Dawn/Sunset
+  family selector in Feature 19; provider, export, and import controls live in
+  Feature 18.
 - SteamConnection, SyncRun, EnrichmentJob, PriceRefresh, and sweep/run records
   persist status, retry timing, counts, and safe diagnostics.
 - SteamRecentActivityCache holds a 24-hour narrow activity result. It may show
@@ -96,17 +94,21 @@ boundaries.
   references reusable AlternativeSource, which has a normalized name, optional
   known-source key, icon metadata, and archive state. No source is inferred
   from legacy free text.
-- MetadataSnapshot is replaceable RAWG data with attribution. PossibleDuplicate
-  records review evidence. CatalogOperation enables scoped, reload-safe Undo for
-  merge and delete.
+- MetadataSnapshot is replaceable RAWG data with attribution. Feature 17 bumps
+  it to version 3: derived palette variants (primary plus dark/muted) and up
+  to six screenshot URLs (id, image, width, height; RAWG-hidden entries
+  filtered), tolerant of v1/v2 rows and backfilled by re-enrichment.
+  PossibleDuplicate records review evidence. CatalogOperation enables scoped,
+  reload-safe Undo for merge and delete.
 
 ### Wishlist, pricing, compatibility, and recommendations
 
 - WishlistEntry stays independent from Game until explicit acquisition. It is an
   unowned base game or an unowned DLC linked to an owned base game.
-- WishlistMetadataSnapshot is independent RAWG evidence. UnresolvedSteamDlc,
-  WishlistImportReview, and WishlistImportIgnore preserve manual review across
-  owned sync and wishlist import.
+- WishlistMetadataSnapshot is independent RAWG evidence and follows the same
+  v3 contract for base-game wishes. UnresolvedSteamDlc, WishlistImportReview,
+  and WishlistImportIgnore preserve manual review across owned sync and
+  wishlist import.
 - DealOffer keeps valid Mexican offer alternatives. ItadIdentity caches
   Steam-App-ID-to-ITAD mapping. The selected offer is the cheapest valid Mexican
   offer, never one based on seller preference.
@@ -115,15 +117,17 @@ boundaries.
   strong opportunity signal.
 - CompatibilitySnapshot and EnvironmentCompatibility hold catalog evidence.
   Bazzite is primary, Windows is derived, and Bazzite-only personal overrides
-  take priority. Wishlist compatibility uses parallel, read-only storage keyed
-  to wishlist entries and never reuses catalog snapshots.
+  take priority. WishlistCompatibilitySnapshot and
+  WishlistEnvironmentCompatibility are parallel, read-only storage keyed to
+  wishlist entries and never reuse catalog snapshots.
 - RecommendationRun, RecommendationItem, RecommendationFeedback,
   RecommendationEvent, RecommendationProfile, RecommendationPreference, tune
   state, and presets are recommendation-owned. Reset removes these only,
-  preserving catalog and provider data.
+  preserving catalog and provider data. All of these are export/import data in
+  Feature 18, restoring only into an empty schema.
 - PersonalTag, GameTag, Collection, and CollectionMembership organize games.
-  WallpaperState, introduced in Feature 16, stores URLs and selection only,
-  never image binaries.
+  WallpaperState stores Wallhaven URLs and selection only, never image
+  binaries.
 
 ## Product rules
 
@@ -142,7 +146,6 @@ boundaries.
   suggestion-only until confirmed. Provenance is visible.
 - One explicit global Wishlist price action queues confirmed identities,
   prevents overlap, and reports refreshed, failed, and identity-required items.
-  Scheduled work waits for deployment.
 - ITAD is server-side, read-only, country=MX, batched, cached, and respects
   rate limits. The seller page is authoritative for activation; key stores warn
   that Mexico activation must be checked.
@@ -152,9 +155,9 @@ boundaries.
 - ProtonDB and AWAY remain separate attributable evidence. A Steam App ID keys
   evidence. A single 180-day freshness rule keeps stale values visible and
   warns recommendations instead of excluding a game.
-- A global compatibility sweep is already available from Settings as part of the
-  shipped catalog and wishlist flows; Feature 18 may expand or relabel those
-  controls. Scheduled rescheduling waits for deployment.
+- A global compatibility sweep is available from Settings. The deployment
+  feature's daily cron enqueues a compatibility freshness sweep for catalog
+  and wishlist evidence older than the window, alongside the price refresh.
 - Play Next considers non-hidden, non-main base games that are not started or
   replay-flagged played/abandoned games. In-progress titles belong to Today;
   DLC does not enter Play Next. Buy considers base wishes and eligible DLC
@@ -174,6 +177,33 @@ boundaries.
   temporary cooldown, never negative feedback. Start playing marks a game
   in progress and follows the existing main-game decision; it never launches a
   game.
+
+### Themes, voice, and icons (Features 17 and 19)
+
+- Per-game themes derive server-side during RAWG enrichment and apply
+  read-only as a hero band plus decorative accent tints (headers, borders,
+  chips, dividers). Semantic tokens stay untouched; contrast overlays,
+  deterministic fallbacks, and reduced-data behavior apply.
+- RAWG screenshots render as a dedicated bottom carousel-style section on
+  game detail and wishlist detail (base-game wishes), separate from the
+  metadata block, with attribution and reduced-data token fallback.
+- Theme families are Dawn (cyan/purple) and Sunset (orange/yellow), each in
+  light and dark - four selectable palettes over the feature-14 token
+  architecture. Each family owns the hue mapping for the semantic roles
+  (interactive, deal/opportunity, warning, danger), contrast-validated per
+  palette; roles stay stable app-wide. Settings gains the family selector;
+  system mode resolves light/dark within the selected family.
+- Typography pairs Cinzel (display) with Inter (body); technical monospace
+  evidence labels are unchanged. The pairing and Sunset mapping get their
+  final call at the 19a prototype.
+- The Odyssey voice sweep covers expressive surfaces only - page and section
+  headers, empty states, buttons, dashboard moments, and dialogs - mixing
+  subtle allusion with named mythology. Statuses, errors, evidence labels,
+  freshness, field help, and caveats stay plain and factual. Navigation and
+  section names keep their identity.
+- Official brand icons replace placeholder art for known availability sources;
+  the neutral fallback for custom sources is unchanged. The general UI icon
+  swap is the gated final step awaiting the owner's premium/custom set.
 
 ## Today and visual direction
 
@@ -211,17 +241,20 @@ freshness, and operations are supporting sections.
 - /today - decision dashboard, coverage dialogs, recommendations, recent Steam
   activity, offers, provider freshness, and operations.
 - /library - searchable catalog, source filters, manual creation, duplicate
-  review, and catalog enrichment. Feature 14 adds grid/list presentation.
-- /games/[id] - personal fields, availability, metadata, compatibility, DLC,
-  duplicate/recommendation context, and RAWG actions.
+  review, and catalog enrichment, with grid/list presentation.
+- /games/[id] - personal fields, availability, metadata, screenshots,
+  derived-palette themed surfaces, compatibility, DLC, duplicate/recommendation
+  context, and RAWG actions.
 - /wishlist - independent wishes, RAWG, identity, global price refresh,
-  opportunities, Steam import/review, and acquisition. Feature 14 adds focus/list.
-- /wishlist/[id] - metadata, identity/provenance, offers, target, notes,
-  interest, acquire/edit/delete, compatibility, and fill-only enrichment.
-- /collections and /collections/[id] - collections and existing forms/dialogs,
-  restyled in Feature 15.
+  opportunities, Steam import/review, and acquisition, with focus/list
+  presentation.
+- /wishlist/[id] - metadata, screenshots and themed surfaces for base-game
+  wishes, identity/provenance, offers, target, notes, interest,
+  acquire/edit/delete, compatibility, and fill-only enrichment.
+- /collections and /collections/[id] - collections and existing forms/dialogs.
 - /settings - sessions, recommendation profile/reset, provider and queue
-  controls, wishlist diagnostics, visual preferences, Wallhaven, and export.
+  controls, wishlist diagnostics, visual preferences with the Dawn/Sunset
+  family selector, Wallhaven, export, and empty-schema import.
 
 ## Tech, validation, and deployment
 
@@ -231,24 +264,30 @@ freshness, and operations are supporting sections.
   pnpm typecheck, and pnpm test.
 - Provider keys stay server-side. Production validates environment, database
   migration, queue/scheduler behavior, and smoke tests.
-- Feature 19 configures Vercel Cron and CRON_SECRET to enqueue daily price
-  refresh at 06:00 UTC-6. Claims must be atomic, calls idempotent, and retry
-  history visible.
-- Feature 14 acceptance covers primary routes on desktop/mobile and dark/light/
-  system modes, keyboard/focus/targets/contrast, reduced motion/data, and
-  loading/empty/error/stale/operation states, then existing automated checks.
+- Feature 20 configures Vercel Cron and CRON_SECRET for a daily run at
+  06:00 UTC-6 enqueueing the price refresh plus a compatibility freshness
+  sweep for catalog and wishlist evidence older than the 180-day window.
+  Claims must be atomic, calls idempotent, and retry history visible.
+- Visual acceptance (14f, and 19g for the families) covers primary routes on
+  desktop/mobile and light/dark/system modes, keyboard/focus/targets/contrast,
+  reduced motion/data, and loading/empty/error/stale/operation states, then
+  existing automated checks.
 
 ## Open questions and plan gaps
 
-- Wallhaven rate limits and keyword defaults validate in Feature 16; exact
-  Vercel/Supabase scheduler configuration validates in Feature 19.
+- Wallhaven wording: project-plan.md section 13 and build-plan item 16 still
+  describe a fixed keyword pool (gaming-art/landscape defaults), while the
+  latest approved spec revision made searches game-driven - main game title
+  first, then in-progress titles, no fixed keyword list. The plans can be
+  updated to match the shipped behavior; nothing else depends on it.
+- Sunset family's exact orange/yellow mapping and the final Cinzel/Inter
+  confirmation happen at the 19a prototype.
+- The general UI icon set choice is the owner's; it gates only 19f.
 
 ## Next workflow action
 
-The next unchecked item is **Feature 16: Wallhaven global background** - an
-optional cached SFW pool with deterministic daily rotation, shuffle,
-attribution, fallback, and reduced-data hard-off. Run `$feature 16` to produce
-its reviewed implementation spec.
+The next unchecked item is **17a: Version 3 snapshot - palettes and
+screenshots**. Run `/feature 17` to produce the reviewed implementation spec.
 
 This overview is generated from the two plans and does not authorize code
 changes.
