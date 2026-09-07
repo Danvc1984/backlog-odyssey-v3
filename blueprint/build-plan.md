@@ -375,7 +375,7 @@
     leaves provider snapshots to rebuild through manual enrichment actions
     only
 
-- [ ] 19. **OS setup, onboarding, and environment-aware behavior** - first-login onboarding
+- [x] 19. **OS setup, onboarding, and environment-aware behavior** - first-login onboarding
   capturing the primary OS (Linux or Windows) and an optional handheld
   (Linux or Windows); Windows as the only fallback OS, offered only when the
   primary is Linux and the owner has a Windows machine, and never when the
