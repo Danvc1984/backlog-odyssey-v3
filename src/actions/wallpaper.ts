@@ -4,6 +4,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/lib/auth-guard";
 import { friendlyActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
+import { refreshWallpaperPool } from "@/lib/wallpaper-refresh";
 import {
   dayStringInMexicoCity,
   parseWallpaperPool,
@@ -62,6 +63,28 @@ export async function shuffleWallpaper() {
       success: false as const,
       data: null,
       error: friendlyActionError(error, "Failed to shuffle wallpaper"),
+    };
+  }
+}
+
+export async function refreshWallpaper() {
+  try {
+    await requireUser();
+
+    const result = await refreshWallpaperPool(undefined, true);
+
+    return {
+      success: result.success,
+      data: result.success
+        ? { status: result.status, itemCount: result.itemCount }
+        : null,
+      error: result.error,
+    };
+  } catch (error) {
+    return {
+      success: false as const,
+      data: null,
+      error: friendlyActionError(error, "Failed to refresh wallpaper pool"),
     };
   }
 }

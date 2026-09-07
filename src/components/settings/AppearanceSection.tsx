@@ -3,9 +3,9 @@
 import { useEffect, useState, useSyncExternalStore, useTransition, type ReactNode } from "react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
-import { Shuffle } from "lucide-react";
+import { RefreshCw, Shuffle } from "lucide-react";
 import { toast } from "sonner";
-import { setWallpaperEnabled, shuffleWallpaper } from "@/actions/wallpaper";
+import { setWallpaperEnabled, refreshWallpaper, shuffleWallpaper } from "@/actions/wallpaper";
 import { useVisualPreferences } from "@/components/preferences/VisualPreferencesProvider";
 import { formatMexicoTimestamp } from "@/lib/format-times";
 import type { DataSetting, MotionSetting, ThemeFamily } from "@/lib/visual-preferences";
@@ -132,6 +132,18 @@ export function AppearanceSection({
   const [wallpaperEnabled, setWallpaperEnabledState] = useState(initialWallpaperEnabled);
   const [wallpaperPending, startWallpaperTransition] = useTransition();
 
+  const refreshPool = () => {
+    startWallpaperTransition(async () => {
+      const result = await refreshWallpaper();
+      if (!result.success || !result.data) {
+        toast.error(result.error ?? "Failed to refresh wallpaper pool");
+        return;
+      }
+      router.refresh();
+      toast.success(`Wallpaper pool refreshed (${result.data.itemCount} images)`);
+    });
+  };
+
   const toggleWallpaper = () => {
     const next = !wallpaperEnabled;
     setWallpaperEnabledState(next);
@@ -240,6 +252,15 @@ export function AppearanceSection({
               >
                 <Shuffle aria-hidden className="size-3.5" />
                 Shuffle now
+              </button>
+              <button
+                type="button"
+                onClick={refreshPool}
+                disabled={wallpaperPending}
+                className="inline-flex h-8 items-center gap-1 rounded-md border border-border bg-input px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground disabled:cursor-wait disabled:opacity-60"
+              >
+                <RefreshCw aria-hidden className="size-3.5" />
+                Refresh pool
               </button>
             </div>
           }

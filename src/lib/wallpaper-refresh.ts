@@ -45,26 +45,26 @@ interface TermOutcome {
 
 let inFlightRefresh: Promise<WallpaperRefreshResult> | null = null;
 
-export function refreshWallpaperPool(now = new Date()): Promise<WallpaperRefreshResult> {
+export function refreshWallpaperPool(now = new Date(), force = false): Promise<WallpaperRefreshResult> {
   if (inFlightRefresh) {
     return inFlightRefresh;
   }
 
-  const refresh = runWallpaperRefresh(now);
+  const refresh = runWallpaperRefresh(now, force);
   inFlightRefresh = refresh.finally(() => {
     inFlightRefresh = null;
   });
   return inFlightRefresh;
 }
 
-async function runWallpaperRefresh(now: Date): Promise<WallpaperRefreshResult> {
+async function runWallpaperRefresh(now: Date, force: boolean): Promise<WallpaperRefreshResult> {
   let state: WallpaperStateRow | null = null;
   try {
     state = await prisma.wallpaperState.findUnique({ where: { id: 1 } });
     const games = await loadWallpaperGames();
     const plan = buildSearchPlan(games.mainGame, games.inProgressGames);
 
-    if (!isPoolStale(state, plan, now)) {
+    if (!force && !isPoolStale(state, plan, now)) {
       return {
         success: true,
         status: state && isWallpaperRefreshThrottled(state.lastAttemptAt, now)

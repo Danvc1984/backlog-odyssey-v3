@@ -2,11 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/auth-guard", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
+vi.mock("@/lib/wallpaper-refresh", () => ({ refreshWallpaperPool: vi.fn() }));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { refreshWallpaperPool } from "@/lib/wallpaper-refresh";
 import { WALLPAPER_QUERY_VERSION } from "@/lib/wallpaper";
-import { shuffleWallpaper, setWallpaperEnabled } from "./wallpaper";
+import { refreshWallpaper, shuffleWallpaper, setWallpaperEnabled } from "./wallpaper";
 
 const pool = {
   queryVersion: WALLPAPER_QUERY_VERSION,
@@ -122,5 +124,51 @@ describe("wallpaper actions", () => {
 
     expect(result).toMatchObject({ success: false, error: "Invalid input" });
     expect(upsertSettings).not.toHaveBeenCalled();
+  });
+
+  it("forcibly refreshes the wallpaper pool and maps a successful result", async () => {
+    vi.mocked(refreshWallpaperPool).mockResolvedValue({
+      success: true,
+      status: "REFRESHED",
+      searched: [],
+      itemCount: 6,
+      error: null,
+    });
+
+    const result = await refreshWallpaper();
+
+    expect(result).toEqual({
+      success: true,
+      data: { status: "REFRESHED", itemCount: 6 },
+      error: null,
+    });
+    expect(refreshWallpaperPool).toHaveBeenCalledWith(undefined, true);
+  });
+
+  it("maps a failed refresh to a graceful error", async () => {
+    vi.mocked(refreshWallpaperPool).mockResolvedValue({
+      success: false,
+      status: "FAILED",
+      searched: [],
+      itemCount: 0,
+      error: "Wallhaven refresh failed",
+    });
+
+    const result = await refreshWallpaper();
+
+    expect(result).toEqual({
+      success: false,
+      data: null,
+      error: "Wallhaven refresh failed",
+    });
+  });
+
+  it("requires an authenticated user before refreshing", async () => {
+    vi.mocked(requireUser).mockRejectedValue(new Error("Unauthorized"));
+
+    const result = await refreshWallpaper();
+
+    expect(result.success).toBe(false);
+    expect(refreshWallpaperPool).not.toHaveBeenCalled();
   });
 });

@@ -208,6 +208,11 @@ export function isPoolStale(
   if (storedPool.mode !== currentPlan.mode || !sameSourcePlan(storedPool.searched, currentPlan.terms)) {
     return true;
   }
+  if (storedPool.items.length === 0) {
+    // An empty pool is not usable: rebuild as soon as the throttle allows so a
+    // zero-result refresh does not condemn the pool to the full 7-day window.
+    return !isWallpaperRefreshThrottled(state.lastAttemptAt, now);
+  }
   if (state && isWallpaperRefreshThrottled(state.lastAttemptAt, now)) {
     return false;
   }

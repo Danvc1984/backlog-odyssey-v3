@@ -196,6 +196,28 @@ describe("wallpaper freshness and search planning", () => {
       candidates: { ...pool, mode: "IN_PROGRESS", searched: noMainPlan.terms },
     }, plan, now)).toBe(true);
   });
+
+  it("treats an empty pool as stale once the throttle allows", () => {
+    const now = new Date("2026-09-03T12:00:00.000Z");
+    const plan = buildSearchPlan(main, inProgress);
+    const empty = { candidates: { ...pool, items: [] }, cachedAt: now, lastAttemptAt: null };
+
+    expect(isPoolStale(empty, plan, now)).toBe(true);
+    expect(isPoolStale({ ...empty, lastAttemptAt: new Date(now.getTime() - 1_000) }, plan, now)).toBe(false);
+    expect(isPoolStale({ ...empty, lastAttemptAt: new Date(now.getTime() - WALLPAPER_REFRESH_THROTTLE_MS - 1) }, plan, now)).toBe(true);
+  });
+
+  it("lets plan drift beat the throttle on an empty pool", () => {
+    const now = new Date("2026-09-03T12:00:00.000Z");
+    const plan = buildSearchPlan(null, [main]);
+    const storedPlan = buildSearchPlan(main, inProgress);
+
+    expect(isPoolStale({
+      candidates: { ...pool, items: [], mode: storedPlan.mode, searched: storedPlan.terms },
+      cachedAt: now,
+      lastAttemptAt: new Date(now.getTime() - 1_000),
+    }, plan, now)).toBe(true);
+  });
 });
 
 describe("wallpaper shuffle", () => {
