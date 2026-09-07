@@ -119,8 +119,8 @@ export function CompatibilitySection({
   const [overrideReason, setOverrideReason] = useState(override?.reason ?? "");
   const [savingOverride, setSavingOverride] = useState(false);
   const age = latestSnapshotAt ? daysSince(latestSnapshotAt) : null;
-  const bazziteStatus = override?.status ?? protonDb?.status ?? "UNKNOWN";
-  const windowsFallback = deriveWindowsFallback(bazziteStatus, antiCheat?.status ?? null);
+  const linuxStatus = override?.status ?? protonDb?.status ?? "UNKNOWN";
+  const windowsFallback = deriveWindowsFallback(linuxStatus, antiCheat?.status ?? null);
   const antiCheatBlocksLinux = antiCheat?.status === "Denied" || antiCheat?.status === "Broken";
 
   const refresh = async () => {
@@ -144,7 +144,7 @@ export function CompatibilitySection({
       return;
     }
     setEditingOverride(false);
-    toast.success("Bazzite override saved");
+    toast.success("Linux override saved");
     router.refresh();
   };
 
@@ -156,7 +156,7 @@ export function CompatibilitySection({
       toast.error(result.error ?? "Failed to clear override");
       return;
     }
-    toast.success("Bazzite override cleared");
+    toast.success("Linux override cleared");
     router.refresh();
   };
 
@@ -165,7 +165,7 @@ export function CompatibilitySection({
       eyebrow="Playability"
       title="Compatibility"
       id="compatibility-heading"
-      description="Bazzite first, Windows fallback when needed."
+      description="Linux first, Windows fallback when needed."
       aside={
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span className={age !== null && age > 150 ? "text-warning-text" : undefined}>
@@ -210,8 +210,8 @@ export function CompatibilitySection({
         <div className="grid gap-2">
           <div className="flex flex-col gap-3 rounded-lg border border-border p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
-              <p className="text-sm font-medium">Bazzite</p>
-              <p className="text-xs text-muted-foreground">{override ? "Primary: Bazzite personal override" : "Primary: ProtonDB"}</p>
+              <p className="text-sm font-medium">Linux</p>
+              <p className="text-xs text-muted-foreground">{override ? "Primary: Linux personal override" : "Primary: ProtonDB"}</p>
               {antiCheat ? (
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   {antiCheat.anticheats.length > 0 && <span>{antiCheat.anticheats.join(", ")}</span>}
@@ -220,7 +220,7 @@ export function CompatibilitySection({
               ) : null}
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:flex-col sm:items-end">
-              <Badge label={STATUS_LABELS[bazziteStatus]} className={STATUS_CLASSES[bazziteStatus]} />
+              <Badge label={STATUS_LABELS[linuxStatus]} className={STATUS_CLASSES[linuxStatus]} />
               <ProtonDbTier protonDb={protonDb} />
             </div>
           </div>
@@ -250,33 +250,33 @@ export function CompatibilitySection({
 
       {override && !isRomOnly && !editingOverride && (
         <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm">
-          <p>Bazzite override reason: {override.reason || "No reason provided"}</p>
+          <p>Linux override reason: {override.reason || "No reason provided"}</p>
           <div className="flex gap-2">
             <Button type="button" variant="ghost" size="sm" onClick={() => setEditingOverride(true)} disabled={savingOverride}>
-              Edit Bazzite override
+              Edit Linux override
             </Button>
             <Button type="button" variant="ghost" size="sm" onClick={() => void clearOverride()} disabled={savingOverride}>
-              Clear Bazzite override
+              Clear Linux override
             </Button>
           </div>
         </div>
       )}
       {!override && !isRomOnly && !editingOverride && (
         <Button type="button" variant="ghost" size="sm" onClick={() => setEditingOverride(true)}>
-          Set Bazzite override
+          Set Linux override
         </Button>
       )}
       {editingOverride && (
         <div className="space-y-2 rounded-lg border border-border p-3">
           <Select value={overrideStatus} onValueChange={(value) => setOverrideStatus(value as Status)}>
-            <SelectTrigger aria-label="Bazzite override compatibility status"><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Linux override compatibility status"><SelectValue /></SelectTrigger>
             <SelectContent>
               {Object.entries(STATUS_LABELS).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Input value={overrideReason} onChange={(event) => setOverrideReason(event.target.value)} placeholder="Why does this Bazzite override apply?" aria-label="Bazzite override reason" />
+          <Input value={overrideReason} onChange={(event) => setOverrideReason(event.target.value)} placeholder="Why does this Linux override apply?" aria-label="Linux override reason" />
           <div className="flex gap-2">
-            <Button type="button" size="sm" onClick={() => void saveOverride()} disabled={savingOverride}>{savingOverride ? "Saving..." : "Save Bazzite override"}</Button>
+            <Button type="button" size="sm" onClick={() => void saveOverride()} disabled={savingOverride}>{savingOverride ? "Saving..." : "Save Linux override"}</Button>
             <Button type="button" variant="outline" size="sm" onClick={() => setEditingOverride(false)} disabled={savingOverride}>Cancel</Button>
           </div>
         </div>

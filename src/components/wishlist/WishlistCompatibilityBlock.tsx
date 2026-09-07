@@ -71,10 +71,10 @@ const AWAY_CLASSES: Record<AntiCheatEvidence["status"], string> = {
   Broken: STATUS_CLASSES.REQUIRED,
 };
 
-const ENVIRONMENT_ORDER = ["BAZZITE", "WINDOWS"] as const;
+const ENVIRONMENT_ORDER = ["LINUX", "WINDOWS"] as const;
 
 const ENVIRONMENT_LABELS: Record<string, string> = {
-  BAZZITE: "Bazzite",
+  LINUX: "Linux",
   WINDOWS: "Windows",
 };
 

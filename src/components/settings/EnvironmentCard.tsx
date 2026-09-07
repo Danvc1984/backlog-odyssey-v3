@@ -1,48 +1,153 @@
+"use client";
+
+import { useState } from "react";
+import { toast } from "sonner";
+import { updateOsSetup } from "@/actions/settings";
+import { buildOsSetupConsequenceSummary, type OsSetup } from "@/lib/os-setup";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SectionCard } from "@/components/ui/detail-card";
 
-const ENVIRONMENT_DEFAULTS = {
-  desktopOs: "BAZZITE",
-  portableDevice: "STEAM_DECK",
-  fallbackOs: "WINDOWS",
-  priceCountry: "MX",
-  timeZone: "America/Mexico_City",
-} as const;
-
-const ENVIRONMENT_LABELS: Record<string, string> = {
-  BAZZITE: "Bazzite",
-  STEAM_DECK: "Steam Deck",
-  WINDOWS: "Windows",
-  MX: "MX",
-  "America/Mexico_City": "America/Mexico_City",
+const DEFAULT_SETUP: OsSetup = {
+  primaryOs: "LINUX",
+  hasWindowsFallback: false,
+  handheldOs: "NONE",
+  onboardingCompleted: false,
 };
 
-function environmentValue(key: keyof typeof ENVIRONMENT_DEFAULTS, value: string | null | undefined): string {
-  const resolved = value ?? ENVIRONMENT_DEFAULTS[key];
-  return ENVIRONMENT_LABELS[resolved] ?? resolved;
-}
+const ENVIRONMENT_LABELS = {
+  LINUX: "Linux",
+  WINDOWS: "Windows",
+  NONE: "None",
+} as const;
 
-interface EnvironmentSettings {
-  desktopOs: string | null;
-  portableDevice: string | null;
-  fallbackOs: string | null;
+interface EnvironmentSettings extends OsSetup {
   priceCountry: string | null;
   timeZone: string | null;
 }
 
+function setupFromSettings(settings: EnvironmentSettings | null): OsSetup {
+  if (!settings) return DEFAULT_SETUP;
+  return {
+    primaryOs: settings.primaryOs,
+    hasWindowsFallback: settings.hasWindowsFallback,
+    handheldOs: settings.handheldOs,
+    onboardingCompleted: settings.onboardingCompleted,
+  };
+}
+
+function environmentLabel(value: keyof typeof ENVIRONMENT_LABELS | string | null): string {
+  return value ? ENVIRONMENT_LABELS[value as keyof typeof ENVIRONMENT_LABELS] ?? value : "Not set";
+}
+
 export function EnvironmentCard({ settings }: { settings: EnvironmentSettings | null }) {
+  const [savedSetup, setSavedSetup] = useState(() => setupFromSettings(settings));
+  const [draft, setDraft] = useState(savedSetup);
+  const [open, setOpen] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const consequence = buildOsSetupConsequenceSummary(draft);
+
   const rows = [
-    { label: "Desktop OS", value: environmentValue("desktopOs", settings?.desktopOs) },
-    { label: "Portable device", value: environmentValue("portableDevice", settings?.portableDevice) },
-    { label: "Fallback OS", value: environmentValue("fallbackOs", settings?.fallbackOs) },
-    { label: "Price country", value: environmentValue("priceCountry", settings?.priceCountry) },
-    { label: "Time zone", value: environmentValue("timeZone", settings?.timeZone) },
+    { label: "Primary OS", value: environmentLabel(savedSetup.primaryOs) },
+    { label: "Windows fallback", value: savedSetup.hasWindowsFallback ? "Yes" : "No" },
+    { label: "Handheld OS", value: environmentLabel(savedSetup.handheldOs) },
+    { label: "Price country", value: settings?.priceCountry ?? "MX" },
+    { label: "Time zone", value: settings?.timeZone ?? "America/Mexico_City" },
   ];
+
+  const beginEdit = () => {
+    setDraft(savedSetup);
+    setConfirming(false);
+    setOpen(true);
+  };
+
+  const save = async () => {
+    setSaving(true);
+    const result = await updateOsSetup(draft);
+    setSaving(false);
+    if (!result.success) {
+      toast.error(result.error ?? "Failed to update OS setup");
+      return;
+    }
+    setSavedSetup(draft);
+    setOpen(false);
+    setConfirming(false);
+    toast.success("OS setup updated");
+  };
 
   return (
     <SectionCard
       eyebrow="Environment"
-      title="Fixed environment"
+      title="Environment"
       description="Context used for compatibility, prices, and scheduling."
+      aside={
+        <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen) { setDraft(savedSetup); setConfirming(false); } setOpen(nextOpen); }}>
+          <DialogTrigger asChild>
+            <Button type="button" variant="outline" size="sm" onClick={beginEdit}>Edit</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-lg">
+            {!confirming ? (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Edit environment</DialogTitle>
+                  <DialogDescription>Choose the devices this library is meant to support.</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="primary-os">Primary OS</Label>
+                    <Select value={draft.primaryOs} onValueChange={(value) => setDraft((current) => ({ ...current, primaryOs: value as OsSetup["primaryOs"], hasWindowsFallback: value === "WINDOWS" ? false : current.hasWindowsFallback }))}>
+                      <SelectTrigger id="primary-os"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="LINUX">Linux</SelectItem>
+                        <SelectItem value="WINDOWS">Windows</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {draft.primaryOs === "LINUX" && (
+                    <label className="flex items-center gap-2 text-sm">
+                      <input type="checkbox" checked={draft.hasWindowsFallback} onChange={(event) => setDraft((current) => ({ ...current, hasWindowsFallback: event.target.checked }))} className="accent-foreground" />
+                      I have a Windows fallback
+                    </label>
+                  )}
+                  <div className="grid gap-2">
+                    <Label htmlFor="handheld-os">Handheld OS</Label>
+                    <Select value={draft.handheldOs} onValueChange={(value) => setDraft((current) => ({ ...current, handheldOs: value as OsSetup["handheldOs"] }))}>
+                      <SelectTrigger id="handheld-os"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="NONE">No handheld</SelectItem>
+                        <SelectItem value="LINUX">Linux</SelectItem>
+                        <SelectItem value="WINDOWS">Windows</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+                  <Button type="button" onClick={() => setConfirming(true)}>Review changes</Button>
+                </DialogFooter>
+              </>
+            ) : (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Apply environment changes?</DialogTitle>
+                  <DialogDescription>Saving this setup immediately updates derived compatibility and regenerates recommendation runs.</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-2 rounded-md border border-border bg-muted/30 p-3 text-sm">
+                  <p>{consequence.compatibility}</p>
+                  <p>{consequence.recommendations}</p>
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setConfirming(false)} disabled={saving}>Back</Button>
+                  <Button type="button" onClick={() => void save()} disabled={saving}>{saving ? "Saving..." : "Confirm changes"}</Button>
+                </DialogFooter>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+      }
     >
       <dl className="divide-y divide-border rounded-lg border border-border">
         {rows.map((row) => (

@@ -1,16 +1,22 @@
 import { prisma } from "../src/lib/prisma";
 
 async function main() {
-  // Seed the singleton AppSettings record (fixed environment profile from the PRD).
+  // Seed a neutral setup so a fresh database starts in onboarding.
   await prisma.appSettings.upsert({
     where: { id: 1 },
-    update: {},
+    update: {
+      primaryOs: "LINUX",
+      hasWindowsFallback: false,
+      handheldOs: "NONE",
+      onboardingCompleted: false,
+    },
     create: {
       id: 1,
       theme: "SYSTEM",
-      desktopOs: "BAZZITE",
-      portableDevice: "STEAM_DECK",
-      fallbackOs: "WINDOWS",
+      primaryOs: "LINUX",
+      hasWindowsFallback: false,
+      handheldOs: "NONE",
+      onboardingCompleted: false,
       priceCountry: "MX",
       timeZone: "America/Mexico_City",
     },
@@ -22,7 +28,7 @@ async function main() {
     create: { id: 1, selectedIdx: 0 },
   });
 
-  console.log("Seed complete: AppSettings and WallpaperState singletons created.");
+  console.log("Seed complete: neutral AppSettings and WallpaperState singletons created.");
 }
 
 main()

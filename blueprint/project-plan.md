@@ -13,11 +13,14 @@ recommendations without becoming a launcher or storefront.
 
 ## 2. Users
 
-A single private owner using:
+A single private owner using a self-configured setup chosen at first login:
 
-- Bazzite desktop.
-- Steam Deck portable.
-- Windows fallback.
+- One primary OS: Linux-based or Windows.
+- An optional handheld running Linux (e.g. Steam Deck) or Windows
+  (e.g. ROG Ally).
+- A Windows fallback is optional: it exists only when the primary OS is
+  Linux and the owner has a Windows machine available. The fallback OS is
+  always Windows when one exists, and a Windows primary has no fallback.
 - Mexico prices and UTC-6.
 
 The MVP has one authorized Google account. The data model may retain explicit
@@ -42,8 +45,20 @@ registration, and collaboration are outside the MVP.
 - ITAD/Steam price enrichment for wishlist entries.
 - Optional MXN target prices, transparent valid-offer comparison, and purchase-opportunity signals.
 - Manual Steam wishlist import with conservative local matching, review queues, and RAWG follow-up for new base-game wishes.
-- Compatibility evidence for Bazzite and its Windows fallback, with wishlist
-  evidence presented separately when a wish has a confirmed Steam App ID.
+- First-login OS setup capturing the primary OS, an optional Windows
+  fallback (offered only when the primary is Linux), and the handheld;
+  the flow ends by offering the existing taste-setup as an optional next
+  step (start now or not now), and an all-Windows setup is the trivial
+  path with no compatibility explanation step.
+- Compatibility evidence for Linux targets with a derived Windows fallback,
+  skipped entirely on all-Windows setups; wishlist evidence presented
+  separately when a wish has a confirmed Steam App ID. Compatibility
+  display is gated per setup and per game: card tags render four distinct
+  states on active Linux setups (evidence, unknown/not-checked, stale,
+  absent - no hollow placeholders), and all-Windows setups render no
+  compatibility UI anywhere. Changing the OS setup in Settings asks for
+  confirmation and then immediately re-derives compatibility synthesis
+  and synchronously regenerates recommendation runs.
 - Deterministic explainable play-next and buy recommendations with DLC affinity weighting.
 - Recommendation runs with temporary dismissal and persistent calibration signals.
 - Today dashboard with active-backlog progress, data-coverage prompts, daily-cached
@@ -459,9 +474,45 @@ details stay out of the wishlist.
 
 ## 10. Compatibility Synthesis
 
-Compatibility evidence uses Bazzite as the primary environment and derives the
-Windows fallback from it. It does not maintain a separate Steam Deck
-compatibility layer.
+Compatibility evidence serves the Linux targets in the configured setup: the
+primary OS when it is Linux, and a Linux handheld when one is configured.
+ProtonDB and AWAY evidence keys off a Steam App ID and represents Linux
+playability for any Linux device; the app does not maintain a separate
+per-device Linux layer. Windows is derived from that evidence only when the
+primary OS is Linux and a Windows fallback is configured - the fallback OS
+is always Windows when one exists, and it is absent when the primary is
+Windows or when the owner has no Windows machine. When no fallback exists,
+evidence that would otherwise recommend the Windows fallback instead marks
+the game as not practically playable on this setup. When the primary OS is
+Windows and no Linux
+handheld is configured, the entire compatibility flow is inactive: no
+auto-queue, no sweeps, no per-game refresh affordances, no compatibility
+sections or tags, and no compatibility factors in recommendations.
+
+Compatibility display is gated per setup and per game, so it only appears
+when it makes sense:
+
+- On an active Linux setup, games with a confirmed Steam App ID (non-ROM,
+  base game) show full compatibility UI: card tags and detail sections.
+- Catalog games without a confirmed App ID get the manual "add Steam App ID"
+  affordance on the detail page only; cards show no tag rather than a hollow
+  placeholder.
+- Wishlist entries without a confirmed App ID and DLC wishes show nothing.
+- On an all-Windows setup, no compatibility UI renders anywhere, including
+  hidden or disabled controls.
+
+Card tags on active Linux setups use four distinct states: evidence (tier
+and/or anti-cheat known), unknown / not yet checked, stale (past the 180-day
+window, as its own state for sweep-coverage scannability), and absent (no
+tag at all when identity or eligibility is missing). Detail pages keep their
+richer freshness treatment regardless of card state.
+
+Changing the OS setup (primary OS, fallback flag, or handheld) in Settings
+asks for confirmation with a dialog describing the consequence, then
+immediately re-derives compatibility synthesis and synchronously
+regenerates recommendation runs under the new setup. The re-run uses normal
+run semantics - a fresh run record, retained batches, and exposure
+cooldowns still apply - replacing the previous tuned run.
 
 All provider evidence keys off a Steam App ID. Catalog games without one get
 a manual "add Steam App ID" affordance on the detail page, writing into the
@@ -475,19 +526,19 @@ still receives Steam-based evidence.
 
 Sources:
 
-- ProtonDB is primary for Bazzite/Linux reports, with its tier and a single
+- ProtonDB is primary for Linux reports, with its tier and a single
   per-game ProtonDB link shown as evidence.
 - Anti-cheat evidence comes from the AreWeAntiCheatYet crowdsourced dataset,
   cached like other providers and shown separately; absent data stays explicit
   unknown.
-- Windows is derived from effective Bazzite evidence: a game ready without
+- Windows is derived from effective Linux evidence: a game ready without
   tinkering needs no fallback, tinkering or degraded Linux support recommends a
-  fallback, and denied/broken anti-cheat, not-playable Bazzite evidence, or
-  unknown Bazzite evidence requires it.
+  fallback, and denied/broken anti-cheat, not-playable Linux evidence, or
+  unknown Linux evidence requires it.
 
-Mixed evidence shows all sources with attribution. Personal overrides apply to
-Bazzite only, take priority, are never overwritten, and consequently affect
-the derived Windows fallback.
+Mixed evidence shows all sources with attribution. Personal overrides apply
+to the Linux evidence only while compatibility is active, take priority, are
+never overwritten, and consequently affect the derived Windows fallback.
 
 Wishlist entries with a confirmed Steam App ID (both `steamAppId` and
 `steamAppIdProvenance` set) show the same ProtonDB and AWAY evidence with the
@@ -517,7 +568,8 @@ automatic queue and per-game manual refresh. A global compatibility sweep is
 already available from Settings; feature 18 may expand or relabel those
 controls. The deployment feature's daily cron enqueues a compatibility
 freshness sweep for catalog and wishlist evidence older than the window,
-alongside the price refresh. Provider
+alongside the price refresh, and the sweep is a no-op while compatibility is
+inactive. Provider
 endpoint stability (ProtonDB summary endpoint and AWAY dataset shape) validates
 during the feature spec.
 
@@ -583,9 +635,20 @@ factors such as:
   tuning never affects buy recommendations, wishlist eligibility, seller
   ranking, or price comparison.
 - Compatibility is a small practical-fit signal for the intended environment,
-  not a hard gate. Confirmed fit may boost a recommendation; unknown, stale,
-  or poor evidence surfaces caveats and can reduce practical fit, but does not
-  declare a game unplayable or silently exclude it.
+  not a hard gate, with one sanctioned exception. Confirmed fit may boost a
+  recommendation; unknown, stale, or poor evidence surfaces caveats and can
+  reduce practical fit, but does not declare a game unplayable or silently
+  exclude it. On all-Windows setups compatibility is inactive and contributes
+  no factors, floors, or caveats; environment fit derives from the configured
+  devices instead. The exception: on a Linux setup without a Windows
+  fallback, evidence that would derive "fallback needed" (denied/broken
+  anti-cheat, not-playable Linux, or unknown Linux evidence where a READY
+  floor applies) hard-excludes the game from all play roles with a visible,
+  explained reason - the only sanctioned hard exclusion. A play role left
+  with no remaining candidate is absent from the run, consistent with the
+  existing role rule. The same evidence class never hard-excludes from buy
+  recommendations or wishlist discovery; there it applies a heavy
+  practical-fit penalty plus a caveat, never exclusion.
 - Buy offer quality: fresh-offer discount percentage earns points; proximity
   to the historical low breaks ties; stale offers contribute zero
   offer-quality points, consistent with the 48-hour rule.
@@ -960,7 +1023,8 @@ with named mythology (gods, creatures, places):
 Settings includes:
 
 - Google session management.
-- Fixed environment display.
+- OS preferences set at onboarding: primary OS, handheld, and the derived
+  fallback, editable afterward.
 - Steam wishlist-import status and review access.
 - Vercel Cron status and diagnostics for the daily price refresh and
   compatibility sweep once deployment enables it.

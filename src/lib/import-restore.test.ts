@@ -12,7 +12,7 @@ const now = "2026-09-04T12:00:00.000Z";
 
 function minimalDocument(): ExportDocument {
   return {
-    version: 1,
+    version: 2,
     exportedAt: now,
     data: {
       settings: null,
@@ -265,9 +265,10 @@ describe("restoreExportDocument", () => {
     doc.data.settings = {
       id: 1,
       theme: "SYSTEM",
-      desktopOs: "BAZZITE",
-      portableDevice: "STEAM_DECK",
-      fallbackOs: "WINDOWS",
+      primaryOs: "LINUX",
+      hasWindowsFallback: true,
+      handheldOs: "LINUX",
+      onboardingCompleted: true,
       priceCountry: "MX",
       timeZone: "America/Mexico_City",
       wallpaperEnabled: true,

@@ -46,9 +46,10 @@ export default async function SettingsPage() {
       where: { id: 1 },
       select: {
         wallpaperEnabled: true,
-        desktopOs: true,
-        portableDevice: true,
-        fallbackOs: true,
+        primaryOs: true,
+        hasWindowsFallback: true,
+        handheldOs: true,
+        onboardingCompleted: true,
         priceCountry: true,
         timeZone: true,
       },

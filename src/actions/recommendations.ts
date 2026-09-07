@@ -90,7 +90,7 @@ const tasteSetupPickSchema = z.object({
 const saveTasteSetupSchema = z.object({
   picks: z.array(tasteSetupPickSchema).min(1).max(6),
   experience: z.enum(["PC_GAMING", "MULTIPLAYER_COOP", "COUCH_GAMING", "ON_THE_GO"]).nullable().optional(),
-  environment: z.enum(["BAZZITE", "STEAM_DECK", "WINDOWS"]).nullable().optional(),
+  environment: z.enum(["LINUX", "STEAM_DECK", "WINDOWS"]).nullable().optional(),
 }).strict().superRefine((value, ctx) => {
   if (new Set(value.picks.map((pick) => pick.gameId)).size !== value.picks.length) {
     ctx.addIssue({ code: "custom", path: ["picks"], message: "Duplicate picks are not allowed" });

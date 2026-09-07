@@ -38,7 +38,7 @@ const EXPERIENCE_OPTIONS = [
 ] as const;
 
 const ENVIRONMENT_OPTIONS = [
-  ["BAZZITE", "Bazzite"],
+  ["LINUX", "Linux"],
   ["STEAM_DECK", "Steam Deck"],
   ["WINDOWS", "Windows"],
 ] as const;
@@ -88,7 +88,7 @@ export function TasteSetupPanel({ games, initialPicks }: TasteSetupPanelProps) {
   };
 
   return (
-    <section className="rounded-lg border border-border bg-card shadow-card">
+    <section id="taste-setup" className="rounded-lg border border-border bg-card shadow-card">
       <div className="flex items-center justify-between gap-3 px-4 py-3">
         <button type="button" onClick={() => setOpen((current) => !current)} className="flex min-w-0 items-center gap-2 text-left">
           <span className="text-sm font-medium">Set up your taste</span>

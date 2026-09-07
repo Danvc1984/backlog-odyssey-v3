@@ -89,7 +89,7 @@ describe("computeProfileCoverage", () => {
           playState: "NOT_STARTED",
           interest: null,
           priority: "HIGH",
-          preferredEnvironment: "BAZZITE",
+          preferredEnvironment: "LINUX",
           gameExperience: "PC_GAMING",
         },
       }),

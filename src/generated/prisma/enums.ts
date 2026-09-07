@@ -65,12 +65,29 @@ export type Priority = (typeof Priority)[keyof typeof Priority]
 
 
 export const Environment = {
-  BAZZITE: 'BAZZITE',
+  LINUX: 'LINUX',
   STEAM_DECK: 'STEAM_DECK',
   WINDOWS: 'WINDOWS'
 } as const
 
 export type Environment = (typeof Environment)[keyof typeof Environment]
+
+
+export const PrimaryOs = {
+  LINUX: 'LINUX',
+  WINDOWS: 'WINDOWS'
+} as const
+
+export type PrimaryOs = (typeof PrimaryOs)[keyof typeof PrimaryOs]
+
+
+export const HandheldOs = {
+  NONE: 'NONE',
+  LINUX: 'LINUX',
+  WINDOWS: 'WINDOWS'
+} as const
+
+export type HandheldOs = (typeof HandheldOs)[keyof typeof HandheldOs]
 
 
 export const GameExperience = {

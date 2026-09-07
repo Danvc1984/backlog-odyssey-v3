@@ -1,7 +1,8 @@
 # Backlog Odyssey - Project Overview
 
 > Private, single-user gaming library and decision assistant for choosing what
-> to play and buy in Mexico across Bazzite, Steam Deck, and Windows.
+> to play and buy in Mexico across a self-configured setup of Linux or Windows
+> desktops and handhelds.
 
 ## Product, user, and boundaries
 
@@ -9,11 +10,16 @@ Backlog Odyssey consolidates ownership, personal catalog state, prices,
 compatibility evidence, metadata, and explainable recommendations. It is not a
 launcher, storefront, or automatic purchasing tool.
 
-The MVP serves one authorized Google account on Bazzite desktop, Steam Deck,
-and a Windows fallback. Mexico pricing and UTC-6 are the defaults. Public
-registration, collaboration, automatic Steam synchronization, notifications,
-webhooks, PWA/offline behavior, and automatic non-Steam account-library imports
-are outside scope. Alternative stores remain manual availability sources unless
+The MVP serves one authorized Google account on a setup the owner configures at
+first login: one primary OS (Linux-based or Windows) and an optional handheld
+running Linux (e.g. Steam Deck) or Windows (e.g. ROG Ally). A Windows fallback
+is optional - it exists only when the primary OS is Linux and the owner has a
+Windows machine; the fallback OS is always Windows when one exists, and a
+Windows primary has no fallback. Mexico pricing and UTC-6 are the defaults.
+Public registration,
+collaboration, automatic Steam synchronization, notifications, webhooks,
+PWA/offline behavior, and automatic non-Steam account-library imports are
+outside scope. Alternative stores remain manual availability sources unless
 they offer a supported account-library API.
 
 Personal intent and explicit catalog choices are authoritative. Provider data
@@ -37,7 +43,7 @@ The exact checked state is owned by blueprint/build-plan.md.
 5. **[x] 10a-10c: Wishlist and pricing** - Independent base/DLC wishes,
    acquisition, identity provenance, Mexican offers, target opportunities, and
    conservative manual Steam wishlist import.
-6. **[x] 11-11d: Compatibility and wishlist detail** - Bazzite-first evidence,
+6. **[x] 11-11d: Compatibility and wishlist detail** - Linux evidence with a
    Windows fallback, catalog and wishlist queues/sweeps, and wishlist detail.
 7. **[x] 12-12e: Recommendations** - Explainable Play Next and Buy runs,
    adaptive profile/calibration, role diversity, reusable alternative sources,
@@ -52,22 +58,30 @@ The exact checked state is owned by blueprint/build-plan.md.
     Detail, Wishlist Detail, Collections, and Settings, plus the optional
     cached Wallhaven background with rotation, shuffle, attribution, fallback,
     and reduced-data hard-off.
-11. **[ ] 17a-17d: Per-game themes and RAWG screenshots** - Version 3 snapshot
+11. **[x] 17a-17d: Per-game themes and RAWG screenshots** - Version 3 snapshot
     adding derived palettes and up to six screenshots, hero-band themes with
     decorative accent tints on game detail and wishlist detail, a dedicated
     screenshots carousel, and backfill through the existing re-enrichment
     route.
-12. **[ ] 18a-18c: Settings, export, and restore** - Consolidated Settings
+12. **[x] 18a-18c: Settings, export, and restore** - Consolidated Settings
     surfaces, versioned personal-data JSON export, and empty-schema-only
     import in one all-or-nothing transaction.
-13. **[ ] 19a-19g: Odyssey theme expansion** - Dawn and Sunset palette families
+13. **[ ] 19a-19c: OS setup, onboarding, and environment-aware behavior** -
+    First-login onboarding capturing the primary OS, optional Windows
+    fallback, and optional handheld (trivial path on all-Windows setups,
+    ending with an optional taste-setup offer); Linux-gated compatibility
+    flows with per-setup and per-game display gating; OS-aware play/buy
+    recommendations and wishlist discovery, including the no-fallback
+    play-role hard exclusion; Settings setup changes confirm, then
+    immediately re-derive compatibility and synchronously regenerate runs.
+14. **[ ] 20a-20g: Odyssey theme expansion** - Dawn and Sunset palette families
     (light and dark each) with family-owned semantic hue mapping, Cinzel/Inter
     typography, official brand icons, and a whole-app Odyssey voice sweep on
     expressive surfaces, locked through a prototype first; the general UI icon
     swap waits for the owner's chosen set.
-14. **[ ] 20: Deployment and CI readiness** - Vercel/Supabase, Cron covering
-    prices plus the compatibility freshness sweep, smoke tests, Verify command,
-    and automatic checks.
+15. **[ ] 21: Deployment and CI readiness** - Vercel/Supabase, Cron covering
+    prices plus the compatibility freshness sweep (a no-op while compatibility
+    is inactive), smoke tests, Verify command, and automatic checks.
 
 ## Data model and ownership
 
@@ -77,10 +91,20 @@ boundaries.
 ### Identity, operations, and catalog
 
 - User, Account, and Session provide one-user Google authentication.
-- AppSettings holds fixed environment context and app controls. Feature 14
-  visual preferences use a non-migrating mechanism and gain the Dawn/Sunset
-  family selector in Feature 19; provider, export, and import controls live in
-  Feature 18.
+- AppSettings holds the owner-configured OS setup - primary OS
+  (`LINUX`/`WINDOWS`), an optional Windows fallback (`hasWindowsFallback`,
+  only offered when the primary is Linux), optional handheld OS
+  (`NONE`/`LINUX`/`WINDOWS`), and onboarding completion - captured at first
+  login and editable in Settings. The derived fallback is Windows only when
+  the primary is Linux and the owner has a Windows machine; it is absent
+  when the primary is Windows or no Windows machine exists. Changing the
+  setup in Settings requires a confirmation dialog and then immediately
+  re-derives compatibility synthesis and synchronously regenerates
+  recommendation runs (normal run semantics: fresh run record, retained
+  batches, exposure cooldowns; it replaces the previous tuned run). Feature
+  14 visual preferences use a non-migrating mechanism and gain the
+  Dawn/Sunset family selector in Feature 20; provider, export, and import
+  controls live in Feature 18.
 - SteamConnection, SyncRun, EnrichmentJob, PriceRefresh, and sweep/run records
   persist status, retry timing, counts, and safe diagnostics.
 - SteamRecentActivityCache holds a 24-hour narrow activity result. It may show
@@ -94,7 +118,7 @@ boundaries.
   references reusable AlternativeSource, which has a normalized name, optional
   known-source key, icon metadata, and archive state. No source is inferred
   from legacy free text.
-- MetadataSnapshot is replaceable RAWG data with attribution. Feature 17 bumps
+- MetadataSnapshot is replaceable RAWG data with attribution. Feature 17 bumped
   it to version 3: derived palette variants (primary plus dark/muted) and up
   to six screenshot URLs (id, image, width, height; RAWG-hidden entries
   filtered), tolerant of v1/v2 rows and backfilled by re-enrichment.
@@ -115,11 +139,12 @@ boundaries.
 - Target price is optional. Fresh target hits create opportunity signals;
   historical low is display-only. Offers stale after 48 hours cannot create a
   strong opportunity signal.
-- CompatibilitySnapshot and EnvironmentCompatibility hold catalog evidence.
-  Bazzite is primary, Windows is derived, and Bazzite-only personal overrides
-  take priority. WishlistCompatibilitySnapshot and
-  WishlistEnvironmentCompatibility are parallel, read-only storage keyed to
-  wishlist entries and never reuse catalog snapshots.
+- CompatibilitySnapshot and EnvironmentCompatibility hold catalog evidence and
+  WishlistCompatibilitySnapshot and WishlistEnvironmentCompatibility hold the
+  parallel, read-only wishlist copies keyed to wishlist entries. The
+  `Environment` enum is `LINUX` (migrated from BAZZITE), `STEAM_DECK`, and
+  `WINDOWS`. Evidence is active only while the configured setup includes a
+  Linux device; personal overrides apply to the Linux evidence only.
 - RecommendationRun, RecommendationItem, RecommendationFeedback,
   RecommendationEvent, RecommendationProfile, RecommendationPreference, tune
   state, and presets are recommendation-owned. Reset removes these only,
@@ -150,20 +175,59 @@ boundaries.
   rate limits. The seller page is authoritative for activation; key stores warn
   that Mexico activation must be checked.
 
-### Compatibility and recommendations
+### OS setup, compatibility, and recommendations
 
-- ProtonDB and AWAY remain separate attributable evidence. A Steam App ID keys
-  evidence. A single 180-day freshness rule keeps stale values visible and
-  warns recommendations instead of excluding a game.
-- A global compatibility sweep is available from Settings. The deployment
-  feature's daily cron enqueues a compatibility freshness sweep for catalog
-  and wishlist evidence older than the window, alongside the price refresh.
+- The OS setup is captured at first login through an onboarding gate and stays
+  editable in Settings. It is the single source for environment semantics:
+  which devices exist, which run Linux, and whether a Windows fallback
+  exists. All-Windows onboarding is the trivial path with no compatibility
+  explanation step; onboarding ends with an optional start-now / not-now
+  taste-setup offer (the import-flow entry point is unchanged).
+- The compatibility pipeline (ProtonDB and AWAY evidence, post-RAWG auto-queue,
+  global sweeps, per-game refresh, ProtonDB card tags, and catalog/wishlist
+  compatibility sections) is active only while the primary OS or the handheld
+  is Linux. All-Windows setups see no compatibility flow anywhere, rendering
+  no compatibility UI at all; the deployment cron's sweep becomes a no-op.
+- Compatibility display is gated per setup and per game so it appears only
+  when it makes sense: active Linux setups show full UI for confirmed-App-ID
+  non-ROM base games; catalog games without a confirmed App ID get only the
+  detail-page "add Steam App ID" affordance (cards show no tag, not a hollow
+  placeholder); wishlist entries without confirmed identity and DLC wishes
+  show nothing. Card tags use four distinct states - evidence,
+  unknown/not-checked, stale (its own state, past the 180-day window), and
+  absent - while detail pages keep richer freshness treatment.
+- Changing the OS setup (primary OS, fallback flag, or handheld) in Settings
+  shows a confirmation dialog, then immediately re-derives compatibility
+  synthesis and synchronously regenerates recommendation runs. The re-run
+  uses normal run semantics (fresh run record, retained batches, exposure
+  cooldowns) and replaces the previous tuned run.
+- ProtonDB and AWAY remain separate attributable evidence keyed by a Steam App
+  ID and represent Linux playability for any Linux device - there is no
+  separate per-device Linux layer. Windows is derived from that evidence only
+  when the primary OS is Linux and a Windows fallback is configured; the
+  fallback OS is always Windows when one exists, and it is absent when the
+  primary is Windows or the owner has no Windows machine. When no fallback
+  exists, evidence that would otherwise recommend the Windows fallback marks
+  the game as not practically playable on this setup. This rule is stated
+  consistently across the
+  app.
+- A single 180-day freshness rule keeps stale values visible and warns
+  recommendations instead of excluding a game.
 - Play Next considers non-hidden, non-main base games that are not started or
   replay-flagged played/abandoned games. In-progress titles belong to Today;
   DLC does not enter Play Next. Buy considers base wishes and eligible DLC
   wishes; ROMs never enter Buy.
 - Interest is durable taste; catalog priority is short-term Play Next urgency.
-  Compatibility and metadata are soft, explainable evidence, not hard gates.
+  Compatibility and metadata are soft, explainable evidence, not hard gates,
+  with one sanctioned exception. On all-Windows setups compatibility
+  contributes no factors, floors, or caveats, and environment fit derives
+  from the configured devices. The exception: on a Linux setup without a
+  Windows fallback, fallback-needing evidence (denied/broken anti-cheat,
+  not-playable Linux, or unknown Linux evidence where a READY floor applies)
+  hard-excludes the game from all play roles with a visible, explained
+  reason; a play role left empty is absent from the run. The same evidence
+  class never hard-excludes from Buy or wishlist discovery - there it is a
+  heavy practical-fit penalty plus caveat, never exclusion.
 - Source tuning is an inclusive, modest Play Next boost. It does not exclude
   eligible games, affect Buy, or influence seller/offer selection.
 - Play Next provides two Best Fit roles, Out of the Box, and Change of Pace.
@@ -178,7 +242,7 @@ boundaries.
   in progress and follows the existing main-game decision; it never launches a
   game.
 
-### Themes, voice, and icons (Features 17 and 19)
+### Themes, voice, and icons (Features 17 and 20)
 
 - Per-game themes derive server-side during RAWG enrichment and apply
   read-only as a hero band plus decorative accent tints (headers, borders,
@@ -195,7 +259,7 @@ boundaries.
   system mode resolves light/dark within the selected family.
 - Typography pairs Cinzel (display) with Inter (body); technical monospace
   evidence labels are unchanged. The pairing and Sunset mapping get their
-  final call at the 19a prototype.
+  final call at the 20a prototype.
 - The Odyssey voice sweep covers expressive surfaces only - page and section
   headers, empty states, buttons, dashboard moments, and dialogs - mixing
   subtle allusion with named mythology. Statuses, errors, evidence labels,
@@ -238,6 +302,9 @@ freshness, and operations are supporting sections.
 ## Routes
 
 - / - authentication landing.
+- /welcome - first-login onboarding capturing the OS setup (primary OS,
+  handheld, handheld OS) behind an onboarding-completion gate, ending with
+  an optional taste-setup offer.
 - /today - decision dashboard, coverage dialogs, recommendations, recent Steam
   activity, offers, provider freshness, and operations.
 - /library - searchable catalog, source filters, manual creation, duplicate
@@ -252,9 +319,11 @@ freshness, and operations are supporting sections.
   wishes, identity/provenance, offers, target, notes, interest,
   acquire/edit/delete, compatibility, and fill-only enrichment.
 - /collections and /collections/[id] - collections and existing forms/dialogs.
-- /settings - sessions, recommendation profile/reset, provider and queue
-  controls, wishlist diagnostics, visual preferences with the Dawn/Sunset
-  family selector, Wallhaven, export, and empty-schema import.
+- /settings - sessions, OS preferences (edited through a confirmation dialog
+  that precedes immediate re-derivation), recommendation profile/reset,
+  provider and queue controls, wishlist diagnostics, visual preferences with
+  the Dawn/Sunset family selector, Wallhaven, export, and empty-schema
+  import.
 
 ## Tech, validation, and deployment
 
@@ -264,11 +333,12 @@ freshness, and operations are supporting sections.
   pnpm typecheck, and pnpm test.
 - Provider keys stay server-side. Production validates environment, database
   migration, queue/scheduler behavior, and smoke tests.
-- Feature 20 configures Vercel Cron and CRON_SECRET for a daily run at
+- Feature 21 configures Vercel Cron and CRON_SECRET for a daily run at
   06:00 UTC-6 enqueueing the price refresh plus a compatibility freshness
-  sweep for catalog and wishlist evidence older than the 180-day window.
-  Claims must be atomic, calls idempotent, and retry history visible.
-- Visual acceptance (14f, and 19g for the families) covers primary routes on
+  sweep for catalog and wishlist evidence older than the 180-day window; the
+  sweep is a no-op while compatibility is inactive. Claims must be atomic,
+  calls idempotent, and retry history visible.
+- Visual acceptance (14f, and 20g for the families) covers primary routes on
   desktop/mobile and light/dark/system modes, keyboard/focus/targets/contrast,
   reduced motion/data, and loading/empty/error/stale/operation states, then
   existing automated checks.
@@ -281,13 +351,17 @@ freshness, and operations are supporting sections.
   first, then in-progress titles, no fixed keyword list. The plans can be
   updated to match the shipped behavior; nothing else depends on it.
 - Sunset family's exact orange/yellow mapping and the final Cinzel/Inter
-  confirmation happen at the 19a prototype.
-- The general UI icon set choice is the owner's; it gates only 19f.
+  confirmation happen at the 20a prototype.
+- The general UI icon set choice is the owner's; it gates only 20f.
+- Feature 19c carries the exact no-fallback exclusion evidence classes
+  (denied/broken anti-cheat, not-playable Linux, unknown Linux where a READY
+  floor applies); edge combinations (e.g. unknown evidence on
+  out-of-the-box vs best-fit roles) refine at the /feature 19 spec.
 
 ## Next workflow action
 
-The next unchecked item is **17a: Version 3 snapshot - palettes and
-screenshots**. Run `/feature 17` to produce the reviewed implementation spec.
+The next unchecked item is **19a: OS preferences and first-login onboarding**.
+Run `/feature 19` to produce the reviewed implementation spec.
 
 This overview is generated from the two plans and does not authorize code
 changes.

@@ -13,7 +13,7 @@ const updatePersonalFieldsSchema = z.object({
   interest: z.number().int().min(1).max(5).optional().nullable(),
   rating: z.number().int().min(1).max(10).optional().nullable(),
   preferredEnvironment: z
-    .enum(["BAZZITE", "STEAM_DECK", "WINDOWS"])
+    .enum(["LINUX", "STEAM_DECK", "WINDOWS"])
     .optional()
     .nullable(),
   gameExperience: z

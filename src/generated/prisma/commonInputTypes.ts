@@ -180,9 +180,23 @@ export type EnumThemeFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumThemeFilter<$PrismaModel> | $Enums.Theme
 }
 
+export type EnumPrimaryOsFilter<$PrismaModel = never> = {
+  equals?: $Enums.PrimaryOs | Prisma.EnumPrimaryOsFieldRefInput<$PrismaModel>
+  in?: $Enums.PrimaryOs[] | Prisma.ListEnumPrimaryOsFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PrimaryOs[] | Prisma.ListEnumPrimaryOsFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPrimaryOsFilter<$PrismaModel> | $Enums.PrimaryOs
+}
+
 export type BoolFilter<$PrismaModel = never> = {
   equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel>
   not?: Prisma.NestedBoolFilter<$PrismaModel> | boolean
+}
+
+export type EnumHandheldOsFilter<$PrismaModel = never> = {
+  equals?: $Enums.HandheldOs | Prisma.EnumHandheldOsFieldRefInput<$PrismaModel>
+  in?: $Enums.HandheldOs[] | Prisma.ListEnumHandheldOsFieldRefInput<$PrismaModel>
+  notIn?: $Enums.HandheldOs[] | Prisma.ListEnumHandheldOsFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumHandheldOsFilter<$PrismaModel> | $Enums.HandheldOs
 }
 
 export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -211,12 +225,32 @@ export type EnumThemeWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumThemeFilter<$PrismaModel>
 }
 
+export type EnumPrimaryOsWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PrimaryOs | Prisma.EnumPrimaryOsFieldRefInput<$PrismaModel>
+  in?: $Enums.PrimaryOs[] | Prisma.ListEnumPrimaryOsFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PrimaryOs[] | Prisma.ListEnumPrimaryOsFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPrimaryOsWithAggregatesFilter<$PrismaModel> | $Enums.PrimaryOs
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPrimaryOsFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPrimaryOsFilter<$PrismaModel>
+}
+
 export type BoolWithAggregatesFilter<$PrismaModel = never> = {
   equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel>
   not?: Prisma.NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedBoolFilter<$PrismaModel>
   _max?: Prisma.NestedBoolFilter<$PrismaModel>
+}
+
+export type EnumHandheldOsWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.HandheldOs | Prisma.EnumHandheldOsFieldRefInput<$PrismaModel>
+  in?: $Enums.HandheldOs[] | Prisma.ListEnumHandheldOsFieldRefInput<$PrismaModel>
+  notIn?: $Enums.HandheldOs[] | Prisma.ListEnumHandheldOsFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumHandheldOsWithAggregatesFilter<$PrismaModel> | $Enums.HandheldOs
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumHandheldOsFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumHandheldOsFilter<$PrismaModel>
 }
 
 export type JsonNullableFilter<$PrismaModel = never> =
@@ -1056,9 +1090,23 @@ export type NestedEnumThemeFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumThemeFilter<$PrismaModel> | $Enums.Theme
 }
 
+export type NestedEnumPrimaryOsFilter<$PrismaModel = never> = {
+  equals?: $Enums.PrimaryOs | Prisma.EnumPrimaryOsFieldRefInput<$PrismaModel>
+  in?: $Enums.PrimaryOs[] | Prisma.ListEnumPrimaryOsFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PrimaryOs[] | Prisma.ListEnumPrimaryOsFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPrimaryOsFilter<$PrismaModel> | $Enums.PrimaryOs
+}
+
 export type NestedBoolFilter<$PrismaModel = never> = {
   equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel>
   not?: Prisma.NestedBoolFilter<$PrismaModel> | boolean
+}
+
+export type NestedEnumHandheldOsFilter<$PrismaModel = never> = {
+  equals?: $Enums.HandheldOs | Prisma.EnumHandheldOsFieldRefInput<$PrismaModel>
+  in?: $Enums.HandheldOs[] | Prisma.ListEnumHandheldOsFieldRefInput<$PrismaModel>
+  notIn?: $Enums.HandheldOs[] | Prisma.ListEnumHandheldOsFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumHandheldOsFilter<$PrismaModel> | $Enums.HandheldOs
 }
 
 export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
@@ -1098,12 +1146,32 @@ export type NestedEnumThemeWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumThemeFilter<$PrismaModel>
 }
 
+export type NestedEnumPrimaryOsWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PrimaryOs | Prisma.EnumPrimaryOsFieldRefInput<$PrismaModel>
+  in?: $Enums.PrimaryOs[] | Prisma.ListEnumPrimaryOsFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PrimaryOs[] | Prisma.ListEnumPrimaryOsFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPrimaryOsWithAggregatesFilter<$PrismaModel> | $Enums.PrimaryOs
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPrimaryOsFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPrimaryOsFilter<$PrismaModel>
+}
+
 export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
   equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel>
   not?: Prisma.NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedBoolFilter<$PrismaModel>
   _max?: Prisma.NestedBoolFilter<$PrismaModel>
+}
+
+export type NestedEnumHandheldOsWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.HandheldOs | Prisma.EnumHandheldOsFieldRefInput<$PrismaModel>
+  in?: $Enums.HandheldOs[] | Prisma.ListEnumHandheldOsFieldRefInput<$PrismaModel>
+  notIn?: $Enums.HandheldOs[] | Prisma.ListEnumHandheldOsFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumHandheldOsWithAggregatesFilter<$PrismaModel> | $Enums.HandheldOs
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumHandheldOsFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumHandheldOsFilter<$PrismaModel>
 }
 
 export type NestedJsonNullableFilter<$PrismaModel = never> =

@@ -54,8 +54,19 @@ enum Priority {
 }
 
 enum Environment {
-  BAZZITE
+  LINUX
   STEAM_DECK
+  WINDOWS
+}
+
+enum PrimaryOs {
+  LINUX
+  WINDOWS
+}
+
+enum HandheldOs {
+  NONE
+  LINUX
   WINDOWS
 }
 
@@ -245,9 +256,10 @@ model Session {
 model AppSettings {
   id                    Int      @id @default(1)
   theme                 Theme    @default(SYSTEM)
-  desktopOs             String   @default("BAZZITE")
-  portableDevice        String   @default("STEAM_DECK")
-  fallbackOs            String   @default("WINDOWS")
+  primaryOs             PrimaryOs @default(LINUX)
+  hasWindowsFallback    Boolean  @default(false)
+  handheldOs            HandheldOs @default(NONE)
+  onboardingCompleted   Boolean  @default(false)
   priceCountry          String   @default("MX")
   timeZone              String   @default("America/Mexico_City") // IANA; Mexico eliminated DST in 2023, permanently UTC-6
   wallpaperEnabled      Boolean  @default(true)

@@ -659,15 +659,15 @@ describe("planMergeMutations", () => {
   it("applies the chosen side for an environment one-to-one conflict", () => {
     const gameA = makeGraphGame({
       id: "game-a",
-      envCompat: [{ id: "v-a", gameId: "game-a", environment: "BAZZITE" }],
+      envCompat: [{ id: "v-a", gameId: "game-a", environment: "LINUX" }],
     });
     const gameB = makeGraphGame({
       id: "game-b",
       origin: "STEAM_IMPORT",
-      envCompat: [{ id: "v-b", gameId: "game-b", environment: "BAZZITE" }],
+      envCompat: [{ id: "v-b", gameId: "game-b", environment: "LINUX" }],
     });
 
-    const mutations = run(gameA, gameB, makeResolvedPlan({ oneToOneKeep: { BAZZITE: "b" } }));
+    const mutations = run(gameA, gameB, makeResolvedPlan({ oneToOneKeep: { LINUX: "b" } }));
 
     expect(mutations.envMoves).toEqual([]);
     expect(mutations.envDeletes.map((m) => m.id)).toEqual(["v-a"]);
@@ -949,7 +949,7 @@ describe("buildDeleteSnapshotPlan", () => {
       metadataSnapshots: [{ id: "m1", gameId: "game-a", provider: "RAWG", fetchedAt: new Date("2026-01-01") }],
       wishlistDlcs: [{ id: "w1", baseGameId: "game-a" }],
       compatSnapshots: [{ id: "c1", gameId: "game-a", provider: "PROTONDB" }],
-      envCompat: [{ id: "v1", gameId: "game-a", environment: "BAZZITE" }],
+      envCompat: [{ id: "v1", gameId: "game-a", environment: "LINUX" }],
       duplicatesA: [{ id: "dup-1", gameBId: "game-c", status: "OPEN" }],
     });
     const dlc = makeGraphGame({

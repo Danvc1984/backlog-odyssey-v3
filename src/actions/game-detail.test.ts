@@ -401,7 +401,7 @@ describe("updatePersonalFields", () => {
       priority: "HIGH",
       interest: 4,
       rating: 8,
-      preferredEnvironment: "BAZZITE",
+      preferredEnvironment: "LINUX",
       gameExperience: "PC_GAMING",
       notes: "Great game",
     });
@@ -412,7 +412,7 @@ describe("updatePersonalFields", () => {
         priority: "HIGH",
         interest: 4,
         rating: 8,
-        preferredEnvironment: "BAZZITE",
+        preferredEnvironment: "LINUX",
         gameExperience: "PC_GAMING",
         notes: "Great game",
       },

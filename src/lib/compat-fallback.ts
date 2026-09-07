@@ -14,7 +14,7 @@ export interface WindowsFallback {
 }
 
 export function deriveWindowsFallback(
-  bazziteStatus: CompatibilityStatus,
+  linuxStatus: CompatibilityStatus,
   antiCheatStatus: AntiCheatStatus,
 ): WindowsFallback {
   if (antiCheatStatus === "Denied" || antiCheatStatus === "Broken") {
@@ -25,36 +25,36 @@ export function deriveWindowsFallback(
     };
   }
 
-  switch (bazziteStatus) {
+  switch (linuxStatus) {
     case "READY":
       return {
         status: "READY",
         label: "Fallback not needed",
-        source: "Windows fallback is not needed because ProtonDB reports Bazzite ready without tinkering.",
+        source: "Windows fallback is not needed because ProtonDB reports Linux ready without tinkering.",
       };
     case "READY_WITH_TINKERING":
       return {
         status: "FALLBACK_RECOMMENDED",
         label: "Fallback recommended",
-        source: "Windows fallback is recommended because Bazzite needs tinkering according to ProtonDB.",
+        source: "Windows fallback is recommended because Linux needs tinkering according to ProtonDB.",
       };
     case "FALLBACK_RECOMMENDED":
       return {
         status: "FALLBACK_RECOMMENDED",
         label: "Fallback recommended",
-        source: "Windows fallback is recommended because ProtonDB reports degraded Bazzite compatibility.",
+        source: "Windows fallback is recommended because ProtonDB reports degraded Linux compatibility.",
       };
     case "REQUIRED":
       return {
         status: "REQUIRED",
         label: "Fallback required",
-        source: "Windows fallback is required because ProtonDB reports Bazzite as not playable.",
+        source: "Windows fallback is required because ProtonDB reports Linux as not playable.",
       };
     case "UNKNOWN":
       return {
         status: "REQUIRED",
         label: "Fallback required",
-        source: "Windows fallback is required because Bazzite compatibility is unknown.",
+        source: "Windows fallback is required because Linux compatibility is unknown.",
       };
   }
 }

@@ -84,11 +84,11 @@ describe("refreshGameCompatibility", () => {
     await expect(refreshGameCompatibility({ gameId: "game-1" })).resolves.toMatchObject({ success: true });
 
     const { setCompatOverride } = await import("./compatibility");
-    const saved = await setCompatOverride({ gameId: "game-1", status: "REQUIRED", reason: "Anti-cheat blocks Bazzite" });
+    const saved = await setCompatOverride({ gameId: "game-1", status: "REQUIRED", reason: "Anti-cheat blocks Linux" });
     expect(saved.success).toBe(true);
     expect(libraryUpdate).toHaveBeenCalledWith({
       where: { gameId: "game-1" },
-      data: { compatOverrideStatus: "REQUIRED", compatOverrideReason: "Anti-cheat blocks Bazzite" },
+      data: { compatOverrideStatus: "REQUIRED", compatOverrideReason: "Anti-cheat blocks Linux" },
     });
 
     await setCompatOverride({ gameId: "game-1", status: null, reason: null });

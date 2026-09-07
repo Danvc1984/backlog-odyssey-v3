@@ -26,11 +26,11 @@ function protonDbRow(environment: Environment, protonDb: ProtonDbResult | null):
 }
 
 export function synthesizeCompatibility(input: CompatibilitySynthesisInput): CompatibilityRow[] {
-  const bazzite = protonDbRow("BAZZITE", input.protonDb);
-  const windows = deriveWindowsFallback(bazzite.status, input.away?.status ?? null);
+  const linux = protonDbRow("LINUX", input.protonDb);
+  const windows = deriveWindowsFallback(linux.status, input.away?.status ?? null);
 
   return [
-    bazzite,
+    linux,
     { environment: "WINDOWS", status: windows.status, source: windows.source },
   ];
 }

@@ -75,7 +75,7 @@ describe("wishlist compatibility contracts", () => {
       }),
     ]);
     expect(result.environments).toEqual([
-      expect.objectContaining({ wishlistEntryId: "wish-1", environment: "BAZZITE", status: "READY" }),
+      expect.objectContaining({ wishlistEntryId: "wish-1", environment: "LINUX", status: "READY" }),
       expect.objectContaining({ wishlistEntryId: "wish-1", environment: "WINDOWS", status: "READY" }),
     ]);
   });
@@ -92,7 +92,7 @@ describe("wishlist compatibility contracts", () => {
     expect(result.snapshots[0].result).toBeNull();
     expect(result.snapshots[1].result).toBeNull();
     expect(result.environments).toEqual([
-      expect.objectContaining({ environment: "BAZZITE", status: "UNKNOWN" }),
+      expect.objectContaining({ environment: "LINUX", status: "UNKNOWN" }),
       expect.objectContaining({ environment: "WINDOWS", status: "REQUIRED" }),
     ]);
   });

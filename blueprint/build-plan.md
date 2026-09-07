@@ -67,7 +67,7 @@
   the cheapest 8-10 offers with visible alternatives and MX activation
   warnings; display-only historical lows; inline MXN targets; 48-hour
   freshness; bounded retries; clear partial failures; opportunity badges
-   without automatic recommendation runs. Vercel Cron activation deferred to 19.
+   without automatic recommendation runs. Vercel Cron activation deferred to 21.
   - [x] 10b-a. **Price identity and provenance** - three provenance-tracked
     identity paths (Steam import auto-confirm, manual Steam URL/AppID paste,
     RAWG store-link suggest-and-confirm extending only the wishlist snapshot),
@@ -375,39 +375,81 @@
     leaves provider snapshots to rebuild through manual enrichment actions
     only
 
-- [ ] 19. **Odyssey theme expansion** - two palette families (Dawn and
+- [ ] 19. **OS setup, onboarding, and environment-aware behavior** - first-login onboarding
+  capturing the primary OS (Linux or Windows) and an optional handheld
+  (Linux or Windows); Windows as the only fallback OS, offered only when the
+  primary is Linux and the owner has a Windows machine, and never when the
+  primary is Windows; compatibility flows active only when a configured
+  device runs Linux; OS-aware play and buy recommendations and wishlist
+  discovery that factor whether a fallback exists
+  - [x] 19a. **OS preferences and first-login onboarding** - structured OS
+    preference fields on AppSettings replacing the fixed display strings
+    (with BAZZITE→LINUX enum migration and an explicit optional Windows
+    fallback), an onboarding-completion gate that routes first login through
+    an introduction screen (trivial default path on all-Windows setups, no
+    compatibility explanation step) ending with an optional start-now /
+    not-now taste-setup offer, Settings editing afterward through a
+    confirmation dialog that precedes immediate re-derivation (compatibility
+    synthesis recompute plus a synchronous recommendation re-run replacing
+    the current run under normal run semantics), and export/import
+    schema updates
+  - [ ] 19b. **Linux-gated compatibility flows** - one compatibility gate:
+    ProtonDB/AWAY evidence, post-RAWG auto-queue, global sweeps, per-game
+    refresh, ProtonDB card tags, and catalog/wishlist compatibility sections
+    active only when the primary OS or the handheld is Linux; all-Windows
+    setups see no compatibility flow anywhere, rendering no compatibility UI
+    at all; fallback language states Windows is the only fallback and none
+    exists when Windows is primary; per-setup and per-game display gating so
+    compatibility appears only when it makes sense (cards use four distinct
+    tag states - evidence, unknown/not-checked, stale, absent - with no
+    hollow placeholders and no tag without a confirmed App ID); the
+    deployment feature's cron sweep becomes a no-op here
+  - [ ] 19c. **OS-aware recommendations and wishlist discovery** - play-next
+    and buy engines derive environment fit, play floors (e.g. the
+    out-of-the-box READY floor), caveats, and explanations from the
+    configured devices; compatibility contributes only when Linux targets
+    exist; on a Linux setup without a Windows fallback, fallback-needing
+    evidence hard-excludes a game from all play roles with a visible,
+    explained reason (the sanctioned carve-out from the soft-signal rule;
+    an emptied role is absent from the run) while buy picks and wishlist
+    discovery apply a heavy practical-fit penalty plus caveat, never
+    exclusion; setup changes re-derive compatibility and synchronously
+    regenerate runs; preferred-environment options and the derived profile
+    adapt to the configured setup
+
+- [ ] 20. **Odyssey theme expansion** - two palette families (Dawn and
   Sunset, light and dark each) with family-owned semantic hue mapping, a
   Cinzel/Inter typography pairing, official brand icons, and a whole-app
   Odyssey voice sweep on expressive surfaces, locked through a prototype
   first
-  - [ ] 19a. **Prototype lock** - throwaway mockups validating the four
+  - [ ] 20a. **Prototype lock** - throwaway mockups validating the four
     palettes and the Cinzel + Inter pairing against real Today, Library,
     Wishlist, and detail surfaces before any application change; final
     palette mapping and font call happen here
-  - [ ] 19b. **Family tokens and selector** - Dawn (cyan/purple) and
+  - [ ] 20b. **Family tokens and selector** - Dawn (cyan/purple) and
     Sunset (orange/yellow) families in light and dark over the existing
     token architecture, each family owning its interactive/deal/warning/
     danger hue mapping with contrast validation, plus a Settings family
     selector beside the light/dark/system control
-  - [ ] 19c. **Typography** - Cinzel display for headers and hero moments,
+  - [ ] 20c. **Typography** - Cinzel display for headers and hero moments,
     Inter body, unchanged technical monospace for evidence and freshness
     labels
-  - [ ] 19d. **Brand icons** - official source icons in the code-owned
+  - [ ] 20d. **Brand icons** - official source icons in the code-owned
     known-source catalog with the neutral fallback untouched for custom
     sources
-  - [ ] 19e. **Odyssey voice sweep** - adventurous copy mixing subtle
+  - [ ] 20e. **Odyssey voice sweep** - adventurous copy mixing subtle
     allusion and named mythology across headers, empty states, buttons,
     dashboard moments, and dialogs; statuses, errors, evidence labels,
     field help, and caveats stay factual; navigation names unchanged
-  - [ ] 19f. **UI icon set swap (gated)** - replace general UI icons with
+  - [ ] 20f. **UI icon set swap (gated)** - replace general UI icons with
     the owner-selected premium/custom set once provided; current icons
     remain the fallback until then
-  - [ ] 19g. **Cross-app acceptance** - all four palettes across desktop
+  - [ ] 20g. **Cross-app acceptance** - all four palettes across desktop
     and mobile in light, dark, and system modes with keyboard, focus,
     contrast, reduced-motion, and reduced-data review of every primary
     route
 
-- [ ] 20. **Deployment and CI readiness** - Vercel/Supabase environment
+- [ ] 21. **Deployment and CI readiness** - Vercel/Supabase environment
   review, Vercel Cron daily run at 06:00 UTC-6 with `CRON_SECRET` enqueueing
   the price refresh plus a compatibility freshness sweep for catalog and
   wishlist evidence older than the 180-day window, queue overlap protection,

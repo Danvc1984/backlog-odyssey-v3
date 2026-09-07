@@ -32,7 +32,7 @@ const PRIORITY_OPTIONS = [
 ];
 
 const ENV_OPTIONS = [
-  { value: "BAZZITE", label: "Bazzite" },
+  { value: "LINUX", label: "Linux" },
   { value: "STEAM_DECK", label: "Steam Deck" },
   { value: "WINDOWS", label: "Windows" },
 ];
@@ -82,7 +82,7 @@ export function PersonalFieldsForm({
       preferredEnvironment:
         preferredEnvironment === ""
           ? null
-          : (preferredEnvironment as "BAZZITE" | "STEAM_DECK" | "WINDOWS"),
+          : (preferredEnvironment as "LINUX" | "STEAM_DECK" | "WINDOWS"),
       gameExperience: gameExperience === "" ? null : gameExperience as
         | "PC_GAMING"
         | "MULTIPLAYER_COOP"

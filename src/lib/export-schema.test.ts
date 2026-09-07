@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   availabilitySchema,
   collectionsSchema,
+  exportDocumentSchema,
   externalIdsSchema,
   gamesSchema,
   libraryEntriesSchema,
@@ -15,9 +16,10 @@ describe("export schema: settings and catalog", () => {
     const row = {
       id: 1,
       theme: "SYSTEM",
-      desktopOs: "BAZZITE",
-      portableDevice: "STEAM_DECK",
-      fallbackOs: "WINDOWS",
+      primaryOs: "LINUX",
+      hasWindowsFallback: true,
+      handheldOs: "LINUX",
+      onboardingCompleted: true,
       priceCountry: "MX",
       timeZone: "America/Mexico_City",
       wallpaperEnabled: true,
@@ -35,9 +37,10 @@ describe("export schema: settings and catalog", () => {
       settingsSchema.parse({
         id: 1,
         theme: "NIGHT",
-        desktopOs: "BAZZITE",
-        portableDevice: "STEAM_DECK",
-        fallbackOs: "WINDOWS",
+        primaryOs: "LINUX",
+        hasWindowsFallback: true,
+        handheldOs: "LINUX",
+        onboardingCompleted: true,
         priceCountry: "MX",
         timeZone: "America/Mexico_City",
         wallpaperEnabled: true,
@@ -90,7 +93,7 @@ describe("export schema: settings and catalog", () => {
       priority: "HIGH",
       interest: 4,
       rating: 4,
-      preferredEnvironment: "BAZZITE",
+      preferredEnvironment: "LINUX",
       gameExperience: "PC_GAMING",
       compatOverrideStatus: "READY",
       compatOverrideReason: null,
@@ -154,5 +157,80 @@ describe("export schema: settings and catalog", () => {
         },
       ]),
     ).toThrow();
+  });
+});
+
+describe("export document schema", () => {
+  it("maps a version 1 environment into the current settings shape", () => {
+    const legacyEntry = {
+      id: "l1",
+      gameId: "g1",
+      playState: "NOT_STARTED",
+      isMainGame: false,
+      priority: null,
+      interest: null,
+      rating: null,
+      preferredEnvironment: "BAZZITE",
+      gameExperience: null,
+      compatOverrideStatus: null,
+      compatOverrideReason: null,
+      playSoon: false,
+      replayCandidate: false,
+      hidden: false,
+      notes: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const legacyData = {
+      settings: {
+        id: 1,
+        theme: "SYSTEM",
+        desktopOs: "BAZZITE",
+        portableDevice: "STEAM_DECK",
+        fallbackOs: "WINDOWS",
+        priceCountry: "MX",
+        timeZone: "America/Mexico_City",
+        wallpaperEnabled: true,
+        reducedData: false,
+        steamDailySyncEnabled: true,
+        itadDailyRefresh: true,
+        createdAt: now,
+        updatedAt: now,
+      },
+      games: [],
+      libraryEntries: [legacyEntry],
+      availability: [],
+      externalIds: [],
+      alternativeSources: [],
+      tags: [],
+      gameTags: [],
+      collections: [],
+      collectionMemberships: [],
+      wishlist: [],
+      unresolvedDlc: [],
+      wishlistImportReviews: [],
+      wishlistImportIgnores: [],
+      possibleDuplicates: [],
+      recommendations: {
+        runs: [],
+        items: [],
+        feedback: [],
+        events: [],
+        profile: null,
+        preferences: [],
+        tuneState: null,
+        presets: [],
+      },
+    };
+
+    const parsed = exportDocumentSchema.parse({ version: 1, exportedAt: now, data: legacyData });
+    expect(parsed.version).toBe(2);
+    expect(parsed.data.settings).toMatchObject({
+      primaryOs: "LINUX",
+      hasWindowsFallback: true,
+      handheldOs: "LINUX",
+      onboardingCompleted: true,
+    });
+    expect(parsed.data.libraryEntries[0].preferredEnvironment).toBe("LINUX");
   });
 });

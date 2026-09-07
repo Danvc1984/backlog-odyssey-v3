@@ -13,9 +13,10 @@ function emptyData(): ExportDocument["data"] {
     settings: {
       id: 1,
       theme: "SYSTEM",
-      desktopOs: "BAZZITE",
-      portableDevice: "STEAM_DECK",
-      fallbackOs: "WINDOWS",
+      primaryOs: "LINUX",
+      hasWindowsFallback: true,
+      handheldOs: "LINUX",
+      onboardingCompleted: true,
       priceCountry: "MX",
       timeZone: "America/Mexico_City",
       wallpaperEnabled: true,
@@ -56,20 +57,20 @@ describe("export document schema", () => {
   it("parses a complete minimal document", () => {
     const doc = { version: EXPORT_VERSION, exportedAt: now, data: emptyData() };
     const parsed = exportDocumentSchema.parse(doc);
-    expect(parsed.version).toBe(1);
+    expect(parsed.version).toBe(2);
     expect(parsed.data.settings).not.toBeNull();
   });
 
   it("rejects a wrong version", () => {
     expect(() =>
-      exportDocumentSchema.parse({ version: 2, exportedAt: now, data: emptyData() }),
+      exportDocumentSchema.parse({ version: 3, exportedAt: now, data: emptyData() }),
     ).toThrow();
   });
 
   it("parses a null settings row", () => {
     const data = emptyData();
     data.settings = null;
-    expect(exportDocumentSchema.parse({ version: 1, exportedAt: now, data }).data.settings).toBeNull();
+    expect(exportDocumentSchema.parse({ version: 2, exportedAt: now, data }).data.settings).toBeNull();
   });
 
   it("parses a wishlist row with a decimal target price as a string", () => {
@@ -91,7 +92,7 @@ describe("export document schema", () => {
     ];
     const data = emptyData();
     data.wishlist = wishlist;
-    expect(exportDocumentSchema.parse({ version: 1, exportedAt: now, data }).data.wishlist).toHaveLength(1);
+    expect(exportDocumentSchema.parse({ version: 2, exportedAt: now, data }).data.wishlist).toHaveLength(1);
   });
 
   it("parses a full recommendations object with a profile and tunes", () => {

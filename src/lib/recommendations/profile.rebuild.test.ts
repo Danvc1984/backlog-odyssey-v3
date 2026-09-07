@@ -20,7 +20,7 @@ describe("rebuildRecommendationProfile", () => {
       recommendationEvent: { findMany: vi.fn().mockResolvedValue([
         {
           kind: "COMPLETION", gameId: "g1", wishlistEntryId: null, createdAt: now,
-          payload: null, game: { libraryEntry: { gameExperience: "PC_GAMING", preferredEnvironment: "BAZZITE" }, metadataSnapshots: [{ payload: payload() }] }, wishlistEntry: null,
+          payload: null, game: { libraryEntry: { gameExperience: "PC_GAMING", preferredEnvironment: "LINUX" }, metadataSnapshots: [{ payload: payload() }] }, wishlistEntry: null,
         },
         {
           kind: "START", gameId: "g1", wishlistEntryId: null, createdAt: new Date("2025-07-05T00:00:00.000Z"),
@@ -54,7 +54,7 @@ describe("rebuildRecommendationProfile", () => {
       libraryEntry: {
         hidden: true,
         gameExperience: "PC_GAMING",
-        preferredEnvironment: "BAZZITE",
+        preferredEnvironment: "LINUX",
       },
     };
     const client = {

@@ -21,13 +21,13 @@ describe("recommendationCopy", () => {
         role: "CHANGE_OF_PACE",
         positive: [{ factor: "interest", label: "high interest", points: 20 }],
         caveats: [
-          { factor: "compat_bazzite", label: "runs well on Bazzite" },
+          { factor: "compat_bazzite", label: "runs well on Linux" },
           { factor: "preference", label: "short session" },
           { factor: "source_tune", label: "ROM available" },
         ],
       }),
     ).toBe(
-      "A change of pace when you want a deliberate reset: runs well on Bazzite · short session.",
+      "A change of pace when you want a deliberate reset: runs well on Linux · short session.",
     );
   });
 

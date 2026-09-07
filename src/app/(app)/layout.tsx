@@ -1,4 +1,5 @@
 import { after } from "next/server";
+import { redirect } from "next/navigation";
 
 import { ActiveOperationsWatcher } from "@/components/games/ActiveOperationsWatcher";
 import { WallpaperBackground } from "@/components/wallpaper/WallpaperBackground";
@@ -16,6 +17,12 @@ import { AppNav } from "./_components/AppNav";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await requireUser();
+  const onboarding = await prisma.appSettings.findUnique({
+    where: { id: 1 },
+    select: { onboardingCompleted: true },
+  });
+  if (!onboarding?.onboardingCompleted) redirect("/welcome");
+
   const [settings, wallpaperState, catalogRows] = await Promise.all([
     prisma.appSettings.findUnique({
       where: { id: 1 },

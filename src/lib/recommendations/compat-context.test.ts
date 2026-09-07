@@ -19,18 +19,18 @@ function input(overrides: Partial<CompatEvidenceInput> = {}): CompatEvidenceInpu
 }
 
 describe("buildCompatContext", () => {
-  it("emits the positive zero-point Bazzite factor when READY", () => {
+  it("emits the positive zero-point Linux factor when READY", () => {
     const verdict = buildCompatContext(input({ protonDbStatus: "READY" }), now);
 
     expect(verdict.positives).toEqual([
-      { factor: "compat_bazzite", label: "Runs well on Bazzite", points: 0 },
+      { factor: "compat_bazzite", label: "Runs well on Linux", points: 0 },
     ]);
     expect(verdict.caveats).toEqual([]);
   });
 
   it("maps each non-ready status to its caveat factor", () => {
     expect(buildCompatContext(input({ protonDbStatus: "READY_WITH_TINKERING" }), now).caveats).toEqual([
-      { factor: "compat_tinkering", label: "Needs tinkering on Bazzite" },
+      { factor: "compat_tinkering", label: "Needs tinkering on Linux" },
     ]);
     expect(buildCompatContext(input({ protonDbStatus: "FALLBACK_RECOMMENDED" }), now).caveats).toEqual([
       { factor: "compat_fallback", label: "Windows fallback recommended" },

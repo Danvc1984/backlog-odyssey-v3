@@ -382,16 +382,16 @@ describe("saveTasteSetup", () => {
     await saveTasteSetup({
       picks: [{ gameId: "in-progress", answer: "PLAYED" }, { gameId: "already-liked", answer: "LIKED" }],
       experience: "PC_GAMING",
-      environment: "BAZZITE",
+      environment: "LINUX",
     });
 
     expect(libraryEntryUpdate).toHaveBeenNthCalledWith(1, {
       where: { gameId: "in-progress" },
-      data: { gameExperience: "PC_GAMING", preferredEnvironment: "BAZZITE" },
+      data: { gameExperience: "PC_GAMING", preferredEnvironment: "LINUX" },
     });
     expect(libraryEntryUpdate).toHaveBeenNthCalledWith(2, {
       where: { gameId: "already-liked" },
-      data: { gameExperience: "PC_GAMING", preferredEnvironment: "BAZZITE" },
+      data: { gameExperience: "PC_GAMING", preferredEnvironment: "LINUX" },
     });
   });
 
@@ -429,7 +429,7 @@ interface CandidateRowShape {
     hidden: boolean;
     isMainGame: boolean;
     gameExperience?: "PC_GAMING" | "MULTIPLAYER_COOP" | "COUCH_GAMING" | "ON_THE_GO" | null;
-    preferredEnvironment?: "BAZZITE" | "STEAM_DECK" | "WINDOWS" | null;
+    preferredEnvironment?: "LINUX" | "STEAM_DECK" | "WINDOWS" | null;
   };
   externalIds: { externalId: string }[];
   availability: {
@@ -440,7 +440,7 @@ interface CandidateRowShape {
   }[];
   compatSnapshots: { provider: string; result: unknown; fetchedAt: Date }[];
   metadataSnapshots: { payload: unknown }[];
-  envCompat: { environment: "BAZZITE" | "STEAM_DECK" | "WINDOWS"; status: "READY" | "READY_WITH_TINKERING" | "FALLBACK_RECOMMENDED" | "REQUIRED" | "UNKNOWN" }[];
+  envCompat: { environment: "LINUX" | "STEAM_DECK" | "WINDOWS"; status: "READY" | "READY_WITH_TINKERING" | "FALLBACK_RECOMMENDED" | "REQUIRED" | "UNKNOWN" }[];
 }
 
 function libraryEntry(
@@ -753,7 +753,7 @@ describe("updateRecommendations", () => {
     });
     expect(items[0].positive).toEqual([
       { factor: "interest", label: "Interest 5", points: 50 },
-      { factor: "compat_bazzite", label: "Runs well on Bazzite", points: 0 },
+      { factor: "compat_bazzite", label: "Runs well on Linux", points: 0 },
     ]);
     expect(items[0].caveats).toEqual([
       { factor: "anticheat", label: "Anti-cheat blocks Linux" },
@@ -1186,10 +1186,10 @@ describe("updateRecommendations re-ranking", () => {
     gameFindMany.mockResolvedValue([
       {
         ...baseRow(),
-        libraryEntry: libraryEntry({ interest: 2, playState: "ABANDONED", replayCandidate: true, preferredEnvironment: "BAZZITE" }),
+        libraryEntry: libraryEntry({ interest: 2, playState: "ABANDONED", replayCandidate: true, preferredEnvironment: "LINUX" }),
         availability: [{ source: "STEAM", steamLastPlayed: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }],
         metadataSnapshots: [{ payload: { title: "Portal 2", genres: ["Puzzle"], metacriticScore: 95 } }],
-        envCompat: [{ environment: "BAZZITE", status: "READY" }],
+        envCompat: [{ environment: "LINUX", status: "READY" }],
       },
     ]);
 

@@ -237,19 +237,19 @@ describe("planOneToOneConflicts", () => {
       {
         gameId: "game-a",
         compatSnapshots: [],
-        envCompat: [{ id: "v1", environment: "BAZZITE" }],
+        envCompat: [{ id: "v1", environment: "LINUX" }],
       },
       {
         gameId: "game-b",
         compatSnapshots: [],
-        envCompat: [{ id: "v2", environment: "BAZZITE" }],
+        envCompat: [{ id: "v2", environment: "LINUX" }],
       },
     );
 
     expect(result).toEqual([
       {
         kind: "environment",
-        key: "BAZZITE",
+        key: "LINUX",
         a: { gameId: "game-a", rowId: "v1" },
         b: { gameId: "game-b", rowId: "v2" },
       },
@@ -261,7 +261,7 @@ describe("planOneToOneConflicts", () => {
       {
         gameId: "game-a",
         compatSnapshots: [{ id: "c1", provider: "PROTONDB" }],
-        envCompat: [{ id: "v1", environment: "BAZZITE" }],
+        envCompat: [{ id: "v1", environment: "LINUX" }],
       },
       {
         gameId: "game-b",

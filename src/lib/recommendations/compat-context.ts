@@ -4,7 +4,7 @@ import type { CompatEvidenceInput, ExplanationCaveat, ExplanationFactor } from "
 export const COMPAT_STALENESS_DAYS = 180;
 
 const CAVEAT_LABELS = {
-  compat_tinkering: "Needs tinkering on Bazzite",
+  compat_tinkering: "Needs tinkering on Linux",
   compat_fallback: "Windows fallback recommended",
   compat_required: "Requires Windows to run",
   compat_unknown: "Compatibility unknown",
@@ -42,7 +42,7 @@ export function buildCompatContext(
     : "UNKNOWN";
 
   if (effective === "READY") {
-    positives.push({ factor: "compat_bazzite", label: "Runs well on Bazzite", points: 0 });
+    positives.push({ factor: "compat_bazzite", label: "Runs well on Linux", points: 0 });
   } else {
     caveats.push({
       factor: STATUS_CAVEAT_FACTORS[effective],
