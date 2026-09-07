@@ -11,6 +11,7 @@ function input(overrides: Partial<CompatEvidenceInput> = {}): CompatEvidenceInpu
     hasSteamIdentity: true,
     romOnly: false,
     overrideStatus: null,
+    overrideReason: null,
     protonDbStatus: "UNKNOWN",
     protonDbFetchedAt: new Date(now.getTime() - 10 * DAY_MS),
     awayStatus: "Supported",
@@ -19,6 +20,25 @@ function input(overrides: Partial<CompatEvidenceInput> = {}): CompatEvidenceInpu
 }
 
 describe("buildCompatContext", () => {
+  const linuxOnly = { primaryOs: "LINUX" as const, hasWindowsFallback: false, handheldOs: "NONE" as const };
+  const allWindows = { primaryOs: "WINDOWS" as const, hasWindowsFallback: false, handheldOs: "NONE" as const };
+
+  it("gates all compatibility output for an all-Windows setup", () => {
+    expect(buildCompatContext(input({ protonDbStatus: "READY", awayStatus: "Denied" }), now, allWindows)).toEqual({
+      positives: [],
+      caveats: [],
+    });
+  });
+
+  it("adapts the fallback caveat when Linux has no Windows fallback", () => {
+    expect(buildCompatContext(input({ protonDbStatus: "FALLBACK_RECOMMENDED" }), now, linuxOnly).caveats).toEqual([
+      { factor: "compat_fallback", label: "Windows fallback recommended, but none is configured" },
+    ]);
+    expect(buildCompatContext(input({ protonDbStatus: "FALLBACK_RECOMMENDED" }), now, { ...linuxOnly, hasWindowsFallback: true }).caveats).toEqual([
+      { factor: "compat_fallback", label: "Windows fallback recommended" },
+    ]);
+  });
+
   it("emits the positive zero-point Linux factor when READY", () => {
     const verdict = buildCompatContext(input({ protonDbStatus: "READY" }), now);
 

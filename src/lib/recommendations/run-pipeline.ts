@@ -15,6 +15,8 @@ import { countTuneMatches, type TuneCandidateInput } from "@/lib/recommendations
 import type { CandidateSource } from "@/lib/recommendations/tune";
 import type { CompatEvidenceInput, ExplanationCaveat, ExplanationFactor, PlayNextCandidate } from "@/lib/recommendations/types";
 import { buildCompatContext } from "@/lib/recommendations/compat-context";
+import { classifyPlayPracticality, resolvePlayEnvStatus } from "@/lib/recommendations/environment-fit";
+import type { OsSetup } from "@/lib/os-setup";
 import { isEligibleForBuy, rankAllBuyCandidates } from "@/lib/recommendations/buy";
 import { isEligibleForPlayNext, rankAllPlayNextCandidates } from "@/lib/recommendations/play-next";
 import { calibratedInterest } from "@/lib/recommendations/calibration";
@@ -65,6 +67,7 @@ interface SourceTunedPlayItem {
 export function buildPlayPipeline(
   pool: SourceTunedPlayItem[],
   rows: ReadonlyMap<string, PlayRow>,
+  setup: OsSetup,
   profile: Parameters<typeof rerankPlayCandidates>[1],
   preferences: TastePreference[],
   now: Date,
@@ -82,9 +85,6 @@ export function buildPlayPipeline(
     const steamRow = row.availability.find(
       (availability) => availability.source === "STEAM" && availability.steamLastPlayed !== null,
     );
-    const envRow = row.libraryEntry?.preferredEnvironment
-      ? row.envCompat.find((entry) => entry.environment === row.libraryEntry?.preferredEnvironment)
-      : undefined;
     return {
       id: item.id,
       name: item.name,
@@ -98,7 +98,7 @@ export function buildPlayPipeline(
         replayCandidate: row.libraryEntry?.replayCandidate ?? false,
         steamLastPlayed: steamRow?.steamLastPlayed ?? null,
       },
-      envStatus: envRow?.status ?? null,
+      envStatus: resolvePlayEnvStatus(setup, row.libraryEntry?.preferredEnvironment ?? null, row.envCompat),
       quality: {
         metacriticScore: parsedPayload?.metacriticScore ?? null,
         rating: parsedPayload?.rating ?? null,
@@ -115,6 +115,7 @@ export function buildPlayPipeline(
     })),
     playRerank.context.mode,
     secondChanceIds,
+    setup.primaryOs === "LINUX" && !setup.hasWindowsFallback,
   );
   const playPoolById = new Map<string, (typeof playRerank.pool)[number]>();
   for (const item of playRerank.pool) {
@@ -237,6 +238,7 @@ export function buildRecommendationContexts({
   buyTune,
   tunedBuyPool,
   buyTuneInputs,
+  playExclusions,
 }: {
   baseContext: object;
   playStaleExcluded: number;
@@ -251,9 +253,11 @@ export function buildRecommendationContexts({
   buyTune: TuneContext | null;
   tunedBuyPool: Array<{ id: string }>;
   buyTuneInputs: ReadonlyMap<string, TuneCandidateInput>;
+  playExclusions?: Array<{ id: string; name: string; reason: { factor: string; label: string } }>;
 }) {
   const playContext = {
     ...baseContext,
+    play: { exclusions: playExclusions ?? [] },
     staleExcluded: playStaleExcluded,
     rerank: playRerankContext,
     roles: { batches: snapshotBatches(playRoles.batches, playPoolById) },
@@ -280,6 +284,7 @@ export async function persistRecommendationRuns(
   buyItems: PersistBuyItem[],
   evidenceById: ReadonlyMap<string, CompatEvidenceInput>,
   now: Date,
+  setup: OsSetup,
 ) {
   const playNextRun = await client.recommendationRun.create({
     data: {
@@ -289,7 +294,7 @@ export async function persistRecommendationRuns(
         create: playItems.map((item, index) => {
           const evidence = evidenceById.get(item.id);
           if (!evidence) throw new Error(`Missing compatibility evidence for ${item.id}`);
-          const verdict = buildCompatContext(evidence, now);
+          const verdict = buildCompatContext(evidence, now, setup);
           return {
             game: { connect: { id: item.id } },
             rank: index + 1,
@@ -355,6 +360,18 @@ export async function pruneAndRebuild(client: Prisma.TransactionClient, now: Dat
 
 export async function runRecommendationPipeline(tx: Prisma.TransactionClient) {
       const now = new Date();
+      const settings = tx.appSettings
+        ? await tx.appSettings.findUnique({
+            where: { id: 1 },
+            select: { primaryOs: true, hasWindowsFallback: true, handheldOs: true, onboardingCompleted: true },
+          })
+        : null;
+      const setup: OsSetup = settings ?? {
+        primaryOs: "LINUX",
+        hasWindowsFallback: false,
+        handheldOs: "NONE",
+        onboardingCompleted: false,
+      };
       const { pruned, prunedEvents, profile, playTune, buyTune } = await pruneAndRebuild(tx, now);
 
       const rows = await loadCandidates(tx);
@@ -364,7 +381,17 @@ export async function runRecommendationPipeline(tx: Prisma.TransactionClient) {
         type: row.type,
         libraryEntry: row.libraryEntry,
       }));
-      const eligible = candidates.filter(isEligibleForPlayNext);
+      const evidenceById = new Map(rows.map((row) => [row.id, compatEvidenceFor(row)]));
+      const rowById = new Map(rows.map((row) => [row.id, row]));
+      const playEligibleCandidates = candidates.filter(isEligibleForPlayNext);
+      const playExclusions = playEligibleCandidates.flatMap((candidate) => {
+        const row = rowById.get(candidate.id);
+        if (!row) return [];
+        const practicality = classifyPlayPracticality(setup, evidenceById.get(row.id)!);
+        return practicality.kind === "EXCLUDED" ? [{ id: row.id, name: row.name, reason: practicality.reason }] : [];
+      });
+      const excludedIds = new Set(playExclusions.map((exclusion) => exclusion.id));
+      const eligible = playEligibleCandidates.filter((candidate) => !excludedIds.has(candidate.id));
       const { candidates: buyCandidates, wishViews } = await loadBuyCandidates(tx);
       const buyEligibleList = buyCandidates.filter(isEligibleForBuy);
       const playIds = eligible.map((candidate) => candidate.id);
@@ -405,8 +432,6 @@ export async function runRecommendationPipeline(tx: Prisma.TransactionClient) {
       const secondChanceIds = baselinePool
         .filter((candidate) => secondChanceCandidateIds.has(candidate.id))
         .map((candidate) => candidate.id);
-      const evidenceById = new Map(rows.map((row) => [row.id, compatEvidenceFor(row)]));
-      const rowById = new Map(rows.map((row) => [row.id, row]));
       const preferences = (await tx.recommendationPreference.findMany()) as TastePreference[];
       const playTuneInputs = new Map(rows.map((row) => [
         row.id,
@@ -438,6 +463,7 @@ export async function runRecommendationPipeline(tx: Prisma.TransactionClient) {
       const { playRerank, playRoles, playPoolById, playItems } = buildPlayPipeline(
         sourceTunedPlayPool,
         rowById,
+        setup,
         profile,
         preferences,
         now,
@@ -496,6 +522,7 @@ export async function runRecommendationPipeline(tx: Prisma.TransactionClient) {
         buyTune,
         tunedBuyPool,
         buyTuneInputs,
+        playExclusions,
       });
 
       const { playNextRunId, buyRunId } = await persistRecommendationRuns(
@@ -506,6 +533,7 @@ export async function runRecommendationPipeline(tx: Prisma.TransactionClient) {
         buyItems,
         evidenceById,
         now,
+        setup,
       );
 
       return {

@@ -1,4 +1,5 @@
 import type { CompatibilityStatus } from "@/generated/prisma/client";
+import { deriveWindowsFallbackExists, type OsSetup } from "@/lib/os-setup";
 import type { CompatEvidenceInput, ExplanationCaveat, ExplanationFactor } from "./types";
 
 export const COMPAT_STALENESS_DAYS = 180;
@@ -30,7 +31,11 @@ export interface CompatVerdict {
 export function buildCompatContext(
   input: CompatEvidenceInput,
   now: Date,
+  setup?: Pick<OsSetup, "primaryOs" | "hasWindowsFallback" | "handheldOs"> | null,
 ): CompatVerdict {
+  if (setup && setup.primaryOs === "WINDOWS" && setup.handheldOs !== "LINUX") {
+    return { positives: [], caveats: [] };
+  }
   if (input.romOnly) {
     return { positives: [], caveats: [{ factor: "compat_na", label: CAVEAT_LABELS.compat_na }] };
   }
@@ -46,7 +51,10 @@ export function buildCompatContext(
   } else {
     caveats.push({
       factor: STATUS_CAVEAT_FACTORS[effective],
-      label: CAVEAT_LABELS[STATUS_CAVEAT_FACTORS[effective]],
+      label:
+        setup && effective === "FALLBACK_RECOMMENDED" && !deriveWindowsFallbackExists(setup)
+          ? "Windows fallback recommended, but none is configured"
+          : CAVEAT_LABELS[STATUS_CAVEAT_FACTORS[effective]],
     });
   }
 

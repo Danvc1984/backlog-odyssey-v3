@@ -88,6 +88,7 @@ const profileDeleteMany = vi.fn();
 const presetDeleteMany = vi.fn();
 const tuneStateDeleteMany = vi.fn();
 const tuneStateFindUnique = vi.fn();
+const appSettingsFindUnique = vi.fn();
 const tuneStateUpsert = vi.fn();
 const presetUpsert = vi.fn();
 const presetFindMany = vi.fn();
@@ -111,6 +112,7 @@ const EMPTY_DIMENSIONS = {
 
 function txFactory() {
   return {
+    appSettings: { findUnique: appSettingsFindUnique },
     recommendationRun: { create: runCreate, deleteMany: runDeleteMany },
     recommendationFeedback: { create: feedbackCreate, groupBy: feedbackGroupBy, deleteMany: feedbackDeleteMany },
     recommendationEvent: { create: eventCreate, createMany: eventCreateMany, deleteMany: eventDeleteMany, findMany: eventFindMany },
@@ -177,6 +179,12 @@ transaction.mockImplementation(async (callback: (tx: ReturnType<typeof txFactory
   presetDeleteMany.mockResolvedValue({ count: 0 });
   tuneStateDeleteMany.mockResolvedValue({ count: 0 });
   tuneStateFindUnique.mockResolvedValue(null);
+  appSettingsFindUnique.mockResolvedValue({
+    primaryOs: "LINUX",
+    hasWindowsFallback: true,
+    handheldOs: "NONE",
+    onboardingCompleted: true,
+  });
   tuneStateUpsert.mockResolvedValue({ id: 1 });
   presetUpsert.mockResolvedValue({ id: "preset-1" });
   presetFindMany.mockResolvedValue([]);
@@ -551,6 +559,27 @@ describe("updateRecommendations", () => {
 
     expect(result).toEqual({ success: false, data: null, error: "Failed to update recommendations" });
     expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it("records no-fallback exclusions without exposing or ranking the game", async () => {
+    appSettingsFindUnique.mockResolvedValue({
+      primaryOs: "LINUX",
+      hasWindowsFallback: false,
+      handheldOs: "NONE",
+      onboardingCompleted: true,
+    });
+    gameFindMany.mockResolvedValue([baseRow()]);
+
+    const result = await updateRecommendations();
+
+    expect(result).toMatchObject({ success: true, data: { playNextEligible: 0, playNextItems: 0 } });
+    const playCall = runCreate.mock.calls.find((call) => (call[0] as { data: { kind: string } }).data.kind === "PLAY_NEXT");
+    expect(playCall?.[0].data.context).toMatchObject({
+      play: {
+        exclusions: [{ id: "game-1", name: "Portal 2", reason: { factor: "anticheat" } }],
+      },
+    });
+    expect(playCall?.[0].data.items.create).toEqual([]);
   });
 
   it("applies tune points before cold-start selection and records the tune context", async () => {

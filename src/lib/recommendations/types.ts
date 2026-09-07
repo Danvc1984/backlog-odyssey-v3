@@ -155,6 +155,7 @@ export interface CompatEvidenceInput {
   hasSteamIdentity: boolean;
   romOnly: boolean;
   overrideStatus: CompatibilityStatus | null;
+  overrideReason: string | null;
   protonDbStatus: CompatibilityStatus | null;
   protonDbFetchedAt: Date | null;
   awayStatus: AwayStatus | null;

@@ -84,6 +84,7 @@ export function assignPlayRoles(
   pool: readonly PlayRoleCandidate[],
   mode: RerankMode,
   secondChances: readonly string[] = [],
+  requireReadyForOutOfTheBox = false,
 ): RoleAssignment {
   const assigned: AssignedRole[] = [];
   const batches: Record<RecommendationRole, string[]> = {
@@ -117,13 +118,13 @@ export function assignPlayRoles(
     assignPlayRole(displayPool[1], "BEST_FIT_2");
     const remaining = displayPool.slice(2);
     const ready = remaining.find((candidate) => candidate.envStatus === "READY");
-    const outOfTheBox = ready ?? remaining[0];
+    const outOfTheBox = ready ?? (requireReadyForOutOfTheBox ? undefined : remaining[0]);
     assignPlayRole(
       outOfTheBox,
       "OUT_OF_THE_BOX",
-      ready ? [] : [fallbackCaveat(ROLE_FALLBACK_LABELS.noReady)],
+      ready || requireReadyForOutOfTheBox ? [] : [fallbackCaveat(ROLE_FALLBACK_LABELS.noReady)],
     );
-    if (!outOfTheBox && hasPrimary) assignPlayRole(secondChancePool[0], "OUT_OF_THE_BOX");
+    if (!outOfTheBox && hasPrimary && !requireReadyForOutOfTheBox) assignPlayRole(secondChancePool[0], "OUT_OF_THE_BOX");
     assignPlayRole(
       remaining.find((candidate) => candidate.id !== outOfTheBox?.id),
       "CHANGE_OF_PACE",
@@ -136,7 +137,7 @@ export function assignPlayRoles(
     batches.OUT_OF_THE_BOX = primaryPool
       .filter((candidate) => candidate.envStatus === "READY" && !displayIds.has(candidate.id))
       .map((candidate) => candidate.id)
-      .concat(secondChancePool.filter((candidate) => !displayIds.has(candidate.id)).map((candidate) => candidate.id));
+      .concat(secondChancePool.filter((candidate) => (!requireReadyForOutOfTheBox || candidate.envStatus === "READY") && !displayIds.has(candidate.id)).map((candidate) => candidate.id));
     batches.CHANGE_OF_PACE = primaryPool
       .filter((candidate) => !displayIds.has(candidate.id))
       .slice()
@@ -153,13 +154,13 @@ export function assignPlayRoles(
 
   const remaining = workingPool.filter((candidate) => !displayIds.has(candidate.id));
   const ready = remaining.find((candidate) => candidate.envStatus === "READY");
-  const outOfTheBox = ready ?? remaining[0];
+  const outOfTheBox = ready ?? (requireReadyForOutOfTheBox ? undefined : remaining[0]);
   assignPlayRole(
     outOfTheBox,
     "OUT_OF_THE_BOX",
-    ready ? [] : [fallbackCaveat(ROLE_FALLBACK_LABELS.noReady)],
+    ready || requireReadyForOutOfTheBox ? [] : [fallbackCaveat(ROLE_FALLBACK_LABELS.noReady)],
   );
-  if (!outOfTheBox && hasPrimary) assignPlayRole(secondChancePool[0], "OUT_OF_THE_BOX");
+  if (!outOfTheBox && hasPrimary && !requireReadyForOutOfTheBox) assignPlayRole(secondChancePool[0], "OUT_OF_THE_BOX");
   if (outOfTheBox) displayIds.add(outOfTheBox.id);
   if (!outOfTheBox && secondChancePool[0]) displayIds.add(secondChancePool[0].id);
 
@@ -181,7 +182,7 @@ export function assignPlayRoles(
   batches.OUT_OF_THE_BOX = primaryPool
     .filter((candidate) => candidate.envStatus === "READY" && !displayIds.has(candidate.id))
     .map((candidate) => candidate.id)
-    .concat(secondChancePool.filter((candidate) => !displayIds.has(candidate.id)).map((candidate) => candidate.id));
+    .concat(secondChancePool.filter((candidate) => (!requireReadyForOutOfTheBox || candidate.envStatus === "READY") && !displayIds.has(candidate.id)).map((candidate) => candidate.id));
   batches.CHANGE_OF_PACE = primaryPool
     .filter((candidate) => !displayIds.has(candidate.id))
     .slice()

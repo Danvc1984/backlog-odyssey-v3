@@ -199,7 +199,11 @@ export default async function TodayPage() {
     new Date(),
   );
   const playContext = latestPlayNextRun?.context as
-    | { rerank?: { mode?: string }; tune?: { thinPool?: boolean } }
+    | {
+        rerank?: { mode?: string };
+        tune?: { thinPool?: boolean };
+        play?: { exclusions?: Array<{ id: string }> };
+      }
     | null
     | undefined;
   const buyContext = latestBuyRun?.context as
@@ -220,6 +224,7 @@ export default async function TodayPage() {
     )?.backgroundImageUrls[0] ??
     null;
   const coldStart = playContext?.rerank?.mode === "COLD_START";
+  const excludedPlayCount = playContext?.play?.exclusions?.length ?? 0;
   const hasPlayRoles = items.some((item) => item.role !== null);
   const hasBuyRoles = buyItems.some((item) => item.role !== null);
   const activityAppIds = [
@@ -330,6 +335,11 @@ export default async function TodayPage() {
           />
         </div>
         {latestPlayNextRun && <ColdStartNote visible={coldStart} />}
+        {excludedPlayCount > 0 && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            {excludedPlayCount} {excludedPlayCount === 1 ? "game" : "games"} not shown: need Windows, no fallback configured
+          </p>
+        )}
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No eligible games right now.

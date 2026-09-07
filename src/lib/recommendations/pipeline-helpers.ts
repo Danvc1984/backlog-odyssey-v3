@@ -27,6 +27,8 @@ export async function loadCandidates(client: Prisma.TransactionClient) {
           isMainGame: true,
           gameExperience: true,
           preferredEnvironment: true,
+          compatOverrideStatus: true,
+          compatOverrideReason: true,
         },
       },
       externalIds: { select: { externalId: true } },
@@ -55,6 +57,7 @@ export async function loadCandidates(client: Prisma.TransactionClient) {
 export function compatEvidenceFor(row: {
   externalIds: { externalId: string }[];
   availability: { source: "STEAM" | "OTHER_PLATFORM" | "ROM" }[];
+  libraryEntry?: { compatOverrideStatus: CompatEvidenceInput["overrideStatus"]; compatOverrideReason: string | null } | null;
   compatSnapshots: { provider: string; result: unknown; fetchedAt: Date }[];
 }): CompatEvidenceInput {
   const steamAppId = row.externalIds[0]?.externalId ?? null;
@@ -75,7 +78,8 @@ export function compatEvidenceFor(row: {
   return {
     hasSteamIdentity: Boolean(steamAppId),
     romOnly,
-    overrideStatus: null,
+    overrideStatus: row.libraryEntry?.compatOverrideStatus ?? null,
+    overrideReason: row.libraryEntry?.compatOverrideReason ?? null,
     protonDbStatus: protonDb?.status ?? null,
     protonDbFetchedAt: protonDbSnapshot?.fetchedAt ?? null,
     awayStatus: antiCheat?.status ?? null,

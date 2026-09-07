@@ -44,6 +44,20 @@ describe("assignPlayRoles", () => {
     });
   });
 
+  it("leaves Out-of-the-Box absent when a no-fallback setup has no READY candidate", () => {
+    for (const mode of ["RERANKED", "COLD_START"] as const) {
+      const result = assignPlayRoles(
+        [candidate("a", 3), candidate("b", 2), candidate("c", 1)],
+        mode,
+        [],
+        true,
+      );
+
+      expect(result.assigned.map((item) => item.role)).not.toContain("OUT_OF_THE_BOX");
+      expect(result.batches.OUT_OF_THE_BOX).toEqual([]);
+    }
+  });
+
   it("keeps displayed roles non-overlapping and excludes displayed ids from batches", () => {
     const result = assignPlayRoles(
       [
