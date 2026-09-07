@@ -90,4 +90,33 @@ describe("rebuildRecommendationProfile", () => {
     expect(result.dimensions.TAG.Stealth).toMatchObject({ weight: -1, support: 1 });
     expect(result.dimensions.EXPERIENCE.PC_GAMING).toMatchObject({ weight: 1, support: 2 });
   });
+
+  it("filters legacy environment evidence while preserving other dimensions", async () => {
+    const now = new Date("2026-01-01T00:00:00.000Z");
+    const client = {
+      recommendationEvent: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            kind: "COMPLETION",
+            gameId: "legacy-windows",
+            wishlistEntryId: null,
+            createdAt: now,
+            payload: null,
+            game: {
+              libraryEntry: { gameExperience: "PC_GAMING", preferredEnvironment: "WINDOWS" },
+              metadataSnapshots: [{ payload: payload({ genres: ["RPG"] }) }],
+            },
+            wishlistEntry: null,
+          },
+        ]),
+      },
+      recommendationProfile: { upsert: vi.fn().mockResolvedValue({}) },
+    };
+
+    const result = await rebuildRecommendationProfile(client as never, now, ["LINUX"]);
+
+    expect(result.dimensions.ENVIRONMENT).toEqual({});
+    expect(result.dimensions.GENRE.RPG).toMatchObject({ weight: 2, support: 1 });
+    expect(result.dimensions.EXPERIENCE.PC_GAMING).toMatchObject({ weight: 2, support: 1 });
+  });
 });

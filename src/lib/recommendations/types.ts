@@ -30,6 +30,7 @@ export type ExplanationFactorKey =
   | "preference"
   | "steam_recent"
   | "environment_fit"
+  | "practical_fit"
   | "quality"
   | "limited_basis"
   | "role_fallback"
@@ -56,6 +57,7 @@ export const COLD_START_MIN_EVENTS = 5;
 export const TUNE_MATCH_POINTS = 5;
 export const TUNE_TOTAL_CAP = 10;
 export const SOURCE_TUNE_MATCH_POINTS = 3;
+export const BUY_PRACTICAL_FIT_PENALTY = -10;
 
 export interface SourceTune {
   steam: boolean;

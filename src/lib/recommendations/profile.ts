@@ -1,4 +1,5 @@
 import type {
+  Environment,
   Prisma,
   RecommendationDimension,
   RecommendationEventKind,
@@ -96,6 +97,7 @@ export type CandidateDimensionValues = Partial<Record<RecommendationDimension, s
 export interface CandidatePersonalFields {
   gameExperience: string | null;
   preferredEnvironment: string | null;
+  configuredEnvironments?: readonly Environment[];
 }
 
 export function resolveCandidateDimensionValues(
@@ -118,11 +120,19 @@ export function resolveCandidateDimensionValues(
     if (duration) values.DURATION = [duration];
   }
   if (personal.gameExperience) values.EXPERIENCE = [personal.gameExperience];
-  if (personal.preferredEnvironment) values.ENVIRONMENT = [personal.preferredEnvironment];
+  if (
+    personal.preferredEnvironment &&
+    (!personal.configuredEnvironments || personal.configuredEnvironments.includes(personal.preferredEnvironment as Environment))
+  ) {
+    values.ENVIRONMENT = [personal.preferredEnvironment];
+  }
   return values;
 }
 
-function eventValues(event: ProfileEvent): CandidateDimensionValues | null {
+function eventValues(
+  event: ProfileEvent,
+  configuredEnvironments: readonly Environment[],
+): CandidateDimensionValues | null {
   const source = event.gameId ? event.game : event.wishlistEntry;
   if (!source) return null;
   return resolveCandidateDimensionValues(
@@ -130,6 +140,7 @@ function eventValues(event: ProfileEvent): CandidateDimensionValues | null {
     {
       gameExperience: event.game?.libraryEntry?.gameExperience ?? event.wishlistEntry?.gameExperience ?? null,
       preferredEnvironment: event.game?.libraryEntry?.preferredEnvironment ?? null,
+      configuredEnvironments,
     },
   );
 }
@@ -137,6 +148,7 @@ function eventValues(event: ProfileEvent): CandidateDimensionValues | null {
 export async function rebuildRecommendationProfile(
   client: Prisma.TransactionClient,
   now = new Date(),
+  configuredEnvironments: readonly Environment[] = ["LINUX"],
 ): Promise<RecommendationProfilePayload> {
   const events = await client.recommendationEvent.findMany({
     orderBy: { createdAt: "asc" },
@@ -151,7 +163,7 @@ export async function rebuildRecommendationProfile(
   for (const event of events) {
     if (event.kind === "EXPOSURE" || event.kind === "ROTATION") continue;
     byKind[event.kind] = (byKind[event.kind] ?? 0) + 1;
-    const values = eventValues(event);
+    const values = eventValues(event, configuredEnvironments);
     if (!values) { unresolvedTargets += 1; continue; }
     const baseWeight = event.kind === "TASTE_SETUP_ANSWER"
       ? tasteSetupWeight(typeof (event.payload as { answer?: unknown } | null)?.answer === "string" ? (event.payload as { answer: string }).answer : "SKIPPED")

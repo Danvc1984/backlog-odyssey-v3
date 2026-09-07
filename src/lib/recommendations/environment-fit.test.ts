@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   classifyPlayPracticality,
   compatContributes,
+  availableEnvironments,
   resolvePlayEnvStatus,
   type EnvironmentCompatibilityRow,
 } from "./environment-fit";
@@ -41,6 +42,17 @@ function evidence(overrides: Partial<CompatEvidenceInput> = {}): CompatEvidenceI
 }
 
 describe("environment fit", () => {
+  it.each([
+    ["Linux primary only", linuxOnly, ["LINUX"]],
+    ["Linux primary with fallback", linuxWithFallback, ["LINUX", "WINDOWS"]],
+    ["Linux primary with Windows handheld", { ...linuxOnly, handheldOs: "WINDOWS" as const }, ["LINUX", "WINDOWS"]],
+    ["Linux primary with Linux handheld", { ...linuxOnly, handheldOs: "LINUX" as const }, ["LINUX", "STEAM_DECK"]],
+    ["Windows primary only", { ...allWindows, handheldOs: "NONE" as const }, ["WINDOWS"]],
+    ["Windows primary with Linux handheld", { ...allWindows, handheldOs: "LINUX" as const }, ["LINUX", "STEAM_DECK", "WINDOWS"]],
+  ] as const)("derives configured environments for %s", (_label, setup, expected) => {
+    expect(availableEnvironments(setup)).toEqual(expected);
+  });
+
   it("gates compatibility on the presence of a Linux target", () => {
     expect(compatContributes(linuxOnly)).toBe(true);
     expect(compatContributes({ ...allWindows, handheldOs: "NONE" })).toBe(false);

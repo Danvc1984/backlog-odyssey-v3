@@ -404,7 +404,7 @@
     tag states - evidence, unknown/not-checked, stale, absent - with no
     hollow placeholders and no tag without a confirmed App ID); the
     deployment feature's cron sweep becomes a no-op here
-  - [ ] 19c. **OS-aware recommendations and wishlist discovery** - play-next
+  - [x] 19c. **OS-aware recommendations and wishlist discovery** - play-next
     and buy engines derive environment fit, play floors (e.g. the
     out-of-the-box READY floor), caveats, and explanations from the
     configured devices; compatibility contributes only when Linux targets
@@ -416,17 +416,18 @@
     exclusion; setup changes re-derive compatibility and synchronously
     regenerate runs; preferred-environment options and the derived profile
     adapt to the configured setup
-    - [x] 19c-a. **Play environment fit and the no-fallback exclusion** -
-      setup-aware compatibility context in the play engine (compatibility
-      contributes only when Linux targets exist), device-derived environment
-      fit and play floors, override-aware evidence, and the sanctioned
-      no-fallback hard exclusion of fallback-needing evidence from play
-      roles with recorded, visible reasons and role absence
-    - [ ] 19c-b. **Buy practical fit and setup-adapted environment fields** -
-      wishlist compatibility evidence in the buy engine with a heavy
-      practical-fit penalty plus caveat (never exclusion), preferred-
-      environment options and taste setup restricted to configured devices,
-      and derived-profile environment evidence adapting to the setup
+  - [x] 19c. **Play environment fit and the no-fallback exclusion** -
+    setup-aware compatibility context in the play engine (compatibility
+    contributes only when Linux targets exist), device-derived environment
+    fit and play floors, override-aware evidence, and the sanctioned
+    no-fallback hard exclusion of fallback-needing evidence from play
+    roles with recorded, visible reasons and role absence
+
+  - [x] 19d. **Buy practical fit and setup-adapted environment fields** -
+    wishlist compatibility evidence in the buy engine with a heavy
+    practical-fit penalty plus caveat (never exclusion), preferred-
+    environment options and taste setup restricted to configured devices,
+    and derived-profile environment evidence adapting to the setup
 
 - [ ] 20. **Odyssey theme expansion** - two palette families (Dawn and
   Sunset, light and dark each) with family-owned semantic hue mapping, a

@@ -4,6 +4,7 @@ import type { CandidateDimensionValues, RecommendationProfilePayload } from "./p
 import {
   limitedBasisCaveat,
   resolveRerankMode,
+  rerankBuyCandidates,
   scoreEnvironmentFit,
   scoreQuality,
   scoreSteamActivity,
@@ -11,6 +12,8 @@ import {
   selectColdStartPicks,
   type TastePreference,
 } from "./rerank";
+import type { RerankBuyInput } from "./rerank";
+import { BUY_PRACTICAL_FIT_PENALTY } from "./types";
 
 const DIMENSIONS: RecommendationDimension[] = [
   "GENRE",
@@ -317,5 +320,59 @@ describe("limitedBasisCaveat", () => {
       factor: "limited_basis",
       label: "Cold start: limited history, showing a varied mix",
     });
+  });
+});
+
+describe("buy practical fit", () => {
+  const tiebreak = (id: string) => ({
+    historicalLowGap: null,
+    updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+    id,
+  });
+  const candidate = (id: string, baselineScore: number, practicality: RerankBuyInput["practicality"], envStatus: RerankBuyInput["envStatus"] = null, dimensionValues: CandidateDimensionValues = {}): RerankBuyInput => ({
+    id,
+    baselineScore,
+    positive: [],
+    negative: [],
+    caveats: [],
+    dimensionValues,
+    quality: { metacriticScore: null, rating: null },
+    tiebreak: tiebreak(id),
+    freshDiscount: null,
+    isFresh: false,
+    isKeyshop: false,
+    practicality,
+    envStatus,
+  });
+
+  it("reranks excluded wishes below playable wishes without removing them", () => {
+    const result = rerankBuyCandidates(
+      [
+        candidate("excluded", 20, {
+          kind: "EXCLUDED",
+          reason: { factor: "anticheat", label: "Anti-cheat blocks Linux, and no Windows fallback is configured" },
+        }),
+        candidate("playable", 15, { kind: "PLAYABLE" }, "READY", { GENRE: ["RPG"] }),
+      ],
+      profile({ GENRE: { RPG: { weight: 1, support: 2 } } }),
+      noPreferences,
+    );
+
+    expect(result.pool.map((item) => item.id)).toEqual(["playable", "excluded"]);
+    expect(result.pool[1]?.negative).toContainEqual({
+      factor: "practical_fit",
+      label: "Anti-cheat blocks Linux, and no Windows fallback is configured",
+      points: BUY_PRACTICAL_FIT_PENALTY,
+    });
+  });
+
+  it("adds no compatibility factor for an all-Windows playable wish", () => {
+    const result = rerankBuyCandidates(
+      [candidate("windows", 10, { kind: "PLAYABLE" })],
+      profile({}),
+      noPreferences,
+    );
+
+    expect(result.pool[0]).toMatchObject({ id: "windows", score: 10, positive: [], negative: [], caveats: [limitedBasisCaveat()] });
   });
 });

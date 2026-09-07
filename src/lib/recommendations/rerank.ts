@@ -6,6 +6,7 @@ import type {
 } from "@/generated/prisma/client";
 import type { ExplanationCaveat, ExplanationFactor, RerankAppliedFactors, RerankMode, RerankRunContext } from "./types";
 import {
+  BUY_PRACTICAL_FIT_PENALTY,
   COLD_START_MIN_EVENTS,
   QUALITY_CLAMP,
   QUALITY_METACRITIC_HIGH,
@@ -20,6 +21,7 @@ import {
   STEAM_ACTIVITY_POINTS,
   STEAM_RECENCY_WINDOW_DAYS,
 } from "./types";
+import type { PlayPracticality } from "./environment-fit";
 import type { CandidateDimensionValues, RecommendationProfilePayload } from "./profile";
 import { profileDimensionKeys } from "./profile";
 import { PLAY_NEXT_LIMIT, compareRankedPlay } from "./play-next";
@@ -395,6 +397,8 @@ export interface RerankBuyInput {
   freshDiscount: number | null;
   isFresh: boolean;
   isKeyshop: boolean;
+  practicality: PlayPracticality | null;
+  envStatus: CompatibilityStatus | null;
 }
 
 export interface RerankedBuyItem {
@@ -425,6 +429,25 @@ export function rerankBuyCandidates(
     let tasteCounted = false;
     let qualityCounted = false;
     let tastePoints = 0;
+
+    if (candidate.practicality?.kind === "EXCLUDED") {
+      const factor: ExplanationFactor = {
+        factor: "practical_fit",
+        label: candidate.practicality.reason.label,
+        points: BUY_PRACTICAL_FIT_PENALTY,
+      };
+      negative.push(factor);
+      score += factor.points;
+      applied.environment += 1;
+    } else if (candidate.practicality) {
+      const envFactor = scoreEnvironmentFit(candidate.envStatus);
+      if (envFactor) {
+        if (envFactor.points >= 0) positive.push(envFactor);
+        else negative.push(envFactor);
+        score += envFactor.points;
+        applied.environment += 1;
+      }
+    }
 
     if (mode === "RERANKED") {
       const taste = scoreTaste({ profile, dimensionValues: candidate.dimensionValues, preferences });

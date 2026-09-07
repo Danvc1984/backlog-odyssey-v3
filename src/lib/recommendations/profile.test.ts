@@ -114,4 +114,14 @@ describe("candidate dimension resolution", () => {
       }),
     ).toEqual({ EXPERIENCE: ["REPLAYING"] });
   });
+
+  it("skips a preferred environment that is not configured", () => {
+    expect(
+      resolveCandidateDimensionValues(null, {
+        gameExperience: "PC_GAMING",
+        preferredEnvironment: "WINDOWS",
+        configuredEnvironments: ["LINUX"],
+      }),
+    ).toEqual({ EXPERIENCE: ["PC_GAMING"] });
+  });
 });

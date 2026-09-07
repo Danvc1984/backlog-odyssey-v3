@@ -1,6 +1,6 @@
 import "server-only";
 
-import { Prisma } from "@/generated/prisma/client";
+import { Prisma, type CompatibilityStatus, type Environment } from "@/generated/prisma/client";
 import { parseAntiCheatEvidence } from "@/lib/compat-evidence";
 import { parseProtonDbSummary } from "@/lib/protondb-api";
 import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
@@ -86,6 +86,38 @@ export function compatEvidenceFor(row: {
   };
 }
 
+export function compatEvidenceForWish(row: {
+  type: "BASE_GAME" | "DLC";
+  steamAppId: string | null;
+  steamAppIdProvenance: string | null;
+  compatSnapshots?: { provider: string; result: unknown; fetchedAt: Date }[];
+  envCompat?: { environment: Environment; status: CompatibilityStatus }[];
+}): CompatEvidenceInput | null {
+  if (row.type === "DLC") return null;
+
+  const hasSteamIdentity = Boolean(row.steamAppId?.trim() && row.steamAppIdProvenance?.trim());
+  const protonDbSnapshot = (row.compatSnapshots ?? []).find(
+    (snapshot) => snapshot.provider === "PROTONDB",
+  );
+  const awaySnapshot = (row.compatSnapshots ?? []).find(
+    (snapshot) => snapshot.provider === "ARE_WE_ANTICHEAT_YET",
+  );
+  const protonDb = hasSteamIdentity && row.steamAppId && protonDbSnapshot
+    ? parseProtonDbSummary(row.steamAppId, protonDbSnapshot.result)
+    : null;
+  const antiCheat = hasSteamIdentity ? parseAntiCheatEvidence(awaySnapshot?.result) : null;
+
+  return {
+    hasSteamIdentity,
+    romOnly: false,
+    overrideStatus: null,
+    overrideReason: null,
+    protonDbStatus: protonDb?.status ?? null,
+    protonDbFetchedAt: hasSteamIdentity ? protonDbSnapshot?.fetchedAt ?? null : null,
+    awayStatus: antiCheat?.status ?? null,
+  };
+}
+
 export async function loadBuyCandidates(client: Prisma.TransactionClient) {
   const entries = await client.wishlistEntry.findMany({
     select: {
@@ -97,7 +129,11 @@ export async function loadBuyCandidates(client: Prisma.TransactionClient) {
       updatedAt: true,
       baseGameId: true,
       gameExperience: true,
+      steamAppId: true,
+      steamAppIdProvenance: true,
       metadataSnapshot: { select: { payload: true } },
+      compatSnapshots: { select: { provider: true, result: true, fetchedAt: true } },
+      envCompat: { select: { environment: true, status: true } },
       offers: {
         select: {
           price: true,
@@ -114,7 +150,15 @@ export async function loadBuyCandidates(client: Prisma.TransactionClient) {
   });
 
   if (entries.length === 0) {
-    return { candidates: [] as BuyCandidate[], wishViews: new Map<string, { payload: unknown; gameExperience: string | null }>() };
+    return {
+      candidates: [] as BuyCandidate[],
+      wishViews: new Map<string, {
+        payload: unknown;
+        gameExperience: string | null;
+        compatEvidence: CompatEvidenceInput | null;
+        envCompat: { environment: Environment; status: CompatibilityStatus }[];
+      }>(),
+    };
   }
 
   const baseGameIds = [
@@ -157,7 +201,12 @@ export async function loadBuyCandidates(client: Prisma.TransactionClient) {
     wishViews: new Map(
       entries.map((entry) => [
         entry.id,
-        { payload: entry.metadataSnapshot?.payload ?? null, gameExperience: entry.gameExperience ?? null },
+        {
+          payload: entry.metadataSnapshot?.payload ?? null,
+          gameExperience: entry.gameExperience ?? null,
+          compatEvidence: compatEvidenceForWish(entry),
+          envCompat: entry.envCompat ?? [],
+        },
       ]),
     ),
   };

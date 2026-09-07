@@ -1,6 +1,6 @@
-# Feature: 19c-a Play environment fit and the no-fallback exclusion
+# Feature: 19c Play environment fit and the no-fallback exclusion
 
-**From build-plan:** feature 19c-a (first half of 19c)
+**From build-plan:** feature 19c
 **Status:** complete
 
 ## Goal
@@ -42,7 +42,7 @@ note styling.
 
 ## Out of scope
 
-- 19c-b: buy-engine practical-fit penalty and wishlist discovery, buy
+- 19d: buy-engine practical-fit penalty and wishlist discovery, buy
   compat caveats, preferred-environment option restriction across personal
   field surfaces, taste-setup environment restriction, derived-profile
   environment adaptation. Buy behavior is unchanged by this feature.
@@ -146,7 +146,7 @@ was too big, so split it.
 
 - No schema changes.
 - **Load-bearing:** `classifyPlayPracticality(setup, evidence)` and its
-  `SOFT`/`EXCLUDED` classes - 19c-b reuses the same classification for the
+  `SOFT`/`EXCLUDED` classes - 19d reuses the same classification for the
   buy penalty; the reason `factor` vocabulary is shared.
 - **Load-bearing run-context contract:** `context.play.exclusions:
   Array<{ id: string; name: string; reason: { factor: string; label: string } }>`
@@ -181,7 +181,7 @@ compat factors or caveats appear on any run item.
   excluded games must not consume exposure cooldowns or appear in
   `Show another` batches.
 - Do not change buy behavior in this feature; buy items keep their current
-  caveat persistence until 19c-b.
+  caveat persistence until 19d.
 - Keep caveat and reason labels factual (no Odyssey voice; 20e owns copy
   sweeps). No em dashes in user-visible copy per coding standards.
 - The override fields are nullable; a null override means provider evidence

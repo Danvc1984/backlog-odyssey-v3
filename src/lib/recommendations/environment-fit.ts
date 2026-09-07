@@ -22,7 +22,9 @@ const SOFT_REASONS: Record<CompatibilityStatus, { factor: string; label: string 
 
 const ROM_REASON = { factor: "compat_na", label: "ROM only, compatibility not applicable" };
 
-function windowsDeviceExists(setup: OsSetup): boolean {
+function windowsDeviceExists(
+  setup: Pick<OsSetup, "primaryOs" | "hasWindowsFallback" | "handheldOs">,
+): boolean {
   return (
     setup.primaryOs === "WINDOWS" ||
     deriveWindowsFallbackExists(setup) ||
@@ -39,6 +41,16 @@ function preferredDeviceExists(setup: OsSetup, preferredEnvironment: Environment
     case "WINDOWS":
       return windowsDeviceExists(setup);
   }
+}
+
+export function availableEnvironments(
+  setup: Pick<OsSetup, "primaryOs" | "hasWindowsFallback" | "handheldOs">,
+): Environment[] {
+  const environments: Environment[] = [];
+  if (linuxTargetsExist(setup)) environments.push("LINUX");
+  if (setup.handheldOs === "LINUX") environments.push("STEAM_DECK");
+  if (windowsDeviceExists(setup)) environments.push("WINDOWS");
+  return environments;
 }
 
 export function compatContributes(setup: Pick<OsSetup, "primaryOs" | "handheldOs">): boolean {

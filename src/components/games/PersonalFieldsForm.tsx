@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { updatePersonalFields } from "@/actions/game-detail";
 import { PERSONAL_FIELD_HELP } from "@/lib/personal-field-help";
+import type { Environment } from "@/generated/prisma/client";
 
 type LibraryEntryData = {
   priority: string | null;
@@ -31,7 +32,7 @@ const PRIORITY_OPTIONS = [
   { value: "HIGH", label: "High" },
 ];
 
-const ENV_OPTIONS = [
+const ENV_OPTIONS: Array<{ value: Environment; label: string }> = [
   { value: "LINUX", label: "Linux" },
   { value: "STEAM_DECK", label: "Steam Deck" },
   { value: "WINDOWS", label: "Windows" },
@@ -47,9 +48,11 @@ const EXPERIENCE_OPTIONS = [
 export function PersonalFieldsForm({
   gameId,
   libraryEntry,
+  availableEnvironments,
 }: {
   gameId: string;
   libraryEntry: LibraryEntryData | null;
+  availableEnvironments: Environment[];
 }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +68,9 @@ export function PersonalFieldsForm({
     libraryEntry?.gameExperience ?? "",
   );
   const [notes, setNotes] = useState(libraryEntry?.notes ?? "");
+  const environmentValues = libraryEntry?.preferredEnvironment && !availableEnvironments.includes(libraryEntry.preferredEnvironment as Environment)
+    ? [...availableEnvironments, libraryEntry.preferredEnvironment as Environment]
+    : availableEnvironments;
 
   if (!libraryEntry) {
     return <p className="text-sm text-muted-foreground">Not in library</p>;
@@ -163,11 +169,15 @@ export function PersonalFieldsForm({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">Not set</SelectItem>
-            {ENV_OPTIONS.map((opt) => (
+            {environmentValues.map((value) => {
+              const opt = ENV_OPTIONS.find((option) => option.value === value);
+              if (!opt) return null;
+              return (
               <SelectItem key={opt.value} value={opt.value}>
                 {opt.label}
               </SelectItem>
-            ))}
+              );
+            })}
           </SelectContent>
         </Select>
       </div>

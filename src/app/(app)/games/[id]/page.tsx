@@ -29,6 +29,7 @@ import { SectionCard, StatusPill } from "@/components/ui/detail-card";
 import { resolvePagePalette } from "@/lib/game-theme";
 import { deriveWindowsFallbackExists } from "@/lib/os-setup";
 import { getCompatibilityGate } from "@/lib/compat-gate";
+import { availableEnvironments } from "@/lib/recommendations/environment-fit";
 
 export default async function GameDetailPage({
   params,
@@ -165,6 +166,13 @@ export default async function GameDetailPage({
       !latest || snapshot.fetchedAt > latest ? snapshot.fetchedAt : latest,
     null,
   );
+  const configuredEnvironments = availableEnvironments(
+    compatibilityGate.setup ?? {
+      primaryOs: "LINUX",
+      hasWindowsFallback: false,
+      handheldOs: "NONE",
+    },
+  );
 
   return (
     <GameThemeScope palette={resolvePagePalette(rawgPayload)}>
@@ -266,6 +274,7 @@ export default async function GameDetailPage({
       >
         <PersonalFieldsForm
           gameId={game.id}
+          availableEnvironments={configuredEnvironments}
           libraryEntry={
             game.libraryEntry
               ? {
