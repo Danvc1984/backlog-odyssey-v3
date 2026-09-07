@@ -6,6 +6,7 @@ import { friendlyActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
 import { runRawgEnrichmentJob } from "@/lib/rawg-job-runner";
 import { runCompatJob } from "@/lib/compat-job-runner";
+import { getCompatibilityGate } from "@/lib/compat-gate";
 
 const retryInputSchema = z.object({ jobId: z.string().min(1) }).strict();
 
@@ -46,6 +47,12 @@ export async function retryEnrichmentJob(input: unknown) {
     }
     if (!(RETRYABLE_PROVIDERS as readonly string[]).includes(job.provider)) {
       return { success: false as const, data: null, error: "Retry is not available for this provider" };
+    }
+    if (job.provider === "PROTONDB" || job.provider === "ARE_WE_ANTICHEAT_YET") {
+      const gate = await getCompatibilityGate();
+      if (!gate.active) {
+        return { success: false as const, data: null, error: "Compatibility is inactive for this setup" };
+      }
     }
 
     const requeued = await prisma.enrichmentJob.update({

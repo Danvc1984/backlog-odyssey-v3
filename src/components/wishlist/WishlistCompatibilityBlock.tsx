@@ -25,6 +25,7 @@ interface WishlistCompatibilityBlockProps {
   eligibility: WishlistCompatibilityEligibility;
   protonDb: { tier: ProtonDbTier } | null;
   antiCheat: AntiCheatEvidence | null;
+  hasWindowsFallback: boolean;
   environments: EnvironmentRow[];
   latestSnapshotAt: Date | null;
 }
@@ -111,24 +112,11 @@ export function WishlistCompatibilityBlock({
   eligibility,
   protonDb,
   antiCheat,
+  hasWindowsFallback,
   environments,
   latestSnapshotAt,
 }: WishlistCompatibilityBlockProps) {
-  if (!eligibility.eligible) {
-    return (
-      <SectionCard
-        eyebrow="Playability"
-        title="Compatibility"
-        description="Compatibility evidence for this wishlist entry."
-      >
-        <p className="text-sm text-muted-foreground">
-          {eligibility.reason === "DLC"
-            ? "Compatibility follows the owned base game."
-            : "Compatibility appears once this wish has a confirmed Steam App ID."}
-        </p>
-      </SectionCard>
-    );
-  }
+  if (!eligibility.eligible) return null;
 
   const hasEvidence =
     protonDb !== null || antiCheat !== null || environments.length > 0;
@@ -206,7 +194,7 @@ export function WishlistCompatibilityBlock({
           </div>
 
           <div className="grid gap-2 sm:grid-cols-2">
-            {orderedEnvironments(environments).map((row) => (
+            {orderedEnvironments(environments.filter((row) => hasWindowsFallback || row.environment !== "WINDOWS")).map((row) => (
               <div key={row.environment} className="rounded-md border border-border p-3">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm font-medium">
@@ -219,6 +207,17 @@ export function WishlistCompatibilityBlock({
                 )}
               </div>
             ))}
+            {!hasWindowsFallback && (
+              <div className="rounded-md border border-border p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-medium">Windows</span>
+                  <Badge label="Not configured" className={STATUS_CLASSES.UNKNOWN} />
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  No Windows fallback is configured for this setup.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

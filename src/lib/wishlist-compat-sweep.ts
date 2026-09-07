@@ -12,6 +12,7 @@ import {
   recoverAbandonedRun,
   startSingleRun,
 } from "./run-record-lifecycle";
+import { getCompatibilityGate } from "@/lib/compat-gate";
 
 const WISHLIST_COMPAT_CONCURRENCY = 5;
 
@@ -169,9 +170,15 @@ export async function finalizeWishlistCompatSweep(
 
 export type RunWishlistCompatSweepResult =
   | { ok: true; runId: string }
-  | { ok: false; reason: "already-running"; runId: string };
+  | { ok: false; reason: "already-running"; runId: string }
+  | { ok: false; reason: "compatibility-inactive" };
 
 export async function runWishlistCompatSweep(): Promise<RunWishlistCompatSweepResult> {
+  const gate = await getCompatibilityGate();
+  if (!gate.active) {
+    return { ok: false, reason: "compatibility-inactive" };
+  }
+
   const started = await startWishlistCompatSweep();
   if (!started.ok) {
     return started;

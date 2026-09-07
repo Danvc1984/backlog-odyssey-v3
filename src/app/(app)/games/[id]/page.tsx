@@ -27,6 +27,8 @@ import { GameDetailHero } from "@/components/games/GameDetailHero";
 import { GameThemeScope } from "@/components/games/GameThemeScope";
 import { SectionCard, StatusPill } from "@/components/ui/detail-card";
 import { resolvePagePalette } from "@/lib/game-theme";
+import { deriveWindowsFallbackExists } from "@/lib/os-setup";
+import { getCompatibilityGate } from "@/lib/compat-gate";
 
 export default async function GameDetailPage({
   params,
@@ -40,6 +42,7 @@ export default async function GameDetailPage({
     possibleDuplicate,
     playDismissalCount,
     savedSources,
+    compatibilityGate,
   ] = await Promise.all([
     prisma.game.findUnique({
       where: { id },
@@ -108,6 +111,7 @@ export default async function GameDetailPage({
       orderBy: { name: "asc" },
       select: { id: true, name: true, archivedAt: true },
     }),
+    getCompatibilityGate(),
   ]);
 
   if (!game) {
@@ -289,7 +293,8 @@ export default async function GameDetailPage({
         rawgTitle={rawgPayload?.title ?? null}
       />
 
-      <CompatibilitySection
+      {compatibilityGate.active && game.type === "BASE_GAME" && (
+        <CompatibilitySection
         gameId={game.id}
         gameName={game.name}
         hasSteamIdentity={hasSteamIdentity}
@@ -310,6 +315,7 @@ export default async function GameDetailPage({
         }
         antiCheat={antiCheat}
         awayUrl={antiCheat && steamAppId ? awayGameUrl(steamAppId) : null}
+        hasWindowsFallback={compatibilityGate.setup ? deriveWindowsFallbackExists(compatibilityGate.setup) : false}
         override={
           game.libraryEntry?.compatOverrideStatus
             ? {
@@ -327,7 +333,8 @@ export default async function GameDetailPage({
               }
             : null
         }
-      />
+        />
+      )}
 
       <SectionCard
         eyebrow="Where it lives"

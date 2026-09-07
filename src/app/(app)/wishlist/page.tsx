@@ -8,7 +8,8 @@ import { prisma } from "@/lib/prisma";
 import { buildEntryOfferView } from "@/lib/offer-selection";
 import { wishlistWhere } from "@/lib/wishlist-search";
 import { getWishlistCompatibilityEligibility } from "@/lib/wishlist-compatibility";
-import { deriveCardTier } from "@/lib/protondb-tags";
+import { deriveCompatTag } from "@/lib/protondb-tags";
+import { getCompatibilityGate } from "@/lib/compat-gate";
 import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
 import { wishlistCardMetadataView } from "@/lib/card-metadata-view";
 
@@ -40,6 +41,7 @@ export default async function WishlistPage({
     ? interest
     : undefined;
   const query = params.q?.trim() || undefined;
+  const compatibilityGate = await getCompatibilityGate();
 
   const [entries, baseGames] = await Promise.all([
     prisma.wishlistEntry.findMany({
@@ -60,7 +62,7 @@ export default async function WishlistPage({
           where: { provider: "PROTONDB" },
           orderBy: { fetchedAt: "desc" },
           take: 1,
-          select: { result: true },
+          select: { result: true, fetchedAt: true },
         },
         offers: {
           orderBy: [{ price: { sort: "asc", nulls: "last" } }],
@@ -103,11 +105,13 @@ export default async function WishlistPage({
       metadataGenres: metadataPayload?.genres ?? [],
       hasOwnMetadata: ownMetadata !== null,
       hasInheritedMetadata: ownMetadata === null && inheritedMetadata !== null,
-      protonDbTier: eligibility.eligible
-        ? deriveCardTier({
+      compatTag: eligibility.eligible
+        ? deriveCompatTag({
+            active: compatibilityGate.active,
             steamAppId: eligibility.steamAppId,
             isRomOnly: false,
             snapshotResult: compatSnapshots[0]?.result ?? null,
+            snapshotFetchedAt: compatSnapshots[0]?.fetchedAt ?? null,
           })
         : null,
       offerView: buildEntryOfferView(offers, targetPriceMxn, new Date()),

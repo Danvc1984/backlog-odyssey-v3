@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildOsSetupConsequenceSummary,
   deriveWindowsFallbackExists,
+  isCompatibilityActive,
   isTrivialPath,
   linuxTargetsExist,
   osSetupSchema,
@@ -27,6 +28,13 @@ describe("os setup contract", () => {
     expect(isTrivialPath(setup({ primaryOs: "WINDOWS", handheldOs: "NONE" }))).toBe(true);
     expect(isTrivialPath(setup({ primaryOs: "WINDOWS", handheldOs: "WINDOWS" }))).toBe(true);
     expect(isTrivialPath(setup({ primaryOs: "WINDOWS", handheldOs: "LINUX" }))).toBe(false);
+  });
+
+  it("activates compatibility when the primary or handheld is Linux", () => {
+    expect(isCompatibilityActive(setup({ primaryOs: "LINUX", hasWindowsFallback: false }))).toBe(true);
+    expect(isCompatibilityActive(setup({ primaryOs: "LINUX", hasWindowsFallback: true }))).toBe(true);
+    expect(isCompatibilityActive(setup({ primaryOs: "WINDOWS", handheldOs: "LINUX" }))).toBe(true);
+    expect(isCompatibilityActive(setup({ primaryOs: "WINDOWS", handheldOs: "WINDOWS" }))).toBe(false);
   });
 
   it("rejects a fallback on a Windows primary", () => {

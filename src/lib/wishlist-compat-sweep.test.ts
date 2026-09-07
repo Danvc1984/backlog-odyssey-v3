@@ -5,10 +5,12 @@ vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 vi.mock("./wishlist-compatibility-runner", () => ({
   runWishlistCompatibilityRefresh: vi.fn(),
 }));
+vi.mock("@/lib/compat-gate", () => ({ getCompatibilityGate: vi.fn() }));
 
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { runWishlistCompatibilityRefresh } from "./wishlist-compatibility-runner";
+import { getCompatibilityGate } from "@/lib/compat-gate";
 import {
   classifyWishlistCompatEntry,
   emptySweepCounts,
@@ -131,6 +133,7 @@ function configurePrisma() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(getCompatibilityGate).mockResolvedValue({ setup: null, active: true });
   configurePrisma();
   mockRecoveryFindFirst.mockResolvedValue(null);
   mockActiveFindFirst.mockResolvedValue({ id: "sweep-active" });
@@ -240,6 +243,19 @@ describe("startWishlistCompatSweep", () => {
       refreshIds: [],
     });
     expect(mockSnapshotFindMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("runWishlistCompatSweep", () => {
+  it("refuses without creating or recovering a run while inactive", async () => {
+    vi.mocked(getCompatibilityGate).mockResolvedValue({ setup: null, active: false });
+
+    await expect(runWishlistCompatSweep()).resolves.toEqual({
+      ok: false,
+      reason: "compatibility-inactive",
+    });
+    expect(mockRecoveryFindFirst).not.toHaveBeenCalled();
+    expect(mockSweepCreate).not.toHaveBeenCalled();
   });
 });
 

@@ -36,6 +36,10 @@ export function linuxTargetsExist(setup: Pick<OsSetup, "primaryOs" | "handheldOs
   return setup.primaryOs === "LINUX" || setup.handheldOs === "LINUX";
 }
 
+export function isCompatibilityActive(setup: Pick<OsSetup, "primaryOs" | "handheldOs">): boolean {
+  return linuxTargetsExist(setup);
+}
+
 export function isTrivialPath(setup: Pick<OsSetup, "primaryOs" | "handheldOs">): boolean {
   return !linuxTargetsExist(setup);
 }

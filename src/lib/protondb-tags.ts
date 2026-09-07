@@ -3,6 +3,12 @@ import "server-only";
 import { parseProtonDbSummary, type ProtonDbResult } from "./protondb-api";
 
 export type ProtonDbCardTier = ProtonDbResult["tier"];
+export type CompatTag =
+  | { kind: "evidence" | "stale"; tier: ProtonDbCardTier }
+  | { kind: "unknown" }
+  | null;
+
+const COMPATIBILITY_FRESHNESS_MS = 180 * 24 * 60 * 60 * 1000;
 
 export const PROTONDB_TIER_LABELS: Record<ProtonDbCardTier, string> = {
   native: "Native",
@@ -31,4 +37,23 @@ export function deriveCardTier(input: {
   const steamAppId = input.steamAppId?.trim();
   if (!steamAppId) return null;
   return parseProtonDbSummary(steamAppId, input.snapshotResult)?.tier ?? null;
+}
+
+export function deriveCompatTag(input: {
+  active: boolean;
+  steamAppId: string | null;
+  isRomOnly: boolean;
+  snapshotResult: unknown;
+  snapshotFetchedAt: Date | null;
+  now?: Date;
+}): CompatTag {
+  if (!input.active || input.isRomOnly || !input.steamAppId?.trim()) return null;
+
+  const parsed = parseProtonDbSummary(input.steamAppId.trim(), input.snapshotResult);
+  if (!parsed) return { kind: "unknown" };
+
+  const now = input.now ?? new Date();
+  const cutoff = now.getTime() - COMPATIBILITY_FRESHNESS_MS;
+  const isStale = input.snapshotFetchedAt !== null && input.snapshotFetchedAt.getTime() < cutoff;
+  return { kind: isStale ? "stale" : "evidence", tier: parsed.tier };
 }

@@ -6,7 +6,7 @@ import type { WishlistCardMetadataView } from "@/lib/card-metadata-view";
 import { WishlistCover } from "./WishlistCover";
 import { WishlistInterestRating } from "./WishlistInterestRating";
 import { ProtonDbTag } from "@/components/games/ProtonDbTag";
-import type { ProtonDbCardTier } from "@/lib/protondb-tags";
+import type { CompatTag } from "@/lib/protondb-tags";
 
 const priceFormatter = new Intl.NumberFormat("es-MX", {
   minimumFractionDigits: 2,
@@ -29,7 +29,7 @@ interface WishlistCardProps {
     gameExperience: string | null;
     notes: string | null;
     offerView: WishlistOffersView;
-    protonDbTier: ProtonDbCardTier | null;
+    compatTag: CompatTag;
     steamAppId: string | null;
     steamAppIdProvenance: string | null;
     metadata: WishlistCardMetadataView | null;
@@ -75,7 +75,7 @@ export function WishlistCard({
                   entryName={entry.name}
                   interest={entry.interest}
                 />
-                {entry.protonDbTier && <ProtonDbTag tier={entry.protonDbTier} />}
+                {entry.compatTag && <ProtonDbTag tag={entry.compatTag} />}
               </div>
               <WishlistEntryActions entry={entry} baseGames={baseGames} />
             </div>
@@ -111,7 +111,7 @@ export function WishlistCard({
               entryName={entry.name}
               interest={entry.interest}
             />
-            {entry.protonDbTier && <ProtonDbTag tier={entry.protonDbTier} />}
+            {entry.compatTag && <ProtonDbTag tag={entry.compatTag} />}
           </div>
           <WishlistEntryActions entry={entry} baseGames={baseGames} />
         </div>

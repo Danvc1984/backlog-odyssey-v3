@@ -10,7 +10,8 @@ import { CollectionDetailActions } from "@/components/games/CollectionDetailActi
 import { CollectionListControls } from "@/components/games/CollectionListControls";
 import { LibraryGameCard, type LibraryGameCardEntry } from "@/components/games/LibraryGameCard";
 import { StatusPill } from "@/components/ui/detail-card";
-import { deriveCardTier } from "@/lib/protondb-tags";
+import { deriveCompatTag } from "@/lib/protondb-tags";
+import { getCompatibilityGate } from "@/lib/compat-gate";
 import { libraryCardMetadataView } from "@/lib/card-metadata-view";
 
 interface CollectionSearchParams {
@@ -44,10 +45,10 @@ function toLibraryEntry(entry: {
     metadataSnapshots: { id: string; payload?: unknown }[];
     _count: { dlcs: number; collections: number };
     externalIds: { externalId: string }[];
-    compatSnapshots: { result: unknown }[];
+    compatSnapshots: { result: unknown; fetchedAt: Date }[];
     availability: LibraryGameCardEntry["game"]["availability"];
   };
-}): LibraryGameCardEntry {
+}, compatibilityActive: boolean): LibraryGameCardEntry {
   const isRomOnly =
     entry.game.availability.some((availability) => availability.source === "ROM") &&
     !entry.game.availability.some((availability) => availability.source === "STEAM");
@@ -66,10 +67,12 @@ function toLibraryEntry(entry: {
     replayCandidate: entry.replayCandidate,
     hidden: entry.hidden,
     createdAt: entry.createdAt,
-    protonDbTier: deriveCardTier({
+    compatTag: deriveCompatTag({
+      active: compatibilityActive,
       steamAppId: entry.game.externalIds[0]?.externalId ?? null,
       isRomOnly,
       snapshotResult: entry.game.compatSnapshots[0]?.result ?? null,
+      snapshotFetchedAt: entry.game.compatSnapshots[0]?.fetchedAt ?? null,
     }),
     game: {
       id: entry.game.id,
@@ -95,7 +98,7 @@ function collectionGameInclude() {
       where: { provider: "PROTONDB" as const },
       orderBy: { fetchedAt: "desc" as const },
       take: 1,
-      select: { result: true },
+      select: { result: true, fetchedAt: true },
     },
     baseGame: { select: { id: true, name: true } },
     metadataSnapshots: {
@@ -114,6 +117,7 @@ export default async function CollectionDetailPage({
   searchParams: Promise<CollectionSearchParams>;
 }) {
   const [{ id }, { q = "", sort = "newest" }] = await Promise.all([params, searchParams]);
+  const compatibilityGate = await getCompatibilityGate();
   const isSystem = isSystemCollectionId(id);
   const systemDef = isSystem ? getSystemCollectionDefinition(id) : undefined;
   let name = "";
@@ -127,7 +131,7 @@ export default async function CollectionDetailPage({
       where: systemDef.where,
       include: { game: { include: collectionGameInclude() } },
     });
-    rows = entries.map(toLibraryEntry);
+    rows = entries.map((entry) => toLibraryEntry(entry, compatibilityGate.active));
   } else {
     const collection = await prisma.collection.findUnique({
       where: { id },
@@ -150,7 +154,7 @@ export default async function CollectionDetailPage({
     color = collection.color;
     rows = collection.members
       .filter((member) => member.game.libraryEntry !== null)
-      .map((member) => toLibraryEntry({ ...member.game.libraryEntry!, game: member.game }));
+      .map((member) => toLibraryEntry({ ...member.game.libraryEntry!, game: member.game }, compatibilityGate.active));
   }
 
   const query = q.trim().toLocaleLowerCase();

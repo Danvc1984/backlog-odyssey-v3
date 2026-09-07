@@ -24,6 +24,8 @@ import { GameThemeScope } from "@/components/games/GameThemeScope";
 import { ScreenshotsSection } from "@/components/games/ScreenshotsSection";
 import { resolvePagePalette } from "@/lib/game-theme";
 import { resolvePageScreenshots } from "@/lib/screenshot-view";
+import { deriveWindowsFallbackExists } from "@/lib/os-setup";
+import { getCompatibilityGate } from "@/lib/compat-gate";
 
 export default async function WishlistDetailPage({
   params,
@@ -31,7 +33,7 @@ export default async function WishlistDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [entry, baseGames, buyDismissalCount] = await Promise.all([
+  const [entry, baseGames, buyDismissalCount, compatibilityGate] = await Promise.all([
     prisma.wishlistEntry.findUnique({
       where: { id },
       select: {
@@ -86,6 +88,7 @@ export default async function WishlistDetailPage({
     prisma.recommendationFeedback.count({
       where: { wishlistEntryId: id, kind: "BUY" },
     }),
+    getCompatibilityGate(),
   ]);
 
   if (!entry) {
@@ -246,18 +249,21 @@ export default async function WishlistDetailPage({
         </SectionCard>
       )}
 
-      <WishlistCompatibilityBlock
-        wishlistEntryId={entry.id}
-        eligibility={eligibility}
-        protonDb={protonDb ? { tier: protonDb.tier } : null}
-        antiCheat={antiCheat}
-        environments={entry.envCompat.map((row) => ({
-          environment: row.environment,
-          status: row.status,
-          source: row.source,
-        }))}
-        latestSnapshotAt={latestCompatAt}
-      />
+      {compatibilityGate.active && (
+        <WishlistCompatibilityBlock
+          wishlistEntryId={entry.id}
+          eligibility={eligibility}
+          protonDb={protonDb ? { tier: protonDb.tier } : null}
+          antiCheat={antiCheat}
+          hasWindowsFallback={compatibilityGate.setup ? deriveWindowsFallbackExists(compatibilityGate.setup) : false}
+          environments={entry.envCompat.map((row) => ({
+            environment: row.environment,
+            status: row.status,
+            source: row.source,
+          }))}
+          latestSnapshotAt={latestCompatAt}
+        />
+      )}
 
       <SectionCard
         eyebrow="Wishlist entry"

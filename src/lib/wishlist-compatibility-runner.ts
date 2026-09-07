@@ -10,6 +10,7 @@ import {
   getWishlistCompatibilityEligibility,
   isWishlistProviderFailure,
 } from "@/lib/wishlist-compatibility";
+import { getCompatibilityGate } from "@/lib/compat-gate";
 
 export interface WishlistCompatibilityRefreshView {
   fetchedAt: string;
@@ -31,6 +32,11 @@ function providerFailureMessage(value: unknown): string {
 export async function runWishlistCompatibilityRefresh(
   wishlistEntryId: string,
 ): Promise<WishlistCompatibilityRefreshResult> {
+  const gate = await getCompatibilityGate();
+  if (!gate.active) {
+    return { success: false, data: null, error: "Compatibility is inactive for this setup" };
+  }
+
   const entry = await prisma.wishlistEntry.findUnique({
     where: { id: wishlistEntryId },
     select: {

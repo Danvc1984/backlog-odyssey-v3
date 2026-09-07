@@ -7,6 +7,7 @@ import {
   isActiveCompatJobStatus,
 } from "@/lib/compat-job";
 import { runCompatJob, type CompatJobRunResult } from "@/lib/compat-job-runner";
+import { getCompatibilityGate } from "@/lib/compat-gate";
 
 export interface CompatEligibilityGame {
   libraryEntry: { id?: string; hidden?: boolean } | null;
@@ -47,6 +48,9 @@ const jobData = {
 export async function queueCompatibilityForGame(
   gameId: string,
 ): Promise<CompatJobRunResult | null> {
+  const gate = await getCompatibilityGate();
+  if (!gate.active) return null;
+
   const game = await prisma.game.findUnique({
     where: { id: gameId },
     select: eligibilitySelect,

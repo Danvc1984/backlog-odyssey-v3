@@ -4,11 +4,13 @@ vi.mock("@/lib/auth-guard", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 vi.mock("@/lib/rawg-job-runner", () => ({ runRawgEnrichmentJob: vi.fn() }));
 vi.mock("@/lib/compat-job-runner", () => ({ runCompatJob: vi.fn() }));
+vi.mock("@/lib/compat-gate", () => ({ getCompatibilityGate: vi.fn() }));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { runRawgEnrichmentJob } from "@/lib/rawg-job-runner";
 import { runCompatJob } from "@/lib/compat-job-runner";
+import { getCompatibilityGate } from "@/lib/compat-gate";
 import { retryEnrichmentJob } from "./enrichment-retry";
 
 const mockFindUnique = vi.fn();
@@ -51,6 +53,7 @@ function failedRawgJob() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(getCompatibilityGate).mockResolvedValue({ setup: null, active: true });
   (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
   (prisma as unknown as { enrichmentJob: Record<string, ReturnType<typeof vi.fn>> }).enrichmentJob = {
     findUnique: mockFindUnique,
@@ -103,6 +106,22 @@ describe("retryEnrichmentJob", () => {
     }
     expect(mockUpdate).not.toHaveBeenCalled();
     expect(runRawgEnrichmentJob).not.toHaveBeenCalled();
+    expect(runCompatJob).not.toHaveBeenCalled();
+  });
+
+  it("refuses compatibility provider retries while inactive", async () => {
+    vi.mocked(getCompatibilityGate).mockResolvedValue({ setup: null, active: false });
+
+    for (const provider of ["PROTONDB", "ARE_WE_ANTICHEAT_YET"]) {
+      mockFindUnique.mockResolvedValue({ ...failedRawgJob(), provider });
+      const result = await retryEnrichmentJob({ jobId: "job-1" });
+      expect(result).toEqual({
+        success: false,
+        data: null,
+        error: "Compatibility is inactive for this setup",
+      });
+      expect(mockUpdate).not.toHaveBeenCalled();
+    }
     expect(runCompatJob).not.toHaveBeenCalled();
   });
 

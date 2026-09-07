@@ -3,10 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/auth-guard", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 vi.mock("@/lib/compat-job-runner", () => ({ runCompatJob: vi.fn() }));
+vi.mock("@/lib/compat-gate", () => ({ getCompatibilityGate: vi.fn() }));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { runCompatJob } from "@/lib/compat-job-runner";
+import { getCompatibilityGate } from "@/lib/compat-gate";
 import { refreshGameCompatibility } from "./compatibility";
 
 describe("refreshGameCompatibility", () => {
@@ -19,6 +21,7 @@ describe("refreshGameCompatibility", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getCompatibilityGate).mockResolvedValue({ setup: null, active: true });
     vi.mocked(requireUser).mockResolvedValue({} as never);
     vi.mocked(runCompatJob).mockResolvedValue({
       success: true,
@@ -55,6 +58,18 @@ describe("refreshGameCompatibility", () => {
       data: expect.objectContaining({ gameId: "game-1", provider: "PROTONDB", maxAttempts: 3 }),
     }));
     expect(runCompatJob).toHaveBeenCalledWith("job-1");
+  });
+
+  it("refuses refresh while compatibility is inactive", async () => {
+    vi.mocked(getCompatibilityGate).mockResolvedValue({ setup: null, active: false });
+
+    await expect(refreshGameCompatibility({ gameId: "game-1" })).resolves.toEqual({
+      success: false,
+      data: null,
+      error: "Compatibility is inactive for this setup",
+    });
+    expect(gameFindUnique).not.toHaveBeenCalled();
+    expect(jobCreate).not.toHaveBeenCalled();
   });
 
   it("returns an active job without starting a second run", async () => {
@@ -96,5 +111,18 @@ describe("refreshGameCompatibility", () => {
       where: { gameId: "game-1" },
       data: { compatOverrideStatus: null, compatOverrideReason: null },
     });
+  });
+
+  it("refuses compatibility overrides while inactive", async () => {
+    vi.mocked(getCompatibilityGate).mockResolvedValue({ setup: null, active: false });
+
+    const { setCompatOverride } = await import("./compatibility");
+    await expect(setCompatOverride({ gameId: "game-1", status: "REQUIRED", reason: "reason" })).resolves.toEqual({
+      success: false,
+      data: null,
+      error: "Compatibility is inactive for this setup",
+    });
+    expect(libraryFindUnique).not.toHaveBeenCalled();
+    expect(libraryUpdate).not.toHaveBeenCalled();
   });
 });

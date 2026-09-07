@@ -3,9 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/auth-guard", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/compat-gate", () => ({ getCompatibilityGate: vi.fn() }));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { getCompatibilityGate } from "@/lib/compat-gate";
 import { startCompatibilitySweep } from "./compat-batch-enrichment";
 
 describe("compatibility sweep action", () => {
@@ -18,6 +20,7 @@ describe("compatibility sweep action", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(requireUser).mockResolvedValue({} as never);
+    vi.mocked(getCompatibilityGate).mockResolvedValue({ setup: null, active: true });
     transaction.mockImplementation(async (callback) => callback({
       syncRun: { findFirst: findActiveBatch, create: createBatch },
       game: { findMany: findGames },
@@ -52,6 +55,17 @@ describe("compatibility sweep action", () => {
     });
     expect(findGames).not.toHaveBeenCalled();
     expect(createBatch).not.toHaveBeenCalled();
+  });
+
+  it("refuses an inactive sweep before opening a transaction", async () => {
+    vi.mocked(getCompatibilityGate).mockResolvedValue({ setup: null, active: false });
+
+    await expect(startCompatibilitySweep({})).resolves.toEqual({
+      success: false,
+      data: null,
+      error: "Compatibility is inactive for this setup",
+    });
+    expect(transaction).not.toHaveBeenCalled();
   });
 
   it("queues eligible games and reports active and ineligible skips", async () => {

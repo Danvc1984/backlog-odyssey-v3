@@ -3,9 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 vi.mock("@/lib/compat-job-runner", () => ({ runCompatJob: vi.fn() }));
+vi.mock("@/lib/compat-gate", () => ({ getCompatibilityGate: vi.fn() }));
 
 import { prisma } from "@/lib/prisma";
 import { runCompatJob } from "@/lib/compat-job-runner";
+import { getCompatibilityGate } from "@/lib/compat-gate";
 import { isCompatEligible, queueCompatibilityForGame } from "./compat-queue";
 
 describe("compatibility queue", () => {
@@ -21,6 +23,7 @@ describe("compatibility queue", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getCompatibilityGate).mockResolvedValue({ setup: null, active: true });
     Object.assign(prisma, {
       game: { findUnique: gameFindUnique },
       enrichmentJob: { findUnique: jobFindUnique, upsert: jobUpsert },
@@ -48,6 +51,16 @@ describe("compatibility queue", () => {
     await expect(queueCompatibilityForGame("game-1")).resolves.toBeNull();
 
     expect(jobFindUnique).not.toHaveBeenCalled();
+    expect(jobUpsert).not.toHaveBeenCalled();
+    expect(runCompatJob).not.toHaveBeenCalled();
+  });
+
+  it("does not read or queue games while compatibility is inactive", async () => {
+    vi.mocked(getCompatibilityGate).mockResolvedValue({ setup: null, active: false });
+
+    await expect(queueCompatibilityForGame("game-1")).resolves.toBeNull();
+
+    expect(gameFindUnique).not.toHaveBeenCalled();
     expect(jobUpsert).not.toHaveBeenCalled();
     expect(runCompatJob).not.toHaveBeenCalled();
   });

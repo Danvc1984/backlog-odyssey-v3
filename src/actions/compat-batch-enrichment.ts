@@ -7,6 +7,7 @@ import { compatBatchSummary } from "@/lib/compat-batch";
 import { COMPAT_JOB_MAX_ATTEMPTS, isActiveCompatJobStatus } from "@/lib/compat-job";
 import { isCompatEligible } from "@/lib/compat-queue";
 import { startProviderEnrichmentBatch } from "@/lib/enrichment-batch-start";
+import { getCompatibilityGate } from "@/lib/compat-gate";
 
 const startCompatibilitySweepSchema = z.object({}).strict();
 
@@ -44,6 +45,11 @@ export async function startCompatibilitySweep(input: unknown) {
     const parsed = startCompatibilitySweepSchema.safeParse(input);
     if (!parsed.success) {
       return { success: false as const, data: null, error: "Invalid input" };
+    }
+
+    const gate = await getCompatibilityGate();
+    if (!gate.active) {
+      return { success: false as const, data: null, error: "Compatibility is inactive for this setup" };
     }
 
     const result = await startProviderEnrichmentBatch({

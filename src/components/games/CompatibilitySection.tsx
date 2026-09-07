@@ -35,6 +35,7 @@ interface CompatibilitySectionProps {
   gameName: string;
   hasSteamIdentity: boolean;
   isRomOnly: boolean;
+  hasWindowsFallback: boolean;
   latestSnapshotAt: Date | null;
   protonDb: ProtonDbEvidence | null;
   protonDbUrl: string | null;
@@ -104,6 +105,7 @@ export function CompatibilitySection({
   gameName,
   hasSteamIdentity,
   isRomOnly,
+  hasWindowsFallback,
   latestSnapshotAt,
   protonDb,
   protonDbUrl,
@@ -120,7 +122,9 @@ export function CompatibilitySection({
   const [savingOverride, setSavingOverride] = useState(false);
   const age = latestSnapshotAt ? daysSince(latestSnapshotAt) : null;
   const linuxStatus = override?.status ?? protonDb?.status ?? "UNKNOWN";
-  const windowsFallback = deriveWindowsFallback(linuxStatus, antiCheat?.status ?? null);
+  const windowsFallback = hasWindowsFallback
+    ? deriveWindowsFallback(linuxStatus, antiCheat?.status ?? null)
+    : null;
   const antiCheatBlocksLinux = antiCheat?.status === "Denied" || antiCheat?.status === "Broken";
 
   const refresh = async () => {
@@ -168,10 +172,10 @@ export function CompatibilitySection({
       description="Linux first, Windows fallback when needed."
       aside={
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span className={age !== null && age > 150 ? "text-warning-text" : undefined}>
+          {hasSteamIdentity && <span className={age !== null && age > 150 ? "text-warning-text" : undefined}>
             Evidence updated {age === null ? "never" : `${age} days ago`}
-          </span>
-          {!isRomOnly && hasSteamIdentity && (
+          </span>}
+          {hasSteamIdentity && !isRomOnly && (
             <Button
               type="button"
               variant="ghost"
@@ -188,26 +192,28 @@ export function CompatibilitySection({
       }
     >
       <div className="space-y-4">
-        <div className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
-          <ProtonDbTier protonDb={protonDb} />
-          {protonDbUrl && (
-            <a className="text-xs text-primary underline-offset-4 hover:underline" href={protonDbUrl} target="_blank" rel="noreferrer">
-              View this game on ProtonDB
-            </a>
-          )}
-          {antiCheat ? (
-            <Badge label={`AWAY: ${antiCheat.status}`} className={AWAY_CLASSES[antiCheat.status]} />
-          ) : (
-            <Badge label="No anti-cheat evidence" className="border-border bg-muted/40 text-muted-foreground" />
-          )}
-        </div>
-
       {isRomOnly ? (
         <p className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground">
           Compatibility is not applicable to ROM-only games.
         </p>
+      ) : !hasSteamIdentity ? (
+        <p className="text-xs text-muted-foreground">Add a Steam App ID above to look up compatibility evidence.</p>
       ) : (
-        <div className="grid gap-2">
+        <>
+          <div className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
+            <ProtonDbTier protonDb={protonDb} />
+            {protonDbUrl && (
+              <a className="text-xs text-primary underline-offset-4 hover:underline" href={protonDbUrl} target="_blank" rel="noreferrer">
+                View this game on ProtonDB
+              </a>
+            )}
+            {antiCheat ? (
+              <Badge label={`AWAY: ${antiCheat.status}`} className={AWAY_CLASSES[antiCheat.status]} />
+            ) : (
+              <Badge label="No anti-cheat evidence" className="border-border bg-muted/40 text-muted-foreground" />
+            )}
+          </div>
+          <div className="grid gap-2">
           <div className="flex flex-col gap-3 rounded-lg border border-border p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
               <p className="text-sm font-medium">Linux</p>
@@ -225,30 +231,34 @@ export function CompatibilitySection({
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 rounded-lg border border-border p-3 sm:flex-row sm:items-center sm:justify-between">
+          {windowsFallback ? <div className="flex flex-col gap-3 rounded-lg border border-border p-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-medium">Windows</p>
               <p className="text-xs text-muted-foreground">{windowsFallback.source}</p>
             </div>
             <Badge label={windowsFallback.label} className={STATUS_CLASSES[windowsFallback.status]} />
+          </div> : <div className="flex flex-col gap-3 rounded-lg border border-border p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-medium">Windows</p>
+              <p className="text-xs text-muted-foreground">No Windows fallback is configured for this setup.</p>
+            </div>
+            <Badge label="Not configured" className={STATUS_CLASSES.UNKNOWN} />
+          </div>}
           </div>
-        </div>
+        </>
       )}
 
-      {!hasSteamIdentity && !isRomOnly && (
-        <p className="text-xs text-muted-foreground">Add a Steam App ID above to look up compatibility evidence.</p>
-      )}
-      {antiCheatBlocksLinux && !isRomOnly && (
+      {antiCheatBlocksLinux && !isRomOnly && hasSteamIdentity && (
         <p className="rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-200">
           Anti-cheat warning: AreWeAntiCheatYet reports {antiCheat?.status}.
         </p>
       )}
-      {job && ["QUEUED", "RUNNING", "RETRY_WAIT"].includes(job.status) && (
+      {job && hasSteamIdentity && !isRomOnly && ["QUEUED", "RUNNING", "RETRY_WAIT"].includes(job.status) && (
         <p className="text-xs text-muted-foreground">Refresh {job.status.toLowerCase().replace("_", " ")} ({job.progress}%).</p>
       )}
-      {job?.status === "FAILED" && !override && <p className="text-xs text-destructive">{job.lastErrorMessage}</p>}
+      {job?.status === "FAILED" && hasSteamIdentity && !isRomOnly && !override && <p className="text-xs text-destructive">{job.lastErrorMessage}</p>}
 
-      {override && !isRomOnly && !editingOverride && (
+      {override && hasSteamIdentity && !isRomOnly && !editingOverride && (
         <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm">
           <p>Linux override reason: {override.reason || "No reason provided"}</p>
           <div className="flex gap-2">
@@ -261,12 +271,12 @@ export function CompatibilitySection({
           </div>
         </div>
       )}
-      {!override && !isRomOnly && !editingOverride && (
+      {!override && hasSteamIdentity && !isRomOnly && !editingOverride && (
         <Button type="button" variant="ghost" size="sm" onClick={() => setEditingOverride(true)}>
           Set Linux override
         </Button>
       )}
-      {editingOverride && (
+      {editingOverride && hasSteamIdentity && !isRomOnly && (
         <div className="space-y-2 rounded-lg border border-border p-3">
           <Select value={overrideStatus} onValueChange={(value) => setOverrideStatus(value as Status)}>
             <SelectTrigger aria-label="Linux override compatibility status"><SelectValue /></SelectTrigger>

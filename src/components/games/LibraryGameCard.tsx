@@ -3,7 +3,7 @@ import { formatDescriptionPreview } from "@/lib/cover-presentation";
 import { WishlistCover } from "@/components/wishlist/WishlistCover";
 import { LibraryInterestRating } from "./LibraryInterestRating";
 import { ProtonDbTag } from "./ProtonDbTag";
-import type { ProtonDbCardTier } from "@/lib/protondb-tags";
+import type { CompatTag } from "@/lib/protondb-tags";
 import type { LibraryCardMetadataView } from "@/lib/card-metadata-view";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +16,7 @@ export interface LibraryGameCardEntry {
   replayCandidate: boolean;
   hidden: boolean;
   createdAt: Date;
-  protonDbTier: ProtonDbCardTier | null;
+  compatTag: CompatTag;
   game: {
     id: string;
     name: string;
@@ -216,7 +216,7 @@ function CardBody({
               gameName={entry.game.name}
               interest={entry.interest}
             />
-            {entry.protonDbTier && <ProtonDbTag tier={entry.protonDbTier} />}
+            {entry.compatTag && <ProtonDbTag tag={entry.compatTag} />}
           </div>
           <MockActions gameId={entry.game.id} />
         </div>
@@ -264,7 +264,7 @@ export function LibraryGameCard({
                   gameName={entry.game.name}
                   interest={entry.interest}
                 />
-                {entry.protonDbTier && <ProtonDbTag tier={entry.protonDbTier} />}
+                {entry.compatTag && <ProtonDbTag tag={entry.compatTag} />}
               </div>
               <MockActions gameId={entry.game.id} />
             </div>

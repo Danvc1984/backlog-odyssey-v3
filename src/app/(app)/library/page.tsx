@@ -15,7 +15,8 @@ import {
   getSystemCollections,
 } from "@/lib/system-collections";
 import { availabilitySourcePresentation } from "@/lib/sources/known-sources";
-import { deriveCardTier } from "@/lib/protondb-tags";
+import { deriveCompatTag } from "@/lib/protondb-tags";
+import { getCompatibilityGate } from "@/lib/compat-gate";
 import { libraryCardMetadataView } from "@/lib/card-metadata-view";
 
 interface LibrarySearchParams {
@@ -43,6 +44,7 @@ export default async function LibraryPage({
   const { q = "", source, alt, state, sort = "newest", collection, duplicates, view: viewParam } =
     await searchParams;
   const view = normalizeLibraryView(viewParam);
+  const compatibilityGate = await getCompatibilityGate();
 
   if (duplicates === "true") {
     const openDuplicates = await prisma.possibleDuplicate.findMany({
@@ -195,7 +197,7 @@ export default async function LibraryPage({
               where: { provider: "PROTONDB" },
               orderBy: { fetchedAt: "desc" },
               take: 1,
-              select: { result: true },
+              select: { result: true, fetchedAt: true },
             },
             baseGame: {
               select: { id: true, name: true },
@@ -237,12 +239,14 @@ export default async function LibraryPage({
         metadata,
         metadataReady: metadataSnapshots.length > 0,
       },
-      protonDbTier: deriveCardTier({
+      compatTag: deriveCompatTag({
+        active: compatibilityGate.active,
         steamAppId: entry.game.externalIds[0]?.externalId ?? null,
         isRomOnly:
           entry.game.availability.some((a) => a.source === "ROM") &&
           !entry.game.availability.some((a) => a.source === "STEAM"),
         snapshotResult: entry.game.compatSnapshots[0]?.result ?? null,
+        snapshotFetchedAt: entry.game.compatSnapshots[0]?.fetchedAt ?? null,
       }),
     };
   });

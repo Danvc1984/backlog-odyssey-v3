@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { COMPAT_JOB_MAX_ATTEMPTS, compatJobSelect, toCompatJobView } from "@/lib/compat-job";
 import { runCompatJob } from "@/lib/compat-job-runner";
+import { getCompatibilityGate } from "@/lib/compat-gate";
 
 const refreshSchema = z.object({ gameId: z.string().trim().min(1) }).strict();
 const overrideSchema = z.object({
@@ -21,6 +22,11 @@ export async function refreshGameCompatibility(input: unknown) {
     await requireUser();
     const parsed = refreshSchema.safeParse(input);
     if (!parsed.success) return { success: false as const, data: null, error: "Invalid input" };
+
+    const gate = await getCompatibilityGate();
+    if (!gate.active) {
+      return { success: false as const, data: null, error: "Compatibility is inactive for this setup" };
+    }
 
     const game = await prisma.game.findUnique({
       where: { id: parsed.data.gameId },
@@ -72,6 +78,11 @@ export async function setCompatOverride(input: unknown) {
     await requireUser();
     const parsed = overrideSchema.safeParse(input);
     if (!parsed.success) return { success: false as const, data: null, error: "Invalid input" };
+
+    const gate = await getCompatibilityGate();
+    if (!gate.active) {
+      return { success: false as const, data: null, error: "Compatibility is inactive for this setup" };
+    }
 
     const libraryEntry = await prisma.libraryEntry.findUnique({
       where: { gameId: parsed.data.gameId },

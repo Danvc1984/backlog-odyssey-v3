@@ -393,7 +393,7 @@
     synthesis recompute plus a synchronous recommendation re-run replacing
     the current run under normal run semantics), and export/import
     schema updates
-  - [ ] 19b. **Linux-gated compatibility flows** - one compatibility gate:
+  - [x] 19b. **Linux-gated compatibility flows** - one compatibility gate:
     ProtonDB/AWAY evidence, post-RAWG auto-queue, global sweeps, per-game
     refresh, ProtonDB card tags, and catalog/wishlist compatibility sections
     active only when the primary OS or the handheld is Linux; all-Windows

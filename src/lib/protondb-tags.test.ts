@@ -6,6 +6,7 @@ import {
   PROTONDB_TIER_CLASSES,
   PROTONDB_TIER_LABELS,
   deriveCardTier,
+  deriveCompatTag,
 } from "./protondb-tags";
 
 const TIERS = ["native", "platinum", "gold", "silver", "bronze", "borked"] as const;
@@ -72,5 +73,70 @@ describe("deriveCardTier", () => {
         snapshotResult: { confidence: "strong", tier: "gold" },
       }),
     ).toBeNull();
+  });
+});
+
+describe("deriveCompatTag", () => {
+  const now = new Date("2026-09-07T12:00:00.000Z");
+  const snapshotResult = { confidence: "strong", tier: "gold" };
+
+  it("returns evidence for a current parsed tier", () => {
+    expect(deriveCompatTag({
+      active: true,
+      steamAppId: "620",
+      isRomOnly: false,
+      snapshotResult,
+      snapshotFetchedAt: new Date("2026-08-01T12:00:00.000Z"),
+      now,
+    })).toEqual({ kind: "evidence", tier: "gold" });
+  });
+
+  it("marks evidence older than 180 days stale but keeps its tier", () => {
+    const boundary = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+    expect(deriveCompatTag({
+      active: true,
+      steamAppId: "620",
+      isRomOnly: false,
+      snapshotResult,
+      snapshotFetchedAt: boundary,
+      now,
+    })).toEqual({ kind: "evidence", tier: "gold" });
+
+    expect(deriveCompatTag({
+      active: true,
+      steamAppId: "620",
+      isRomOnly: false,
+      snapshotResult,
+      snapshotFetchedAt: new Date(boundary.getTime() - 1),
+      now,
+    })).toEqual({ kind: "stale", tier: "gold" });
+  });
+
+  it("returns unknown for a confirmed App ID without usable evidence", () => {
+    expect(deriveCompatTag({
+      active: true,
+      steamAppId: "620",
+      isRomOnly: false,
+      snapshotResult: null,
+      snapshotFetchedAt: null,
+      now,
+    })).toEqual({ kind: "unknown" });
+  });
+
+  it.each([
+    ["inactive setup", { active: false }],
+    ["ROM-only game", { isRomOnly: true }],
+    ["missing App ID", { steamAppId: null }],
+    ["blank App ID", { steamAppId: "   " }],
+  ])("returns absent for %s", (_label, overrides) => {
+    expect(deriveCompatTag({
+      active: true,
+      steamAppId: "620",
+      isRomOnly: false,
+      snapshotResult,
+      snapshotFetchedAt: now,
+      now,
+      ...overrides,
+    })).toBeNull();
   });
 });

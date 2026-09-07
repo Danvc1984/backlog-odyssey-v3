@@ -10,11 +10,13 @@ vi.mock("@/lib/away-api", () => ({
   lookupAway: vi.fn(),
   AWAY_URL: "https://away.test/games.json",
 }));
+vi.mock("@/lib/compat-gate", () => ({ getCompatibilityGate: vi.fn() }));
 
 import { lookupAway } from "@/lib/away-api";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { lookupProtonDb } from "@/lib/protondb-api";
+import { getCompatibilityGate } from "@/lib/compat-gate";
 import { runWishlistCompatibilityRefresh, silentlyRefreshWishlistCompatibility } from "./wishlist-compatibility-runner";
 
 const findUnique = vi.fn();
@@ -47,6 +49,7 @@ const away = {
 describe("wishlist compatibility runner", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getCompatibilityGate).mockResolvedValue({ setup: null, active: true });
     Object.assign(prisma, {
       wishlistEntry: { findUnique },
       $transaction: transaction,
@@ -132,11 +135,25 @@ describe("wishlist compatibility runner", () => {
     expect(lookupProtonDb).not.toHaveBeenCalled();
     expect(lookupAway).not.toHaveBeenCalled();
   });
+
+  it("refuses before reading or contacting providers while inactive", async () => {
+    vi.mocked(getCompatibilityGate).mockResolvedValue({ setup: null, active: false });
+
+    await expect(runWishlistCompatibilityRefresh("wish-1")).resolves.toEqual({
+      success: false,
+      data: null,
+      error: "Compatibility is inactive for this setup",
+    });
+    expect(findUnique).not.toHaveBeenCalled();
+    expect(lookupProtonDb).not.toHaveBeenCalled();
+    expect(lookupAway).not.toHaveBeenCalled();
+  });
 });
 
 describe("silentlyRefreshWishlistCompatibility", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getCompatibilityGate).mockResolvedValue({ setup: null, active: true });
     Object.assign(prisma, {
       wishlistEntry: { findUnique },
       $transaction: transaction,

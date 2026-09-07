@@ -18,6 +18,7 @@ import { AlternativeSourcesCard } from "@/components/sources/AlternativeSourcesC
 import { type RawgBatchView } from "@/lib/rawg-batch-runner";
 import { getLatestRawgBatchStatus } from "@/lib/rawg-batch-runner";
 import { getLatestWishlistCompatSweep } from "@/actions/wishlist-compatibility";
+import { isCompatibilityActive } from "@/lib/os-setup";
 
 export default async function SettingsPage() {
   const session = await requireUser();
@@ -155,6 +156,7 @@ export default async function SettingsPage() {
       />
 
       <CompatibilitySweepPanel
+        compatibilityActive={appSettings ? isCompatibilityActive(appSettings) : false}
         initialBatch={latestCompatBatch?.data ?? null}
         initialRawgBatch={
           (latestRawgBatch?.data ?? null) as RawgBatchView | null

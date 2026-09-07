@@ -20,6 +20,7 @@ import {
 import type { RawgBatchView } from "@/lib/rawg-batch-runner";
 
 interface CompatibilitySweepPanelProps {
+  compatibilityActive: boolean;
   initialBatch: CompatBatchView | null;
   initialRawgBatch: RawgBatchView | null;
   initialWishlistRun: WishlistCompatSweepRunView | null;
@@ -60,12 +61,15 @@ function terminalBatchMessage(batch: CompatBatchView): string {
 }
 
 export function CompatibilitySweepPanel({
+  compatibilityActive,
   initialBatch,
   initialRawgBatch,
   initialWishlistRun,
 }: CompatibilitySweepPanelProps) {
   const router = useRouter();
-  const [batch, setBatch] = useState<CompatBatchView | null>(initialBatch);
+  const [batch, setBatch] = useState<CompatBatchView | null>(
+    compatibilityActive ? initialBatch : null,
+  );
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dismissedGameIds, setDismissedGameIds] = useState<Set<string>>(new Set());
@@ -116,7 +120,7 @@ export function CompatibilitySweepPanel({
   const activeBatchId = batch?.status === "RUNNING" ? batch.id : null;
 
   useEffect(() => {
-    if (!activeBatchId) return;
+    if (!compatibilityActive || !activeBatchId) return;
 
     let cancelled = false;
     let inFlight = false;
@@ -146,7 +150,7 @@ export function CompatibilitySweepPanel({
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [activeBatchId, refreshBatch, runBatch]);
+  }, [activeBatchId, compatibilityActive, refreshBatch, runBatch]);
 
   const startSweep = async () => {
     setRunning(true);
@@ -178,9 +182,11 @@ export function CompatibilitySweepPanel({
   return (
     <SectionCard
       eyebrow="Provider maintenance"
-      title="Enrichment and compatibility"
+      title={compatibilityActive ? "Enrichment and compatibility" : "RAWG enrichment"}
       id="compatibility-sweep-heading"
-      description="Enrich RAWG metadata and refresh ProtonDB and AWAY evidence by library domain."
+      description={compatibilityActive
+        ? "Enrich RAWG metadata and refresh ProtonDB and AWAY evidence by library domain."
+        : "Enrich RAWG metadata for eligible catalog games."}
     >
       <div>
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -192,21 +198,21 @@ export function CompatibilitySweepPanel({
           </div>
           <div className="flex flex-wrap justify-end gap-2">
             <RawgBatchEnrichmentButton />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={running || activeBatchId !== null}
-              onClick={() => void startSweep()}
-            >
-              {running ? "Starting..." : activeBatchId ? "Sweep running..." : "Sweep compatibility"}
-            </Button>
+            {compatibilityActive && <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={running || activeBatchId !== null}
+                onClick={() => void startSweep()}
+              >
+                {running ? "Starting..." : activeBatchId ? "Sweep running..." : "Sweep compatibility"}
+              </Button>}
           </div>
         </div>
 
         <RawgBatchEnrichmentPanel initialBatch={initialRawgBatch} embedded />
 
-        {batch && (
+        {compatibilityActive && batch && (
           <div className="mt-4 space-y-3 text-sm">
             <h4 className="text-sm font-medium">Compatibility sweep</h4>
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -261,7 +267,7 @@ export function CompatibilitySweepPanel({
         {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
       </div>
 
-      <WishlistCompatSweepPanel initialRun={initialWishlistRun} />
+      {compatibilityActive && <WishlistCompatSweepPanel initialRun={initialWishlistRun} />}
     </SectionCard>
   );
 }

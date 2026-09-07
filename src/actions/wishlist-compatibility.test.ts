@@ -152,6 +152,20 @@ describe("startWishlistCompatibilitySweep", () => {
     });
     expect(mockSweepFindUnique).not.toHaveBeenCalled();
   });
+
+  it("returns the inactive refusal without looking up a run", async () => {
+    vi.mocked(runWishlistCompatSweep).mockResolvedValue({
+      ok: false,
+      reason: "compatibility-inactive",
+    });
+
+    await expect(startWishlistCompatibilitySweep()).resolves.toEqual({
+      success: false,
+      data: null,
+      error: "Compatibility is inactive for this setup",
+    });
+    expect(mockSweepFindUnique).not.toHaveBeenCalled();
+  });
 });
 
 describe("getLatestWishlistCompatSweep", () => {

@@ -48,6 +48,13 @@ export async function startWishlistCompatibilitySweep() {
 
     const result = await runWishlistCompatSweep();
     if (!result.ok) {
+      if (result.reason === "compatibility-inactive") {
+        return {
+          success: false as const,
+          data: null,
+          error: "Compatibility is inactive for this setup",
+        };
+      }
       return {
         success: false as const,
         data: { runId: result.runId, reason: result.reason },
