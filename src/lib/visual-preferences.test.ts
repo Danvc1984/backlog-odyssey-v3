@@ -1,11 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   DATA_STORAGE_KEY,
+  FAMILY_ATTRIBUTE,
+  FAMILY_STORAGE_KEY,
   MOTION_ATTRIBUTE,
   MOTION_STORAGE_KEY,
   REDUCED_DATA_ATTRIBUTE,
   applyVisualAttributes,
   normalizeData,
+  normalizeFamily,
   normalizeMotion,
   resolveVisualPreferences,
 } from "./visual-preferences";
@@ -32,6 +35,18 @@ describe("normalizeData", () => {
   it("falls back to system for invalid or missing values", () => {
     for (const raw of [null, undefined, "", "true", "reduced", 0, []]) {
       expect(normalizeData(raw)).toBe("system");
+    }
+  });
+});
+
+describe("normalizeFamily", () => {
+  it("passes sunset through", () => {
+    expect(normalizeFamily("sunset")).toBe("sunset");
+  });
+
+  it("falls back to dawn for invalid or missing values", () => {
+    for (const raw of [null, undefined, "", "dawn", "system", "garbage", 42, {}]) {
+      expect(normalizeFamily(raw)).toBe("dawn");
     }
   });
 });
@@ -65,21 +80,21 @@ describe("resolveVisualPreferences", () => {
 describe("applyVisualAttributes", () => {
   it("sets the motion attribute for manual overrides", () => {
     const el = { setAttribute: vi.fn(), removeAttribute: vi.fn() };
-    applyVisualAttributes(el, "reduced", "system");
+    applyVisualAttributes(el, "reduced", "system", "dawn");
     expect(el.setAttribute).toHaveBeenCalledWith(MOTION_ATTRIBUTE, "reduced");
     expect(el.removeAttribute).toHaveBeenCalledWith(REDUCED_DATA_ATTRIBUTE);
   });
 
   it("sets the data attribute for manual overrides", () => {
     const el = { setAttribute: vi.fn(), removeAttribute: vi.fn() };
-    applyVisualAttributes(el, "system", "on");
+    applyVisualAttributes(el, "system", "on", "dawn");
     expect(el.removeAttribute).toHaveBeenCalledWith(MOTION_ATTRIBUTE);
     expect(el.setAttribute).toHaveBeenCalledWith(REDUCED_DATA_ATTRIBUTE, "on");
   });
 
   it("removes both attributes when both settings are system", () => {
     const el = { setAttribute: vi.fn(), removeAttribute: vi.fn() };
-    applyVisualAttributes(el, "system", "system");
+    applyVisualAttributes(el, "system", "system", "dawn");
     expect(el.removeAttribute).toHaveBeenCalledWith(MOTION_ATTRIBUTE);
     expect(el.removeAttribute).toHaveBeenCalledWith(REDUCED_DATA_ATTRIBUTE);
     expect(el.setAttribute).not.toHaveBeenCalled();
@@ -87,9 +102,29 @@ describe("applyVisualAttributes", () => {
 
   it("applies both overrides at once", () => {
     const el = { setAttribute: vi.fn(), removeAttribute: vi.fn() };
-    applyVisualAttributes(el, "full", "off");
+    applyVisualAttributes(el, "full", "off", "dawn");
     expect(el.setAttribute).toHaveBeenCalledWith(MOTION_ATTRIBUTE, "full");
     expect(el.setAttribute).toHaveBeenCalledWith(REDUCED_DATA_ATTRIBUTE, "off");
+  });
+
+  it("sets the family attribute for sunset", () => {
+    const el = { setAttribute: vi.fn(), removeAttribute: vi.fn() };
+    applyVisualAttributes(el, "system", "system", "sunset");
+    expect(el.setAttribute).toHaveBeenCalledWith(FAMILY_ATTRIBUTE, "sunset");
+  });
+
+  it("removes the family attribute for dawn", () => {
+    const el = { setAttribute: vi.fn(), removeAttribute: vi.fn() };
+    applyVisualAttributes(el, "system", "system", "dawn");
+    expect(el.removeAttribute).toHaveBeenCalledWith(FAMILY_ATTRIBUTE);
+  });
+
+  it("applies motion, data, and family at once", () => {
+    const el = { setAttribute: vi.fn(), removeAttribute: vi.fn() };
+    applyVisualAttributes(el, "reduced", "off", "sunset");
+    expect(el.setAttribute).toHaveBeenCalledWith(MOTION_ATTRIBUTE, "reduced");
+    expect(el.setAttribute).toHaveBeenCalledWith(REDUCED_DATA_ATTRIBUTE, "off");
+    expect(el.setAttribute).toHaveBeenCalledWith(FAMILY_ATTRIBUTE, "sunset");
   });
 });
 
@@ -97,5 +132,6 @@ describe("storage key contract", () => {
   it("uses the documented localStorage keys", () => {
     expect(MOTION_STORAGE_KEY).toBe("backlog-odyssey:motion");
     expect(DATA_STORAGE_KEY).toBe("backlog-odyssey:data");
+    expect(FAMILY_STORAGE_KEY).toBe("backlog-odyssey:family");
   });
 });

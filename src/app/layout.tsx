@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const prePaintVisualPreferences = `(function(){try{var m=localStorage.getItem("backlog-odyssey:motion"),d=localStorage.getItem("backlog-odyssey:data"),r=document.documentElement;if(m==="reduced")r.setAttribute("data-motion","reduced");else if(m==="full")r.setAttribute("data-motion","full");if(d==="on")r.setAttribute("data-reduced-data","on");else if(d==="off")r.setAttribute("data-reduced-data","off");}catch(e){}})();`;
+const prePaintVisualPreferences = `(function(){try{var m=localStorage.getItem("backlog-odyssey:motion"),d=localStorage.getItem("backlog-odyssey:data"),f=localStorage.getItem("backlog-odyssey:family"),r=document.documentElement;if(m==="reduced")r.setAttribute("data-motion","reduced");else if(m==="full")r.setAttribute("data-motion","full");if(d==="on")r.setAttribute("data-reduced-data","on");else if(d==="off")r.setAttribute("data-reduced-data","off");if(f==="sunset")r.setAttribute("data-family","sunset");}catch(e){}})();`;
 
 export const metadata: Metadata = {
   title: "Backlog Odyssey",

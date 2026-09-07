@@ -12,15 +12,18 @@ import {
 } from "react";
 import {
   DATA_STORAGE_KEY,
+  FAMILY_STORAGE_KEY,
   MOTION_STORAGE_KEY,
   applyVisualAttributes,
   normalizeData,
+  normalizeFamily,
   normalizeMotion,
   resolveVisualPreferences,
   type DataSetting,
   type DataPreference,
   type MotionPreference,
   type MotionSetting,
+  type ThemeFamily,
 } from "@/lib/visual-preferences";
 
 export interface VisualPreferencesValue {
@@ -28,13 +31,16 @@ export interface VisualPreferencesValue {
   resolvedMotion: MotionPreference;
   data: DataSetting;
   resolvedData: DataPreference;
+  family: ThemeFamily;
   setMotion: (value: MotionSetting) => void;
   setData: (value: DataSetting) => void;
+  setFamily: (value: ThemeFamily) => void;
 }
 
 interface VisualPreferencesState {
   motion: MotionSetting;
   data: DataSetting;
+  family: ThemeFamily;
 }
 
 const VisualPreferencesContext = createContext<VisualPreferencesValue>({
@@ -42,8 +48,10 @@ const VisualPreferencesContext = createContext<VisualPreferencesValue>({
   resolvedMotion: "full",
   data: "system",
   resolvedData: "off",
+  family: "dawn",
   setMotion: () => {},
   setData: () => {},
+  setFamily: () => {},
 });
 
 export function useVisualPreferences(): VisualPreferencesValue {
@@ -51,14 +59,15 @@ export function useVisualPreferences(): VisualPreferencesValue {
 }
 
 function readStoredPreferences(): VisualPreferencesState {
-  if (typeof window === "undefined") return { motion: "system", data: "system" };
+  if (typeof window === "undefined") return { motion: "system", data: "system", family: "dawn" };
   try {
     return {
       motion: normalizeMotion(window.localStorage.getItem(MOTION_STORAGE_KEY)),
       data: normalizeData(window.localStorage.getItem(DATA_STORAGE_KEY)),
+      family: normalizeFamily(window.localStorage.getItem(FAMILY_STORAGE_KEY)),
     };
   } catch {
-    return { motion: "system", data: "system" };
+    return { motion: "system", data: "system", family: "dawn" };
   }
 }
 
@@ -87,12 +96,16 @@ export function VisualPreferencesProvider({ children }: { children: ReactNode })
   const commit = useCallback((next: VisualPreferencesState) => {
     stateRef.current = next;
     setState(next);
-    applyVisualAttributes(document.documentElement, next.motion, next.data);
+    applyVisualAttributes(document.documentElement, next.motion, next.data, next.family);
   }, []);
 
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
-      if (event.key === MOTION_STORAGE_KEY || event.key === DATA_STORAGE_KEY) {
+      if (
+        event.key === MOTION_STORAGE_KEY ||
+        event.key === DATA_STORAGE_KEY ||
+        event.key === FAMILY_STORAGE_KEY
+      ) {
         commit(readStoredPreferences());
       }
     };
@@ -128,6 +141,20 @@ export function VisualPreferencesProvider({ children }: { children: ReactNode })
     [commit],
   );
 
+  const setFamily = useCallback(
+    (value: ThemeFamily) => {
+      const next = { ...stateRef.current, family: value };
+      try {
+        if (value === "dawn") window.localStorage.removeItem(FAMILY_STORAGE_KEY);
+        else window.localStorage.setItem(FAMILY_STORAGE_KEY, value);
+      } catch {
+        /* storage unavailable */
+      }
+      commit(next);
+    },
+    [commit],
+  );
+
   const value = useMemo(
     () => {
       const resolved = resolveVisualPreferences(state.motion, state.data, {
@@ -139,11 +166,13 @@ export function VisualPreferencesProvider({ children }: { children: ReactNode })
         resolvedMotion: resolved.motion,
         data: state.data,
         resolvedData: resolved.data,
+        family: state.family,
         setMotion,
         setData,
+        setFamily,
       };
     },
-    [state, setMotion, setData, systemReducedMotion, systemReducedData],
+    [state, setMotion, setData, setFamily, systemReducedMotion, systemReducedData],
   );
 
   return (

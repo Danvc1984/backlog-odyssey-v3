@@ -438,7 +438,7 @@
     palettes and the Cinzel + Inter pairing against real Today, Library,
     Wishlist, and detail surfaces before any application change; final
     palette mapping and font call happen here
-  - [ ] 20b. **Family tokens and selector** - Dawn (cyan/purple) and
+  - [x] 20b. **Family tokens and selector** - Dawn (cyan/purple) and
     Sunset (orange/yellow) families in light and dark over the existing
     token architecture, each family owning its interactive/deal/warning/
     danger hue mapping with contrast validation, plus a Settings family

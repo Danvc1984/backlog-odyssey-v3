@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { setWallpaperEnabled, shuffleWallpaper } from "@/actions/wallpaper";
 import { useVisualPreferences } from "@/components/preferences/VisualPreferencesProvider";
 import { formatMexicoTimestamp } from "@/lib/format-times";
-import type { DataSetting, MotionSetting } from "@/lib/visual-preferences";
+import type { DataSetting, MotionSetting, ThemeFamily } from "@/lib/visual-preferences";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "@/components/ui/detail-card";
 
@@ -75,6 +75,11 @@ const themeOptions: Option<string>[] = [
   { value: "dark", label: "Dark" },
 ];
 
+const familyOptions: Option<ThemeFamily>[] = [
+  { value: "dawn", label: "Dawn" },
+  { value: "sunset", label: "Sunset" },
+];
+
 const motionOptions: Option<MotionSetting>[] = [
   { value: "system", label: "System" },
   { value: "reduced", label: "Reduced" },
@@ -122,7 +127,7 @@ export function AppearanceSection({
 }) {
   const hasHydrated = useHasHydrated();
   const { theme, setTheme } = useTheme();
-  const { motion, data, setMotion, setData } = useVisualPreferences();
+  const { motion, data, family, setMotion, setData, setFamily } = useVisualPreferences();
   const router = useRouter();
   const [wallpaperEnabled, setWallpaperEnabledState] = useState(initialWallpaperEnabled);
   const [wallpaperPending, startWallpaperTransition] = useTransition();
@@ -164,6 +169,7 @@ export function AppearanceSection({
   const themeValue = hasHydrated ? theme ?? "system" : "system";
   const motionValue: MotionSetting = hasHydrated ? motion : "system";
   const dataValue: DataSetting = hasHydrated ? data : "system";
+  const familyValue: ThemeFamily = hasHydrated ? family : "dawn";
 
   return (
     <SectionCard
@@ -178,6 +184,13 @@ export function AppearanceSection({
           description="Match the operating system or pin a specific mode."
           control={
             <SegmentedControl value={themeValue} options={themeOptions} onChange={setTheme} label="Theme mode" />
+          }
+        />
+        <SettingRow
+          title="Palette family"
+          description="Dawn is the cool cyan palette; Sunset shifts interactive hues to warm orange and gold."
+          control={
+            <SegmentedControl value={familyValue} options={familyOptions} onChange={setFamily} label="Palette family" />
           }
         />
         <SettingRow
