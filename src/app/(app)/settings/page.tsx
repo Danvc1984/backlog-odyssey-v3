@@ -11,6 +11,7 @@ import { WishlistImportStatusCard } from "@/components/settings/WishlistImportSt
 import { PriceStatusCard } from "@/components/settings/PriceStatusCard";
 import { EnrichmentQueueCard } from "@/components/settings/EnrichmentQueueCard";
 import { DataExportCard } from "@/components/settings/DataExportCard";
+import { DataImportCard } from "@/components/settings/DataImportCard";
 import { getLatestCompatBatchStatus } from "@/lib/compat-batch-runner";
 import { RecommendationProfileSection } from "@/components/recommendations/RecommendationProfileSection";
 import { AlternativeSourcesCard } from "@/components/sources/AlternativeSourcesCard";
@@ -180,6 +181,7 @@ export default async function SettingsPage() {
         wishlistCount={exportWishlistCount}
         recommendationRunCount={exportRecommendationRunCount}
       />
+      <DataImportCard />
     </div>
   );
 }

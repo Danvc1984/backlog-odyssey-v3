@@ -354,7 +354,7 @@
     with a snapshot, respecting fill-only enrichment and the absence of
     personal overrides
 
-- [ ] 18. **Settings, manual export, and restore** - sessions, the
+- [x] 18. **Settings, manual export, and restore** - sessions, the
   visual/accessibility preference area introduced by 14, Wallhaven controls,
   manual provider refresh/retry controls including the global compatibility
   sweep, queue progress, wishlist-import diagnostics, personal-data-only
@@ -368,7 +368,7 @@
     personal fields, tags, collections, settings, manual overrides, and
     recommendation-owned decisions, excluding rebuildable provider
     snapshots
-  - [ ] 18c. **Empty-schema import and restore** - Zod-validated import
+  - [x] 18c. **Empty-schema import and restore** - Zod-validated import
     that refuses while the catalog or wishlist holds data, restores
     personal data including recommendation events, profile, preferences,
     presets, and dismissal counters in one all-or-nothing transaction, and
