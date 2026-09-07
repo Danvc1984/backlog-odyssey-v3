@@ -434,7 +434,7 @@
   Cinzel/Inter typography pairing, official brand icons, and a whole-app
   Odyssey voice sweep on expressive surfaces, locked through a prototype
   first
-  - [ ] 20a. **Prototype lock** - throwaway mockups validating the four
+  - [x] 20a. **Prototype lock** - throwaway mockups validating the four
     palettes and the Cinzel + Inter pairing against real Today, Library,
     Wishlist, and detail surfaces before any application change; final
     palette mapping and font call happen here
