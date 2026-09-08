@@ -449,7 +449,7 @@
   - [x] 20d. **Brand icons** - official source icons in the code-owned
     known-source catalog with the neutral fallback untouched for custom
     sources
-  - [ ] 20e. **Odyssey voice sweep** - adventurous copy mixing subtle
+  - [x] 20e. **Odyssey voice sweep** - adventurous copy mixing subtle
     allusion and named mythology across headers, empty states, buttons,
     dashboard moments, and dialogs; statuses, errors, evidence labels,
     field help, and caveats stay factual; navigation names unchanged

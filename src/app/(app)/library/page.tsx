@@ -65,7 +65,7 @@ export default async function LibraryPage({
       <div>
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold">Duplicate review</h1>
+            <h1 className="text-2xl font-semibold">Review duplicate paths</h1>
             <Link href="/library" className="text-sm text-muted-foreground hover:underline">
               Back to library
             </Link>
@@ -266,10 +266,10 @@ export default async function LibraryPage({
         <div>
           <p className="technical-label text-muted-foreground">Owned Games Library</p>
           <h1 className="mt-2">
-            Your games, <span className="text-signal-strong">your odyssey</span>
+            Your voyage, <span className="text-signal-strong">charted</span>
           </h1>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-            Use this catalog to manage your owned games and track details such as your progress, interest and compatibility.
+            Keep your catalog shipshape, track your progress, and choose which games deserve the next leg of your voyage.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -334,10 +334,10 @@ export default async function LibraryPage({
       {entries.length === 0 ? (
         q || source || alt || state || (collection && collection !== "ALL") ? (
           <div className="mt-16 flex flex-col items-center gap-2 text-center">
-            <p className="technical-label text-muted-foreground">Nothing hidden here</p>
+            <p className="technical-label text-muted-foreground">Nothing beyond this horizon</p>
             <p className="text-lg font-medium">No games match those filters.</p>
             <p className="text-sm text-muted-foreground">
-              Use filters to narrow the orbit, or add a new game to your catalog.
+              Use filters to narrow the search, or add a new game to your catalog.
             </p>
             <Link
               href="/library"
@@ -348,9 +348,9 @@ export default async function LibraryPage({
           </div>
         ) : (
           <div className="mt-16 flex flex-col items-center gap-2 text-center">
-            <p className="text-lg font-medium">No games found</p>
+            <p className="text-lg font-medium">Your library awaits its first traveler</p>
             <p className="text-sm text-muted-foreground">
-              Add your first game to get started.
+              Add your first game to begin the voyage.
             </p>
             <CreateGameDialog alternativeSources={alternativeSources.map((alternative) => ({
               ...alternative,

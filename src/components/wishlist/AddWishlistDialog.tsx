@@ -147,8 +147,8 @@ export function AddWishlistDialog({
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add to wishlist</DialogTitle>
-          <DialogDescription>Save a base game or a DLC for a catalog game.</DialogDescription>
+          <DialogTitle>Add to your horizon</DialogTitle>
+          <DialogDescription>Keep a base game or DLC in view for a future voyage.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-5">
           <div className="grid gap-2">

@@ -216,7 +216,7 @@ export default async function GameDetailPage({
         title="Play state"
         id="play-state"
         className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
-        description="Choose the state that best reflects where this game stands for you."
+        description="Set the course for where this game stands in your voyage."
         status={
           <StatusPill>
             {game.libraryEntry?.playState?.replaceAll("_", " ") ??
@@ -243,7 +243,7 @@ export default async function GameDetailPage({
       <SectionCard
         eyebrow="Catalog identity"
         title="Name"
-        description="Keep the catalog name aligned with how you recognize this game."
+        description="Keep the catalog name true to the way you know this game."
       >
         {game.type === "DLC" && (
           <div className="mb-4">
@@ -265,7 +265,7 @@ export default async function GameDetailPage({
         title="Profile"
         id="personal-fields"
         className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
-        description="Your preferences and notes for this game."
+        description="Your preferences and notes for the journey."
         status={
           <StatusPill>
             {game.libraryEntry ? "Saved" : "Not in library"}
@@ -376,7 +376,7 @@ export default async function GameDetailPage({
       <SectionCard
         eyebrow="Organization"
         title="Tags"
-        description="Personal labels for browsing and tuning."
+        description="Personal markers for finding your way back."
         status={
           <StatusPill>
             {game.tags.length} tag{game.tags.length === 1 ? "" : "s"}
@@ -395,7 +395,7 @@ export default async function GameDetailPage({
       <SectionCard
         eyebrow="Organization"
         title="Collections"
-        description="Personal structure for browsing and tuning."
+        description="Your chosen harbors for browsing and tuning."
         status={
           <StatusPill>
             {game.collections.length} collection

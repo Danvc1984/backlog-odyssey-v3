@@ -52,7 +52,7 @@ function EmptySlide() {
     <article className="rounded-2xl border border-dashed border-border bg-card p-6">
       <div className="flex min-h-52 flex-col justify-center">
         <p className="technical-label text-muted-foreground">Currently playing</p>
-        <h3 className="mt-3 font-display text-3xl font-semibold tracking-[0.01em]">Nothing queued here yet</h3>
+        <h3 className="mt-3 font-display text-3xl font-semibold tracking-[0.01em]">No game holds the helm yet</h3>
         <p className="mt-2 max-w-lg text-sm text-muted-foreground">
           Choose a main game or mark a title in progress to keep it close at hand.
         </p>

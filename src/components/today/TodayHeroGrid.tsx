@@ -78,8 +78,8 @@ function Spotlight({ game }: { game: TodayHeroGame }) {
             </h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               {isMainGame
-                ? "Your main game stays at the center of the backlog. Keep the thread warm or pick the next move below."
-                : "One of your active campaigns. Keep the thread warm or pick the next move below."}
+                ? "Your main game holds the center of the voyage. Keep its thread warm or choose the next move below."
+                : "One of your active campaigns is calling. Keep its thread warm or choose the next move below."}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
@@ -100,7 +100,7 @@ function SpotlightEmpty() {
   return (
     <section className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card p-8 text-center">
       <p className="technical-label text-muted-foreground">Current focus</p>
-      <h2 className="mt-3 text-xl font-bold tracking-[-0.03em]">Nothing queued here yet</h2>
+      <h2 className="mt-3 text-xl font-bold tracking-[-0.03em]">No game holds the helm yet</h2>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
         Choose a main game or mark a title in progress from its detail page to keep it close at hand here.
       </p>
@@ -130,7 +130,7 @@ function BuySignal({ offer }: { offer: TodayOfferView }) {
         id="today-buy-heading"
         className="mt-4 text-lg font-bold tracking-[-0.03em]"
       >
-        A smart buy is waiting.
+        A worthy bargain has surfaced.
       </h2>
       <p className="mt-2 font-medium">{offer.gameName}</p>
       <p className="mt-1 text-3xl font-bold tracking-tight">
@@ -156,9 +156,9 @@ function BuySignalEmpty() {
   return (
     <aside className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card p-8 text-center">
       <p className="technical-label text-muted-foreground">Buy signal</p>
-      <h2 className="mt-3 text-xl font-bold tracking-[-0.03em]">No fresh offers right now</h2>
+      <h2 className="mt-3 text-xl font-bold tracking-[-0.03em]">The buying tide is quiet</h2>
       <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
-        Nothing fresh and under target this cycle. Check the wishlist for current prices and targets.
+        Nothing fresh and under target has surfaced this cycle. Check the wishlist for current prices and targets.
       </p>
       <Link
         href="/wishlist"

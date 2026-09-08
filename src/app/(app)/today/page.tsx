@@ -274,9 +274,9 @@ export default async function TodayPage() {
             <span className="text-signal-strong"> dashboard</span>
           </h1>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-            Placeholder text for the Today page. This section can be used to
-            provide an overview or introduction to the recommendations and data
-            presented below.
+            The road ahead is clear enough: keep your current campaign moving,
+            then use the signals below to choose what deserves your time or
+            coin.
           </p>
         </div>
       </header>
@@ -296,8 +296,8 @@ export default async function TodayPage() {
       {!latestPlayNextRun && (
         <div className="rounded-lg border border-border p-8 text-center">
           <p className="text-sm text-muted-foreground">
-            No recommendations yet. Update recommendations to build your play
-            next list.
+            Your next chapter is still unwritten. Update recommendations to
+            build your play next list.
           </p>
           <div className="mt-4 flex justify-center">
             <UpdateRecommendationsButton />
@@ -342,7 +342,7 @@ export default async function TodayPage() {
         )}
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No eligible games right now.
+            No eligible games are ready for this leg.
           </p>
         ) : !hasPlayRoles ? (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -440,12 +440,12 @@ export default async function TodayPage() {
         />
         {!latestBuyRun ? (
           <p className="text-sm text-muted-foreground">
-            No buy recommendations yet. Update recommendations to score your
-            wishlist.
+            The buying trail has not begun. Update recommendations to score
+            your wishlist.
           </p>
         ) : buyItems.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No eligible wishlist purchases right now.
+            No eligible wishlist purchases are ready for this leg.
           </p>
         ) : !hasBuyRoles ? (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">

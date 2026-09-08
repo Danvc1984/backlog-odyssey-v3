@@ -33,7 +33,7 @@ export default async function CollectionsPage() {
           <p className="technical-label text-muted-foreground">Library organization</p>
           <h1 className="mt-2">Collections</h1>
           <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-            Keep related games together, from calculated shelves to your own rotations.
+            Gather related games into safe harbors, from calculated shelves to your own rotations.
           </p>
         </div>
         <CreateCollectionDialog />
@@ -78,9 +78,9 @@ export default async function CollectionsPage() {
         {manualCollections.length === 0 ? (
           <div className="flex flex-col items-center gap-2 rounded-md border border-dashed border-border bg-card-alt/30 py-10 text-center">
             <Folder className="size-6 text-muted-foreground" aria-hidden />
-            <p className="text-lg font-medium">No collections yet</p>
+            <p className="text-lg font-medium">No shelves on the horizon yet</p>
             <p className="text-sm text-muted-foreground">
-              Create one to start organizing your games.
+              Create one to give your games a place to gather.
             </p>
           </div>
         ) : (

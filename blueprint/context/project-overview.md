@@ -66,19 +66,22 @@ The exact checked state is owned by blueprint/build-plan.md.
 12. **[x] 18a-18c: Settings, export, and restore** - Consolidated Settings
     surfaces, versioned personal-data JSON export, and empty-schema-only
     import in one all-or-nothing transaction.
-13. **[ ] 19a-19c: OS setup, onboarding, and environment-aware behavior** -
+13. **[x] 19a-19d: OS setup, onboarding, and environment-aware behavior** -
     First-login onboarding capturing the primary OS, optional Windows
     fallback, and optional handheld (trivial path on all-Windows setups,
     ending with an optional taste-setup offer); Linux-gated compatibility
-    flows with per-setup and per-game display gating; OS-aware play/buy
-    recommendations and wishlist discovery, including the no-fallback
-    play-role hard exclusion; Settings setup changes confirm, then
-    immediately re-derive compatibility and synchronously regenerate runs.
-14. **[ ] 20a-20g: Odyssey theme expansion** - Dawn and Sunset palette families
-    (light and dark each) with family-owned semantic hue mapping, Cinzel/Inter
-    typography, official brand icons, and a whole-app Odyssey voice sweep on
-    expressive surfaces, locked through a prototype first; the general UI icon
-    swap waits for the owner's chosen set.
+    flows with per-setup and per-game display gating; OS-aware play
+    recommendations with the no-fallback play-role hard exclusion; buy picks
+    taking the practical-fit penalty plus caveat instead; setup-adapted
+    environment fields; Settings setup changes confirm, then immediately
+    re-derive compatibility and synchronously regenerate runs.
+14. **[x] 20a-20d, [ ] 20e-20g: Odyssey theme expansion** - Shipped: the 20a
+    prototype lock (Sunset mapping and Cinzel/Inter pairing owner-confirmed
+    07 Sep 2026), Dawn/Sunset palette families with the Settings family
+    selector, Cinzel/Inter typography, and official brand icons with the
+    dragon identity mark. Remaining: the whole-app Odyssey voice sweep (20e),
+    the owner-gated general UI icon swap (20f), and cross-app acceptance
+    (20g).
 15. **[ ] 21: Deployment and CI readiness** - Vercel/Supabase, Cron covering
     prices plus the compatibility freshness sweep (a no-op while compatibility
     is inactive), smoke tests, Verify command, and automatic checks.
@@ -102,8 +105,8 @@ boundaries.
   re-derives compatibility synthesis and synchronously regenerates
   recommendation runs (normal run semantics: fresh run record, retained
   batches, exposure cooldowns; it replaces the previous tuned run). Feature
-  14 visual preferences use a non-migrating mechanism and gain the
-  Dawn/Sunset family selector in Feature 20; provider, export, and import
+  14 visual preferences use a non-migrating mechanism and include the
+  Dawn/Sunset family selector (shipped in 20b); provider, export, and import
   controls live in Feature 18.
 - SteamConnection, SyncRun, EnrichmentJob, PriceRefresh, and sweep/run records
   persist status, retry timing, counts, and safe diagnostics.
@@ -253,21 +256,24 @@ boundaries.
   metadata block, with attribution and reduced-data token fallback.
 - Theme families are Dawn (cyan/purple) and Sunset (orange/yellow), each in
   light and dark - four selectable palettes over the feature-14 token
-  architecture. Each family owns the hue mapping for the semantic roles
-  (interactive, deal/opportunity, warning, danger), contrast-validated per
-  palette; roles stay stable app-wide. Settings gains the family selector;
-  system mode resolves light/dark within the selected family.
-- Typography pairs Cinzel (display) with Inter (body); technical monospace
-  evidence labels are unchanged. The pairing and Sunset mapping get their
-  final call at the 20a prototype.
+  architecture, shipped in 20b with the Settings family selector. Each family
+  owns the hue mapping for the semantic roles (interactive, deal/opportunity,
+  warning, danger), contrast-validated per palette; roles stay stable
+  app-wide. System mode resolves light/dark within the selected family.
+- Typography pairs Cinzel (display) with Inter (body), shipped in 20c;
+  technical monospace evidence labels are unchanged. The pairing and the
+  Sunset mapping were owner-confirmed at the 20a prototype (07 Sep 2026).
 - The Odyssey voice sweep covers expressive surfaces only - page and section
   headers, empty states, buttons, dashboard moments, and dialogs - mixing
   subtle allusion with named mythology. Statuses, errors, evidence labels,
   freshness, field help, and caveats stay plain and factual. Navigation and
-  section names keep their identity.
-- Official brand icons replace placeholder art for known availability sources;
-  the neutral fallback for custom sources is unchanged. The general UI icon
-  swap is the gated final step awaiting the owner's premium/custom set.
+  section names keep their identity. This sweep is the current feature (20e).
+- Official brand icons are shipped (20d): known availability sources render
+  their official SVGs from `public/` via the code-owned `brandIcon` field;
+  ROM keeps `Disc3` and custom sources keep the neutral `Box` fallback. The
+  dragon icon is the app's identity mark (favicon and nav brand), and the
+  ITAD icon marks the offers source. The general UI icon swap remains the
+  gated final step (20f) awaiting the owner's premium/custom set.
 
 ## Today and visual direction
 
@@ -345,23 +351,23 @@ freshness, and operations are supporting sections.
 
 ## Open questions and plan gaps
 
-- Wallhaven wording: project-plan.md section 13 and build-plan item 16 still
-  describe a fixed keyword pool (gaming-art/landscape defaults), while the
-  latest approved spec revision made searches game-driven - main game title
-  first, then in-progress titles, no fixed keyword list. The plans can be
-  updated to match the shipped behavior; nothing else depends on it.
-- Sunset family's exact orange/yellow mapping and the final Cinzel/Inter
-  confirmation happen at the 20a prototype.
+- Wallhaven wording: project-plan.md section 13 still describes a fixed
+  keyword pool (gaming-art/landscape defaults), while build-plan item 16 and
+  the approved spec made searches game-driven - main game title first, then
+  in-progress titles, no fixed keyword list. The plan can be updated to match
+  the shipped behavior; nothing else depends on it.
+- Duplicate numbering in build-plan.md: two checked items carry the label
+  19c (the OS-aware recommendations parent and the Play environment fit
+  child) following the 2026-09-07 renumbering. All are complete, so this is
+  cosmetic; renaming the parent would clean the history.
 - The general UI icon set choice is the owner's; it gates only 20f.
-- Feature 19c carries the exact no-fallback exclusion evidence classes
-  (denied/broken anti-cheat, not-playable Linux, unknown Linux where a READY
-  floor applies); edge combinations (e.g. unknown evidence on
-  out-of-the-box vs best-fit roles) refine at the /feature 19 spec.
 
 ## Next workflow action
 
-The next unchecked item is **19a: OS preferences and first-login onboarding**.
-Run `/feature 19` to produce the reviewed implementation spec.
+blueprint/context/current-feature.md holds the reviewed spec for **20e:
+Odyssey voice sweep**. Run `/implement` to build it. After 20e, 20f remains
+owner-gated (waiting on the icon set) and 20g is the cross-app acceptance
+pass before 21.
 
 This overview is generated from the two plans and does not authorize code
 changes.

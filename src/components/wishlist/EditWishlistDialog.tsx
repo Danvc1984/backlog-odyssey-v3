@@ -110,8 +110,8 @@ export function EditWishlistDialog({ entry, baseGames }: EditWishlistDialogProps
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Edit wishlist entry</DialogTitle>
-          <DialogDescription>Update local wishlist details.</DialogDescription>
+          <DialogTitle>Adjust wishlist entry</DialogTitle>
+          <DialogDescription>Set the local details for this entry.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-5">
           <div className="grid gap-2">

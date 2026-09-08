@@ -163,7 +163,7 @@ export default async function CollectionDetailPage({
     sort,
   );
   const emptyMessage = rows.length === 0
-    ? isSystem ? "No games match this collection." : "No games in this collection."
+    ? isSystem ? "No games answer this collection's call." : "This collection has no games yet."
     : "No games match this search.";
 
   return (
@@ -206,7 +206,7 @@ export default async function CollectionDetailPage({
           <Folder className="size-6 text-muted-foreground" aria-hidden />
           <p className="text-lg font-medium">{emptyMessage}</p>
           <p className="text-sm text-muted-foreground">
-            {rows.length === 0 ? "Add games from their catalog detail page." : "Try another search."}
+            {rows.length === 0 ? "Add games from their catalog detail page to set this shelf in motion." : "Try another search."}
           </p>
         </div>
       ) : (

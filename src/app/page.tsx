@@ -12,7 +12,7 @@ export default async function Home() {
     <main className="flex flex-1 flex-col items-center justify-center gap-6 p-8 text-center">
       <h1 className="text-3xl font-semibold tracking-tight">Backlog Odyssey</h1>
       <p className="max-w-md text-zinc-600 dark:text-zinc-400">
-        Private gaming library, wishlist, and decision assistant.
+        Your private chart for the games waiting beyond the horizon.
       </p>
       <form
         action={async () => {

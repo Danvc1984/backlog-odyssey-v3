@@ -99,8 +99,8 @@ export function CollectionDetailActions({
         </DialogTrigger>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Edit collection</DialogTitle>
-            <DialogDescription>Update the name or color.</DialogDescription>
+            <DialogTitle>Adjust collection course</DialogTitle>
+            <DialogDescription>Update the name or color for the next leg.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="grid gap-5">
             <div className="grid gap-2">

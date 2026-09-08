@@ -121,9 +121,9 @@ export function CreateGameDialog({
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add game</DialogTitle>
+          <DialogTitle>Add a game to your catalog</DialogTitle>
           <DialogDescription>
-            Add a manually owned game to your catalog.
+            Bring a manually owned game aboard your catalog.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-5">

@@ -71,9 +71,9 @@ export function CreateCollectionDialog() {
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>New collection</DialogTitle>
+          <DialogTitle>Chart a new collection</DialogTitle>
           <DialogDescription>
-            Group games together, e.g. &quot;Cozy games&quot; or &quot;Local co-op&quot;.
+            Gather games under one banner, e.g. &quot;Cozy games&quot; or &quot;Local co-op&quot;.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-5">

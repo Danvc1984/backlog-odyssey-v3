@@ -27,7 +27,7 @@ export function RecentSteamActivity({
         <a href="/settings#steam-connection-card" className="underline underline-offset-4 hover:text-foreground">
           Connect Steam
         </a>{" "}
-        to see your recent activity here.
+        and let the latest trail find its way here.
       </p>
     );
   }
@@ -35,7 +35,7 @@ export function RecentSteamActivity({
   if (view.state === "FRESH_EMPTY") {
     return (
       <p className="text-sm text-muted-foreground">
-        No recent Steam activity. Games you played in the last two weeks will appear here.
+        The latest trail is quiet. Games you played in the last two weeks will appear here.
       </p>
     );
   }
@@ -54,7 +54,7 @@ export function RecentSteamActivity({
       )}
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          No recent Steam activity. Games you played in the last two weeks will appear here.
+          The latest trail is quiet. Games you played in the last two weeks will appear here.
         </p>
       ) : (
         <ul className="grid gap-2">

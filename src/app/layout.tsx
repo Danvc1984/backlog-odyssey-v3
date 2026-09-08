@@ -28,7 +28,7 @@ const prePaintVisualPreferences = `(function(){try{var m=localStorage.getItem("b
 export const metadata: Metadata = {
   title: "Backlog Odyssey",
   description:
-    "Private gaming library, wishlist, and decision assistant for a configurable Linux / Steam Deck / Windows setup.",
+    "Your private gaming library, wishlist, and decision assistant for the voyage across Linux, Steam Deck, and Windows.",
   icons: {
     icon: "/dragon-icon-dawn.svg",
   },

@@ -117,7 +117,7 @@ export default async function SettingsPage() {
         <p className="technical-label text-muted-foreground">Platform settings</p>
         <h1 className="mt-2">Settings</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          Control account connections, visual preferences, provider maintenance, and recommendation behavior.
+          Keep the ship&apos;s connections, appearance, provider upkeep, and recommendation course in your hands.
         </p>
       </div>
       <SessionCard
