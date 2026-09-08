@@ -31,7 +31,7 @@ export function AppNav({ email, signOutAction }: AppNavProps) {
           <span className="grid size-[34px] place-items-center rounded-[11px] border border-signal font-technical text-[12px] font-bold text-signal-strong shadow-glow">
             BO
           </span>
-          <span className="block text-base font-bold tracking-[-0.03em] text-sidebar-foreground">
+          <span className="block font-display text-base font-semibold tracking-[0.01em] text-sidebar-foreground">
             Backlog Odyssey
           </span>
         </Link>

@@ -38,7 +38,7 @@ export function GameDetailHero({
       <div className="game-detail-hero__content flex min-w-0 flex-col justify-between gap-5 p-6 md:p-8">
         <h1
           id="game-detail-title"
-          className="text-[clamp(2.25rem,5vw,4.5rem)] font-extrabold leading-[0.92] tracking-[-0.08em]"
+          className="text-[clamp(2rem,4.5vw,4rem)] font-extrabold leading-[0.92] tracking-[-0.08em]"
         >
           {name}
         </h1>

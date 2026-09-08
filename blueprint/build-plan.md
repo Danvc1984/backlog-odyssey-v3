@@ -443,7 +443,7 @@
     token architecture, each family owning its interactive/deal/warning/
     danger hue mapping with contrast validation, plus a Settings family
     selector beside the light/dark/system control
-  - [ ] 20c. **Typography** - Cinzel display for headers and hero moments,
+  - [x] 20c. **Typography** - Cinzel display for headers and hero moments,
     Inter body, unchanged technical monospace for evidence and freshness
     labels
   - [ ] 20d. **Brand icons** - official source icons in the code-owned

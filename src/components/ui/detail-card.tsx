@@ -86,7 +86,7 @@ export function SectionCard({
         <div className="mb-5 flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="technical-label text-muted-foreground">{eyebrow}</p>
-            <h2 id={id} className="mt-1 text-xl font-bold tracking-[-0.03em]">
+            <h2 id={id} className="mt-1 text-xl font-semibold tracking-[0.01em]">
               {title}
             </h2>
             {description && (

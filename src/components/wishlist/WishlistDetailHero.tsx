@@ -46,7 +46,7 @@ export function WishlistDetailHero({
           </div>
           <h1
             id="wishlist-detail-title"
-            className="text-[clamp(2.25rem,5vw,4.5rem)] font-extrabold leading-[0.92] tracking-[-0.08em]"
+            className="text-[clamp(2rem,4.5vw,4rem)] font-extrabold leading-[0.92] tracking-[-0.08em]"
           >
             {name}
           </h1>

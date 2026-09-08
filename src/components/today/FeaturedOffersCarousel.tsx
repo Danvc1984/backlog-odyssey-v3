@@ -18,7 +18,7 @@ function OfferSlide({ offer, rank }: { offer: TodayOfferView; rank: number }) {
           </span>
         </div>
         <div>
-          <Link href={`/wishlist/${offer.wishlistEntryId}`} className="font-display text-4xl font-semibold tracking-tight hover:underline">
+          <Link href={`/wishlist/${offer.wishlistEntryId}`} className="font-display text-4xl font-semibold tracking-[0.01em] hover:underline">
             {offer.gameName}
           </Link>
           <div className="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-2">
