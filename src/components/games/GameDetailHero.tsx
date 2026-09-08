@@ -65,7 +65,7 @@ export function GameDetailHero({
         <div className="flex flex-wrap gap-2">
           <Link
             href="#play-state"
-            className="inline-flex h-9 items-center justify-center rounded-[8px] bg-primary px-3 text-sm font-bold text-primary-foreground shadow-glow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30"
+            className="inline-flex h-9 items-center justify-center rounded-[8px] bg-primary px-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30"
           >
             Change play state
           </Link>

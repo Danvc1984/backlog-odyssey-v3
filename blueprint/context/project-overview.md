@@ -75,14 +75,21 @@ The exact checked state is owned by blueprint/build-plan.md.
     taking the practical-fit penalty plus caveat instead; setup-adapted
     environment fields; Settings setup changes confirm, then immediately
     re-derive compatibility and synchronously regenerate runs.
-14. **[x] 20a-20d, [ ] 20e-20g: Odyssey theme expansion** - Shipped: the 20a
-    prototype lock (Sunset mapping and Cinzel/Inter pairing owner-confirmed
-    07 Sep 2026), Dawn/Sunset palette families with the Settings family
-    selector, Cinzel/Inter typography, and official brand icons with the
-    dragon identity mark. Remaining: the whole-app Odyssey voice sweep (20e),
-    the owner-gated general UI icon swap (20f), and cross-app acceptance
-    (20g).
-15. **[ ] 21: Deployment and CI readiness** - Vercel/Supabase, Cron covering
+14. **[x] 20a-20g: Odyssey theme expansion** - Shipped: the 20a prototype
+    lock (Sunset mapping and Cinzel/Inter pairing owner-confirmed 07 Sep
+    2026), Dawn/Sunset palette families with the Settings family selector,
+    Cinzel/Inter typography, official brand icons with the dragon identity
+    mark, the Odyssey voice sweep (20e), the Phosphor UI icon swap (20f),
+    and cross-app acceptance (20g).
+15. **[ ] 21a-21h: Pre-deployment polish and improvements** -
+    Owner-reported fixes across visual polish, Today, recommendations,
+    browsing, and settings: global visual fixes (favicon theme color, glow
+    removal with offer-threshold exceptions, sidebar minimize/maximize),
+    Today focus carousel and wallpaper restore, Today metrics fixes,
+    recommendations presentation with natural-language reasoning, catalog
+    pagination (20/50/100), library and wishlist browsing improvements, and
+    settings reorganization with a hydration fix.
+16. **[ ] 22: Deployment and CI readiness** - Vercel/Supabase, Cron covering
     prices plus the compatibility freshness sweep (a no-op while compatibility
     is inactive), smoke tests, Verify command, and automatic checks.
 
@@ -339,7 +346,7 @@ freshness, and operations are supporting sections.
   pnpm typecheck, and pnpm test.
 - Provider keys stay server-side. Production validates environment, database
   migration, queue/scheduler behavior, and smoke tests.
-- Feature 21 configures Vercel Cron and CRON_SECRET for a daily run at
+- Feature 22 configures Vercel Cron and CRON_SECRET for a daily run at
   06:00 UTC-6 enqueueing the price refresh plus a compatibility freshness
   sweep for catalog and wishlist evidence older than the 180-day window; the
   sweep is a no-op while compatibility is inactive. Claims must be atomic,
@@ -364,10 +371,10 @@ freshness, and operations are supporting sections.
 
 ## Next workflow action
 
-blueprint/context/current-feature.md holds the reviewed spec for **20e:
-Odyssey voice sweep**. Run `/implement` to build it. After 20e, 20f remains
-owner-gated (waiting on the icon set) and 20g is the cross-app acceptance
-pass before 21.
+`blueprint/context/current-feature.md` is an empty stub. The build plan's next
+unchecked item is **21a: Global visual fixes**, the first sub-feature of the
+new pre-deployment polish feature (21a-21h); deployment is now feature 22.
+Run `/feature 21a` to write its spec.
 
 This overview is generated from the two plans and does not authorize code
 changes.

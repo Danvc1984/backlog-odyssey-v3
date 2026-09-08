@@ -452,10 +452,6 @@
     );
   }
 
-  .game-theme-scope .shadow-glow {
-    box-shadow: none !important;
-  }
-
 }
 
 @media (prefers-reduced-motion: reduce) {

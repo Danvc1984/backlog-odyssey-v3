@@ -3,6 +3,7 @@ import { DetailHeroArt } from "@/components/ui/detail-hero-art";
 import { buttonVariants } from "@/components/ui/button";
 import { formatFetchedAgo } from "@/lib/cover-presentation";
 import type { TodayOfferView } from "@/lib/today-offers";
+import { shouldGlowBuyHeading } from "@/lib/deal-glow";
 import { cn } from "@/lib/utils";
 
 export interface TodayHeroGame {
@@ -118,7 +119,10 @@ function BuySignal({ offer }: { offer: TodayOfferView }) {
   return (
     <aside
       aria-labelledby="today-buy-heading"
-      className="rounded-2xl border border-opportunity/40 bg-gradient-to-br from-opportunity/10 via-card to-card p-6 shadow-card"
+      className={cn(
+        "rounded-2xl border border-opportunity/40 bg-gradient-to-br from-opportunity/10 via-card to-card p-6 shadow-card",
+        shouldGlowBuyHeading(offer.discountPercent) && "shadow-glow",
+      )}
     >
       <div className="flex items-center justify-between gap-2">
         <p className="technical-label text-opportunity-text">Buy signal</p>

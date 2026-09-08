@@ -104,6 +104,10 @@ export function VisualPreferencesProvider({ children }: { children: ReactNode })
   }, []);
 
   useEffect(() => {
+    commit(stateRef.current);
+  }, [commit]);
+
+  useEffect(() => {
     const onStorage = (event: StorageEvent) => {
       if (
         event.key === MOTION_STORAGE_KEY ||

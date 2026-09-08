@@ -23,15 +23,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const prePaintVisualPreferences = `(function(){try{var m=localStorage.getItem("backlog-odyssey:motion"),d=localStorage.getItem("backlog-odyssey:data"),f=localStorage.getItem("backlog-odyssey:family"),r=document.documentElement,i=document.querySelector('link[rel="icon"]');if(m==="reduced")r.setAttribute("data-motion","reduced");else if(m==="full")r.setAttribute("data-motion","full");if(d==="on")r.setAttribute("data-reduced-data","on");else if(d==="off")r.setAttribute("data-reduced-data","off");if(f==="sunset")r.setAttribute("data-family","sunset");if(i)i.href=f==="sunset"?"/dragon-icon-sunset.svg":"/dragon-icon-dawn.svg";}catch(e){}})();`;
+const prePaintVisualPreferences = `(function(){try{var m=localStorage.getItem("backlog-odyssey:motion"),d=localStorage.getItem("backlog-odyssey:data"),f=localStorage.getItem("backlog-odyssey:family"),r=document.documentElement,i=document.querySelector('link[rel="icon"]');if(m==="reduced")r.setAttribute("data-motion","reduced");else if(m==="full")r.setAttribute("data-motion","full");if(d==="on")r.setAttribute("data-reduced-data","on");else if(d==="off")r.setAttribute("data-reduced-data","off");if(f==="sunset")r.setAttribute("data-family","sunset");if(!i){i=document.createElement("link");i.rel="icon";document.head.appendChild(i);}i.href=f==="sunset"?"/dragon-icon-sunset.svg":"/dragon-icon-dawn.svg";}catch(e){}})();`;
 
 export const metadata: Metadata = {
   title: "Backlog Odyssey",
   description:
     "Your private gaming library, wishlist, and decision assistant for the voyage across Linux, Steam Deck, and Windows.",
-  icons: {
-    icon: "/dragon-icon-dawn.svg",
-  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

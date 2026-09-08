@@ -13,6 +13,8 @@ import { StartPlayingButton } from "@/components/recommendations/StartPlayingBut
 import { recommendationCopy } from "@/lib/recommendations/recommendation-copy";
 import type { RecommendationRole } from "@/generated/prisma/client";
 import type { ExplanationCaveat, ExplanationFactor } from "@/lib/recommendations/types";
+import { shouldGlowBuyHeading } from "@/lib/deal-glow";
+import { cn } from "@/lib/utils";
 
 function asFactors(value: unknown): ExplanationFactor[] {
   if (!Array.isArray(value)) return [];
@@ -45,6 +47,7 @@ export interface RecommendationItemCardProps {
   runId?: string;
   role?: RecommendationRole | null;
   imageUrl?: string | null;
+  offerDiscount?: number | null;
   rotate?: {
     pending: boolean;
     exhausted: boolean;
@@ -62,6 +65,7 @@ export function RecommendationItemCard({
   runId,
   role,
   imageUrl,
+  offerDiscount,
   rotate,
 }: RecommendationItemCardProps) {
   const [dismissed, setDismissed] = useState(false);
@@ -105,7 +109,10 @@ export function RecommendationItemCard({
   };
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-primary/5 shadow-card">
+    <article className={cn(
+      "flex flex-col overflow-hidden rounded-lg border border-border bg-primary/5 shadow-card",
+      target.kind === "BUY" && shouldGlowBuyHeading(offerDiscount) && "shadow-glow",
+    )}>
       <Link href={href} className="block">
         <DetailHeroArt
           id={coverId}

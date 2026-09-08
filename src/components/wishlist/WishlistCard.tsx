@@ -7,6 +7,8 @@ import { WishlistCover } from "./WishlistCover";
 import { WishlistInterestRating } from "./WishlistInterestRating";
 import { ProtonDbTag } from "@/components/games/ProtonDbTag";
 import type { CompatTag } from "@/lib/protondb-tags";
+import { shouldGlowBuyHeading, shouldGlowOffer } from "@/lib/deal-glow";
+import { cn } from "@/lib/utils";
 
 const priceFormatter = new Intl.NumberFormat("es-MX", {
   minimumFractionDigits: 2,
@@ -53,7 +55,10 @@ export function WishlistCard({
 
   if (variant === "list") {
     return (
-      <article className="overflow-hidden rounded-lg border border-border bg-primary/5 shadow-card">
+      <article className={cn(
+        "overflow-hidden rounded-lg border border-border bg-primary/5 shadow-card",
+        shouldGlowBuyHeading(selectedOffer?.discount) && "shadow-glow",
+      )}>
         <div className="flex items-center gap-3 p-3 sm:gap-4 sm:p-4">
           <WishlistCover
             id={entry.id}
@@ -87,7 +92,7 @@ export function WishlistCard({
               >
                 {formatPrice(selectedOffer?.price ?? null, selectedOffer?.currency ?? null)}
                 {selectedOffer?.discount !== null && selectedOffer?.discount !== undefined && selectedOffer.discount > 0 && (
-                  <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 text-xs font-medium text-emerald-400">
+                  <span className={cn("rounded bg-emerald-500/15 px-1.5 py-0.5 text-xs font-medium text-emerald-400", shouldGlowOffer(selectedOffer.discount) && "shadow-glow")}>
                     -{selectedOffer.discount}%
                   </span>
                 )}
@@ -100,7 +105,10 @@ export function WishlistCard({
   }
 
   return (
-    <article className="overflow-hidden rounded-lg border border-border bg-primary/5 shadow-card">
+    <article className={cn(
+      "overflow-hidden rounded-lg border border-border bg-primary/5 shadow-card",
+      shouldGlowBuyHeading(selectedOffer?.discount) && "shadow-glow",
+    )}>
       <WishlistCover id={entry.id} title={coverTitle} imageUrl={imageUrl} />
       <div className="space-y-3 p-4">
         <div className="flex items-center justify-between gap-3">
@@ -131,7 +139,7 @@ export function WishlistCard({
             <span className="flex items-center gap-2 font-semibold">
               {formatPrice(selectedOffer?.price ?? null, selectedOffer?.currency ?? null)}
               {selectedOffer?.discount !== null && selectedOffer?.discount !== undefined && selectedOffer.discount > 0 && (
-                <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 text-xs font-medium text-emerald-400">
+                <span className={cn("rounded bg-emerald-500/15 px-1.5 py-0.5 text-xs font-medium text-emerald-400", shouldGlowOffer(selectedOffer.discount) && "shadow-glow")}>
                   -{selectedOffer.discount}%
                 </span>
               )}

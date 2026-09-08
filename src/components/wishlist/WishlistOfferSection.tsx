@@ -1,5 +1,7 @@
 import { TagIcon, WarningIcon } from "@phosphor-icons/react/ssr";
 import type { WishlistOffersView } from "@/types/wishlist-offers";
+import { shouldGlowOffer } from "@/lib/deal-glow";
+import { cn } from "@/lib/utils";
 
 const mxnFormatter = new Intl.NumberFormat("es-MX", {
   minimumFractionDigits: 2,
@@ -73,7 +75,7 @@ export function WishlistOfferSection({
       )}
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
         {offer.discount !== null && offer.discount > 0 && (
-          <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 font-medium text-emerald-400">
+          <span className={cn("rounded bg-emerald-500/15 px-1.5 py-0.5 font-medium text-emerald-400", shouldGlowOffer(offer.discount) && "shadow-glow")}>
             -{offer.discount}%
           </span>
         )}

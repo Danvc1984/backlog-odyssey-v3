@@ -246,6 +246,7 @@ export default async function WishlistDetailPage({
             negative={buyItem.negative}
             caveats={buyItem.caveats}
             imageUrl={metadata?.backgroundImageUrls[0] ?? null}
+            offerDiscount={offerView.selected?.discount ?? null}
           />
         </SectionCard>
       )}

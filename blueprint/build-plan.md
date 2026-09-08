@@ -67,7 +67,7 @@
   the cheapest 8-10 offers with visible alternatives and MX activation
   warnings; display-only historical lows; inline MXN targets; 48-hour
   freshness; bounded retries; clear partial failures; opportunity badges
-   without automatic recommendation runs. Vercel Cron activation deferred to 21.
+   without automatic recommendation runs. Vercel Cron activation deferred to 22.
   - [x] 10b-a. **Price identity and provenance** - three provenance-tracked
     identity paths (Steam import auto-confirm, manual Steam URL/AppID paste,
     RAWG store-link suggest-and-confirm extending only the wishlist snapshot),
@@ -461,7 +461,49 @@
     contrast, reduced-motion, and reduced-data review of every primary
     route
 
-- [ ] 21. **Deployment and CI readiness** - Vercel/Supabase environment
+- [ ] 21. **Pre-deployment polish and improvements** - owner-reported fixes
+  across visual polish, Today, recommendations, browsing, and settings
+  - [x] 21a. **Global visual fixes** - favicon respects the active theme
+    family instead of being overwritten with cyan; remove the glow effect
+    app-wide across all four palettes, keeping it for qualifying Today and
+    buy recommendation panels/cards above 60%, wishlist cards above 60%, and
+    offer badges/details above 80%; sidebar minimize/maximize on click
+  - [ ] 21b. **Today focus and wallpaper** - rebuild the Today focus heading
+    as a focus carousel that switches between the main game and the other
+    in-progress games (main game offers only a view-details button;
+    in-progress games add a make-main button), and restore the wallpaper
+    change control at the bottom of the screen with the manual refresh
+    behavior from Settings, offering wallpaper refresh when no wallpapers
+    are loaded and at least one game is in progress
+  - [ ] 21c. **Today metrics fixes** - working recent Steam activity with a
+    manual refresh option and game-image backgrounds on the elongated cards;
+    drop the abandoned-games counter in data health and replace the "Counts
+    are actionable, not decoration." caption; fix or remove the
+    always-"never" Steam provider freshness entry and show compatibility
+    freshness only when the OS profile includes a Linux device
+  - [ ] 21d. **Recommendations presentation** - remove the "Best fit / #02"
+    role numbering; rewrite play and buy reasoning as congruent
+    natural-language text instead of technical fragments; present individual
+    reasons aggregated and ordered from strong positives to strong negatives;
+    make the Tune recommendations (opt in) section header visible with an
+    expand icon; and validate the no-fallback hidden-games message so it does
+    not appear when Windows is primary with a Linux handheld
+  - [ ] 21e. **Catalog pagination** - page-size control of 20/50/100
+    (default 20) across library and wishlist in both grid and list views
+  - [ ] 21f. **Library browsing improvements** - edit and change-state
+    actions working like game detail including the scroll effect;
+    description-based warning for games without metadata replacing the meta
+    ready/meta missing labels (warning color also on wishlist); a more
+    noticeable background for the main-game selector; ProtonDB tags omitted
+    on all-Windows setups
+  - [ ] 21g. **Wishlist browsing improvements** - ITAD as a link in the
+    offer description; replace the redundant opportunity signals with a
+    discounted-games counter
+  - [ ] 21h. **Settings reorganization and hydration fix** - rearrange and
+    group settings sections by concern, and fix the hydration mismatch on
+    hard reload with stored visual preferences
+
+- [ ] 22. **Deployment and CI readiness** - Vercel/Supabase environment
   review, Vercel Cron daily run at 06:00 UTC-6 with `CRON_SECRET` enqueueing
   the price refresh plus a compatibility freshness sweep for catalog and
   wishlist evidence older than the 180-day window, queue overlap protection,

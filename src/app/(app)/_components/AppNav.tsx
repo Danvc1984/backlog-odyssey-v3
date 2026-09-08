@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { HouseIcon, BooksIcon, FolderOpenIcon, HeartIcon, GearIcon, SignOutIcon } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+
+const SIDEBAR_COLLAPSED_STORAGE_KEY = "backlog-odyssey:sidebar-collapsed";
 
 const navItems = [
   { href: "/today", label: "Today", icon: HouseIcon },
@@ -20,52 +23,102 @@ interface AppNavProps {
 
 export function AppNav({ email, signOutAction }: AppNavProps) {
   const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      try {
+        setCollapsed(window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === "1");
+      } catch {
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  const toggleCollapsed = () => {
+    setCollapsed((current) => {
+      const next = !current;
+      try {
+        if (next) window.localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, "1");
+        else window.localStorage.removeItem(SIDEBAR_COLLAPSED_STORAGE_KEY);
+      } catch {
+      }
+      return next;
+    });
+  };
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <>
-      <aside className="sticky top-0 hidden h-screen w-[232px] shrink-0 flex-col gap-8 border-r border-border bg-sidebar px-4 py-6 md:flex">
-        <Link href="/today" className="flex items-center gap-3 px-2">
+      <aside
+        onClick={(event) => {
+          if (event.target instanceof Element && event.target.closest("a, button")) return;
+          toggleCollapsed();
+        }}
+        className={cn(
+          "sticky top-0 hidden h-screen shrink-0 flex-col gap-8 border-r border-border bg-sidebar px-4 py-6 md:flex",
+          collapsed ? "w-[68px] items-center" : "w-[232px]",
+        )}
+      >
+        <Link
+          href="/today"
+          aria-label="Backlog Odyssey"
+          title={collapsed ? "Backlog Odyssey" : undefined}
+          className={cn("flex items-center gap-3 px-2", collapsed && "justify-center")}
+        >
           <span
             aria-hidden
-            className="brand-dragon-mark size-[34px] shrink-0 rounded-[11px] border border-signal bg-signal-strong p-1 shadow-glow"
+            className="brand-dragon-mark size-[34px] shrink-0 rounded-[11px] border border-signal bg-signal-strong p-1"
           />
-          <span className="block font-display text-base font-semibold tracking-[0.01em] text-sidebar-foreground">
+          <span className={cn(
+            "block font-display text-base font-semibold tracking-[0.01em] text-sidebar-foreground",
+            collapsed && "hidden",
+          )}>
             Backlog Odyssey
           </span>
         </Link>
 
         <nav className="flex flex-col gap-2">
-          <p className="technical-label px-2 text-faint">Navigate</p>
+          <p className={cn("technical-label px-2 text-faint", collapsed && "sr-only")}>Navigate</p>
           <ul className="grid gap-2">
             {navItems.map(({ href, label, icon: Icon }) => (
               <li key={href}>
                 <Link
                   href={href}
                   aria-current={isActive(href) ? "page" : undefined}
+                  aria-label={collapsed ? label : undefined}
+                  title={collapsed ? label : undefined}
                   className={cn(
                     "flex items-center gap-3 rounded-lg border border-transparent px-3 py-[11px] text-[13px] transition-colors",
+                    collapsed && "justify-center px-3",
                     isActive(href)
                       ? "border-signal/25 bg-signal/10 font-medium text-signal-strong"
                       : "text-muted-foreground hover:border-signal/25 hover:bg-signal/10 hover:text-signal-strong",
                   )}
                 >
                   <Icon className="size-[18px]" />
-                  {label}
+                  <span className={collapsed ? "hidden" : undefined}>{label}</span>
                 </Link>
               </li>
             ))}
           </ul>
         </nav>
 
-        <div className="mt-auto border-t border-border px-2 pt-4">
-          <p className="truncate text-xs text-muted-foreground">{email}</p>
+        <div className={cn("mt-auto border-t border-border px-2 pt-4", collapsed && "w-full")}>
+          <p className={cn("truncate text-xs text-muted-foreground", collapsed && "hidden")}>{email}</p>
           <form action={signOutAction}>
-            <button className="mt-2 flex w-full items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-signal/10 hover:text-signal-strong">
+            <button
+              title={collapsed ? "Sign out" : undefined}
+              aria-label={collapsed ? "Sign out" : undefined}
+              className={cn(
+                "mt-2 flex w-full items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-signal/10 hover:text-signal-strong",
+                collapsed && "justify-center px-2",
+              )}
+            >
               <SignOutIcon className="size-4" />
-              Sign out
+              <span className={collapsed ? "hidden" : undefined}>Sign out</span>
             </button>
           </form>
         </div>

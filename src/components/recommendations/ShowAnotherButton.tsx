@@ -21,6 +21,7 @@ interface ShowAnotherButtonProps {
   negative: unknown;
   caveats: unknown;
   imageUrl?: string | null;
+  offerDiscount?: number | null;
 }
 
 interface CardSlot {
@@ -30,6 +31,7 @@ interface CardSlot {
   positive: unknown;
   negative: unknown;
   caveats: unknown;
+  offerDiscount: number | null | undefined;
 }
 
 export function ShowAnotherButton({
@@ -44,10 +46,19 @@ export function ShowAnotherButton({
   negative,
   caveats,
   imageUrl,
+  offerDiscount,
 }: ShowAnotherButtonProps) {
   const [pending, setPending] = useState(false);
   const [exhausted, setExhausted] = useState(false);
-  const [slot, setSlot] = useState<CardSlot>({ target, name, score, positive, negative, caveats });
+  const [slot, setSlot] = useState<CardSlot>({
+    target,
+    name,
+    score,
+    positive,
+    negative,
+    caveats,
+    offerDiscount,
+  });
 
   const rotate = async () => {
     setPending(true);
@@ -73,6 +84,7 @@ export function ShowAnotherButton({
       positive: rotated.positive,
       negative: rotated.negative,
       caveats: rotated.caveats,
+      offerDiscount: null,
     });
   };
 
@@ -88,6 +100,7 @@ export function ShowAnotherButton({
       runId={runId}
       role={role}
       imageUrl={imageUrl}
+      offerDiscount={slot.offerDiscount}
       rotate={{ pending, exhausted, onRotate: () => void rotate() }}
     />
   );

@@ -32,6 +32,7 @@ import { TodayOperations } from "@/components/today/TodayOperations";
 import { formatMexicoTimestamp } from "@/lib/format-times";
 import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
 import { SectionCard } from "@/components/ui/detail-card";
+import { buildEntryOfferView } from "@/lib/offer-selection";
 
 const PLAY_ROLE_GROUPS = [
   { label: "Best fit", roles: ["BEST_FIT_1", "BEST_FIT_2"] },
@@ -197,6 +198,12 @@ export default async function TodayPage() {
       offers,
     })),
     new Date(),
+  );
+  const selectedOfferDiscountByWishlistId = new Map(
+    wishlistEntries.map((entry) => [
+      entry.id,
+      buildEntryOfferView(entry.offers, entry.targetPriceMxn, new Date()).selected?.discount ?? null,
+    ]),
   );
   const playContext = latestPlayNextRun?.context as
     | {
@@ -466,6 +473,7 @@ export default async function TodayPage() {
                   negative={item.negative}
                   caveats={item.caveats}
                   imageUrl={buyItemCover(item)}
+                  offerDiscount={selectedOfferDiscountByWishlistId.get(item.wishlistEntryId) ?? null}
                 />
               );
             })}
@@ -492,6 +500,7 @@ export default async function TodayPage() {
                   negative={item.negative}
                   caveats={item.caveats}
                   imageUrl={buyItemCover(item)}
+                  offerDiscount={selectedOfferDiscountByWishlistId.get(item.wishlistEntryId) ?? null}
                 />
               ) : null,
             )}
