@@ -453,7 +453,7 @@
     allusion and named mythology across headers, empty states, buttons,
     dashboard moments, and dialogs; statuses, errors, evidence labels,
     field help, and caveats stay factual; navigation names unchanged
-  - [ ] 20f. **UI icon set swap (gated)** - replace general UI icons with
+  - [x] 20f. **UI icon set swap (gated)** - replace general UI icons with
     the owner-selected premium/custom set once provided; current icons
     remain the fallback until then
   - [ ] 20g. **Cross-app acceptance** - all four palettes across desktop

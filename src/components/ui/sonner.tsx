@@ -4,12 +4,12 @@ import type { ReactNode } from "react";
 import { useTheme } from "next-themes";
 import { Toaster as Sonner, toast, type ExternalToast, type ToasterProps } from "sonner";
 import {
-  CircleCheckIcon,
+  CheckCircleIcon,
   InfoIcon,
-  TriangleAlertIcon,
-  OctagonXIcon,
-  Loader2Icon,
-} from "lucide-react";
+  WarningIcon,
+  WarningOctagonIcon,
+  CircleNotchIcon,
+} from "@phosphor-icons/react";
 import {
   catalogToastId,
   catalogToastRegistry,
@@ -96,11 +96,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
     className: "toaster group",
     duration: 5000,
     icons: {
-      success: <CircleCheckIcon className="size-4" />,
+      success: <CheckCircleIcon className="size-4" />,
       info: <InfoIcon className="size-4" />,
-      warning: <TriangleAlertIcon className="size-4" />,
-      error: <OctagonXIcon className="size-4" />,
-      loading: <Loader2Icon className="size-4 animate-spin" />,
+      warning: <WarningIcon className="size-4" />,
+      error: <WarningOctagonIcon className="size-4" />,
+      loading: <CircleNotchIcon className="size-4 animate-spin" />,
     },
     style: {
       "--normal-bg": "var(--popover)",

@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleSlash } from "lucide-react";
+import { ProhibitIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +35,7 @@ export function CollectionColorPicker({
         aria-pressed={!color}
         onClick={() => onColorChange("")}
       >
-        <CircleSlash className={cn("size-4", !color && "text-primary")} />
+        <ProhibitIcon className={cn("size-4", !color && "text-primary")} />
       </Button>
       {PALETTE.map((c) => {
         const selected = color === c;

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { RefreshCw } from "lucide-react";
+import { ArrowClockwiseIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { refreshGameCompatibility, setCompatOverride } from "@/actions/compatibility";
 import { deriveWindowsFallback, type AntiCheatStatus } from "@/lib/compat-fallback";
@@ -185,7 +185,7 @@ export function CompatibilitySection({
               aria-label="Refresh compatibility evidence"
               title="Refresh compatibility evidence"
             >
-              <RefreshCw aria-hidden className={refreshing ? "animate-spin" : ""} />
+              <ArrowClockwiseIcon aria-hidden className={refreshing ? "animate-spin" : ""} />
             </Button>
           )}
         </div>

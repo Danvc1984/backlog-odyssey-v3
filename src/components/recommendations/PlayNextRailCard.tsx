@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { RefreshCw, X } from "lucide-react";
+import { ArrowClockwiseIcon, XIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { dismissRecommendation, rotateRecommendationRole } from "@/actions/recommendations";
 import { StartPlayingButton } from "@/components/recommendations/StartPlayingButton";
@@ -136,13 +136,13 @@ export function PlayNextRailCard({ runId, role, itemId, gameId, name, rank, scor
               disabled={pending}
               className="inline-flex items-center gap-1 text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground disabled:opacity-50"
             >
-              <RefreshCw aria-hidden className={pending ? "h-3 w-3 animate-spin" : "h-3 w-3"} />
+              <ArrowClockwiseIcon aria-hidden className={pending ? "h-3 w-3 animate-spin" : "h-3 w-3"} />
               {pending ? "Rotating..." : "Show another"}
             </button>
           )}
         </div>
         <button type="button" onClick={() => void dismiss()} disabled={pending} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50">
-          <X aria-hidden className="h-3 w-3" />
+          <XIcon aria-hidden className="h-3 w-3" />
           Dismiss
         </button>
       </div>

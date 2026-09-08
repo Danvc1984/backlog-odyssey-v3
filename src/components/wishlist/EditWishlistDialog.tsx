@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { updateWishlistEntry } from "@/actions/wishlist";
 import { enrichWishlistEntryWithRawg, searchWishlistRawg } from "@/actions/wishlist-rawg";
@@ -122,7 +122,7 @@ export function EditWishlistDialog({ entry, baseGames }: EditWishlistDialogProps
               <Input id={`edit-wishlist-name-${entry.id}`} value={name} onChange={(event) => setName(event.target.value)} required />
               {entry.type === "BASE_GAME" && (
                 <Button type="button" variant="outline" onClick={() => void searchRawg()} disabled={searching || !name.trim()}>
-                  <Search />
+                  <MagnifyingGlassIcon />
                   {searching ? "Searching" : "Search"}
                 </Button>
               )}

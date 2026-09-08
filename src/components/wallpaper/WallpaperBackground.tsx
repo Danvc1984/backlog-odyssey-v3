@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { Shuffle } from "lucide-react";
+import { ShuffleIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { shuffleWallpaper } from "@/actions/wallpaper";
@@ -76,7 +76,7 @@ export function WallpaperBackground({ enabled, selection }: WallpaperBackgroundP
           disabled={isShuffling}
           className="rounded-sm p-1 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-60"
         >
-          <Shuffle aria-hidden className={isShuffling ? "h-3.5 w-3.5 animate-pulse" : "h-3.5 w-3.5"} />
+          <ShuffleIcon aria-hidden className={isShuffling ? "h-3.5 w-3.5 animate-pulse" : "h-3.5 w-3.5"} />
         </button>
         <a
           href={candidate.pageUrl}

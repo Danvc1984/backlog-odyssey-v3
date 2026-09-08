@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Link2, RotateCcw, Trash2, WandSparkles } from "lucide-react";
+import { CheckIcon, LinkSimpleIcon, ArrowCounterClockwiseIcon, TrashIcon, MagicWandIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import {
   discardUnresolvedDlc,
@@ -168,12 +168,12 @@ export function UnresolvedDlcReviewCard({
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" size="sm" variant="outline" onClick={() => openLinkDialog(item)}>
-                    <Link2 />
+                    <LinkSimpleIcon />
                     Link base game
                   </Button>
                   {item.source === "OWNED_SYNC" && (
                     <Button type="button" size="sm" variant="outline" onClick={() => openCreateDialog(item)}>
-                      <WandSparkles />
+                      <MagicWandIcon />
                       Create base + DLC
                     </Button>
                   )}
@@ -184,7 +184,7 @@ export function UnresolvedDlcReviewCard({
                     disabled={workingId === item.id}
                     onClick={() => void updateStatus(item, "DISCARD")}
                   >
-                    <Trash2 />
+                    <TrashIcon />
                     Discard
                   </Button>
                 </div>
@@ -206,7 +206,7 @@ export function UnresolvedDlcReviewCard({
                       disabled={workingId === item.id}
                       onClick={() => void updateStatus(item, "RESTORE")}
                     >
-                      <RotateCcw />
+                      <ArrowCounterClockwiseIcon />
                       Restore
                     </Button>
                   </li>
@@ -249,7 +249,7 @@ export function UnresolvedDlcReviewCard({
                         disabled={workingId === selectedItem.id}
                         onClick={() => void linkItem(game.id)}
                       >
-                        <Check />
+                        <CheckIcon />
                         {game.name}
                       </Button>
                     ))

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { createDlc } from "@/actions/dlc";
 import { Button } from "@/components/ui/button";
@@ -62,7 +62,7 @@ export function CreateDlcDialog({ baseGameId }: { baseGameId: string }) {
     >
       <DialogTrigger asChild>
         <Button type="button" variant="outline" size="sm">
-          <Plus />
+          <PlusIcon />
           Add purchased DLC
         </Button>
       </DialogTrigger>

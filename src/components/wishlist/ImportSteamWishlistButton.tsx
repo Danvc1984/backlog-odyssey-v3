@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Download, RefreshCw, X } from "lucide-react";
+import { DownloadSimpleIcon, ArrowClockwiseIcon, XIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import {
   enrichImportedWishlist,
@@ -42,7 +42,7 @@ export function WishlistImportResultPanel({
         aria-label="Dismiss wishlist import result"
         onClick={onDismiss}
       >
-        <X aria-hidden />
+        <XIcon aria-hidden />
       </Button>
       <p className="technical-label text-warning-text">
         Steam import
@@ -140,7 +140,7 @@ export function ImportSteamWishlistButton({
         onClick={() => void importWishlist()}
         disabled={disabled || busy}
       >
-        {busy ? <RefreshCw aria-hidden className="animate-spin" /> : <Download aria-hidden />}
+        {busy ? <ArrowClockwiseIcon aria-hidden className="animate-spin" /> : <DownloadSimpleIcon aria-hidden />}
         {enriching
           ? `Enriching ${enrichmentProgress?.completed ?? 0}/${enrichmentProgress?.total ?? 0}...`
           : running ? "Importing wishlist..." : "Import Steam wishlist"}

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { SparkleIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -48,7 +48,7 @@ export function RawgBatchEnrichmentButton() {
 
   return (
     <Button type="button" variant="outline" size="sm" disabled={running} onClick={() => void startBatch()}>
-      <Sparkles aria-hidden />
+      <SparkleIcon aria-hidden />
       {running ? "Starting..." : "Enrich eligible games"}
     </Button>
   );

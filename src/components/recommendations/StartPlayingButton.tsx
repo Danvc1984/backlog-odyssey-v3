@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Play } from "lucide-react";
+import { PlayIcon } from "@phosphor-icons/react";
 import { startPlayingFromRecommendation } from "@/actions/recommendations";
 
 interface StartPlayingButtonProps {
@@ -66,7 +66,7 @@ export function StartPlayingButton({ gameId }: StartPlayingButtonProps) {
           disabled={pending}
           className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
         >
-          <Play aria-hidden className="h-3 w-3" />
+          <PlayIcon aria-hidden className="h-3 w-3" />
           {pending ? "Starting..." : "Start playing"}
         </button>
       )}

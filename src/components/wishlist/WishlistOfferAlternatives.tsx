@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ChevronDown, ChevronUp, TriangleAlert } from "lucide-react";
+import { CaretDownIcon, CaretUpIcon, WarningIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import type { WishlistOfferView } from "@/types/wishlist-offers";
 
@@ -50,7 +50,7 @@ export function WishlistOfferAlternatives({
         aria-expanded={expanded}
         onClick={() => setExpanded((value) => !value)}
       >
-        {expanded ? <ChevronUp /> : <ChevronDown />}
+        {expanded ? <CaretUpIcon /> : <CaretDownIcon />}
         {expanded ? "Hide offers" : `+${alternatives.length} more offers`}
       </Button>
       {expanded && (
@@ -78,7 +78,7 @@ export function WishlistOfferAlternatives({
                     className="mt-1 flex items-center gap-1 text-amber-300"
                     title="Keyshop - activation not guaranteed in Mexico"
                   >
-                    <TriangleAlert className="size-3" aria-hidden="true" />
+                    <WarningIcon className="size-3" aria-hidden="true" />
                     Keyshop - activation not guaranteed in Mexico
                   </span>
                 )}

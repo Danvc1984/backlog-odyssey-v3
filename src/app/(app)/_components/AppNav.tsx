@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Library, FolderOpen, Heart, Settings, LogOut } from "lucide-react";
+import { HouseIcon, BooksIcon, FolderOpenIcon, HeartIcon, GearIcon, SignOutIcon } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/today", label: "Today", icon: Home },
-  { href: "/library", label: "Library", icon: Library },
-  { href: "/collections", label: "Collections", icon: FolderOpen },
-  { href: "/wishlist", label: "Wishlist", icon: Heart },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/today", label: "Today", icon: HouseIcon },
+  { href: "/library", label: "Library", icon: BooksIcon },
+  { href: "/collections", label: "Collections", icon: FolderOpenIcon },
+  { href: "/wishlist", label: "Wishlist", icon: HeartIcon },
+  { href: "/settings", label: "Settings", icon: GearIcon },
 ];
 
 interface AppNavProps {
@@ -64,7 +64,7 @@ export function AppNav({ email, signOutAction }: AppNavProps) {
           <p className="truncate text-xs text-muted-foreground">{email}</p>
           <form action={signOutAction}>
             <button className="mt-2 flex w-full items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-signal/10 hover:text-signal-strong">
-              <LogOut className="size-4" />
+              <SignOutIcon className="size-4" />
               Sign out
             </button>
           </form>

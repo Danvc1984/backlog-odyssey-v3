@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import { ArrowClockwiseIcon, XIcon } from "@phosphor-icons/react";
 import { dismissRecommendation } from "@/actions/recommendations";
 import { Input } from "@/components/ui/input";
 import { DetailHeroArt } from "@/components/ui/detail-hero-art";
@@ -11,7 +11,6 @@ import { caveatChip, factorChip } from "@/components/recommendations/FactorChips
 import { recommendationRoleLabel } from "@/components/recommendations/RecommendationRoleLabel";
 import { StartPlayingButton } from "@/components/recommendations/StartPlayingButton";
 import { recommendationCopy } from "@/lib/recommendations/recommendation-copy";
-import { RefreshCw } from "lucide-react";
 import type { RecommendationRole } from "@/generated/prisma/client";
 import type { ExplanationCaveat, ExplanationFactor } from "@/lib/recommendations/types";
 
@@ -141,7 +140,7 @@ export function RecommendationItemCard({
               disabled={rotate.pending}
               className="inline-flex items-center gap-1 text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground disabled:opacity-50"
             >
-              <RefreshCw aria-hidden className={rotate.pending ? "h-3 w-3 animate-spin" : "h-3 w-3"} />
+              <ArrowClockwiseIcon aria-hidden className={rotate.pending ? "h-3 w-3 animate-spin" : "h-3 w-3"} />
               {rotate.pending ? "Rotating..." : "Show another"}
             </button>
           )}
@@ -165,7 +164,7 @@ export function RecommendationItemCard({
           </div>
         ) : (
           <button type="button" onClick={() => setReasonOpen(true)} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground">
-            <X aria-hidden className="h-3 w-3" />
+            <XIcon aria-hidden className="h-3 w-3" />
             Dismiss
           </button>
         )}

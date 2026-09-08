@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { RefreshCw } from "lucide-react";
+import { ArrowClockwiseIcon } from "@phosphor-icons/react";
 import {
   applyRawgTitle,
   cancelRawgEnrichment,
@@ -327,7 +327,7 @@ export function RawgEnrichmentPanel({
               aria-label="Refresh RAWG metadata"
               title="Refresh RAWG metadata"
             >
-              <RefreshCw aria-hidden="true" className={running ? "animate-spin" : undefined} />
+              <ArrowClockwiseIcon aria-hidden="true" className={running ? "animate-spin" : undefined} />
             </Button>
           )}
         </div>

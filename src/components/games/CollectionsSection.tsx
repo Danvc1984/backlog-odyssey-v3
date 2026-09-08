@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { addGameToCollection, removeGameFromCollection } from "@/actions/collections";
-import { FolderPlus, X } from "lucide-react";
+import { FolderPlusIcon, XIcon } from "@phosphor-icons/react";
 
 type CollectionData = {
   id: string;
@@ -89,7 +89,7 @@ export function CollectionsSection({
                 disabled={submitting}
                 onClick={() => handleRemove(c.id)}
               >
-                <X className="size-3" />
+                <XIcon className="size-3" />
               </button>
             </span>
           ))}
@@ -140,7 +140,7 @@ export function CollectionsSection({
           size="sm"
           onClick={() => setPickerOpen(true)}
         >
-          <FolderPlus />
+          <FolderPlusIcon />
           Add to collection
         </Button>
       )}

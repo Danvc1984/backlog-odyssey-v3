@@ -1,4 +1,4 @@
-import { Tag, TriangleAlert } from "lucide-react";
+import { TagIcon, WarningIcon } from "@phosphor-icons/react/ssr";
 import type { WishlistOffersView } from "@/types/wishlist-offers";
 
 const mxnFormatter = new Intl.NumberFormat("es-MX", {
@@ -62,7 +62,7 @@ export function WishlistOfferSection({
               className="inline-flex items-center gap-1 text-xs text-amber-300"
               title="Keyshop - activation not guaranteed in Mexico"
             >
-              <TriangleAlert className="size-3" aria-hidden="true" />
+              <WarningIcon className="size-3" aria-hidden="true" />
               Keyshop - activation not guaranteed in Mexico
             </span>
           )}
@@ -93,7 +93,7 @@ export function WishlistOfferSection({
           </span>
           {offerView.opportunity.hasBadge && (
             <span className="inline-flex items-center gap-1 rounded-full bg-fuchsia-500/15 px-2 py-0.5 font-medium text-fuchsia-300">
-              <Tag className="size-3" aria-hidden="true" />
+              <TagIcon className="size-3" aria-hidden="true" />
               Opportunity
             </span>
           )}

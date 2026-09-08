@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { CircleNotchIcon } from "@phosphor-icons/react";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -146,7 +146,7 @@ export function PlayStateSection({
 
       {saving && (
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Loader2 className="size-3 animate-spin" />
+          <CircleNotchIcon className="size-3 animate-spin" />
           Saving...
         </p>
       )}

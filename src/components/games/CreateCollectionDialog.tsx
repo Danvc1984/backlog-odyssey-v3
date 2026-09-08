@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createCollection } from "@/actions/collections";
 import { CollectionColorPicker } from "./CollectionColorPicker";
-import { FolderPlus } from "lucide-react";
+import { FolderPlusIcon } from "@phosphor-icons/react";
 
 export function CreateCollectionDialog() {
   const router = useRouter();
@@ -65,7 +65,7 @@ export function CreateCollectionDialog() {
     >
       <DialogTrigger asChild>
         <Button>
-          <FolderPlus />
+          <FolderPlusIcon />
           New collection
         </Button>
       </DialogTrigger>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { RefreshCw } from "lucide-react";
+import { ArrowClockwiseIcon } from "@phosphor-icons/react";
 import {
   startWishlistCompatibilitySweep,
   type WishlistCompatSweepRunView,
@@ -86,7 +86,7 @@ export function WishlistCompatSweepPanel({
           onClick={() => void sweep()}
           disabled={running}
         >
-          <RefreshCw aria-hidden className={running ? "animate-spin" : ""} />
+          <ArrowClockwiseIcon aria-hidden className={running ? "animate-spin" : ""} />
           {running ? "Updating compatibility..." : "Update compatibility"}
         </Button>
       </div>

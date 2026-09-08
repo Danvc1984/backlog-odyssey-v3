@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { deleteWishlistEntry } from "@/actions/wishlist";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,7 +58,7 @@ export function WishlistEntryActions({ entry, baseGames, showDelete = true }: Wi
         >
           <DialogTrigger asChild>
             <Button type="button" variant="ghost" size="icon-sm" disabled={deleting} aria-label={`Delete ${entry.name}`}>
-              <Trash2 />
+              <TrashIcon />
             </Button>
           </DialogTrigger>
           <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { dismissDuplicate, detectDuplicates } from "@/actions/duplicates";
 import { Button } from "@/components/ui/button";
-import { ScanSearch } from "lucide-react";
+import { ScanIcon } from "@phosphor-icons/react";
 
 export function ScanDuplicatesButton() {
   const router = useRouter();
@@ -37,7 +37,7 @@ export function ScanDuplicatesButton() {
         Re-check dismissed
       </label>
       <Button type="button" onClick={handleScan} disabled={scanning}>
-        <ScanSearch />
+        <ScanIcon />
         {scanning ? "Scanning..." : "Scan for duplicates"}
       </Button>
     </div>

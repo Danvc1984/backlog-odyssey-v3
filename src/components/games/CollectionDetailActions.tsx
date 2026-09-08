@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Pencil, Trash2 } from "lucide-react";
+import { PencilSimpleIcon, TrashIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -93,7 +93,7 @@ export function CollectionDetailActions({
       >
         <DialogTrigger asChild>
           <Button variant="outline" size="sm">
-            <Pencil />
+            <PencilSimpleIcon />
             Edit
           </Button>
         </DialogTrigger>
@@ -135,7 +135,7 @@ export function CollectionDetailActions({
       >
         <DialogTrigger asChild>
           <Button variant="destructive" size="sm">
-            <Trash2 />
+            <TrashIcon />
             Delete
           </Button>
         </DialogTrigger>

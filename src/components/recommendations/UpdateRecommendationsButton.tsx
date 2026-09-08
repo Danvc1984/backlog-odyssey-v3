@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { RefreshCw } from "lucide-react";
+import { ArrowClockwiseIcon } from "@phosphor-icons/react";
 import { updateRecommendations } from "@/actions/recommendations";
 import { Button } from "@/components/ui/button";
 
@@ -28,7 +28,7 @@ export function UpdateRecommendationsButton() {
 
   return (
     <Button type="button" variant="secondary" size="lg" onClick={() => void update()} disabled={running}>
-      <RefreshCw aria-hidden className={running ? "animate-spin" : ""} />
+      <ArrowClockwiseIcon aria-hidden className={running ? "animate-spin" : ""} />
       {running ? "Updating..." : "Update recommendations"}
     </Button>
   );

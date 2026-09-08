@@ -1,4 +1,4 @@
-import { LogOut } from "lucide-react";
+import { SignOutIcon } from "@phosphor-icons/react/ssr";
 import { Button } from "@/components/ui/button";
 import { SectionCard, StatusPill } from "@/components/ui/detail-card";
 
@@ -26,7 +26,7 @@ export function SessionCard({
         </p>
         <form action={signOutAction}>
           <Button type="submit" variant="outline" size="sm">
-            <LogOut aria-hidden className="size-4" />
+            <SignOutIcon aria-hidden className="size-4" />
             Sign out
           </Button>
         </form>

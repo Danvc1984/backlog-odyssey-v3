@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { RefreshCw } from "lucide-react";
+import { ArrowClockwiseIcon } from "@phosphor-icons/react";
 import { updatePrices } from "@/actions/prices";
 import { Button } from "@/components/ui/button";
 import { formatMexicoTimestamp } from "@/lib/format-times";
@@ -57,7 +57,7 @@ export function PriceRefreshPanel() {
   return (
     <div className="flex flex-col items-end gap-1.5">
       <Button type="button" variant="secondary" size="lg" onClick={() => void refresh()} disabled={running}>
-        <RefreshCw aria-hidden className={running ? "animate-spin" : ""} />
+        <ArrowClockwiseIcon aria-hidden className={running ? "animate-spin" : ""} />
         {running ? "Refreshing prices..." : "Update prices"}
       </Button>
     </div>

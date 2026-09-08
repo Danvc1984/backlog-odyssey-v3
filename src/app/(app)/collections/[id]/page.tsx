@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Calculator, Folder } from "lucide-react";
+import { CalculatorIcon, FolderIcon } from "@phosphor-icons/react/ssr";
 import { prisma } from "@/lib/prisma";
 import {
   getSystemCollectionDefinition,
@@ -182,7 +182,7 @@ export default async function CollectionDetailPage({
             <h1>{name}</h1>
             {isSystem && (
               <StatusPill>
-                <Calculator className="size-3" aria-hidden />
+                <CalculatorIcon className="size-3" aria-hidden />
                 Calculated
               </StatusPill>
             )}
@@ -203,7 +203,7 @@ export default async function CollectionDetailPage({
 
       {filteredRows.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border py-12 text-center">
-          <Folder className="size-6 text-muted-foreground" aria-hidden />
+          <FolderIcon className="size-6 text-muted-foreground" aria-hidden />
           <p className="text-lg font-medium">{emptyMessage}</p>
           <p className="text-sm text-muted-foreground">
             {rows.length === 0 ? "Add games from their catalog detail page to set this shelf in motion." : "Try another search."}

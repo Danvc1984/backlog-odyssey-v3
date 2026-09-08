@@ -1,17 +1,24 @@
 import Link from "next/link";
-import type { LucideIcon } from "lucide-react";
-import { Clock, RotateCcw, Star, EyeOff, Flag, Folder } from "lucide-react";
+import type { Icon } from "@phosphor-icons/react";
+import {
+  ArrowCounterClockwiseIcon,
+  ClockIcon,
+  EyeSlashIcon,
+  FlagIcon,
+  FolderIcon,
+  StarIcon,
+} from "@phosphor-icons/react/ssr";
 import { prisma } from "@/lib/prisma";
 import { getSystemCollections } from "@/lib/system-collections";
 import { CreateCollectionDialog } from "@/components/games/CreateCollectionDialog";
 import { SectionCard, StatusPill } from "@/components/ui/detail-card";
 
-const SYSTEM_ICONS: Record<string, LucideIcon> = {
-  Clock,
-  RotateCcw,
-  Star,
-  EyeOff,
-  Flag,
+const SYSTEM_ICONS: Record<string, Icon> = {
+  Clock: ClockIcon,
+  RotateCcw: ArrowCounterClockwiseIcon,
+  Star: StarIcon,
+  EyeOff: EyeSlashIcon,
+  Flag: FlagIcon,
 };
 
 export default async function CollectionsPage() {
@@ -48,7 +55,7 @@ export default async function CollectionsPage() {
       >
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {systemCollections.map((c) => {
-            const Icon = SYSTEM_ICONS[c.icon] ?? Folder;
+            const Icon = SYSTEM_ICONS[c.icon] ?? FolderIcon;
             return (
               <Link
                 key={c.id}
@@ -77,7 +84,7 @@ export default async function CollectionsPage() {
       >
         {manualCollections.length === 0 ? (
           <div className="flex flex-col items-center gap-2 rounded-md border border-dashed border-border bg-card-alt/30 py-10 text-center">
-            <Folder className="size-6 text-muted-foreground" aria-hidden />
+            <FolderIcon className="size-6 text-muted-foreground" aria-hidden />
             <p className="text-lg font-medium">No shelves on the horizon yet</p>
             <p className="text-sm text-muted-foreground">
               Create one to give your games a place to gather.
@@ -100,7 +107,7 @@ export default async function CollectionsPage() {
                         aria-hidden
                       />
                     ) : (
-                      <Folder className="size-4 text-muted-foreground" aria-hidden />
+                      <FolderIcon className="size-4 text-muted-foreground" aria-hidden />
                     )}
                   </span>
                   <StatusPill className="bg-background/70">

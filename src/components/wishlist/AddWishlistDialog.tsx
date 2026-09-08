@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Plus } from "lucide-react";
+import { MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { createWishlistEntry } from "@/actions/wishlist";
 import { enrichWishlistEntryWithRawg, searchWishlistRawg } from "@/actions/wishlist-rawg";
@@ -141,7 +141,7 @@ export function AddWishlistDialog({
     >
       <DialogTrigger asChild>
         <Button size={triggerSize}>
-          <Plus />
+          <PlusIcon />
           {triggerLabel}
         </Button>
       </DialogTrigger>
@@ -169,7 +169,7 @@ export function AddWishlistDialog({
               <Input id="wishlist-name" value={name} onChange={(event) => setName(event.target.value)} required />
               {type === "BASE_GAME" && (
                 <Button type="button" variant="outline" onClick={() => void searchRawg()} disabled={searching || !name.trim()}>
-                  <Search />
+                  <MagnifyingGlassIcon />
                   {searching ? "Searching" : "Search"}
                 </Button>
               )}

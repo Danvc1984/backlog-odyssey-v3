@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Copy } from "lucide-react";
+import { CopyIcon } from "@phosphor-icons/react/ssr";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { CreateGameDialog } from "@/components/games/CreateGameDialog";
@@ -289,7 +289,7 @@ export default async function LibraryPage({
             size="lg"
           >
             <Link href="/library?duplicates=true">
-              <Copy aria-hidden />
+              <CopyIcon aria-hidden />
               Review duplicates
             </Link>
           </Button>

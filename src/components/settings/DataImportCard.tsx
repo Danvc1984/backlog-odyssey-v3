@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Upload } from "lucide-react";
+import { UploadSimpleIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SectionCard } from "@/components/ui/detail-card";
@@ -86,7 +86,7 @@ export function DataImportCard() {
           onClick={handleUpload}
           disabled={pending || !file}
         >
-          <Upload aria-hidden className="size-4" />
+          <UploadSimpleIcon aria-hidden className="size-4" />
           {pending ? "Restoring..." : "Restore from file"}
         </Button>
       </div>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import { XIcon } from "@phosphor-icons/react";
 import { startCompatibilitySweep } from "@/actions/compat-batch-enrichment";
 import { Button } from "@/components/ui/button";
 import { SectionCard } from "@/components/ui/detail-card";
@@ -254,7 +254,7 @@ export function CompatibilitySweepPanel({
                         aria-label={`Dismiss ${game.name} from failed games`}
                         onClick={() => setDismissedGameIds((current) => new Set(current).add(game.id))}
                       >
-                        <X aria-hidden />
+                        <XIcon aria-hidden />
                       </Button>
                     </li>
                   ))}

@@ -3,7 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import { Popover } from "radix-ui";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontalIcon } from "@phosphor-icons/react";
 import { Input } from "@/components/ui/input";
 import { SourceIcon } from "@/components/sources/SourceIcon";
 import { cn } from "@/lib/utils";
@@ -191,7 +191,7 @@ export function LibraryFilters({
                 : "border-border bg-card text-muted-foreground hover:text-foreground",
             )}
           >
-            <SlidersHorizontal className="size-3.5" />
+            <SlidersHorizontalIcon className="size-3.5" />
             More filters
           </button>
         </Popover.Trigger>

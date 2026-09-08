@@ -3,7 +3,7 @@
 import { useEffect, useState, useSyncExternalStore, useTransition, type ReactNode } from "react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
-import { RefreshCw, Shuffle } from "lucide-react";
+import { ArrowClockwiseIcon, ShuffleIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { setWallpaperEnabled, refreshWallpaper, shuffleWallpaper } from "@/actions/wallpaper";
 import { useVisualPreferences } from "@/components/preferences/VisualPreferencesProvider";
@@ -250,7 +250,7 @@ export function AppearanceSection({
                 disabled={wallpaperPending}
                 className="inline-flex h-8 items-center gap-1 rounded-md border border-border bg-input px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground disabled:cursor-wait disabled:opacity-60"
               >
-                <Shuffle aria-hidden className="size-3.5" />
+                <ShuffleIcon aria-hidden className="size-3.5" />
                 Shuffle now
               </button>
               <button
@@ -259,7 +259,7 @@ export function AppearanceSection({
                 disabled={wallpaperPending}
                 className="inline-flex h-8 items-center gap-1 rounded-md border border-border bg-input px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground disabled:cursor-wait disabled:opacity-60"
               >
-                <RefreshCw aria-hidden className="size-3.5" />
+                <ArrowClockwiseIcon aria-hidden className="size-3.5" />
                 Refresh pool
               </button>
             </div>

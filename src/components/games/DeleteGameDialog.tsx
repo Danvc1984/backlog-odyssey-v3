@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { showCatalogActionToast } from "@/components/ui/sonner";
 import {
@@ -114,7 +114,7 @@ export function DeleteGameDialog({ gameId }: { gameId: string }) {
     >
       <DialogTrigger asChild>
         <Button type="button" variant="destructive" size="sm">
-          <Trash2 />
+          <TrashIcon />
           Delete
         </Button>
       </DialogTrigger>

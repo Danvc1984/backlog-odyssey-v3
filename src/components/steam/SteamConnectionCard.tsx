@@ -9,7 +9,7 @@ import { ImportSteamWishlistButton } from "@/components/wishlist/ImportSteamWish
 import { importSteamGames } from "@/actions/steam-import";
 import { syncSteamPlaytime } from "@/actions/steam-sync";
 import { disconnectSteam } from "@/actions/steam";
-import { Import, RefreshCw, Unplug } from "lucide-react";
+import { FileArrowDownIcon, ArrowClockwiseIcon, PlugsConnectedIcon } from "@phosphor-icons/react";
 import { SectionCard, StatusPill } from "@/components/ui/detail-card";
 import { SourceIcon } from "@/components/sources/SourceIcon";
 
@@ -111,7 +111,7 @@ export function SteamConnectionCard({
               onClick={handleSync}
               disabled={syncing || importing || submitting || importingWishlist}
             >
-              <RefreshCw />
+              <ArrowClockwiseIcon />
               {syncing ? "Syncing..." : "Sync now"}
             </Button>
             <Button
@@ -120,7 +120,7 @@ export function SteamConnectionCard({
               onClick={handleImport}
               disabled={importing || syncing || submitting || importingWishlist}
             >
-              <Import />
+              <FileArrowDownIcon />
               {importing ? "Importing..." : "Import from Steam"}
             </Button>
             <ImportSteamWishlistButton
@@ -133,7 +133,7 @@ export function SteamConnectionCard({
               onClick={handleDisconnect}
               disabled={submitting || importing || syncing || importingWishlist}
             >
-              <Unplug />
+              <PlugsConnectedIcon />
               {submitting ? "Disconnecting..." : "Disconnect"}
             </Button>
           </div>

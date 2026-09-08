@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Link2, X } from "lucide-react";
+import { LinkSimpleIcon, XIcon } from "@phosphor-icons/react";
 import {
   confirmRawgSuggestedIdentity,
   dismissRawgIdentitySuggestion,
@@ -83,7 +83,7 @@ export function WishlistIdentity({
     return (
       <div className="flex items-center gap-1.5">
         <span className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground">
-          <Link2 className="h-3 w-3" aria-hidden />
+          <LinkSimpleIcon className="h-3 w-3" aria-hidden />
           Steam App {steamAppId}
           {provenance && PROVENANCE_LABELS[provenance] ? ` · ${PROVENANCE_LABELS[provenance]}` : ""}
         </span>
@@ -95,7 +95,7 @@ export function WishlistIdentity({
           onClick={() => void remove()}
           aria-label={`Remove Steam identity from ${entryName}`}
         >
-          <X />
+          <XIcon />
         </Button>
       </div>
     );
@@ -158,7 +158,7 @@ export function WishlistIdentity({
           onClick={() => setAdding(true)}
           className="text-xs text-muted-foreground"
         >
-          <Link2 aria-hidden /> Add Steam link
+          <LinkSimpleIcon aria-hidden /> Add Steam link
         </Button>
       </div>
     );

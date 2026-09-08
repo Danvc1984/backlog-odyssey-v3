@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { RefreshCw } from "lucide-react";
+import { ArrowClockwiseIcon } from "@phosphor-icons/react";
 import { refreshWishlistCompatibility } from "@/actions/wishlist-compatibility";
 import { Button } from "@/components/ui/button";
 
@@ -38,7 +38,7 @@ export function WishlistCompatRefreshButton({
       onClick={() => void refresh()}
       aria-label="Refresh compatibility evidence"
     >
-      <RefreshCw className={refreshing ? "animate-spin" : undefined} />
+      <ArrowClockwiseIcon className={refreshing ? "animate-spin" : undefined} />
     </Button>
   );
 }

@@ -1,7 +1,5 @@
-import { icons, type LucideIcon } from "lucide-react"
+import { LEGACY_FALLBACK_ICON_NAME, LEGACY_ICON_REGISTRY } from "@/lib/icons/icon-registry"
 import { FALLBACK_SOURCE_ICON } from "@/lib/sources/known-sources"
-
-const iconMap = icons as Record<string, LucideIcon>
 
 export function SourceIcon({ iconName, brandIcon }: { iconName: string; brandIcon?: string }) {
   if (brandIcon) {
@@ -13,7 +11,7 @@ export function SourceIcon({ iconName, brandIcon }: { iconName: string; brandIco
       />
     )
   }
-  const Icon = iconMap[iconName] ?? iconMap[FALLBACK_SOURCE_ICON]
+  const Icon = LEGACY_ICON_REGISTRY[iconName] ?? LEGACY_ICON_REGISTRY[LEGACY_FALLBACK_ICON_NAME]
   const colorClass =
     iconName === FALLBACK_SOURCE_ICON || iconName === "Disc3"
       ? "text-signal-strong"

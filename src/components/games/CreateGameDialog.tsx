@@ -19,7 +19,7 @@ import { createGame } from "@/actions/games";
 import { createAlternativeSource } from "@/actions/sources";
 import { SourceIcon } from "@/components/sources/SourceIcon";
 import { suggestSources } from "@/lib/sources/known-sources";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@phosphor-icons/react";
 
 type SourceValue = "STEAM" | "ROM" | "CUSTOM" | `ALT:${string}`;
 
@@ -115,7 +115,7 @@ export function CreateGameDialog({
     >
       <DialogTrigger asChild>
         <Button size={triggerSize}>
-          <Plus />
+          <PlusIcon />
           Add game
         </Button>
       </DialogTrigger>

@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { GitMerge } from "lucide-react";
+import { GitMergeIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { showCatalogActionToast } from "@/components/ui/sonner";
 import {
@@ -187,7 +187,7 @@ export function MergeGamesDialog({ duplicateId }: { duplicateId: string }) {
     >
       <DialogTrigger asChild>
         <Button type="button" variant="outline" size="sm">
-          <GitMerge />
+          <GitMergeIcon />
           Merge
         </Button>
       </DialogTrigger>

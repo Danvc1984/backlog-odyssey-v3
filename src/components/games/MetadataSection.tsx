@@ -1,7 +1,7 @@
 import type { RawgMetadataPayload } from "@/lib/rawg-types";
 import { externalUrl } from "@/lib/external-url";
 import { SectionCard } from "@/components/ui/detail-card";
-import { ExternalLink } from "lucide-react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react/ssr";
 
 function Field({ label, value }: { label: string; value: string | null }) {
   if (!value) return null;
@@ -131,7 +131,7 @@ export function MetadataSection({
                   className="underline-offset-4 hover:underline"
                 >
                   <span className="inline-flex items-center gap-1">
-                    RAWG <ExternalLink aria-hidden="true" className="size-3" />
+                    RAWG <ArrowSquareOutIcon aria-hidden="true" className="size-3" />
                   </span>
                 </a>
               ) : (

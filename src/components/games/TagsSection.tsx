@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { addTagToGame } from "@/actions/game-detail";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@phosphor-icons/react";
 
 type TagData = {
   id: string;
@@ -92,7 +92,7 @@ export function TagsSection({
           onClick={handleAdd}
           disabled={submitting}
         >
-          <Plus />
+          <PlusIcon />
         </Button>
       </div>
 

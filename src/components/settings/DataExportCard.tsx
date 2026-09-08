@@ -1,4 +1,4 @@
-import { Download } from "lucide-react";
+import { DownloadSimpleIcon } from "@phosphor-icons/react/ssr";
 import { SectionCard } from "@/components/ui/detail-card";
 import { Button } from "@/components/ui/button";
 
@@ -26,7 +26,7 @@ export function DataExportCard({
         </p>
         <a href="/api/export" download>
           <Button type="button" variant="outline" size="sm">
-            <Download aria-hidden className="size-4" />
+            <DownloadSimpleIcon aria-hidden className="size-4" />
             Download export
           </Button>
         </a>

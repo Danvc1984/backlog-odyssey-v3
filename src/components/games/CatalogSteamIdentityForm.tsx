@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Link2 } from "lucide-react";
+import { LinkSimpleIcon } from "@phosphor-icons/react";
 import { setCatalogSteamAppId } from "@/actions/catalog-identity";
 import { parseSteamAppIdInput } from "@/lib/steam-identity";
 import { Button } from "@/components/ui/button";
@@ -43,7 +43,7 @@ export function CatalogSteamIdentityForm({ gameId, gameName }: { gameId: string;
           aria-label={`Steam identity for ${gameName}`}
         />
         <Button type="button" onClick={() => void save()} disabled={saving || !parsed?.ok}>
-          <Link2 aria-hidden />
+          <LinkSimpleIcon aria-hidden />
           {saving ? "Saving..." : "Link Steam"}
         </Button>
       </div>
