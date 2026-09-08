@@ -295,7 +295,7 @@ export default async function LibraryPage({
           </Button>
           <CreateGameDialog alternativeSources={alternativeSources.map((alternative) => ({
             ...alternative,
-            iconName: availabilitySourcePresentation("OTHER_PLATFORM", alternative.name).iconName,
+            ...availabilitySourcePresentation("OTHER_PLATFORM", alternative.name),
           }))} triggerSize="lg" />
         </div>
       </div>
@@ -325,7 +325,7 @@ export default async function LibraryPage({
           ]}
           alternativeSources={alternativeSources.map((alternative) => ({
             ...alternative,
-            iconName: availabilitySourcePresentation("OTHER_PLATFORM", alternative.name).iconName,
+            ...availabilitySourcePresentation("OTHER_PLATFORM", alternative.name),
           }))}
         />
         <ViewSwitch view={view} label="Library view" />
@@ -354,7 +354,7 @@ export default async function LibraryPage({
             </p>
             <CreateGameDialog alternativeSources={alternativeSources.map((alternative) => ({
               ...alternative,
-              iconName: availabilitySourcePresentation("OTHER_PLATFORM", alternative.name).iconName,
+              ...availabilitySourcePresentation("OTHER_PLATFORM", alternative.name),
             }))} />
           </div>
         )

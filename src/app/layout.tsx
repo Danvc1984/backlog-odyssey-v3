@@ -23,12 +23,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const prePaintVisualPreferences = `(function(){try{var m=localStorage.getItem("backlog-odyssey:motion"),d=localStorage.getItem("backlog-odyssey:data"),f=localStorage.getItem("backlog-odyssey:family"),r=document.documentElement;if(m==="reduced")r.setAttribute("data-motion","reduced");else if(m==="full")r.setAttribute("data-motion","full");if(d==="on")r.setAttribute("data-reduced-data","on");else if(d==="off")r.setAttribute("data-reduced-data","off");if(f==="sunset")r.setAttribute("data-family","sunset");}catch(e){}})();`;
+const prePaintVisualPreferences = `(function(){try{var m=localStorage.getItem("backlog-odyssey:motion"),d=localStorage.getItem("backlog-odyssey:data"),f=localStorage.getItem("backlog-odyssey:family"),r=document.documentElement,i=document.querySelector('link[rel="icon"]');if(m==="reduced")r.setAttribute("data-motion","reduced");else if(m==="full")r.setAttribute("data-motion","full");if(d==="on")r.setAttribute("data-reduced-data","on");else if(d==="off")r.setAttribute("data-reduced-data","off");if(f==="sunset")r.setAttribute("data-family","sunset");if(i)i.href=f==="sunset"?"/dragon-icon-sunset.svg":"/dragon-icon-dawn.svg";}catch(e){}})();`;
 
 export const metadata: Metadata = {
   title: "Backlog Odyssey",
   description:
     "Private gaming library, wishlist, and decision assistant for a configurable Linux / Steam Deck / Windows setup.",
+  icons: {
+    icon: "/dragon-icon-dawn.svg",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

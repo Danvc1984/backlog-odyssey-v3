@@ -3,6 +3,13 @@ export interface KnownSource {
   label: string;
   aliases: readonly string[];
   iconName: string;
+  brandIcon: string;
+}
+
+export interface SourcePresentation {
+  label: string;
+  iconName: string;
+  brandIcon?: string;
 }
 
 export const UNSPECIFIED_OTHER_SOURCE_NAME = "Unspecified other source";
@@ -17,60 +24,70 @@ export const KNOWN_SOURCES: readonly KnownSource[] = [
     label: "Epic Games Store",
     aliases: ["EGS", "Epic"],
     iconName: "Sparkles",
+    brandIcon: "epic-games-themed.svg",
   },
   {
     key: "GOG",
     label: "GOG",
     aliases: ["Good Old Games"],
     iconName: "Ghost",
+    brandIcon: "gog.svg",
   },
   {
     key: "EA_APP",
     label: "EA app",
     aliases: ["Origin", "EA Desktop", "EA"],
     iconName: "Gamepad2",
+    brandIcon: "ea-games.svg",
   },
   {
     key: "UBISOFT_CONNECT",
     label: "Ubisoft Connect",
     aliases: ["Uplay", "Ubisoft"],
     iconName: "Orbit",
+    brandIcon: "ubisoft.svg",
   },
   {
     key: "BATTLE_NET",
     label: "Battle.net",
     aliases: ["Blizzard", "Battle.net App"],
     iconName: "Swords",
+    brandIcon: "battle-net.svg",
   },
   {
     key: "XBOX_MICROSOFT_STORE",
     label: "Xbox/Microsoft Store",
     aliases: ["Xbox", "Microsoft Store", "MS Store"],
     iconName: "Gamepad",
+    brandIcon: "xbox.svg",
   },
   {
     key: "ITCH_IO",
     label: "itch.io",
     aliases: ["itch"],
     iconName: "Palette",
+    brandIcon: "itch-io.svg",
   },
   {
     key: "AMAZON_GAMES",
     label: "Amazon Games",
     aliases: ["Amazon"],
     iconName: "Package",
+    brandIcon: "amazon-games-themed.svg",
   },
   {
     key: "HUMBLE_BUNDLE",
     label: "Humble Bundle",
     aliases: ["Humble", "Humble Choice"],
     iconName: "Gift",
+    brandIcon: "humble-bundle.svg",
   },
   {
     key: "ROCKSTAR_GAMES_LAUNCHER",
     label: "Rockstar Games Launcher",
     aliases: ["Rockstar", "Social Club", "RGL"],
     iconName: "Star",
+    brandIcon: "rockstar.svg",
   },
 ];
 
@@ -90,12 +107,11 @@ export function matchKnownSource(name: string): KnownSource | null {
   );
 }
 
-export function resolveSourcePresentation(name: string): {
-  label: string;
-  iconName: string;
-} {
+export function resolveSourcePresentation(name: string): SourcePresentation {
   const known = matchKnownSource(name);
-  if (known) return { label: known.label, iconName: known.iconName };
+  if (known) {
+    return { label: known.label, iconName: known.iconName, brandIcon: known.brandIcon };
+  }
   const trimmed = name.trim();
   return {
     label: trimmed || UNSPECIFIED_OTHER_SOURCE_NAME,
@@ -106,9 +122,9 @@ export function resolveSourcePresentation(name: string): {
 export function availabilitySourcePresentation(
   source: AvailabilitySource,
   alternativeSourceName: string | null,
-): { label: string; iconName: string } {
+): SourcePresentation {
   if (source === "STEAM") {
-    return { label: "Steam", iconName: "MonitorPlay" };
+    return { label: "Steam", iconName: "MonitorPlay", brandIcon: "steam.svg" };
   }
   if (source === "ROM") {
     return { label: "ROM", iconName: "Disc3" };

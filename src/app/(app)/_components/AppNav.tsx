@@ -28,9 +28,10 @@ export function AppNav({ email, signOutAction }: AppNavProps) {
     <>
       <aside className="sticky top-0 hidden h-screen w-[232px] shrink-0 flex-col gap-8 border-r border-border bg-sidebar px-4 py-6 md:flex">
         <Link href="/today" className="flex items-center gap-3 px-2">
-          <span className="grid size-[34px] place-items-center rounded-[11px] border border-signal font-technical text-[12px] font-bold text-signal-strong shadow-glow">
-            BO
-          </span>
+          <span
+            aria-hidden
+            className="brand-dragon-mark size-[34px] shrink-0 rounded-[11px] border border-signal bg-signal-strong p-1 shadow-glow"
+          />
           <span className="block font-display text-base font-semibold tracking-[0.01em] text-sidebar-foreground">
             Backlog Odyssey
           </span>

@@ -330,7 +330,7 @@ export default async function TodayPage() {
             presets={presets}
             alternativeSources={alternativeSources.map((source) => ({
               ...source,
-              iconName: resolveSourcePresentation(source.name).iconName,
+              ...resolveSourcePresentation(source.name),
             }))}
           />
         </div>

@@ -24,7 +24,7 @@ import { Plus } from "lucide-react";
 type SourceValue = "STEAM" | "ROM" | "CUSTOM" | `ALT:${string}`;
 
 interface CreateGameDialogProps {
-  alternativeSources?: { id: string; name: string; iconName: string }[];
+  alternativeSources?: { id: string; name: string; iconName: string; brandIcon?: string }[];
   triggerSize?: "default" | "lg";
 }
 
@@ -92,7 +92,7 @@ export function CreateGameDialog({
 
   const knownSuggestions = suggestSources(sourceQuery, alternativeSources).known;
   const builtInSuggestions = [
-    { value: "STEAM" as const, label: "Steam", iconName: "MonitorPlay" },
+    { value: "STEAM" as const, label: "Steam", iconName: "MonitorPlay", brandIcon: "steam.svg" },
     { value: "ROM" as const, label: "ROM", iconName: "Disc3" },
   ].filter((option) => option.label.toLowerCase().includes(sourceQuery.trim().toLowerCase()));
   const savedSuggestions = alternativeSources
@@ -178,10 +178,10 @@ export function CreateGameDialog({
               />
               {sourceListOpen && suggestionCount > 0 && (
                 <ul role="listbox" className="absolute z-10 mt-1 w-full rounded-md border border-border bg-popover p-1 shadow-md">
-                  {[...builtInSuggestions, ...savedSuggestions.map((option) => ({ ...option, value: `ALT:${option.id}` as const })), ...knownSuggestions.map((option) => ({ value: "CUSTOM" as const, label: option.label, iconName: option.iconName }))].map((option, index) => (
+                  {[...builtInSuggestions, ...savedSuggestions.map((option) => ({ ...option, value: `ALT:${option.id}` as const })), ...knownSuggestions.map((option) => ({ value: "CUSTOM" as const, label: option.label, iconName: option.iconName, brandIcon: option.brandIcon }))].map((option, index) => (
                     <li key={`${option.value}-${option.label}`} role="option" aria-selected={index === activeSuggestion}>
                       <button type="button" className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted" onMouseDown={(event) => event.preventDefault()} onClick={() => selectSource(option.value, option.label)}>
-                        <SourceIcon iconName={option.iconName} />
+                        <SourceIcon iconName={option.iconName} brandIcon={option.brandIcon} />
                         {option.label}
                       </button>
                     </li>

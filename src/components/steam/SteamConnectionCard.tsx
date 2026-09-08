@@ -11,6 +11,7 @@ import { syncSteamPlaytime } from "@/actions/steam-sync";
 import { disconnectSteam } from "@/actions/steam";
 import { Import, RefreshCw, Unplug } from "lucide-react";
 import { SectionCard, StatusPill } from "@/components/ui/detail-card";
+import { SourceIcon } from "@/components/sources/SourceIcon";
 
 export function SteamConnectionCard({
   connected,
@@ -138,7 +139,10 @@ export function SteamConnectionCard({
           </div>
         ) : (
           <Link href="/api/steam/connect">
-            <Button size="sm">Connect Steam</Button>
+            <Button size="sm">
+              <SourceIcon iconName="MonitorPlay" brandIcon="steam.svg" />
+              Connect Steam
+            </Button>
           </Link>
         )}
       </div>

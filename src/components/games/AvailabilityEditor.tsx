@@ -187,7 +187,7 @@ export function AvailabilityEditor({ gameId, rows, savedSources }: AvailabilityE
                   onCheckedChange={(checked) => void toggle(option, checked === true)}
                 />
                 <label htmlFor={`availability-${option.key}`} className="flex min-w-0 items-center gap-2 text-sm">
-                  <SourceIcon iconName={presentation.iconName} />
+                  <SourceIcon iconName={presentation.iconName} brandIcon={presentation.brandIcon} />
                   <span className="truncate">{presentation.label}</span>
                 </label>
                 {syncedSteam && <span className="text-xs text-muted-foreground">Synced</span>}
@@ -239,7 +239,7 @@ export function AvailabilityEditor({ gameId, rows, savedSources }: AvailabilityE
                     onMouseDown={(event) => event.preventDefault()}
                     onClick={() => void addSource(suggestion.label)}
                   >
-                    <SourceIcon iconName={suggestion.iconName} />
+                    <SourceIcon iconName={suggestion.iconName} brandIcon={suggestion.brandIcon} />
                     {suggestion.label}
                   </button>
                 </li>

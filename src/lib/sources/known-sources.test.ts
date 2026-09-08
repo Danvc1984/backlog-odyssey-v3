@@ -58,10 +58,12 @@ describe("resolveSourcePresentation", () => {
     expect(resolveSourcePresentation("EGS")).toEqual({
       label: "Epic Games Store",
       iconName: "Sparkles",
+      brandIcon: "epic-games-themed.svg",
     });
     expect(resolveSourcePresentation("Origin")).toEqual({
       label: "EA app",
       iconName: "Gamepad2",
+      brandIcon: "ea-games.svg",
     });
   });
 
@@ -85,6 +87,7 @@ describe("availabilitySourcePresentation", () => {
     expect(availabilitySourcePresentation("STEAM", null)).toEqual({
       label: "Steam",
       iconName: "MonitorPlay",
+      brandIcon: "steam.svg",
     });
     expect(availabilitySourcePresentation("ROM", null)).toEqual({
       label: "ROM",
@@ -96,6 +99,7 @@ describe("availabilitySourcePresentation", () => {
     expect(availabilitySourcePresentation("OTHER_PLATFORM", "EGS")).toEqual({
       label: "Epic Games Store",
       iconName: "Sparkles",
+      brandIcon: "epic-games-themed.svg",
     });
     expect(
       availabilitySourcePresentation("OTHER_PLATFORM", "  My Custom Store  "),
@@ -110,6 +114,10 @@ describe("availabilitySourcePresentation", () => {
       label: "Other platform",
       iconName: FALLBACK_SOURCE_ICON,
     });
+  });
+
+  it("assigns a brand file to every known source", () => {
+    expect(KNOWN_SOURCES.every((source) => source.brandIcon.endsWith(".svg"))).toBe(true);
   });
 });
 

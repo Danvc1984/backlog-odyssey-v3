@@ -249,6 +249,146 @@
 }
 
 @layer components {
+  .brand-dragon-mark {
+    mask: url("/dragon-icon.svg") center / contain no-repeat;
+    -webkit-mask: url("/dragon-icon.svg") center / contain no-repeat;
+  }
+
+  .source-brand-icon {
+    display: inline-block;
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: contain;
+    mask-mode: alpha;
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+  }
+
+  .source-brand-icon[data-brand-icon="steam.svg"] {
+    mask-image: url("/steam.svg");
+    -webkit-mask-image: url("/steam.svg");
+  }
+
+  .source-brand-icon[data-brand-icon="epic-games.svg"] {
+    mask-image: url("/epic-games.svg");
+    -webkit-mask-image: url("/epic-games.svg");
+  }
+
+  .source-brand-icon[data-brand-icon="epic-games-themed.svg"] {
+    position: relative;
+    background: transparent;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+
+  .source-brand-icon[data-brand-icon="epic-games-themed.svg"]::before,
+  .source-brand-icon[data-brand-icon="epic-games-themed.svg"]::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: contain;
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+  }
+
+  .source-brand-icon[data-brand-icon="epic-games-themed.svg"]::before {
+    background: var(--signal-strong);
+    mask-image: url("/epic-games-base.svg");
+    -webkit-mask-image: url("/epic-games-base.svg");
+  }
+
+  .source-brand-icon[data-brand-icon="epic-games-themed.svg"]::after {
+    background: var(--card);
+    mask-image: url("/epic-games-details.svg");
+    -webkit-mask-image: url("/epic-games-details.svg");
+  }
+
+  .source-brand-icon[data-brand-icon="gog.svg"] {
+    mask-image: url("/gog.svg");
+    -webkit-mask-image: url("/gog.svg");
+  }
+
+  .source-brand-icon[data-brand-icon="ea-games.svg"] {
+    mask-image: url("/ea-games.svg");
+    -webkit-mask-image: url("/ea-games.svg");
+  }
+
+  .source-brand-icon[data-brand-icon="ubisoft.svg"] {
+    mask-image: url("/ubisoft.svg");
+    -webkit-mask-image: url("/ubisoft.svg");
+  }
+
+  .source-brand-icon[data-brand-icon="battle-net.svg"] {
+    mask-image: url("/battle-net.svg");
+    -webkit-mask-image: url("/battle-net.svg");
+  }
+
+  .source-brand-icon[data-brand-icon="xbox.svg"] {
+    mask-image: url("/xbox.svg");
+    -webkit-mask-image: url("/xbox.svg");
+  }
+
+  .source-brand-icon[data-brand-icon="itch-io.svg"] {
+    mask-image: url("/itch-io.svg");
+    -webkit-mask-image: url("/itch-io.svg");
+  }
+
+  .source-brand-icon[data-brand-icon="amazon-games.svg"] {
+    mask-image: url("/amazon-games.svg");
+    -webkit-mask-image: url("/amazon-games.svg");
+  }
+
+  .source-brand-icon[data-brand-icon="amazon-games-themed.svg"] {
+    position: relative;
+    background: transparent;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+
+  .source-brand-icon[data-brand-icon="amazon-games-themed.svg"]::before,
+  .source-brand-icon[data-brand-icon="amazon-games-themed.svg"]::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: contain;
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+  }
+
+  .source-brand-icon[data-brand-icon="amazon-games-themed.svg"]::before {
+    background: var(--signal-strong);
+    mask-image: url("/amazon-games-base.svg");
+    -webkit-mask-image: url("/amazon-games-base.svg");
+  }
+
+  .source-brand-icon[data-brand-icon="amazon-games-themed.svg"]::after {
+    background: var(--card);
+    mask-image: url("/amazon-games-details.svg");
+    -webkit-mask-image: url("/amazon-games-details.svg");
+  }
+
+  .source-brand-icon[data-brand-icon="humble-bundle.svg"] {
+    mask-image: url("/humble-bundle.svg");
+    -webkit-mask-image: url("/humble-bundle.svg");
+  }
+
+  .source-brand-icon[data-brand-icon="rockstar.svg"] {
+    mask-image: url("/rockstar.svg");
+    -webkit-mask-image: url("/rockstar.svg");
+  }
+
+  .source-brand-icon[data-brand-icon="itad.svg"] {
+    mask-image: url("/itad.svg");
+    -webkit-mask-image: url("/itad.svg");
+  }
+
   .technical-label {
     font-family: var(--font-technical);
     font-size: 10px;

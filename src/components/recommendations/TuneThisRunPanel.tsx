@@ -25,6 +25,7 @@ interface AlternativeSource {
   id: string;
   name: string;
   iconName: string;
+  brandIcon?: string;
 }
 
 interface RecommendationPreset {
@@ -231,7 +232,7 @@ export function TuneThisRunPanel({ engine, initialTune, knownValues, thinPool, p
             <div className="flex flex-wrap gap-x-4 gap-y-2">
               <label className="flex items-center gap-2 text-sm text-foreground">
                 <input type="checkbox" checked={sourceTune.steam} onChange={(event) => updateSourceTune("steam", event.target.checked)} className="accent-foreground" />
-                <SourceIcon iconName="MonitorPlay" />
+                <SourceIcon iconName="MonitorPlay" brandIcon="steam.svg" />
                 Steam
               </label>
               <label className="flex items-center gap-2 text-sm text-foreground">
@@ -247,7 +248,7 @@ export function TuneThisRunPanel({ engine, initialTune, knownValues, thinPool, p
               {alternativeSources.map((source) => (
                 <label key={source.id} className="flex items-center gap-2 text-sm text-foreground">
                   <input type="checkbox" checked={sourceTune.alternativeSourceIds.includes(source.id)} onChange={(event) => toggleAlternativeSource(source.id, event.target.checked)} className="accent-foreground" />
-                  <SourceIcon iconName={source.iconName} />
+                  <SourceIcon iconName={source.iconName} brandIcon={source.brandIcon} />
                   {source.name}
                 </label>
               ))}

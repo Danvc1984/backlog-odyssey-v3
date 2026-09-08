@@ -82,7 +82,7 @@ export function LibraryFilters({
   alternativeSources,
 }: {
   collections: FilterCollection[];
-  alternativeSources: { id: string; name: string; iconName: string }[];
+  alternativeSources: { id: string; name: string; iconName: string; brandIcon?: string }[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -240,7 +240,7 @@ export function LibraryFilters({
                         {alternativeSources.map((alternative) => (
                           <SelectItem key={alternative.id} value={`alt:${alternative.id}`}>
                             <span className="flex items-center gap-2">
-                              <SourceIcon iconName={alternative.iconName} />
+                              <SourceIcon iconName={alternative.iconName} brandIcon={alternative.brandIcon} />
                               {alternative.name}
                             </span>
                           </SelectItem>

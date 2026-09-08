@@ -63,7 +63,7 @@ export function SectionCard({
   children,
 }: {
   eyebrow: string;
-  title: string;
+  title: ReactNode;
   id?: string;
   description?: ReactNode;
   status?: ReactNode;

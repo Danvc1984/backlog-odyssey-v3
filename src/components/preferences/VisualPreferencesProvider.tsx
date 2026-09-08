@@ -97,6 +97,10 @@ export function VisualPreferencesProvider({ children }: { children: ReactNode })
     stateRef.current = next;
     setState(next);
     applyVisualAttributes(document.documentElement, next.motion, next.data, next.family);
+    const favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (favicon) {
+      favicon.href = next.family === "sunset" ? "/dragon-icon-sunset.svg" : "/dragon-icon-dawn.svg";
+    }
   }, []);
 
   useEffect(() => {

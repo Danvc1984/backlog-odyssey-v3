@@ -26,6 +26,7 @@ import { resolvePagePalette } from "@/lib/game-theme";
 import { resolvePageScreenshots } from "@/lib/screenshot-view";
 import { deriveWindowsFallbackExists } from "@/lib/os-setup";
 import { getCompatibilityGate } from "@/lib/compat-gate";
+import { SourceIcon } from "@/components/sources/SourceIcon";
 
 export default async function WishlistDetailPage({
   params,
@@ -204,7 +205,7 @@ export default async function WishlistDetailPage({
 
       <SectionCard
         eyebrow="Current offers"
-        title="Offers"
+        title={<span className="inline-flex items-center gap-2">Offers <SourceIcon iconName="Box" brandIcon="itad.svg" /></span>}
         id="offers"
         description="Prices are shown only when the store identity is confirmed."
         status={

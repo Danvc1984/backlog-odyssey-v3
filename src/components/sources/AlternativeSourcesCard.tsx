@@ -180,7 +180,7 @@ export function AlternativeSourcesCard({ sources }: AlternativeSourcesCardProps)
                 disabled={busy}
                 onClick={() => quickAdd(known.label)}
               >
-                <SourceIcon iconName={presentation.iconName} />
+                <SourceIcon iconName={presentation.iconName} brandIcon={presentation.brandIcon} />
                 {known.label}
               </Button>
             );
@@ -201,7 +201,7 @@ export function AlternativeSourcesCard({ sources }: AlternativeSourcesCardProps)
             return (
               <li key={source.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <div className="flex min-w-0 items-center gap-2">
-                  <SourceIcon iconName={presentation.iconName} />
+                  <SourceIcon iconName={presentation.iconName} brandIcon={presentation.brandIcon} />
                   {renamingId === source.id ? (
                     <Input
                       className="w-56"

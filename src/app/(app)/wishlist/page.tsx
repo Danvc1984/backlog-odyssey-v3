@@ -2,6 +2,7 @@ import { WishlistFilterBar } from "@/components/wishlist/WishlistFilterBar";
 import { WishlistList } from "@/components/wishlist/WishlistList";
 import { AddWishlistDialog } from "@/components/wishlist/AddWishlistDialog";
 import { PriceRefreshPanel } from "@/components/wishlist/PriceRefreshPanel";
+import { SourceIcon } from "@/components/sources/SourceIcon";
 import { WishlistImportReviewSection } from "@/components/wishlist/WishlistImportReviewSection";
 import { ViewSwitch } from "@/components/games/ViewSwitch";
 import { prisma } from "@/lib/prisma";
@@ -133,7 +134,7 @@ export default async function WishlistPage({
             <span className="text-opportunity-text">adventure?</span>
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-            Your selection of wishlisted games and dlcs, discounts powered by ITAD and just enough context to know what deserves your money next.
+            Your selection of wishlisted games and dlcs, just enough context to know what deserves your money next. <span className="inline-flex items-center gap-1 whitespace-nowrap">Discounts powered by ITAD <SourceIcon iconName="Box" brandIcon="itad.svg" /></span>
           </p>
         </div>
         <div className="flex max-w-2xl flex-wrap items-end justify-end gap-3">

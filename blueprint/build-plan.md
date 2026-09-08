@@ -446,7 +446,7 @@
   - [x] 20c. **Typography** - Cinzel display for headers and hero moments,
     Inter body, unchanged technical monospace for evidence and freshness
     labels
-  - [ ] 20d. **Brand icons** - official source icons in the code-owned
+  - [x] 20d. **Brand icons** - official source icons in the code-owned
     known-source catalog with the neutral fallback untouched for custom
     sources
   - [ ] 20e. **Odyssey voice sweep** - adventurous copy mixing subtle
