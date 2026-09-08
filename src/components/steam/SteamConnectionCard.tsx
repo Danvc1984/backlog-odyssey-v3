@@ -104,7 +104,7 @@ export function SteamConnectionCard({
           </p>
         </div>
         {connected ? (
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <div className="flex w-full min-w-0 flex-wrap items-center justify-start gap-2 sm:w-auto sm:justify-end">
             <Button
               variant="outline"
               size="sm"

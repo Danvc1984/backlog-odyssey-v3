@@ -429,7 +429,7 @@
     environment options and taste setup restricted to configured devices,
     and derived-profile environment evidence adapting to the setup
 
-- [ ] 20. **Odyssey theme expansion** - two palette families (Dawn and
+- [x] 20. **Odyssey theme expansion** - two palette families (Dawn and
   Sunset, light and dark each) with family-owned semantic hue mapping, a
   Cinzel/Inter typography pairing, official brand icons, and a whole-app
   Odyssey voice sweep on expressive surfaces, locked through a prototype
@@ -456,7 +456,7 @@
   - [x] 20f. **UI icon set swap (gated)** - replace general UI icons with
     the owner-selected premium/custom set once provided; current icons
     remain the fallback until then
-  - [ ] 20g. **Cross-app acceptance** - all four palettes across desktop
+  - [x] 20g. **Cross-app acceptance** - all four palettes across desktop
     and mobile in light, dark, and system modes with keyboard, focus,
     contrast, reduced-motion, and reduced-data review of every primary
     route
