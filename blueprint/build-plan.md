@@ -67,7 +67,7 @@
   the cheapest 8-10 offers with visible alternatives and MX activation
   warnings; display-only historical lows; inline MXN targets; 48-hour
   freshness; bounded retries; clear partial failures; opportunity badges
-   without automatic recommendation runs. Vercel Cron activation deferred to 22.
+   without automatic recommendation runs. Vercel Cron activation deferred to 24.
   - [x] 10b-a. **Price identity and provenance** - three provenance-tracked
     identity paths (Steam import auto-confirm, manual Steam URL/AppID paste,
     RAWG store-link suggest-and-confirm extending only the wishlist snapshot),
@@ -493,11 +493,13 @@
     effect; description-based warning for games without metadata replacing
     the meta ready/meta missing labels; a more noticeable background for the
     main-game selector; ProtonDB card tags omitted on all-Windows setups
-  - [ ] 21d. **Wishlist** - page-size control of 20/50/100 (default 20) in
-    both views; ITAD as a link in the offer description; replace the
-    redundant opportunity signals with a discounted-games counter; sorting
-    by discount; efficient search matching the library search behavior;
-    warning color for the missing-metadata note
+  - [x] 21d. **Wishlist** - page-size control of 18/48/99 (default 18, the
+    same sizes as the Library) in both views, with the size selector living
+    inside the shared pagination bar (the 21c miss: the Library toolbar
+    control moves there too); ITAD as a link in the offer description;
+    replace the redundant opportunity signals with a discounted-games
+    counter; sorting by discount; efficient search matching the library
+    search behavior; warning color for the missing-metadata note
   - [ ] 21e. **Settings and onboarding** - rearrange and group settings
     sections by concern; fix the hydration mismatch on hard reload with
     stored visual preferences; add an app theme choice (family and mode) to
@@ -505,7 +507,38 @@
     names at Steam import time (import runs from the Settings Steam
     connection card)
 
-- [ ] 22. **Deployment and CI readiness** - Vercel/Supabase environment
+- [ ] 22. **Handheld suitability flag and handheld-aware recommendations** -
+  owner-marked handheld-suitable games feeding environment-aware
+  recommendations and compatibility presentation across catalog and wishlist
+  - [ ] 22a. **Handheld-suitable personal flag** - nullable flag on
+    LibraryEntry and WishlistEntry (mirroring gameExperience), edit
+    affordances on game detail and wishlist edit/detail, Library filter,
+    export/import schema updates
+  - [ ] 22b. **Handheld-aware fit and context** - engine factors with visible
+    explanations: a handheld-fit boost or caveat where the setup has a Linux
+    handheld (including the Windows-primary case, where compatibility
+    evidence is framed for the handheld target), and the Windows-handheld
+    rescue: a handheld-suitable game playable on a configured Windows
+    handheld is not hard-excluded by no-fallback evidence and the
+    explanation says so, while non-flagged games keep the heavy
+    practical-fit penalty; setup changes re-derive affected runs per the
+    existing rules
+
+- [ ] 23. **Playtime estimates from a dedicated provider** - replace RAWG
+  duration as the duration evidence source with IGDB and SteamSpy only,
+  feeding metadata display and the recommendation engine's duration signals
+  - [ ] 23a. **Playtime evidence provider** - IGDB `game_time_to_beats`
+    primary (identity via Steam App ID), SteamSpy median fallback when IGDB
+    has no row and RAWG is not a fallback; snapshot storage with attribution
+    and provenance, backfill through the existing re-enrichment patterns,
+    tolerant parsing; provider contract locked at spec time
+  - [ ] 23b. **Playtime display and duration wiring** - main/completionist
+    estimates on game and wishlist detail, durationBand derived only from
+    the new evidence, Tune length matching and the profile DURATION
+    dimension consuming it, RAWG playtimeHours retired from duration
+    derivation and estimates display; duration stays soft evidence only
+
+- [ ] 24. **Deployment and CI readiness** - Vercel/Supabase environment
   review, Vercel Cron daily run at 06:00 UTC-6 with `CRON_SECRET` enqueueing
   the price refresh plus a compatibility freshness sweep for catalog and
   wishlist evidence older than the 180-day window, queue overlap protection,

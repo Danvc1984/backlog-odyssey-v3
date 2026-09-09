@@ -23,10 +23,10 @@ outside scope. Alternative stores remain manual availability sources unless
 they offer a supported account-library API.
 
 Personal intent and explicit catalog choices are authoritative. Provider data
-from Steam, RAWG, ITAD, ProtonDB, AWAY, and Wallhaven is replaceable evidence:
-it never silently overwrites local data. Provider work is persistent,
-asynchronous, rate-limited, retryable up to three times, and failures preserve
-the last usable data.
+from Steam, RAWG, ITAD, ProtonDB, AWAY, Wallhaven, IGDB, and SteamSpy is
+replaceable evidence: it never silently overwrites local data. Provider work is
+persistent, asynchronous, rate-limited, retryable up to three times, and
+failures preserve the last usable data.
 
 ## Build order
 
@@ -87,13 +87,29 @@ The exact checked state is owned by blueprint/build-plan.md.
     exceptions, sidebar minimize/maximize); Today (focus carousel, wallpaper
     restore, activity/metrics fixes, natural-language recommendation
     reasoning, tune-header visibility, no-fallback message validation);
-    Library (pagination 20/50/100, edit/change-state with scroll effect,
+    Library (pagination 18/48/99, edit/change-state with scroll effect,
     metadata warning, main-game selector, ProtonDB tag gating); Wishlist
-    (pagination, ITAD link, discounted counter, discount sorting,
+    (pagination with the size selector inside the shared pagination bar,
+    ITAD link, discounted counter, discount sorting,
     library-style search, warning color); Settings and onboarding (section
     regrouping, hydration fix, welcome theme choice, Steam-name symbol
     cleanup at import).
-16. **[ ] 22: Deployment and CI readiness** - Vercel/Supabase, Cron covering
+16. **[ ] 22a-22b: Handheld suitability flag and handheld-aware
+    recommendations** - Owner-marked handheld-suitable personal flag on
+    catalog and wishlist entries (mirroring gameExperience); handheld-fit
+    factors with visible explanations where the setup has a Linux handheld,
+    including compatibility framed for the handheld target on Windows-primary
+    setups; the Windows-handheld rescue lifting the no-fallback hard
+    exclusion for flagged games with a visible explanation while non-flagged
+    games keep the heavy practical-fit penalty.
+17. **[ ] 23a-23b: Playtime estimates from a dedicated provider** - IGDB
+    `game_time_to_beats` primary with the SteamSpy median as the only
+    fallback (RAWG playtime is not a fallback), replaceable attributed
+    evidence keyed by the confirmed Steam App ID, estimates display on game
+    and wishlist detail, durationBand and Tune length wired to the new
+    evidence, and RAWG playtimeHours retired from duration derivation and
+    estimates display; duration stays soft evidence.
+18. **[ ] 24: Deployment and CI readiness** - Vercel/Supabase, Cron covering
     prices plus the compatibility freshness sweep (a no-op while compatibility
     is inactive), smoke tests, Verify command, and automatic checks.
 
@@ -125,7 +141,8 @@ boundaries.
   unimported titles but never imports or links catalog records.
 - Game is catalog-only and represents a base game or DLC. LibraryEntry holds
   personal play state, main game, priority, interest, rating, environment,
-  game experience, notes, replayCandidate, and hidden state.
+  game experience, notes, replayCandidate, hidden state, and (feature 23) a
+  nullable handheld-suitable flag.
 - ExternalGameId stores provider identities and provenance. GameAvailability is
   separate from origin, provider IDs, compatibility, and offer sellers.
 - Steam and ROM are built-in availability kinds. Other platform availability
@@ -138,11 +155,16 @@ boundaries.
   filtered), tolerant of v1/v2 rows and backfilled by re-enrichment.
   PossibleDuplicate records review evidence. CatalogOperation enables scoped,
   reload-safe Undo for merge and delete.
+- Playtime evidence (feature 24) is replaceable, attributed IGDB/SteamSpy data
+  keyed by the confirmed Steam App ID; its storage shape is a spec decision
+  for 24a. RAWG `playtimeHours` stays in old snapshots but is no longer a
+  duration source.
 
 ### Wishlist, pricing, compatibility, and recommendations
 
 - WishlistEntry stays independent from Game until explicit acquisition. It is an
-  unowned base game or an unowned DLC linked to an owned base game.
+  unowned base game or an unowned DLC linked to an owned base game, carrying
+  the shared personal fields including the handheld-suitable flag.
 - WishlistMetadataSnapshot is independent RAWG evidence and follows the same
   v3 contract for base-game wishes. UnresolvedSteamDlc, WishlistImportReview,
   and WishlistImportIgnore preserve manual review across owned sync and
@@ -188,6 +210,12 @@ boundaries.
 - ITAD is server-side, read-only, country=MX, batched, cached, and respects
   rate limits. The seller page is authoritative for activation; key stores warn
   that Mexico activation must be checked.
+- Playtime estimates come from IGDB's `game_time_to_beats` (hastily, normally,
+  completely plus sample count) with the SteamSpy median as the only fallback;
+  RAWG playtime is not a fallback and is retired from duration derivation and
+  estimates display. Estimates are replaceable, attributed evidence keyed by
+  the confirmed Steam App ID; games without provider rows show unknown
+  duration, like any other missing provider evidence.
 
 ### OS setup, compatibility, and recommendations
 
@@ -233,15 +261,23 @@ boundaries.
   wishes; ROMs never enter Buy.
 - Interest is durable taste; catalog priority is short-term Play Next urgency.
   Compatibility and metadata are soft, explainable evidence, not hard gates,
-  with one sanctioned exception. On all-Windows setups compatibility
+  with two sanctioned exceptions. On all-Windows setups compatibility
   contributes no factors, floors, or caveats, and environment fit derives
-  from the configured devices. The exception: on a Linux setup without a
+  from the configured devices. First exception: on a Linux setup without a
   Windows fallback, fallback-needing evidence (denied/broken anti-cheat,
   not-playable Linux, or unknown Linux evidence where a READY floor applies)
   hard-excludes the game from all play roles with a visible, explained
-  reason; a play role left empty is absent from the run. The same evidence
+  reason; a play role left empty is absent from the run. Second exception
+  (feature 23): that no-fallback exclusion does not apply to a game the
+  owner flagged as handheld-suitable when the setup includes a Windows
+  handheld - the game remains playable there and the explanation says so;
+  non-flagged games keep the heavy practical-fit penalty. The same evidence
   class never hard-excludes from Buy or wishlist discovery - there it is a
   heavy practical-fit penalty plus caveat, never exclusion.
+- The handheld-suitable flag is soft personal evidence: a handheld-fit boost
+  or caveat where the setup has a Linux handheld (compatibility framed for
+  the handheld target on Windows-primary setups), visible in explanations,
+  never an eligibility gate by itself.
 - Source tuning is an inclusive, modest Play Next boost. It does not exclude
   eligible games, affect Buy, or influence seller/offer selection.
 - Play Next provides two Best Fit roles, Out of the Box, and Change of Pace.
@@ -278,7 +314,7 @@ boundaries.
   headers, empty states, buttons, dashboard moments, and dialogs - mixing
   subtle allusion with named mythology. Statuses, errors, evidence labels,
   freshness, field help, and caveats stay plain and factual. Navigation and
-  section names keep their identity. This sweep is the current feature (20e).
+  section names keep their identity. The sweep shipped in 20e.
 - Official brand icons are shipped (20d): known availability sources render
   their official SVGs from `public/` via the code-owned `brandIcon` field;
   ROM keeps `Disc3` and custom sources keep the neutral `Box` fallback. The
@@ -348,9 +384,11 @@ freshness, and operations are supporting sections.
   Prisma/PostgreSQL/Supabase, Auth.js/Google, Zod, Vitest, and Vercel.
 - Commands: pnpm dev on port 3500, pnpm build, pnpm start, pnpm lint,
   pnpm typecheck, and pnpm test.
-- Provider keys stay server-side. Production validates environment, database
+- Provider keys stay server-side. Feature 24 adds IGDB credentials (Twitch
+  client ID/secret, server-side) and keyless SteamSpy under the same
+  server-side rule. Production validates environment, database
   migration, queue/scheduler behavior, and smoke tests.
-- Feature 22 configures Vercel Cron and CRON_SECRET for a daily run at
+- Feature 24 configures Vercel Cron and CRON_SECRET for a daily run at
   06:00 UTC-6 enqueueing the price refresh plus a compatibility freshness
   sweep for catalog and wishlist evidence older than the 180-day window; the
   sweep is a no-op while compatibility is inactive. Claims must be atomic,
@@ -372,14 +410,19 @@ freshness, and operations are supporting sections.
   child) following the 2026-09-07 renumbering. All are complete, so this is
   cosmetic; renaming the parent would clean the history.
 - The general UI icon set choice is the owner's; it gates only 20f.
+- Feature 24a leaves the playtime evidence storage shape and queueing
+  semantics as spec decisions (standalone evidence model versus a snapshot
+  payload key is open until then).
 
 ## Next workflow action
 
-`blueprint/context/current-feature.md` holds the reviewed spec for **21b:
-Today**; the reviewed spec for **21a: Global visual fixes** is parked at
-`blueprint/context/pending-21a-spec.md` until it is picked up (move it back
-to `current-feature.md` or re-run `/feature 21a` when building it). Run
-`/implement` to build 21b. Deployment is feature 22.
+**21a** and **21b** are complete and archived under `blueprint/history/`;
+`blueprint/context/current-feature.md` is the reset stub. Remaining
+unchecked: **21c (Library)**, **21d (Wishlist)**, **21e (Settings and
+onboarding)**, then **22 (handheld flag)** and **23 (playtime)**, with
+deployment as **feature 24**. The owner chose to finish feature 21 before
+the new features: run `/feature 21c` (bare `/feature` also picks 21c as the
+first unchecked item) to spec the next sub-feature.
 
 This overview is generated from the two plans and does not authorize code
 changes.

@@ -8,8 +8,13 @@ import {
 } from "@phosphor-icons/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { PageSizeControl } from "@/components/list/PageSizeControl";
+import type { PageSize } from "@/lib/list-pagination";
 
 interface ListPaginationControlsProps {
+  ariaLabel?: string;
+  pageSizeLabel?: string;
+  size: PageSize;
   page: number;
   totalPages: number;
   rangeStart: number;
@@ -18,6 +23,9 @@ interface ListPaginationControlsProps {
 }
 
 export function ListPaginationControls({
+  ariaLabel = "Library pages",
+  pageSizeLabel = "Games per page",
+  size,
   page,
   totalPages,
   rangeStart,
@@ -40,8 +48,13 @@ export function ListPaginationControls({
   };
 
   return (
-    <nav aria-label="Library pages" className="mt-5 flex items-center justify-between gap-3">
+    <nav aria-label={ariaLabel} className="mt-5 flex flex-wrap items-center justify-between gap-3">
       <div className="flex items-center gap-2">
+        <PageSizeControl
+          size={size}
+          ariaLabel={pageSizeLabel}
+          label={pageSizeLabel.replace(/\s+per page$/i, "")}
+        />
         <Button
           type="button"
           variant="outline"

@@ -7,18 +7,23 @@ import { WishlistImportReviewSection } from "@/components/wishlist/WishlistImpor
 import { ViewSwitch } from "@/components/games/ViewSwitch";
 import { prisma } from "@/lib/prisma";
 import { buildEntryOfferView } from "@/lib/offer-selection";
-import { wishlistWhere } from "@/lib/wishlist-search";
+import { matchWishlistEntries, sortWishlistEntries, wishlistWhere } from "@/lib/wishlist-search";
 import { getWishlistCompatibilityEligibility } from "@/lib/wishlist-compatibility";
 import { deriveCompatTag } from "@/lib/protondb-tags";
 import { getCompatibilityGate } from "@/lib/compat-gate";
 import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
 import { wishlistCardMetadataView } from "@/lib/card-metadata-view";
+import { ListPaginationControls } from "@/components/list/ListPaginationControls";
+import { parsePage, parsePageSize, resolveRange } from "@/lib/list-pagination";
 
 interface WishlistSearchParams {
   type?: string;
   interest?: string;
   q?: string;
   view?: string;
+  size?: string;
+  page?: string;
+  sort?: string;
 }
 
 type WishlistView = "focus" | "list";
@@ -34,6 +39,9 @@ export default async function WishlistPage({
 }) {
   const params = await searchParams;
   const view = normalizeWishlistView(params.view);
+  const size = parsePageSize(params.size);
+  const rawPage = parsePage(params.page, Number.MAX_SAFE_INTEGER);
+  const sort = params.sort === "discount" ? "discount" : "interest";
   const type = ["BASE_GAME", "DLC"].includes(params.type ?? "")
     ? (params.type as "BASE_GAME" | "DLC")
     : undefined;
@@ -46,7 +54,7 @@ export default async function WishlistPage({
 
   const [entries, baseGames] = await Promise.all([
     prisma.wishlistEntry.findMany({
-      where: wishlistWhere({ type, interest: interestFilter, query }),
+      where: wishlistWhere({ type, interest: interestFilter }),
       orderBy: [{ interest: "desc" }, { updatedAt: "desc" }],
       select: {
         id: true,
@@ -59,6 +67,7 @@ export default async function WishlistPage({
         steamAppId: true,
         steamAppIdProvenance: true,
         targetPriceMxn: true,
+        updatedAt: true,
         compatSnapshots: {
           where: { provider: "PROTONDB" },
           orderBy: { fetchedAt: "desc" },
@@ -102,6 +111,7 @@ export default async function WishlistPage({
     });
     return {
       ...entry,
+      baseGameName: baseGame?.name ?? null,
       metadata,
       metadataGenres: metadataPayload?.genres ?? [],
       hasOwnMetadata: ownMetadata !== null,
@@ -118,10 +128,19 @@ export default async function WishlistPage({
       offerView: buildEntryOfferView(offers, targetPriceMxn, new Date()),
     };
   });
-  const baseGameCount = entriesWithOfferViews.filter((entry) => entry.type === "BASE_GAME").length;
-  const dlcCount = entriesWithOfferViews.filter((entry) => entry.type === "DLC").length;
-  const opportunityCount = entriesWithOfferViews.filter((entry) => entry.offerView.opportunity.hasBadge).length;
-  const needsAttentionCount = entriesWithOfferViews.filter((entry) => entry.steamAppId === null).length;
+  const matchedEntries = matchWishlistEntries(query ?? "", entriesWithOfferViews);
+  const orderedEntries = sort === "discount"
+    ? sortWishlistEntries(matchedEntries)
+    : matchedEntries;
+  const baseGameCount = orderedEntries.filter((entry) => entry.type === "BASE_GAME").length;
+  const dlcCount = orderedEntries.filter((entry) => entry.type === "DLC").length;
+  const discountedCount = orderedEntries.filter((entry) => (entry.offerView.selected?.discount ?? 0) > 0).length;
+  const needsAttentionCount = orderedEntries.filter((entry) => entry.steamAppId === null).length;
+  const range = resolveRange(orderedEntries.length, rawPage, size);
+  const paginatedEntries = orderedEntries.slice(
+    (range.page - 1) * size,
+    range.page * size,
+  );
   const hasFilters = Boolean(query || type || interestFilter !== undefined);
 
   return (
@@ -134,7 +153,7 @@ export default async function WishlistPage({
             <span className="text-opportunity-text">adventure?</span>
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-            Keep an eye on the games calling your name, and let the best moment to buy reveal itself. <span className="inline-flex items-center gap-1 whitespace-nowrap">Discounts powered by ITAD <SourceIcon iconName="Box" brandIcon="itad.svg" /></span>
+            Keep an eye on the games calling your name, and let the best moment to buy reveal itself. <span className="inline-flex items-center gap-1 whitespace-nowrap">Discounts powered by <a href="https://isthereanydeal.com" target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-foreground">ITAD</a> <SourceIcon iconName="Box" brandIcon="itad.svg" /></span>
           </p>
         </div>
         <div className="flex max-w-2xl flex-wrap items-end justify-end gap-3">
@@ -149,9 +168,9 @@ export default async function WishlistPage({
           <p className="mt-1 text-xs text-muted-foreground">{baseGameCount} base games · {dlcCount} DLC</p>
         </article>
         <article className="rounded-lg border border-opportunity/40 bg-opportunity/5 p-4">
-          <p className="technical-label text-muted-foreground">Opportunity signals</p>
-          <p className="mt-2 text-3xl font-bold tracking-tight">{opportunityCount.toString().padStart(2, "0")}</p>
-          <p className="mt-1 text-xs text-muted-foreground">fresh offers at target</p>
+          <p className="technical-label text-muted-foreground">Discounted games</p>
+          <p className="mt-2 text-3xl font-bold tracking-tight">{discountedCount.toString().padStart(2, "0")}</p>
+          <p className="mt-1 text-xs text-muted-foreground">cheapest offers discounted now</p>
         </article>
         <article className="rounded-lg border border-warning/40 bg-warning/5 p-4">
           <p className="technical-label text-muted-foreground">Needs your review</p>
@@ -171,7 +190,19 @@ export default async function WishlistPage({
         />
       </div>
       <WishlistImportReviewSection />
-      <WishlistList entries={entriesWithOfferViews} baseGames={baseGames} view={view} hasFilters={hasFilters} />
+      <WishlistList entries={paginatedEntries} baseGames={baseGames} view={view} hasFilters={hasFilters} />
+      {orderedEntries.length > 0 && (
+        <ListPaginationControls
+          ariaLabel="Wishlist pages"
+          pageSizeLabel="Wishes per page"
+          size={size}
+          page={range.page}
+          totalPages={range.totalPages}
+          rangeStart={range.rangeStart}
+          rangeEnd={range.rangeEnd}
+          total={orderedEntries.length}
+        />
+      )}
     </div>
   );
 }

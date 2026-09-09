@@ -18,7 +18,6 @@ import { availabilitySourcePresentation } from "@/lib/sources/known-sources";
 import { deriveCompatTag } from "@/lib/protondb-tags";
 import { getCompatibilityGate } from "@/lib/compat-gate";
 import { libraryCardMetadataView } from "@/lib/card-metadata-view";
-import { PageSizeControl } from "@/components/list/PageSizeControl";
 import { ListPaginationControls } from "@/components/list/ListPaginationControls";
 import { parsePage, parsePageSize, resolveRange } from "@/lib/list-pagination";
 
@@ -361,7 +360,6 @@ export default async function LibraryPage({
           }))}
         />
         <div className="flex flex-wrap items-center gap-2">
-          <PageSizeControl size={size} />
           <ViewSwitch view={view} label="Library view" />
         </div>
       </div>
@@ -408,8 +406,11 @@ export default async function LibraryPage({
               />
             ))}
           </div>
-          {range.totalPages > 1 && (
+          {entries.length > 0 && (
             <ListPaginationControls
+              ariaLabel="Library pages"
+              pageSizeLabel="Games per page"
+              size={size}
               page={range.page}
               totalPages={range.totalPages}
               rangeStart={range.rangeStart}

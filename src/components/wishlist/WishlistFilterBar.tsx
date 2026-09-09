@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -35,25 +35,29 @@ export function WishlistFilterBar() {
     [pathname, router, searchParams],
   );
 
-  const submitSearch = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    update("q", query.trim());
+  const toggleDiscountSort = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (searchParams.get("sort") === "discount") params.delete("sort");
+    else params.set("sort", "discount");
+    params.delete("page");
+    router.replace(`${pathname}${params.size > 0 ? `?${params}` : ""}`);
   };
 
   return (
     <div className="flex flex-wrap items-center gap-2" aria-label="Wishlist filters">
-      <form onSubmit={submitSearch} className="flex min-w-64 flex-1 gap-2">
+      <div className="min-w-64 flex-1">
         <Input
           type="search"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => {
+            const value = event.target.value;
+            setQuery(value);
+            update("q", value.trim());
+          }}
           placeholder="Search games and DLC"
           aria-label="Search wishlist"
         />
-        <button type="submit" className="rounded-md border border-border px-3 text-sm hover:bg-muted">
-          Search
-        </button>
-      </form>
+      </div>
       <div className="flex flex-wrap gap-1.5" aria-label="Wishlist type filters">
         {TYPE_OPTIONS.map((option) => {
           const active = (searchParams.get("type") ?? "ALL") === option.value;
@@ -96,6 +100,19 @@ export function WishlistFilterBar() {
           );
         })}
       </div>
+      <button
+        type="button"
+        aria-pressed={searchParams.get("sort") === "discount"}
+        onClick={toggleDiscountSort}
+        className={cn(
+          "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+          searchParams.get("sort") === "discount"
+            ? "border-opportunity/40 bg-opportunity/10 text-opportunity-text"
+            : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+        )}
+      >
+        Biggest discount
+      </button>
     </div>
   );
 }

@@ -307,6 +307,28 @@ RAWG attribution appears near RAWG data or images and in a
 `Powered by / Data and content providers` section. The key remains server-side
 and provider constraints are respected.
 
+### Playtime estimates
+
+Dedicated playtime evidence replaces the RAWG duration number for duration
+banding and estimates display:
+
+- Sources: IGDB `game_time_to_beats` (hastily, normally, completely, and the
+  sample count) as primary evidence, with the SteamSpy median playtime as
+  fallback when IGDB has no row. RAWG `playtimeHours` is not a fallback:
+  duration derivation and estimates display use the two providers only.
+- Identity keys off the confirmed Steam App ID like compatibility evidence;
+  IGDB mapping may resolve through IGDB external game IDs or a confirmed
+  name search with visible provenance.
+- Stored as replaceable, attributed evidence with provenance and a freshness
+  window; failure preserves the last usable data and never blocks other
+  enrichment.
+- Display appears on game detail and wishlist detail as main and
+  completionist estimates with attribution; games without provider rows show
+  unknown duration, like any other missing provider evidence.
+- Backfill runs through the existing re-enrichment patterns; queueing
+  semantics are a spec decision. Duration remains soft evidence in
+  recommendations.
+
 ## 8. Asynchronous Enrichment and Provider Operations
 
 Manual entries and Steam imports are saved immediately and provider work runs
@@ -591,9 +613,12 @@ factors such as:
 - Priority and declared interest.
 - Availability sources and any active play-next source tune.
 - Game experience / intention, intended environment, and compatibility.
-- RAWG genres, tags, estimated playtime, release era, publisher, sequel
-  relationship where confidently known, ESRB context when available, Metacritic,
-  and community-rating confidence.
+- Handheld-suitability personal flag on catalog and wishlist entries.
+- RAWG genres, tags, release era, publisher, sequel relationship where
+  confidently known, ESRB context when available, Metacritic, and
+  community-rating confidence.
+- IGDB/SteamSpy playtime estimates with attribution when present; RAWG
+  playtime is retired from duration derivation and estimates display.
 - Steam playtime and recency when available, with manually marked play history
   as the safe fallback from a new import onward.
 - Price and target-price status.
@@ -635,20 +660,23 @@ factors such as:
   tuning never affects buy recommendations, wishlist eligibility, seller
   ranking, or price comparison.
 - Compatibility is a small practical-fit signal for the intended environment,
-  not a hard gate, with one sanctioned exception. Confirmed fit may boost a
+  not a hard gate, with two sanctioned exceptions. Confirmed fit may boost a
   recommendation; unknown, stale, or poor evidence surfaces caveats and can
   reduce practical fit, but does not declare a game unplayable or silently
   exclude it. On all-Windows setups compatibility is inactive and contributes
   no factors, floors, or caveats; environment fit derives from the configured
-  devices instead. The exception: on a Linux setup without a Windows
+  devices instead. The first exception: on a Linux setup without a Windows
   fallback, evidence that would derive "fallback needed" (denied/broken
   anti-cheat, not-playable Linux, or unknown Linux evidence where a READY
   floor applies) hard-excludes the game from all play roles with a visible,
-  explained reason - the only sanctioned hard exclusion. A play role left
-  with no remaining candidate is absent from the run, consistent with the
-  existing role rule. The same evidence class never hard-excludes from buy
-  recommendations or wishlist discovery; there it applies a heavy
-  practical-fit penalty plus a caveat, never exclusion.
+  explained reason. The second exception: that no-fallback exclusion does not
+  apply to a game the owner flagged as handheld-suitable when the setup
+  includes a Windows handheld - the game remains playable there and the
+  explanation says so; non-flagged games keep the heavy practical-fit penalty
+  instead. A play role left with no remaining candidate is absent from the
+  run, consistent with the existing role rule. The same evidence class never
+  hard-excludes from buy recommendations or wishlist discovery; there it
+  applies a heavy practical-fit penalty plus a caveat, never exclusion.
 - Buy offer quality: fresh-offer discount percentage earns points; proximity
   to the historical low breaks ties; stale offers contribute zero
   offer-quality points, consistent with the 48-hour rule.

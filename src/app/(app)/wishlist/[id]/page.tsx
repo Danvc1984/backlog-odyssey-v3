@@ -193,7 +193,7 @@ export default async function WishlistDetailPage({
           )}
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-warning-text">
           RAWG metadata is not available yet. Use Edit to search and choose a
           match.
         </p>
@@ -207,7 +207,7 @@ export default async function WishlistDetailPage({
         eyebrow="Current offers"
         title={<span className="inline-flex items-center gap-2">Offers <SourceIcon iconName="Box" brandIcon="itad.svg" /></span>}
         id="offers"
-        description="Prices are shown only when the store identity is confirmed."
+        description={<>Cheapest valid offers via <a href="https://isthereanydeal.com" target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-foreground">ITAD</a>. Prices are shown only when the store identity is confirmed.</>}
         status={
           <StatusPill>
             {entry.steamAppId ? "Identity confirmed" : "Unavailable"}
