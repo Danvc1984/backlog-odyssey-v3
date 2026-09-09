@@ -80,7 +80,6 @@ function toLibraryEntry(entry: {
       type: entry.game.type,
       baseGame: entry.game.baseGame,
       metadata,
-      metadataReady: metadataSnapshots.length > 0,
       _count: entry.game._count,
       availability: entry.game.availability,
     },

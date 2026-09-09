@@ -54,6 +54,7 @@ export function SectionCard({
   eyebrow,
   title,
   id,
+  sectionId,
   description,
   status,
   aside,
@@ -65,6 +66,7 @@ export function SectionCard({
   eyebrow: string;
   title: ReactNode;
   id?: string;
+  sectionId?: string;
   description?: ReactNode;
   status?: ReactNode;
   aside?: ReactNode;
@@ -73,9 +75,12 @@ export function SectionCard({
   className?: string;
   children: ReactNode;
 }) {
+  const headingId = id ? (sectionId ? `${id}-title` : id) : undefined;
+
   return (
     <section
-      aria-labelledby={id}
+      id={sectionId}
+      aria-labelledby={headingId}
       className={cn(
         `game-theme-section-card game-theme-section-card--${tone} rounded-lg border shadow-card`,
         CARD_TONES[tone],
@@ -86,7 +91,7 @@ export function SectionCard({
         <div className="mb-5 flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="technical-label text-muted-foreground">{eyebrow}</p>
-            <h2 id={id} className="mt-1 text-xl font-semibold tracking-[0.01em]">
+            <h2 id={headingId} className="mt-1 text-xl font-semibold tracking-[0.01em]">
               {title}
             </h2>
             {description && (

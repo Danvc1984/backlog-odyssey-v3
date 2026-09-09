@@ -18,6 +18,9 @@ import { availabilitySourcePresentation } from "@/lib/sources/known-sources";
 import { deriveCompatTag } from "@/lib/protondb-tags";
 import { getCompatibilityGate } from "@/lib/compat-gate";
 import { libraryCardMetadataView } from "@/lib/card-metadata-view";
+import { PageSizeControl } from "@/components/list/PageSizeControl";
+import { ListPaginationControls } from "@/components/list/ListPaginationControls";
+import { parsePage, parsePageSize, resolveRange } from "@/lib/list-pagination";
 
 interface LibrarySearchParams {
   q?: string;
@@ -28,6 +31,8 @@ interface LibrarySearchParams {
   collection?: string;
   duplicates?: string;
   view?: string;
+  size?: string;
+  page?: string;
 }
 
 type LibraryView = "grid" | "list";
@@ -41,9 +46,10 @@ export default async function LibraryPage({
 }: {
   searchParams: Promise<LibrarySearchParams>;
 }) {
-  const { q = "", source, alt, state, sort = "newest", collection, duplicates, view: viewParam } =
+  const { q = "", source, alt, state, sort = "newest", collection, duplicates, view: viewParam, size: sizeParam, page: pageParam } =
     await searchParams;
   const view = normalizeLibraryView(viewParam);
+  const size = parsePageSize(sizeParam);
   const compatibilityGate = await getCompatibilityGate();
 
   if (duplicates === "true") {
@@ -175,16 +181,30 @@ export default async function LibraryPage({
         })
     : null;
 
-  const entries = await prisma.libraryEntry.findMany({
-    where: {
-      game: {
-        type: "BASE_GAME",
-        id: fuzzyIds ? { in: fuzzyIds } : undefined,
-        availability: availabilityFilter,
-      },
-      playState: stateFilter ?? undefined,
-      ...collectionWhere,
+  const libraryWhere = {
+    game: {
+      type: "BASE_GAME" as const,
+      id: fuzzyIds ? { in: fuzzyIds } : undefined,
+      availability: availabilityFilter,
     },
+    playState: stateFilter ?? undefined,
+    ...collectionWhere,
+  };
+  const orderBy = (() => {
+    switch (sort) {
+      case "oldest":
+        return { createdAt: "asc" as const };
+      case "name-asc":
+        return { game: { name: "asc" as const } };
+      case "name-desc":
+        return { game: { name: "desc" as const } };
+      default:
+        return { createdAt: "desc" as const };
+    }
+  })();
+  const rawPage = parsePage(pageParam, Number.MAX_SAFE_INTEGER);
+  const query = {
+    where: libraryWhere,
     include: {
         game: {
           include: {
@@ -212,19 +232,32 @@ export default async function LibraryPage({
           },
       },
     },
-    orderBy: (() => {
-      switch (sort) {
-        case "oldest":
-          return { createdAt: "asc" as const };
-        case "name-asc":
-          return { game: { name: "asc" as const } };
-        case "name-desc":
-          return { game: { name: "desc" as const } };
-        default:
-          return { createdAt: "desc" as const };
-      }
-    })(),
-  });
+    orderBy,
+  } as const;
+
+  let entriesResult;
+  let total;
+  if (fuzzyIds) {
+    entriesResult = await prisma.libraryEntry.findMany(query);
+    total = entriesResult.length;
+  } else {
+    [entriesResult, total] = await Promise.all([
+      prisma.libraryEntry.findMany({ ...query, take: size, skip: (rawPage - 1) * size }),
+      prisma.libraryEntry.count({ where: libraryWhere }),
+    ]);
+    const initialRange = resolveRange(total, rawPage, size);
+    if (initialRange.page !== rawPage) {
+      entriesResult = await prisma.libraryEntry.findMany({
+        ...query,
+        take: size,
+        skip: (initialRange.page - 1) * size,
+      });
+    }
+  }
+  const range = resolveRange(total, rawPage, size);
+  const entries = fuzzyIds
+    ? entriesResult.slice((range.page - 1) * size, range.page * size)
+    : entriesResult;
 
   const entriesWithTiers = entries.map((entry) => {
     const { metadataSnapshots, ...game } = entry.game;
@@ -237,7 +270,6 @@ export default async function LibraryPage({
       game: {
         ...game,
         metadata,
-        metadataReady: metadataSnapshots.length > 0,
       },
       compatTag: deriveCompatTag({
         active: compatibilityGate.active,
@@ -328,7 +360,10 @@ export default async function LibraryPage({
             ...availabilitySourcePresentation("OTHER_PLATFORM", alternative.name),
           }))}
         />
-        <ViewSwitch view={view} label="Library view" />
+        <div className="flex flex-wrap items-center gap-2">
+          <PageSizeControl size={size} />
+          <ViewSwitch view={view} label="Library view" />
+        </div>
       </div>
 
       {entries.length === 0 ? (
@@ -373,6 +408,15 @@ export default async function LibraryPage({
               />
             ))}
           </div>
+          {range.totalPages > 1 && (
+            <ListPaginationControls
+              page={range.page}
+              totalPages={range.totalPages}
+              rangeStart={range.rangeStart}
+              rangeEnd={range.rangeEnd}
+              total={total}
+            />
+          )}
         </div>
       )}
     </div>

@@ -125,7 +125,7 @@ export function WishlistCard({
         </div>
 
         {entry.type === "BASE_GAME" && !entry.hasOwnMetadata && !entry.hasInheritedMetadata && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-warning-text">
             RAWG metadata is not available yet. Use Edit to search and choose a match.
           </p>
         )}

@@ -5,7 +5,6 @@ import { LibraryInterestRating } from "./LibraryInterestRating";
 import { ProtonDbTag } from "./ProtonDbTag";
 import type { CompatTag } from "@/lib/protondb-tags";
 import type { LibraryCardMetadataView } from "@/lib/card-metadata-view";
-import { cn } from "@/lib/utils";
 
 export interface LibraryGameCardEntry {
   id: string;
@@ -23,7 +22,6 @@ export interface LibraryGameCardEntry {
     type: string;
     baseGame: { id: string; name: string } | null;
     metadata: LibraryCardMetadataView | null;
-    metadataReady: boolean;
     _count: { dlcs: number; collections: number };
     availability: {
       id: string;
@@ -72,13 +70,13 @@ function MockActions({ gameId }: { gameId: string }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Link
-        href={`/games/${gameId}`}
+        href={`/games/${gameId}#personal-fields`}
         className="inline-flex h-7 items-center rounded-[8px] border border-border-strong bg-card px-2.5 text-xs font-bold text-foreground hover:bg-card-alt"
       >
         Edit
       </Link>
       <Link
-        href={`/games/${gameId}`}
+        href={`/games/${gameId}#play-state`}
         className="inline-flex h-7 items-center rounded-[8px] border border-border-strong bg-card px-2.5 text-xs font-bold text-foreground hover:bg-card-alt"
       >
         Change state
@@ -89,7 +87,6 @@ function MockActions({ gameId }: { gameId: string }) {
 
 function CardMeta({ entry }: { entry: LibraryGameCardEntry }) {
   const notEmpty: string[] = [];
-  const metaReady = entry.game.metadataReady;
   if (entry.game.type === "BASE_GAME" && entry.game._count.dlcs > 0) {
     notEmpty.push(`${entry.game._count.dlcs} DLC`);
   }
@@ -98,12 +95,6 @@ function CardMeta({ entry }: { entry: LibraryGameCardEntry }) {
       `${entry.game._count.collections} ${entry.game._count.collections === 1 ? "collection" : "collections"}`,
     );
   }
-
-  const status = metaReady ? (
-    <span className={cn("technical-label", "text-muted-foreground")}>meta ready</span>
-  ) : (
-    <span className={cn("technical-label", "text-warning-text")}>meta missing</span>
-  );
 
   const counts =
     notEmpty.length > 0 ? (
@@ -118,13 +109,13 @@ function CardMeta({ entry }: { entry: LibraryGameCardEntry }) {
   return (
     <span className="flex min-w-0 items-center gap-2">
       {counts}
-      {status}
     </span>
   );
 }
 
 function CardDetails({
   descriptionPreview,
+  missingDescription,
   genres,
   developers,
   releaseDate,
@@ -135,6 +126,7 @@ function CardDetails({
   listView,
 }: {
   descriptionPreview: string | null;
+  missingDescription: boolean;
   genres: string[];
   developers: string[];
   releaseDate: string | null;
@@ -162,6 +154,11 @@ function CardDetails({
             {descriptionPreview}
           </p>
         </div>
+      )}
+      {missingDescription && (
+        <p className="text-xs text-warning-text">
+          RAWG metadata is not available yet. Use Edit to search and choose a match.
+        </p>
       )}
       {genres.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
@@ -198,6 +195,7 @@ function CardBody({
   const descriptionPreview = meta.description
     ? formatDescriptionPreview(meta.description)
     : null;
+  const missingDescription = !meta.description?.trim();
 
   return (
     <div className={`flex min-w-0 flex-1 flex-col p-4 ${includeControls ? "" : "pt-0"}`}>
@@ -223,6 +221,7 @@ function CardBody({
       )}
       <CardDetails
         descriptionPreview={descriptionPreview}
+        missingDescription={missingDescription}
         genres={meta.genres}
         developers={meta.developers}
         releaseDate={meta.releaseDate}

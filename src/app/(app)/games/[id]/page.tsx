@@ -9,6 +9,7 @@ import { DeleteGameDialog } from "@/components/games/DeleteGameDialog";
 import { AvailabilityEditor } from "@/components/games/AvailabilityEditor";
 import { GameNameForm } from "@/components/games/GameNameForm";
 import { MetadataSection } from "@/components/games/MetadataSection";
+import { HashScrollTarget } from "@/components/ui/HashScrollTarget";
 import { RawgEnrichmentPanel } from "@/components/games/RawgEnrichmentPanel";
 import { DlcSection } from "@/components/games/DlcSection";
 import { ScreenshotsSection } from "@/components/games/ScreenshotsSection";
@@ -177,6 +178,7 @@ export default async function GameDetailPage({
   return (
     <GameThemeScope palette={resolvePagePalette(rawgPayload)}>
       <div className="space-y-8">
+        <HashScrollTarget />
       <p className="technical-label text-muted-foreground">
         <a href="/library" className="hover:text-foreground hover:underline">
           Owned Games Library
@@ -210,11 +212,11 @@ export default async function GameDetailPage({
         fetchedAt={rawgSnapshot?.fetchedAt ?? null}
       />
 
-      <span id="play-state" />
       <SectionCard
         eyebrow="Play status"
         title="Play state"
         id="play-state"
+        sectionId="play-state"
         className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
         description="Set the course for where this game stands in your voyage."
         status={
@@ -259,11 +261,11 @@ export default async function GameDetailPage({
 
       {otherGameName && <DuplicateWarning otherGameName={otherGameName} />}
 
-      <span id="personal-fields" />
       <SectionCard
         eyebrow="Personal"
         title="Profile"
         id="personal-fields"
+        sectionId="personal-fields"
         className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
         description="Your preferences and notes for the journey."
         status={

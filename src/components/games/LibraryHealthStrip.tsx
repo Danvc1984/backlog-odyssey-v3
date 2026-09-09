@@ -176,7 +176,7 @@ export function LibraryHealthStrip({
         value={health.recommendationProfile.incomplete.length}
         detail="games need one more signal"
       />
-      <article className={`rounded-lg border p-4 ${TILE_CLASSES.neutral}`}>
+      <article className="rounded-lg border border-signal/60 bg-signal/10 p-4">
         <div className="technical-label text-muted-foreground">Main game</div>
         {mainGame || inProgress.length > 0 ? (
           <>

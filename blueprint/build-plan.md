@@ -487,7 +487,7 @@
     recommendations (opt in) section header visible
     with an expand icon; and validate the no-fallback hidden-games message
     so it does not appear when Windows is primary with a Linux handheld
-  - [ ] 21c. **Library** - page-size control of 20/50/100 (default 20) in
+  - [x] 21c. **Library** - page-size control of 18/48/99 (default 18) in
     both grid and list views (shared mechanism, reused by 21d); edit and
     change-state actions working like game detail including the scroll
     effect; description-based warning for games without metadata replacing
