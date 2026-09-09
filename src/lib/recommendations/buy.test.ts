@@ -96,7 +96,7 @@ describe("scoreBuyCandidate", () => {
     const scored = scoreBuyCandidate(candidate({ interest: 4 }), now);
     expect(scored.score).toBe(40);
     expect(scored.positive).toEqual([
-      { factor: "interest", label: "Interest 4", points: 40 },
+      { factor: "interest", label: "You have strong interest in this game", points: 40 },
     ]);
 
     const quiet = scoreBuyCandidate(candidate(), now);
@@ -108,14 +108,14 @@ describe("scoreBuyCandidate", () => {
     const fresh = scoreBuyCandidate(candidate({ offers: [offer({ discount: 45 })] }), now);
     expect(fresh.positive).toContainEqual({
       factor: "offer_discount",
-      label: "45% off",
+      label: "It is 45% off right now",
       points: 4,
     });
 
     const capped = scoreBuyCandidate(candidate({ offers: [offer({ discount: 100 })] }), now);
     expect(capped.positive).toContainEqual({
       factor: "offer_discount",
-      label: "100% off",
+      label: "It is 100% off right now",
       points: 10,
     });
 
@@ -138,7 +138,7 @@ describe("scoreBuyCandidate", () => {
   it("adds the locked +8 only for a comparable MXN offer at or below target", () => {
     const hit = scoreBuyCandidate(candidate({ targetPriceMxn: "350.00" }), now);
     expect(hit.targetHit).toBe(true);
-    expect(hit.positive).toContainEqual({ factor: "target_hit", label: "At or below target $350", points: 8 });
+    expect(hit.positive).toContainEqual({ factor: "target_hit", label: "At or below your target price of $350", points: 8 });
     expect(hit.score).toBe(8);
 
     const above = scoreBuyCandidate(candidate({ targetPriceMxn: "250.00" }), now);
@@ -160,7 +160,7 @@ describe("scoreBuyCandidate", () => {
       candidate({ id: "wish-dlc", type: "DLC", baseGame: baseGame(overrides) });
 
     const rated = scoreBuyCandidate(dlcBase({ libraryEntry: { rating: 5, playState: "NOT_STARTED", replayCandidate: false } }), now);
-    expect(rated.positive).toContainEqual({ factor: "dlc_affinity", label: "Owned base game you enjoyed", points: 6 });
+    expect(rated.positive).toContainEqual({ factor: "dlc_affinity", label: "You already enjoyed the base game", points: 6 });
     expect(rated.score).toBe(6);
 
     const replayed = scoreBuyCandidate(dlcBase({ libraryEntry: { rating: null, playState: "ABANDONED", replayCandidate: true } }), now);

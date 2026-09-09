@@ -46,9 +46,9 @@ export function buildCompatContext(
     ? (input.overrideStatus ?? input.protonDbStatus ?? "UNKNOWN")
     : "UNKNOWN";
 
-  if (effective === "READY") {
-    positives.push({ factor: "compat_bazzite", label: "Runs well on Linux", points: 0 });
-  } else {
+  if (effective === "READY" && (!setup || setup.primaryOs === "LINUX")) {
+    positives.push({ factor: "compat_bazzite", label: "Runs well on your Linux devices", points: 0 });
+  } else if (effective !== "READY") {
     caveats.push({
       factor: STATUS_CAVEAT_FACTORS[effective],
       label:

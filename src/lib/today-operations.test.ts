@@ -7,9 +7,12 @@ describe("aggregateTodayOperations", () => {
     const startedAt = new Date("2026-08-31T11:00:00.000Z");
     expect(aggregateTodayOperations({
       steamLastSyncAt: fetchedAt,
+      steamActivityRefreshedAt: null,
+      steamActivityLastError: null,
       rawgLastFetchedAt: null,
       itadLastFinishedAt: fetchedAt,
       compatibilityLastFetchedAt: fetchedAt,
+      hasLinuxTargets: true,
       jobStatuses: ["QUEUED", "RUNNING", "RETRY_WAIT", "FAILED", "SUCCEEDED", "AWAITING_MATCH"],
       runningRuns: [{ kind: "Sync STEAM", startedAt }],
     })).toEqual({
@@ -27,9 +30,12 @@ describe("aggregateTodayOperations", () => {
   it("returns zero counts and absent timestamps when records are missing", () => {
     expect(aggregateTodayOperations({
       steamLastSyncAt: null,
+      steamActivityRefreshedAt: null,
+      steamActivityLastError: null,
       rawgLastFetchedAt: null,
       itadLastFinishedAt: null,
       compatibilityLastFetchedAt: null,
+      hasLinuxTargets: true,
       jobStatuses: [],
       runningRuns: [],
     })).toEqual({
@@ -41,6 +47,28 @@ describe("aggregateTodayOperations", () => {
       ],
       jobs: { queued: 0, running: 0, retryWait: 0, failed: 0 },
       runningRuns: [],
+    });
+  });
+
+  it("uses successful activity freshness and hides compatibility for all-Windows setups", () => {
+    const activityRefreshedAt = new Date("2026-08-31T12:00:00.000Z");
+    const syncAt = new Date("2026-08-30T12:00:00.000Z");
+    expect(aggregateTodayOperations({
+      steamLastSyncAt: syncAt,
+      steamActivityRefreshedAt: activityRefreshedAt,
+      steamActivityLastError: null,
+      rawgLastFetchedAt: null,
+      itadLastFinishedAt: null,
+      compatibilityLastFetchedAt: new Date("2026-08-29T12:00:00.000Z"),
+      hasLinuxTargets: false,
+      jobStatuses: [],
+      runningRuns: [],
+    })).toMatchObject({
+      providers: [
+        { name: "Steam", lastSuccessAt: activityRefreshedAt.toISOString() },
+        { name: "RAWG", lastSuccessAt: null },
+        { name: "ITAD", lastSuccessAt: null },
+      ],
     });
   });
 });

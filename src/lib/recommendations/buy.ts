@@ -7,6 +7,7 @@ import {
   type OfferSelectionInput,
 } from "@/lib/offer-selection";
 import type { ExplanationCaveat, ExplanationFactor } from "./types";
+import { interestLabel } from "./play-factor-labels";
 
 export const BUY_LIMIT = 3;
 
@@ -120,7 +121,7 @@ export function scoreBuyCandidate(
   if (candidate.interest != null && candidate.interest * 10 !== 0) {
     const points = candidate.interest * 10;
     score += points;
-    positive.push({ factor: "interest", label: `Interest ${candidate.interest}`, points });
+    positive.push({ factor: "interest", label: interestLabel(candidate.interest), points });
   }
 
   const selection = selectCheapestOffers(candidate.offers, now);
@@ -154,7 +155,7 @@ export function scoreBuyCandidate(
         score += TARGET_HIT_SCORE;
         positive.push({
           factor: "target_hit",
-          label: `At or below target $${target}`,
+          label: `At or below your target price of $${target}`,
           points: TARGET_HIT_SCORE,
         });
       }
@@ -165,7 +166,7 @@ export function scoreBuyCandidate(
       score += discountPoints;
       positive.push({
         factor: "offer_discount",
-        label: `${selected.discount}% off`,
+        label: `It is ${selected.discount}% off right now`,
         points: discountPoints,
       });
     }
@@ -190,7 +191,7 @@ export function scoreBuyCandidate(
         score += DLC_AFFINITY_POINTS;
         positive.push({
           factor: "dlc_affinity",
-          label: "Owned base game you enjoyed",
+          label: "You already enjoyed the base game",
           points: DLC_AFFINITY_POINTS,
         });
       }

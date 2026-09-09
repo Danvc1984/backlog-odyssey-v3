@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { CaretDownIcon } from "@phosphor-icons/react";
 import { clearTuneState, deleteRecommendationPreset, loadRecommendationPreset, saveRecommendationPreset, saveTuneState } from "@/actions/recommendations";
 import type { TuneContext } from "@/lib/recommendations/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -90,8 +91,6 @@ export function TuneThisRunPanel({ engine, initialTune, knownValues, thinPool, p
   const [saving, setSaving] = useState(false);
   const [presetName, setPresetName] = useState("");
   const [selectedPresetId, setSelectedPresetId] = useState("");
-  const title = engine === "PLAY_NEXT" ? "Tune play next" : "Tune buy recommendations";
-
   const update = <K extends keyof TuneContext>(key: K, value: TuneContext[K]) => {
     setTune((current) => ({ ...current, [key]: value }));
   };
@@ -183,10 +182,10 @@ export function TuneThisRunPanel({ engine, initialTune, knownValues, thinPool, p
   };
 
   return (
-    <details open={Boolean(initialTune)} className="mb-4 rounded-lg border border-border">
-      <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium">
-        <span>{title}</span>
-        {!initialTune && <span className="ml-2 text-xs font-normal text-muted-foreground">Opt-in</span>}
+    <details open={Boolean(initialTune)} className="group mb-4 rounded-lg border border-border">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg bg-muted/40 px-4 py-3 text-sm font-medium transition-colors hover:bg-muted/60">
+        <span>Tune recommendations (opt in)</span>
+        <CaretDownIcon aria-hidden className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
       </summary>
       <div className="grid gap-3 border-t border-border p-4 md:grid-cols-2 xl:grid-cols-4">
         <label className="grid gap-1 text-xs text-muted-foreground">

@@ -1,6 +1,6 @@
 import { deriveSequelRelationship } from "@/lib/rawg-enrichment";
 import type { RawgSeriesEntry } from "@/lib/rawg-types";
-import { durationBand, eraBucket } from "@/lib/recommendations/profile";
+import { eraBucket } from "@/lib/recommendations/profile";
 import type {
   ExplanationFactor,
   SourceTune,
@@ -16,7 +16,6 @@ import type { AvailabilitySource } from "@/lib/sources/known-sources";
 export interface TuneCandidateInput {
   rawgId?: number;
   experience?: string | null;
-  playtimeHours?: number | null;
   releaseDate?: string | null;
   genres?: string[];
   tags?: string[];
@@ -122,7 +121,6 @@ function matchesSequelPosture(
 export function matchTuneCriteria(tune: TuneContext, candidate: TuneCandidateInput): TuneMatch {
   const criteria: string[] = [];
   if (tune.experience && tune.experience === candidate.experience) criteria.push("experience");
-  if (tune.length && tune.length === durationBand(candidate.playtimeHours ?? null)) criteria.push("length");
   if (tune.genres.some((genre) => candidate.genres?.includes(genre))) criteria.push("genre");
   if (tune.tags.some((tag) => candidate.tags?.includes(tag))) criteria.push("tag");
   if (tune.sequelPosture && matchesSequelPosture(tune.sequelPosture, candidate)) criteria.push("sequelPosture");

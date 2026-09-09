@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { Carousel } from "@/components/ui/Carousel";
 import { DetailHeroArt } from "@/components/ui/detail-hero-art";
 import { buttonVariants } from "@/components/ui/button";
+import { MakeMainGameButton } from "@/components/today/MakeMainGameButton";
 import { formatFetchedAgo } from "@/lib/cover-presentation";
 import type { TodayOfferView } from "@/lib/today-offers";
 import { shouldGlowBuyHeading } from "@/lib/deal-glow";
@@ -84,12 +86,10 @@ function Spotlight({ game }: { game: TodayHeroGame }) {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
-            <Link href={`/games/${game.id}`} className={buttonVariants({ variant: "default", size: "sm" })}>
-              Continue game
-            </Link>
             <Link href={`/games/${game.id}`} className={buttonVariants({ variant: "ghost", size: "sm" })}>
-              Open details
+              View details
             </Link>
+            {!isMainGame && <MakeMainGameButton gameId={game.id} />}
           </div>
         </div>
       </div>
@@ -182,15 +182,16 @@ export function TodayHeroGrid({
   offers: readonly TodayOfferView[];
 }) {
   const mainGame = games.find((game) => game.libraryEntry?.isMainGame === true) ?? null;
-  const spotlightGame =
-    mainGame ??
-    games.find((game) => game.libraryEntry?.playState === "IN_PROGRESS") ??
-    null;
+  const inProgressGames = games.filter(
+    (game) => game.libraryEntry?.playState === "IN_PROGRESS" && game.id !== mainGame?.id,
+  );
+  const focusGames = mainGame ? [mainGame, ...inProgressGames] : inProgressGames;
   const bestOffer = offers[0] ?? null;
+  const focusSlides = focusGames.map((game) => <Spotlight key={game.id} game={game} />);
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(300px,0.6fr)]">
-      {spotlightGame ? <Spotlight game={spotlightGame} /> : <SpotlightEmpty />}
+      {focusSlides.length > 0 ? <Carousel label="Today focus" slides={focusSlides} /> : <SpotlightEmpty />}
       {bestOffer ? <BuySignal offer={bestOffer} /> : <BuySignalEmpty />}
     </div>
   );

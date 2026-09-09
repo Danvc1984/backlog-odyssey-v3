@@ -1,5 +1,6 @@
 import type { PlayNextCandidate } from "./types";
 import type { ExplanationFactor } from "./types";
+import { interestLabel } from "./play-factor-labels";
 
 const PRIORITY_POINTS = {
   NONE: 0,
@@ -41,7 +42,7 @@ export function scorePlayNextCandidate(
     if (entry.interest != null && entry.interest * 10 !== 0) {
       const points = entry.interest * 10;
       score += points;
-      positive.push({ factor: "interest", label: `Interest ${entry.interest}`, points });
+      positive.push({ factor: "interest", label: interestLabel(entry.interest), points });
     }
     const priority = entry.priority ?? "NONE";
     const priorityPoints = PRIORITY_POINTS[priority];
@@ -49,24 +50,24 @@ export function scorePlayNextCandidate(
       score += priorityPoints;
       positive.push({
         factor: "priority",
-        label: `Priority ${priority.toLowerCase()}`,
+        label: `${priority[0]}${priority.slice(1).toLowerCase()} priority in your backlog`,
         points: priorityPoints,
       });
     }
     if (entry.playSoon) {
       score += 3;
-      positive.push({ factor: "play_soon", label: "Marked play soon", points: 3 });
+      positive.push({ factor: "play_soon", label: "Marked for an upcoming session", points: 3 });
     }
     const replayState =
       entry.replayCandidate &&
       (entry.playState === "PLAYED_BEFORE" || entry.playState === "ABANDONED");
     if (replayState) {
       score += 2;
-      positive.push({ factor: "replay", label: "Replay candidate", points: 2 });
+      positive.push({ factor: "replay", label: "You marked it as a replay candidate", points: 2 });
     }
     if (entry.playState === "ABANDONED") {
       score -= 2;
-      negative.push({ factor: "abandoned", label: "Previously abandoned", points: -2 });
+      negative.push({ factor: "abandoned", label: "Previously set aside", points: -2 });
     }
   }
 

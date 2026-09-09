@@ -3,6 +3,10 @@ import type { SteamActivityView } from "@/lib/steam-activity";
 import { formatMexicoTimestamp } from "@/lib/format-times";
 import { DetailHeroArt } from "@/components/ui/detail-hero-art";
 
+function steamHeaderUrl(steamAppId: string): string {
+  return `https://cdn.cloudflare.steamstatic.com/steam/apps/${steamAppId}/header.jpg`;
+}
+
 export type ActivityCatalog = Map<string, { gameId: string; imageUrl: string | null }>;
 
 function formatPlaytime(minutes: number): string {
@@ -61,42 +65,44 @@ export function RecentSteamActivity({
           {rows.map((row) => {
             const imported = view.imported.includes(row);
             const match = catalog.get(row.steamAppId);
+            const imageUrl = match?.imageUrl ?? steamHeaderUrl(row.steamAppId);
             return (
               <li
                 key={row.steamAppId}
-                className="relative flex h-28 items-end overflow-hidden rounded-lg border border-border shadow-card"
+                className="relative flex h-28 items-end overflow-hidden rounded-lg border border-white/20 bg-black/20 shadow-card"
               >
                 <DetailHeroArt
                   id={row.steamAppId}
                   title={row.name}
-                  imageUrl={match?.imageUrl ?? null}
+                  imageUrl={imageUrl}
                   hideLabel
+                  fit="cover"
                   className="absolute inset-0"
                 />
                 <div
-                  className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent"
+                  className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/10"
                   aria-hidden="true"
                 />
-                <div className="relative z-10 flex w-full items-center justify-between gap-3 p-3">
+                <div className="relative z-40 flex w-full items-center justify-between gap-3 p-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       {match ? (
                         <Link
                           href={`/games/${match.gameId}`}
-                          className="font-medium text-white drop-shadow-sm hover:underline"
+                          className="font-medium text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] hover:underline"
                         >
                           {row.name}
                         </Link>
                       ) : (
-                        <span className="font-medium text-white drop-shadow-sm">{row.name}</span>
+                        <span className="font-medium text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">{row.name}</span>
                       )}
                       {!imported && (
-                        <span className="rounded bg-white/20 px-1.5 py-0.5 text-xs text-white">
+                        <span className="rounded border border-white/20 bg-black/50 px-1.5 py-0.5 text-xs text-white shadow-sm">
                           not in library
                         </span>
                       )}
                     </div>
-                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-white/85">
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-white drop-shadow-sm">
                       {row.lastPlayedAt && formatMexicoTimestamp(row.lastPlayedAt) && (
                         <span>played {formatMexicoTimestamp(row.lastPlayedAt)}</span>
                       )}

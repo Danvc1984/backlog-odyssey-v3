@@ -8,8 +8,8 @@ import { dismissRecommendation, rotateRecommendationRole } from "@/actions/recom
 import { StartPlayingButton } from "@/components/recommendations/StartPlayingButton";
 import { factorChip, caveatChip } from "@/components/recommendations/FactorChips";
 import { recommendationRoleLabel } from "@/components/recommendations/RecommendationRoleLabel";
+import { prepareRecommendationFactors } from "@/lib/recommendations/factor-presentation";
 import { DetailHeroArt } from "@/components/ui/detail-hero-art";
-import { recommendationCopy } from "@/lib/recommendations/recommendation-copy";
 import type { RecommendationRole } from "@/generated/prisma/client";
 import type { ExplanationCaveat, ExplanationFactor } from "@/lib/recommendations/types";
 
@@ -31,6 +31,7 @@ interface RailSlot {
   itemId: string;
   gameId: string;
   name: string;
+  imageUrl: string | null | undefined;
   score: number;
   positive: unknown;
   negative: unknown;
@@ -46,7 +47,7 @@ function caveats(value: unknown): ExplanationCaveat[] {
 }
 
 export function PlayNextRailCard({ runId, role, itemId, gameId, name, rank, score, positive, negative, caveats: initialCaveats, imageUrl }: PlayNextRailCardProps) {
-  const [slot, setSlot] = useState<RailSlot>({ itemId, gameId, name, score, positive, negative, caveats: initialCaveats });
+  const [slot, setSlot] = useState<RailSlot>({ itemId, gameId, name, imageUrl, score, positive, negative, caveats: initialCaveats });
   const [pending, setPending] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [exhausted, setExhausted] = useState(false);
@@ -70,7 +71,7 @@ export function PlayNextRailCard({ runId, role, itemId, gameId, name, rank, scor
     const rotated = result.data.item;
     const rotatedGameId = rotated.gameId;
     if (!rotatedGameId) return;
-    setSlot({ itemId: rotated.itemId, gameId: rotatedGameId, name: rotated.name, score: rotated.score, positive: rotated.positive, negative: rotated.negative, caveats: rotated.caveats });
+    setSlot({ itemId: rotated.itemId, gameId: rotatedGameId, name: rotated.name, imageUrl: rotated.imageUrl, score: rotated.score, positive: rotated.positive, negative: rotated.negative, caveats: rotated.caveats });
   };
 
   const dismiss = async () => {
@@ -86,23 +87,18 @@ export function PlayNextRailCard({ runId, role, itemId, gameId, name, rank, scor
     toast.success("Dismissed for this run");
   };
 
-  const positiveChips = factors(slot.positive);
-  const negativeChips = factors(slot.negative);
-  const caveatChips = caveats(slot.caveats);
+  const preparedFactors = prepareRecommendationFactors(factors(slot.positive), factors(slot.negative), caveats(slot.caveats));
+  const positiveChips = preparedFactors.positive;
+  const negativeChips = preparedFactors.negative;
+  const caveatChips = preparedFactors.caveats;
   const roleLabel = recommendationRoleLabel(role, "PLAY_NEXT");
-  const copy = recommendationCopy({
-    kind: "PLAY_NEXT",
-    role,
-    positive: positiveChips,
-    caveats: caveatChips,
-  });
   return (
     <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-primary/5 shadow-card">
       <Link href={`/games/${slot.gameId}`} className="block">
         <DetailHeroArt
           id={slot.gameId}
           title={slot.name}
-          imageUrl={imageUrl ?? null}
+          imageUrl={slot.imageUrl ?? null}
           className="aspect-[16/10]"
         />
       </Link>
@@ -112,18 +108,11 @@ export function PlayNextRailCard({ runId, role, itemId, gameId, name, rank, scor
           {roleLabel ?? "Play next"} / #{String(rank).padStart(2, "0")}
         </p>
       </div>
-      {copy && (
-        <p
-          className="mt-2 line-clamp-2 overflow-hidden text-sm leading-6 text-muted-foreground"
-        >
-          {copy}
-        </p>
-      )}
       {(positiveChips.length > 0 || negativeChips.length > 0 || caveatChips.length > 0) && (
         <div className="mt-3 flex max-h-16 flex-wrap gap-1.5 overflow-hidden">
-          {caveatChips.map((chip) => caveatChip(chip))}
           {positiveChips.map((chip) => factorChip(chip, { showPoints: false }))}
           {negativeChips.map((chip) => factorChip(chip, { showPoints: false }))}
+          {caveatChips.map((chip) => caveatChip(chip))}
         </div>
       )}
       <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">

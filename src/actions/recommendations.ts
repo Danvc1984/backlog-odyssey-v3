@@ -139,6 +139,7 @@ export interface RotatedRecommendationItem {
   gameId: string | null;
   wishlistEntryId: string | null;
   name: string;
+  imageUrl: string | null;
   score: number;
   positive: ExplanationFactor[];
   negative: ExplanationFactor[];
@@ -255,16 +256,61 @@ export async function rotateRecommendationRole(input: unknown) {
       // Event telemetry must not make a successful rotation fail.
     }
 
-    const name = isPlay
-      ? (await prisma.game.findUnique({ where: { id: picked.id }, select: { name: true } }))?.name
-      : (await prisma.wishlistEntry.findUnique({ where: { id: picked.id }, select: { name: true } }))?.name;
+    const rotatedTarget = isPlay
+      ? await prisma.game.findUnique({
+          where: { id: picked.id },
+          select: {
+            name: true,
+            metadataSnapshots: {
+              where: { provider: "RAWG" },
+              orderBy: { fetchedAt: "desc" },
+              take: 1,
+              select: { payload: true },
+            },
+          },
+        })
+      : await prisma.wishlistEntry.findUnique({
+          where: { id: picked.id },
+          select: {
+            name: true,
+            metadataSnapshot: { select: { payload: true } },
+            baseGame: {
+              select: {
+                metadataSnapshots: {
+                  where: { provider: "RAWG" },
+                  orderBy: { fetchedAt: "desc" },
+                  take: 1,
+                  select: { payload: true },
+                },
+              },
+            },
+          },
+        });
+    const imageUrl = isPlay
+      ? parseRawgMetadataPayload(
+          rotatedTarget && "metadataSnapshots" in rotatedTarget
+            ? rotatedTarget.metadataSnapshots[0]?.payload
+            : undefined,
+        )?.backgroundImageUrls[0] ?? null
+      : parseRawgMetadataPayload(
+          rotatedTarget && "metadataSnapshot" in rotatedTarget
+            ? rotatedTarget.metadataSnapshot?.payload
+            : undefined,
+        )?.backgroundImageUrls[0] ??
+        parseRawgMetadataPayload(
+          rotatedTarget && "baseGame" in rotatedTarget
+            ? rotatedTarget.baseGame?.metadataSnapshots[0]?.payload
+            : undefined,
+        )?.backgroundImageUrls[0] ??
+        null;
 
     const rotatedItem: RotatedRecommendationItem = {
       itemId,
       role,
       gameId: isPlay ? picked.id : null,
       wishlistEntryId: isPlay ? null : picked.id,
-      name: name ?? "Unknown",
+      name: rotatedTarget?.name ?? "Unknown",
+      imageUrl,
       score: picked.score,
       positive: picked.positive,
       negative: picked.negative,

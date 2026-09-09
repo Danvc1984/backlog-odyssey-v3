@@ -116,8 +116,6 @@ export function resolveCandidateDimensionValues(
     if (maturity) values.MATURITY = [maturity];
     const series = (parsed.seriesGames ?? []).map((entry) => entry.name).filter(Boolean);
     if (series.length > 0) values.SERIES = series;
-    const duration = durationBand(parsed.playtimeHours);
-    if (duration) values.DURATION = [duration];
   }
   if (personal.gameExperience) values.EXPERIENCE = [personal.gameExperience];
   if (

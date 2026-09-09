@@ -8,9 +8,9 @@ import { dismissRecommendation } from "@/actions/recommendations";
 import { Input } from "@/components/ui/input";
 import { DetailHeroArt } from "@/components/ui/detail-hero-art";
 import { caveatChip, factorChip } from "@/components/recommendations/FactorChips";
+import { prepareRecommendationFactors } from "@/lib/recommendations/factor-presentation";
 import { recommendationRoleLabel } from "@/components/recommendations/RecommendationRoleLabel";
 import { StartPlayingButton } from "@/components/recommendations/StartPlayingButton";
-import { recommendationCopy } from "@/lib/recommendations/recommendation-copy";
 import type { RecommendationRole } from "@/generated/prisma/client";
 import type { ExplanationCaveat, ExplanationFactor } from "@/lib/recommendations/types";
 import { shouldGlowBuyHeading } from "@/lib/deal-glow";
@@ -58,7 +58,6 @@ export interface RecommendationItemCardProps {
 export function RecommendationItemCard({
   target,
   name,
-  rank,
   positive,
   negative,
   caveats,
@@ -79,19 +78,12 @@ export function RecommendationItemCard({
 
   const href = target.kind === "PLAY_NEXT" ? `/games/${target.gameId}` : `/wishlist/${target.wishlistEntryId}`;
   const roleLabel = role ? recommendationRoleLabel(role, target.kind) : null;
-  const rankLabel = roleLabel
-    ? `${roleLabel} / #${String(rank).padStart(2, "0")}`
-    : `#${rank}`;
+  const rankLabel = roleLabel;
   const coverId = target.kind === "PLAY_NEXT" ? target.gameId : target.wishlistEntryId;
-  const positives = asFactors(positive);
-  const caveatList = asCaveats(caveats);
-  const copy = recommendationCopy({
-    kind: target.kind,
-    role,
-    positive: positives,
-    caveats: caveatList,
-  });
-
+  const preparedFactors = prepareRecommendationFactors(asFactors(positive), asFactors(negative), asCaveats(caveats));
+  const positives = preparedFactors.positive;
+  const negatives = preparedFactors.negative;
+  const caveatList = preparedFactors.caveats;
   const dismiss = async () => {
     setSubmitting(true);
     const result = await dismissRecommendation(
@@ -122,19 +114,12 @@ export function RecommendationItemCard({
         />
       </Link>
       <div className="flex flex-1 flex-col p-4">
-        <p className="technical-label text-muted-foreground">{rankLabel}</p>
-{copy && (
-        <p
-          className="mt-2 line-clamp-2 overflow-hidden text-sm leading-6 text-muted-foreground"
-        >
-          {copy}
-        </p>
-      )}
-      {(caveatList.length > 0 || positives.length > 0 || asFactors(negative).length > 0) && (
+        {rankLabel && <p className="technical-label text-muted-foreground">{rankLabel}</p>}
+      {(caveatList.length > 0 || positives.length > 0 || negatives.length > 0) && (
         <div className="mt-3 flex flex-wrap gap-1.5">
-          {caveatList.map((caveat) => caveatChip(caveat))}
           {positives.map((factor) => factorChip(factor, { showPoints: false }))}
-          {asFactors(negative).map((factor) => factorChip(factor, { showPoints: false }))}
+          {negatives.map((factor) => factorChip(factor, { showPoints: false }))}
+          {caveatList.map((caveat) => caveatChip(caveat))}
         </div>
       )}
       <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">

@@ -26,6 +26,7 @@ import type { CandidateDimensionValues, RecommendationProfilePayload } from "./p
 import { profileDimensionKeys } from "./profile";
 import { PLAY_NEXT_LIMIT, compareRankedPlay } from "./play-next";
 import { BUY_LIMIT, compareBuyTiebreak, type BuyTiebreakView } from "./buy";
+import { playEnvironmentLabel, playPreferenceLabel, playQualityLabel, playTasteLabel } from "./play-factor-labels";
 
 const PLAY_NEXT_COLD_START_LIMIT = 4;
 
@@ -82,6 +83,7 @@ function derivedContributions(
 ): TasteContribution[] {
   const contributions: TasteContribution[] = [];
   for (const dimension of profileDimensionKeys()) {
+    if (dimension === "DURATION") continue;
     const values = dimensionValues[dimension];
     if (!values || values.length === 0) continue;
 
@@ -104,7 +106,7 @@ function derivedContributions(
       points: clamped,
       factor: {
         factor: "taste_profile",
-        label: clamped > 0 ? `${value} affinity` : `${value} aversion`,
+        label: playTasteLabel(dimension, value, clamped),
         points: clamped,
       },
     });
@@ -135,6 +137,7 @@ function overrideContributions(
 ): TasteContribution[] {
   const contributions: TasteContribution[] = [];
   for (const dimension of profileDimensionKeys()) {
+    if (dimension === "DURATION") continue;
     const values = dimensionValues[dimension];
     if (!values || values.length === 0) continue;
 
@@ -146,7 +149,7 @@ function overrideContributions(
       points,
       factor: {
         factor: "preference",
-        label: override.attitude === "AVOID" ? `You avoid ${override.value}` : `You marked ${override.value} as preferred`,
+        label: playPreferenceLabel(override.value, override.attitude),
         points,
       },
     });
@@ -191,13 +194,6 @@ export interface SteamActivityInput {
   steamLastPlayed: Date | null;
 }
 
-const ENVIRONMENT_LABELS: Record<string, string> = {
-  READY: "Ready on your setup",
-  READY_WITH_TINKERING: "Ready with tinkering",
-  FALLBACK_RECOMMENDED: "Fallback recommended",
-  REQUIRED: "Requires extra setup",
-};
-
 export function scoreSteamActivity(input: SteamActivityInput, now: Date): ExplanationFactor | null {
   if (!input.steamLastPlayed) return null;
   const isReplayOrAbandoned =
@@ -209,13 +205,17 @@ export function scoreSteamActivity(input: SteamActivityInput, now: Date): Explan
   return { factor: "steam_recent", label: "Played recently on Steam", points: STEAM_ACTIVITY_POINTS };
 }
 
-export function scoreEnvironmentFit(status: CompatibilityStatus | null): ExplanationFactor | null {
+export function scoreEnvironmentFit(
+  status: CompatibilityStatus | null,
+  primaryOs: "LINUX" | "WINDOWS" = "LINUX",
+): ExplanationFactor | null {
   if (status === null) return null;
+  if (primaryOs !== "LINUX") return null;
   const points = RERANK_ENVIRONMENT_POINTS[status];
   if (!points) return null;
   return {
     factor: "environment_fit",
-    label: ENVIRONMENT_LABELS[status] ?? status,
+    label: playEnvironmentLabel(status),
     points,
   };
 }
@@ -231,15 +231,15 @@ export function scoreQuality(input: QualityInput): ExplanationFactor | null {
   if (input.metacriticScore !== null) {
     if (input.metacriticScore >= QUALITY_METACRITIC_HIGH) {
       points += 2;
-      parts.push(`Metacritic ${input.metacriticScore}`);
+      parts.push(playQualityLabel(input.metacriticScore, null)[0]);
     } else if (input.metacriticScore < QUALITY_METACRITIC_LOW) {
       points -= 1;
-      parts.push(`Metacritic ${input.metacriticScore}`);
+      parts.push(playQualityLabel(input.metacriticScore, null)[0]);
     }
   }
   if (input.rating !== null && input.rating >= QUALITY_RATING_HIGH) {
     points += 1;
-    parts.push(`RAWG rating ${input.rating}`);
+    parts.push(playQualityLabel(null, input.rating)[0]);
   }
   if (points === 0) return null;
   const clamped = Math.max(-QUALITY_CLAMP, Math.min(QUALITY_CLAMP, points));
@@ -294,6 +294,7 @@ export interface RerankPlayInput {
   dimensionValues: CandidateDimensionValues;
   steam: SteamActivityInput;
   envStatus: CompatibilityStatus | null;
+  primaryOs?: "LINUX" | "WINDOWS";
   quality: QualityInput;
 }
 
@@ -320,7 +321,7 @@ export function rerankPlayCandidates(
 
   const scored = pool.map((candidate) => {
     const steamFactor = scoreSteamActivity(candidate.steam, now);
-    const envFactor = scoreEnvironmentFit(candidate.envStatus);
+    const envFactor = scoreEnvironmentFit(candidate.envStatus, candidate.primaryOs);
     let score = candidate.baselineScore + (steamFactor?.points ?? 0) + (envFactor?.points ?? 0);
     const positive = [...candidate.positive];
     const negative = [...candidate.negative];
@@ -399,6 +400,7 @@ export interface RerankBuyInput {
   isKeyshop: boolean;
   practicality: PlayPracticality | null;
   envStatus: CompatibilityStatus | null;
+  primaryOs?: "LINUX" | "WINDOWS";
 }
 
 export interface RerankedBuyItem {
@@ -440,7 +442,7 @@ export function rerankBuyCandidates(
       score += factor.points;
       applied.environment += 1;
     } else if (candidate.practicality) {
-      const envFactor = scoreEnvironmentFit(candidate.envStatus);
+      const envFactor = scoreEnvironmentFit(candidate.envStatus, candidate.primaryOs);
       if (envFactor) {
         if (envFactor.points >= 0) positive.push(envFactor);
         else negative.push(envFactor);

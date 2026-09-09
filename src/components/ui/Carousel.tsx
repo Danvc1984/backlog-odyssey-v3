@@ -46,9 +46,10 @@ export function Carousel({ slides, label }: CarouselProps) {
     >
       <div>{slides[activeIndex]}</div>
       {hasControls ? (
-        <div className="mt-3 flex items-center justify-between gap-3">
+        <div className="mt-3 flex h-5 items-center justify-between gap-3 text-[11px]">
           <button
             type="button"
+            className="h-full rounded-md px-1.5 font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
             onClick={() => move("previous")}
             aria-label={`Previous ${label.toLowerCase()} slide`}
           >
@@ -59,6 +60,7 @@ export function Carousel({ slides, label }: CarouselProps) {
           </span>
           <button
             type="button"
+            className="h-full rounded-md px-1.5 font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
             onClick={() => move("next")}
             aria-label={`Next ${label.toLowerCase()} slide`}
           >

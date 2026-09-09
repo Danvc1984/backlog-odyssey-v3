@@ -151,8 +151,9 @@ export function buildSteamActivityView(
   };
 }
 
-export async function refreshSteamActivityCacheIfStale(
+async function refreshSteamActivityCache(
   now = new Date(),
+  force = false,
 ): Promise<SteamActivityView> {
   try {
     const context = await requireSteamFlowContext();
@@ -161,7 +162,7 @@ export async function refreshSteamActivityCacheIfStale(
     }
 
     const cached = await prisma.steamRecentActivityCache.findUnique({ where: { id: 1 } });
-    if (isActivityRefreshDue(cached, now)) {
+    if (force || isActivityRefreshDue(cached, now)) {
       await prisma.steamRecentActivityCache.upsert({
         where: { id: 1 },
         create: { id: 1, lastAttemptAt: now },
@@ -197,6 +198,14 @@ export async function refreshSteamActivityCacheIfStale(
     );
     return buildSteamActivityView(cached, imported);
   }
+}
+
+export function refreshSteamActivityCacheIfStale(now = new Date()): Promise<SteamActivityView> {
+  return refreshSteamActivityCache(now);
+}
+
+export function refreshSteamActivityCacheNow(now = new Date()): Promise<SteamActivityView> {
+  return refreshSteamActivityCache(now, true);
 }
 
 async function loadImportedSteamAppIds(entries: unknown): Promise<Set<string>> {

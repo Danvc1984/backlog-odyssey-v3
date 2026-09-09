@@ -81,14 +81,18 @@ The exact checked state is owned by blueprint/build-plan.md.
     Cinzel/Inter typography, official brand icons with the dragon identity
     mark, the Odyssey voice sweep (20e), the Phosphor UI icon swap (20f),
     and cross-app acceptance (20g).
-15. **[ ] 21a-21h: Pre-deployment polish and improvements** -
-    Owner-reported fixes across visual polish, Today, recommendations,
-    browsing, and settings: global visual fixes (favicon theme color, glow
-    removal with offer-threshold exceptions, sidebar minimize/maximize),
-    Today focus carousel and wallpaper restore, Today metrics fixes,
-    recommendations presentation with natural-language reasoning, catalog
-    pagination (20/50/100), library and wishlist browsing improvements, and
-    settings reorganization with a hydration fix.
+15. **[ ] 21a-21e: Pre-deployment polish and improvements** -
+    Owner-reported fixes, one sub-feature per app section: global visual
+    fixes (favicon theme color, glow removal with offer-threshold
+    exceptions, sidebar minimize/maximize); Today (focus carousel, wallpaper
+    restore, activity/metrics fixes, natural-language recommendation
+    reasoning, tune-header visibility, no-fallback message validation);
+    Library (pagination 20/50/100, edit/change-state with scroll effect,
+    metadata warning, main-game selector, ProtonDB tag gating); Wishlist
+    (pagination, ITAD link, discounted counter, discount sorting,
+    library-style search, warning color); Settings and onboarding (section
+    regrouping, hydration fix, welcome theme choice, Steam-name symbol
+    cleanup at import).
 16. **[ ] 22: Deployment and CI readiness** - Vercel/Supabase, Cron covering
     prices plus the compatibility freshness sweep (a no-op while compatibility
     is inactive), smoke tests, Verify command, and automatic checks.
@@ -371,10 +375,11 @@ freshness, and operations are supporting sections.
 
 ## Next workflow action
 
-`blueprint/context/current-feature.md` is an empty stub. The build plan's next
-unchecked item is **21a: Global visual fixes**, the first sub-feature of the
-new pre-deployment polish feature (21a-21h); deployment is now feature 22.
-Run `/feature 21a` to write its spec.
+`blueprint/context/current-feature.md` holds the reviewed spec for **21b:
+Today**; the reviewed spec for **21a: Global visual fixes** is parked at
+`blueprint/context/pending-21a-spec.md` until it is picked up (move it back
+to `current-feature.md` or re-run `/feature 21a` when building it). Run
+`/implement` to build 21b. Deployment is feature 22.
 
 This overview is generated from the two plans and does not authorize code
 changes.

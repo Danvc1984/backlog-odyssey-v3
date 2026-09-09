@@ -59,7 +59,7 @@ describe("scoreTaste", () => {
       preferences: noPreferences,
     });
     expect(half.points).toBe(1);
-    expect(half.factors).toEqual([{ factor: "taste_profile", label: "RPG affinity", points: 1 }]);
+    expect(half.factors).toEqual([{ factor: "taste_profile", label: "Matches your taste for rpg games", points: 1 }]);
 
     const full = scoreTaste({
       profile: profile({ GENRE: { RPG: { weight: 2, support: 3 } } }),
@@ -76,7 +76,7 @@ describe("scoreTaste", () => {
       preferences: noPreferences,
     });
     expect(result.points).toBe(3);
-    expect(result.factors).toEqual([{ factor: "taste_profile", label: "RPG affinity", points: 3 }]);
+    expect(result.factors).toEqual([{ factor: "taste_profile", label: "Matches your taste for rpg games", points: 3 }]);
   });
 
   it("labels negative derived contributions as aversion", () => {
@@ -85,7 +85,7 @@ describe("scoreTaste", () => {
       dimensionValues: dims({ GENRE: ["Horror"] }),
       preferences: noPreferences,
     });
-    expect(result.factors).toEqual([{ factor: "taste_profile", label: "Horror aversion", points: -1 }]);
+    expect(result.factors).toEqual([{ factor: "taste_profile", label: "Less aligned with your taste for horror", points: -1 }]);
   });
 
   it("applies a PREFER override on top of the derived contribution", () => {
@@ -96,8 +96,8 @@ describe("scoreTaste", () => {
     });
     expect(result.points).toBe(5);
     expect(result.factors).toEqual([
-      { factor: "preference", label: "You marked RPG as preferred", points: 4 },
-      { factor: "taste_profile", label: "RPG affinity", points: 1 },
+      { factor: "preference", label: "Matches your preference for rpg", points: 4 },
+      { factor: "taste_profile", label: "Matches your taste for rpg games", points: 1 },
     ]);
   });
 
@@ -121,7 +121,7 @@ describe("scoreTaste", () => {
       ],
     });
     expect(result.points).toBe(-6);
-    expect(result.factors).toEqual([{ factor: "preference", label: "You avoid Mature", points: -6 }]);
+    expect(result.factors).toEqual([{ factor: "preference", label: "Conflicts with your preference against mature", points: -6 }]);
   });
 
   it("caps the combined taste adjustment at ±12, keeping the strongest first", () => {
@@ -159,6 +159,15 @@ describe("scoreTaste", () => {
     expect(result).toEqual({ points: 0, factors: [] });
   });
 
+  it("does not use duration as a recommendation signal", () => {
+    const result = scoreTaste({
+      profile: profile({ DURATION: { SHORT: { weight: 9, support: 4 } } }),
+      dimensionValues: dims({ DURATION: ["SHORT"] }),
+      preferences: noPreferences,
+    });
+    expect(result).toEqual({ points: 0, factors: [] });
+  });
+
   it("matches preference values case-sensitively", () => {
     const result = scoreTaste({
       profile: profile({ GENRE: { RPG: { weight: 1, support: 2 } } }),
@@ -166,7 +175,7 @@ describe("scoreTaste", () => {
       preferences: [{ dimension: "GENRE", value: "rpg", attitude: "PREFER" }],
     });
     expect(result.points).toBe(1);
-    expect(result.factors).toEqual([{ factor: "taste_profile", label: "RPG affinity", points: 1 }]);
+    expect(result.factors).toEqual([{ factor: "taste_profile", label: "Matches your taste for rpg games", points: 1 }]);
   });
 });
 
@@ -230,8 +239,12 @@ describe("scoreEnvironmentFit", () => {
   });
 
   it("labels each status in plain English", () => {
-    expect(scoreEnvironmentFit("READY_WITH_TINKERING")?.label).toBe("Ready with tinkering");
-    expect(scoreEnvironmentFit("REQUIRED")?.label).toBe("Requires extra setup");
+    expect(scoreEnvironmentFit("READY_WITH_TINKERING")?.label).toBe("Runs on Linux with some tinkering");
+    expect(scoreEnvironmentFit("REQUIRED")?.label).toBe("Needs Windows to run");
+  });
+
+  it("does not score Linux compatibility when Windows is primary", () => {
+    expect(scoreEnvironmentFit("READY", "WINDOWS")).toBeNull();
   });
 });
 
@@ -257,7 +270,7 @@ describe("scoreQuality", () => {
   it("combines and clamps at +3 when both quality signals are high", () => {
     const factor = scoreQuality({ metacriticScore: 95, rating: 4.8 });
     expect(factor?.points).toBe(3);
-    expect(factor?.label).toBe("Metacritic 95, RAWG rating 4.8");
+    expect(factor?.label).toBe("Critics rate it highly (Metacritic 95), Players rate it highly (RAWG 4.8)");
   });
 
   it("yields no factor when signals cancel or are absent", () => {

@@ -9,21 +9,34 @@ export interface TodayOperationsView {
 
 interface TodayOperationsRows {
   steamLastSyncAt: Date | null;
+  steamActivityRefreshedAt: Date | null;
+  steamActivityLastError: string | null;
   rawgLastFetchedAt: Date | null;
   itadLastFinishedAt: Date | null;
   compatibilityLastFetchedAt: Date | null;
+  hasLinuxTargets: boolean;
   jobStatuses: readonly string[];
   runningRuns: readonly { kind: string; startedAt: Date }[];
 }
 
 export function aggregateTodayOperations(rows: TodayOperationsRows): TodayOperationsView {
+  const steamLastSuccessAt =
+    rows.steamActivityLastError === null
+      ? rows.steamActivityRefreshedAt ?? rows.steamLastSyncAt
+      : rows.steamLastSyncAt;
+  const providers = [
+    { name: "Steam", lastSuccessAt: steamLastSuccessAt?.toISOString() ?? null },
+    { name: "RAWG", lastSuccessAt: rows.rawgLastFetchedAt?.toISOString() ?? null },
+    { name: "ITAD", lastSuccessAt: rows.itadLastFinishedAt?.toISOString() ?? null },
+  ];
+  if (rows.hasLinuxTargets) {
+    providers.push({
+      name: "Compatibility",
+      lastSuccessAt: rows.compatibilityLastFetchedAt?.toISOString() ?? null,
+    });
+  }
   return {
-    providers: [
-      { name: "Steam", lastSuccessAt: rows.steamLastSyncAt?.toISOString() ?? null },
-      { name: "RAWG", lastSuccessAt: rows.rawgLastFetchedAt?.toISOString() ?? null },
-      { name: "ITAD", lastSuccessAt: rows.itadLastFinishedAt?.toISOString() ?? null },
-      { name: "Compatibility", lastSuccessAt: rows.compatibilityLastFetchedAt?.toISOString() ?? null },
-    ],
+    providers,
     jobs: {
       queued: rows.jobStatuses.filter((status) => status === "QUEUED").length,
       running: rows.jobStatuses.filter((status) => status === "RUNNING").length,
@@ -35,10 +48,12 @@ export function aggregateTodayOperations(rows: TodayOperationsRows): TodayOperat
 }
 
 export async function loadTodayOperations(
-  client: Pick<Prisma.TransactionClient, "steamConnection" | "metadataSnapshot" | "priceRefresh" | "compatibilitySnapshot" | "enrichmentJob" | "syncRun" | "wishlistCompatSweep"> = prisma,
+  client: Pick<Prisma.TransactionClient, "appSettings" | "steamConnection" | "steamRecentActivityCache" | "metadataSnapshot" | "priceRefresh" | "compatibilitySnapshot" | "enrichmentJob" | "syncRun" | "wishlistCompatSweep"> = prisma,
 ): Promise<TodayOperationsView> {
-  const [steam, rawg, itad, compatibility, jobs, syncRuns, priceRuns, compatibilityRuns] = await Promise.all([
+  const [settings, steam, activity, rawg, itad, compatibility, jobs, syncRuns, priceRuns, compatibilityRuns] = await Promise.all([
+    client.appSettings.findUnique({ where: { id: 1 }, select: { primaryOs: true, handheldOs: true } }),
     client.steamConnection.findUnique({ where: { id: 1 }, select: { lastSyncAt: true } }),
+    client.steamRecentActivityCache.findUnique({ where: { id: 1 }, select: { refreshedAt: true, lastError: true } }),
     client.metadataSnapshot.findFirst({ where: { provider: "RAWG" }, orderBy: { fetchedAt: "desc" }, select: { fetchedAt: true } }),
     client.priceRefresh.findFirst({ where: { status: { in: ["SUCCESS", "PARTIAL"] } }, orderBy: { finishedAt: "desc" }, select: { finishedAt: true } }),
     client.compatibilitySnapshot.findFirst({ orderBy: { fetchedAt: "desc" }, select: { fetchedAt: true } }),
@@ -59,9 +74,12 @@ export async function loadTodayOperations(
   ]);
   return aggregateTodayOperations({
     steamLastSyncAt: steam?.lastSyncAt ?? null,
+    steamActivityRefreshedAt: activity?.refreshedAt ?? null,
+    steamActivityLastError: activity?.lastError ?? null,
     rawgLastFetchedAt: rawg?.fetchedAt ?? null,
     itadLastFinishedAt: itad?.finishedAt ?? null,
     compatibilityLastFetchedAt: compatibility?.fetchedAt ?? null,
+    hasLinuxTargets: settings?.primaryOs === "LINUX" || settings?.handheldOs === "LINUX",
     jobStatuses: jobs.map((job) => job.status),
     runningRuns: [
       ...syncRuns.map((run) => ({ kind: `Sync ${run.provider}`, startedAt: run.startedAt })),

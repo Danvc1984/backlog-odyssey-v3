@@ -15,6 +15,7 @@ import {
   classifyRecentEntries,
   isActivityRefreshDue,
   readRecentEntries,
+  refreshSteamActivityCacheNow,
   refreshSteamActivityCacheIfStale,
   type SteamActivityEntry,
 } from "./steam-activity";
@@ -211,6 +212,29 @@ describe("refreshSteamActivityCacheIfStale", () => {
     expect(cacheFindUnique).not.toHaveBeenCalled();
     expect(cacheUpsert).not.toHaveBeenCalled();
     expect(fetchRecentlyPlayedGames).not.toHaveBeenCalled();
+  });
+
+  it("forces a provider refresh even when the automatic 24-hour gate is not due", async () => {
+    const recentAttempt = new Date(now.getTime() - 1_000);
+    cacheRowValue = {
+      entries: [],
+      refreshedAt: recentAttempt,
+      lastAttemptAt: recentAttempt,
+      lastError: null,
+    };
+    vi.mocked(fetchRecentlyPlayedGames).mockResolvedValue({
+      status: "OK",
+      games: [entry("620", "Portal 2", "2025-01-09T00:00:00.000Z")],
+    });
+
+    await refreshSteamActivityCacheIfStale(now);
+    expect(fetchRecentlyPlayedGames).not.toHaveBeenCalled();
+
+    vi.mocked(fetchRecentlyPlayedGames).mockClear();
+    const view = await refreshSteamActivityCacheNow(now);
+
+    expect(fetchRecentlyPlayedGames).toHaveBeenCalledOnce();
+    expect(view.state).toBe("FRESH");
   });
 
   it("returns the NO_CONNECTION view and writes nothing without an API key", async () => {

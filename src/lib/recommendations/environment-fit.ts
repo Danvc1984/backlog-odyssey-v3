@@ -13,7 +13,7 @@ export type PlayPracticality =
   | { kind: "EXCLUDED"; reason: { factor: string; label: string } };
 
 const SOFT_REASONS: Record<CompatibilityStatus, { factor: string; label: string }> = {
-  READY: { factor: "compat_bazzite", label: "Runs well on Linux" },
+  READY: { factor: "compat_bazzite", label: "Runs well on your Linux devices" },
   READY_WITH_TINKERING: { factor: "compat_tinkering", label: "Needs tinkering on Linux" },
   FALLBACK_RECOMMENDED: { factor: "compat_fallback", label: "Windows fallback recommended" },
   REQUIRED: { factor: "compat_required", label: "Requires Windows to run" },
@@ -93,14 +93,14 @@ export function classifyPlayPracticality(
     evidence.overrideStatus === null &&
     (evidence.awayStatus === "Denied" || evidence.awayStatus === "Broken");
 
-  if (!fallbackExists && blockedByAntiCheat) {
+  if (setup.primaryOs === "LINUX" && !fallbackExists && blockedByAntiCheat) {
     return {
       kind: "EXCLUDED",
       reason: excludedReason("anticheat", "Anti-cheat blocks Linux, and no Windows fallback is configured"),
     };
   }
 
-  if (!fallbackExists && effectiveStatus === "REQUIRED") {
+  if (setup.primaryOs === "LINUX" && !fallbackExists && effectiveStatus === "REQUIRED") {
     return {
       kind: "EXCLUDED",
       reason: excludedReason("compat_required", "Requires Windows to run, but no Windows fallback is configured"),
@@ -115,4 +115,15 @@ export function classifyPlayPracticality(
     };
   }
   return { kind: "SOFT", reason: SOFT_REASONS[effectiveStatus] };
+}
+
+export function formatPlayExclusionReasons(
+  exclusions: ReadonlyArray<{ reason?: { label?: string } | null }>,
+): string | null {
+  const labels = [...new Set(
+    exclusions
+      .map((exclusion) => exclusion.reason?.label ?? null)
+      .filter((label): label is string => label !== null && label.trim() !== ""),
+  )];
+  return labels.length > 0 ? labels.join("; ") : null;
 }

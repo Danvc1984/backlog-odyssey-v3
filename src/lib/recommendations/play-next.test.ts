@@ -98,7 +98,7 @@ describe("scorePlayNextCandidate", () => {
 
     expect(scored.score).toBe(40);
     expect(scored.positive).toEqual([
-      { factor: "interest", label: "Interest 4", points: 40 },
+      { factor: "interest", label: "You have strong interest in this game", points: 40 },
     ]);
     expect(scored.negative).toEqual([]);
   });
@@ -128,7 +128,7 @@ describe("scorePlayNextCandidate", () => {
     );
 
     expect(scored.score).toBe(3);
-    expect(scored.positive).toEqual([{ factor: "play_soon", label: "Marked play soon", points: 3 }]);
+    expect(scored.positive).toEqual([{ factor: "play_soon", label: "Marked for an upcoming session", points: 3 }]);
   });
 
   it("adds two replay points for a flagged replay candidate", () => {
@@ -143,7 +143,7 @@ describe("scorePlayNextCandidate", () => {
     );
 
     expect(scored.score).toBe(2);
-    expect(scored.positive).toEqual([{ factor: "replay", label: "Replay candidate", points: 2 }]);
+    expect(scored.positive).toEqual([{ factor: "replay", label: "You marked it as a replay candidate", points: 2 }]);
   });
 
   it("penalizes an abandoned play state by two points", () => {
@@ -153,7 +153,7 @@ describe("scorePlayNextCandidate", () => {
 
     expect(scored.score).toBe(-2);
     expect(scored.negative).toEqual([
-      { factor: "abandoned", label: "Previously abandoned", points: -2 },
+      { factor: "abandoned", label: "Previously set aside", points: -2 },
     ]);
   });
 

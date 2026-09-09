@@ -43,9 +43,19 @@ describe("buildCompatContext", () => {
     const verdict = buildCompatContext(input({ protonDbStatus: "READY" }), now);
 
     expect(verdict.positives).toEqual([
-      { factor: "compat_bazzite", label: "Runs well on Linux", points: 0 },
+      { factor: "compat_bazzite", label: "Runs well on your Linux devices", points: 0 },
     ]);
     expect(verdict.caveats).toEqual([]);
+  });
+
+  it("does not emit a Linux-positive factor when Windows is primary", () => {
+    expect(
+      buildCompatContext(input({ protonDbStatus: "READY" }), now, {
+        primaryOs: "WINDOWS",
+        hasWindowsFallback: false,
+        handheldOs: "LINUX",
+      }),
+    ).toEqual({ positives: [], caveats: [] });
   });
 
   it("maps each non-ready status to its caveat factor", () => {

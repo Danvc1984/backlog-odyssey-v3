@@ -104,6 +104,7 @@ export function buildPlayPipeline(
         steamLastPlayed: steamRow?.steamLastPlayed ?? null,
       },
       envStatus: resolvePlayEnvStatus(setup, row.libraryEntry?.preferredEnvironment ?? null, row.envCompat),
+      primaryOs: setup.primaryOs,
       quality: {
         metacriticScore: parsedPayload?.metacriticScore ?? null,
         rating: parsedPayload?.rating ?? null,
@@ -177,6 +178,7 @@ export function buildBuyPipeline(
       envStatus: view?.compatEvidence
         ? resolvePlayEnvStatus(setup, null, view.envCompat)
         : null,
+      primaryOs: setup.primaryOs,
     };
   });
   const buyRerank = rerankBuyCandidates(buyRerankInputs, profile, preferences);

@@ -22,6 +22,7 @@ import {
 import { resolveSourcePresentation } from "@/lib/sources/known-sources";
 import { refreshSteamActivityCacheIfStale } from "@/lib/steam-activity";
 import { RecentSteamActivity } from "@/components/today/RecentSteamActivity";
+import { SteamActivityRefreshButton } from "@/components/today/SteamActivityRefreshButton";
 import { TodayDataHealth } from "@/components/today/TodaySummary";
 import { loadTodayDataHealth } from "@/lib/today-data-health";
 import { CoverageDialog } from "@/components/today/CoverageDialog";
@@ -33,6 +34,7 @@ import { formatMexicoTimestamp } from "@/lib/format-times";
 import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
 import { SectionCard } from "@/components/ui/detail-card";
 import { buildEntryOfferView } from "@/lib/offer-selection";
+import { formatPlayExclusionReasons } from "@/lib/recommendations/environment-fit";
 
 const PLAY_ROLE_GROUPS = [
   { label: "Best fit", roles: ["BEST_FIT_1", "BEST_FIT_2"] },
@@ -69,6 +71,7 @@ export default async function TodayPage() {
     wishlistEntries,
     todayOperations,
     steamActivityView,
+    todaySettings,
   ] = await Promise.all([
     prisma.recommendationRun.findFirst({
       where: { kind: "PLAY_NEXT" },
@@ -170,6 +173,10 @@ export default async function TodayPage() {
     }),
     loadTodayOperations(prisma),
     refreshSteamActivityCacheIfStale(),
+    prisma.appSettings.findUnique({
+      where: { id: 1 },
+      select: { primaryOs: true },
+    }),
   ]);
   const knownValues = knownValuesResult.success
     ? knownValuesResult.data
@@ -209,7 +216,7 @@ export default async function TodayPage() {
     | {
         rerank?: { mode?: string };
         tune?: { thinPool?: boolean };
-        play?: { exclusions?: Array<{ id: string }> };
+        play?: { exclusions?: Array<{ id: string; reason?: { label?: string } | null }> };
       }
     | null
     | undefined;
@@ -231,7 +238,12 @@ export default async function TodayPage() {
     )?.backgroundImageUrls[0] ??
     null;
   const coldStart = playContext?.rerank?.mode === "COLD_START";
-  const excludedPlayCount = playContext?.play?.exclusions?.length ?? 0;
+  const playExclusions = playContext?.play?.exclusions ?? [];
+  const showPlayExclusions = todaySettings?.primaryOs === "LINUX";
+  const excludedPlayCount = showPlayExclusions ? playExclusions.length : 0;
+  const exclusionReasons = showPlayExclusions
+    ? formatPlayExclusionReasons(playExclusions)
+    : null;
   const hasPlayRoles = items.some((item) => item.role !== null);
   const hasBuyRoles = buyItems.some((item) => item.role !== null);
   const activityAppIds = [
@@ -344,7 +356,8 @@ export default async function TodayPage() {
         {latestPlayNextRun && <ColdStartNote visible={coldStart} />}
         {excludedPlayCount > 0 && (
           <p className="mt-2 text-sm text-muted-foreground">
-            {excludedPlayCount} {excludedPlayCount === 1 ? "game" : "games"} not shown: need Windows, no fallback configured
+            {excludedPlayCount} {excludedPlayCount === 1 ? "game" : "games"} not shown
+            {exclusionReasons ? `: ${exclusionReasons}` : "."}
           </p>
         )}
         {items.length === 0 ? (
@@ -518,6 +531,7 @@ export default async function TodayPage() {
           eyebrow="Steam / last 24 hours"
           title="Recent activity"
           description="Small signals from what you actually touched."
+          aside={<SteamActivityRefreshButton />}
         >
           <RecentSteamActivity
             view={steamActivityView}
@@ -528,11 +542,10 @@ export default async function TodayPage() {
         <SectionCard
           eyebrow="Coverage / attention"
           title="Data health"
-          description="Counts are actionable, not decoration."
+          description="Visible counts summarize backlog progress and current campaigns."
         >
           <TodayDataHealth
             activeBacklog={dataHealth.activeBacklog}
-            abandoned={dataHealth.abandoned}
           />
           <div className="mt-4 grid gap-2">
             <CoverageDialog

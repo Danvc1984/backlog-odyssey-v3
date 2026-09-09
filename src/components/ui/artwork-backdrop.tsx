@@ -1,6 +1,12 @@
 import Image from "next/image";
 
-export function ArtworkBackdrop({ src }: { src: string }) {
+export function ArtworkBackdrop({
+  src,
+  fit = "contain",
+}: {
+  src: string;
+  fit?: "contain" | "cover";
+}) {
   return (
     <>
       <Image
@@ -18,7 +24,7 @@ export function ArtworkBackdrop({ src }: { src: string }) {
         alt=""
         fill
         sizes="(min-width: 1280px) 33vw, 100vw"
-        className="z-20 object-contain"
+        className={`z-20 object-${fit}`}
         loading="lazy"
         unoptimized
       />

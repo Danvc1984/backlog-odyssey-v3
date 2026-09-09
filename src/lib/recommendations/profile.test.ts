@@ -77,7 +77,6 @@ describe("candidate dimension resolution", () => {
       TAG: ["Singleplayer"],
       PUBLISHER: ["Valve"],
       ERA: ["Y2005_2014"],
-      DURATION: ["MEDIUM"],
       MATURITY: ["Everyone 10+"],
       SERIES: ["Portal"],
       EXPERIENCE: ["PLAYED"],
@@ -102,7 +101,6 @@ describe("candidate dimension resolution", () => {
       TAG: [],
       PUBLISHER: ["Valve"],
       ERA: ["Y2005_2014"],
-      DURATION: ["MEDIUM"],
     });
   });
 

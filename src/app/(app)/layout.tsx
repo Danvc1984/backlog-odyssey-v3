@@ -74,7 +74,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="relative isolate flex min-h-screen">
-      <WallpaperBackground enabled={wallpaperEnabled} selection={selection} />
+      <WallpaperBackground
+        enabled={wallpaperEnabled}
+        hasSources={searchPlan.terms.length > 0}
+        selection={selection}
+      />
       <ActiveOperationsWatcher />
       <div className="relative z-10 flex min-h-screen w-full">
         <AppNav

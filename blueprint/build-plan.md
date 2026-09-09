@@ -462,46 +462,48 @@
     route
 
 - [ ] 21. **Pre-deployment polish and improvements** - owner-reported fixes
-  across visual polish, Today, recommendations, browsing, and settings
+  organized one sub-feature per app section
   - [x] 21a. **Global visual fixes** - favicon respects the active theme
-    family instead of being overwritten with cyan; remove the glow effect
-    app-wide across all four palettes, keeping it for qualifying Today and
-    buy recommendation panels/cards above 60%, wishlist cards above 60%, and
-    offer badges/details above 80%; sidebar minimize/maximize on click
-  - [ ] 21b. **Today focus and wallpaper** - rebuild the Today focus heading
-    as a focus carousel that switches between the main game and the other
-    in-progress games (main game offers only a view-details button;
-    in-progress games add a make-main button), and restore the wallpaper
-    change control at the bottom of the screen with the manual refresh
-    behavior from Settings, offering wallpaper refresh when no wallpapers
-    are loaded and at least one game is in progress
-  - [ ] 21c. **Today metrics fixes** - working recent Steam activity with a
-    manual refresh option and game-image backgrounds on the elongated cards;
-    drop the abandoned-games counter in data health and replace the "Counts
-    are actionable, not decoration." caption; fix or remove the
-    always-"never" Steam provider freshness entry and show compatibility
-    freshness only when the OS profile includes a Linux device
-  - [ ] 21d. **Recommendations presentation** - remove the "Best fit / #02"
-    role numbering; rewrite play and buy reasoning as congruent
-    natural-language text instead of technical fragments; present individual
-    reasons aggregated and ordered from strong positives to strong negatives;
-    make the Tune recommendations (opt in) section header visible with an
-    expand icon; and validate the no-fallback hidden-games message so it does
-    not appear when Windows is primary with a Linux handheld
-  - [ ] 21e. **Catalog pagination** - page-size control of 20/50/100
-    (default 20) across library and wishlist in both grid and list views
-  - [ ] 21f. **Library browsing improvements** - edit and change-state
-    actions working like game detail including the scroll effect;
-    description-based warning for games without metadata replacing the meta
-    ready/meta missing labels (warning color also on wishlist); a more
-    noticeable background for the main-game selector; ProtonDB tags omitted
-    on all-Windows setups
-  - [ ] 21g. **Wishlist browsing improvements** - ITAD as a link in the
-    offer description; replace the redundant opportunity signals with a
-    discounted-games counter
-  - [ ] 21h. **Settings reorganization and hydration fix** - rearrange and
-    group settings sections by concern, and fix the hydration mismatch on
-    hard reload with stored visual preferences
+    color instead of being overwritten with cyan; remove the glow effect
+    app-wide across all four palettes, keeping it only for the Today buy
+    heading when the top offer exceeds 60% and for offers above 80% in the
+    wishlist catalog and wishlist detail; sidebar minimize/maximize on click
+  - [x] 21b. **Today** - rebuild the Today focus heading as a focus carousel
+    that switches between the main game and the other in-progress games
+    (main game offers only a view-details button; in-progress games add a
+    make-main button); restore the wallpaper change control at the bottom of
+    the screen with the manual refresh behavior from Settings, offering
+    wallpaper refresh when no wallpapers are loaded and at least one game is
+    in progress; working recent Steam activity with a manual refresh option
+    and game-image backgrounds on the elongated cards; drop the
+    abandoned-games counter in data health and replace the "Counts are
+    actionable, not decoration." caption; fix or remove the always-"never"
+    Steam provider freshness entry and show compatibility freshness only
+    when the OS profile includes a Linux device; remove the "Best fit /
+    #02" role numbering; rewrite play and buy reasoning as congruent
+    natural-language chips instead of technical fragments, with individual
+    reasons aggregated and ordered from strong positives to strong
+    negatives; remove generated card descriptions; make the Tune
+    recommendations (opt in) section header visible
+    with an expand icon; and validate the no-fallback hidden-games message
+    so it does not appear when Windows is primary with a Linux handheld
+  - [ ] 21c. **Library** - page-size control of 20/50/100 (default 20) in
+    both grid and list views (shared mechanism, reused by 21d); edit and
+    change-state actions working like game detail including the scroll
+    effect; description-based warning for games without metadata replacing
+    the meta ready/meta missing labels; a more noticeable background for the
+    main-game selector; ProtonDB card tags omitted on all-Windows setups
+  - [ ] 21d. **Wishlist** - page-size control of 20/50/100 (default 20) in
+    both views; ITAD as a link in the offer description; replace the
+    redundant opportunity signals with a discounted-games counter; sorting
+    by discount; efficient search matching the library search behavior;
+    warning color for the missing-metadata note
+  - [ ] 21e. **Settings and onboarding** - rearrange and group settings
+    sections by concern; fix the hydration mismatch on hard reload with
+    stored visual preferences; add an app theme choice (family and mode) to
+    the welcome onboarding; strip trademark and copyright symbols from game
+    names at Steam import time (import runs from the Settings Steam
+    connection card)
 
 - [ ] 22. **Deployment and CI readiness** - Vercel/Supabase environment
   review, Vercel Cron daily run at 06:00 UTC-6 with `CRON_SECRET` enqueueing

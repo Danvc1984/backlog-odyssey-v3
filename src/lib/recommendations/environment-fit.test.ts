@@ -4,6 +4,7 @@ import {
   classifyPlayPracticality,
   compatContributes,
   availableEnvironments,
+  formatPlayExclusionReasons,
   resolvePlayEnvStatus,
   type EnvironmentCompatibilityRow,
 } from "./environment-fit";
@@ -22,6 +23,10 @@ const allWindows: OsSetup = {
   hasWindowsFallback: false,
   handheldOs: "WINDOWS",
   onboardingCompleted: true,
+};
+const windowsPrimaryLinuxHandheld: OsSetup = {
+  ...allWindows,
+  handheldOs: "LINUX",
 };
 const rows: EnvironmentCompatibilityRow[] = [
   { environment: "LINUX", status: "READY" },
@@ -77,6 +82,14 @@ describe("environment fit", () => {
     expect(classifyPlayPracticality(linuxOnly, evidence({ awayStatus: "Denied" })).kind).toBe("EXCLUDED");
     expect(classifyPlayPracticality(linuxWithFallback, evidence({ awayStatus: "Broken" })).kind).toBe("SOFT");
     expect(classifyPlayPracticality(allWindows, evidence({ protonDbStatus: "REQUIRED", awayStatus: "Denied" })).kind).toBe("PLAYABLE");
+    expect(classifyPlayPracticality(windowsPrimaryLinuxHandheld, evidence({ protonDbStatus: "REQUIRED" }))).toEqual({
+      kind: "SOFT",
+      reason: { factor: "compat_required", label: "Requires Windows to run" },
+    });
+    expect(classifyPlayPracticality(windowsPrimaryLinuxHandheld, evidence({ awayStatus: "Denied" }))).toEqual({
+      kind: "SOFT",
+      reason: { factor: "anticheat", label: "Anti-cheat blocks Linux" },
+    });
   });
 
   it("lets personal overrides win and keeps ROM and unknown evidence soft", () => {
@@ -89,5 +102,16 @@ describe("environment fit", () => {
       kind: "SOFT",
       reason: { factor: "compat_unknown", label: "Compatibility unknown" },
     });
+  });
+
+  it("deduplicates stored exclusion reasons for the Today message", () => {
+    expect(formatPlayExclusionReasons([
+      { reason: { label: "Requires Windows to run, but no Windows fallback is configured" } },
+      { reason: { label: "Requires Windows to run, but no Windows fallback is configured" } },
+      { reason: { label: "Anti-cheat blocks Linux, and no Windows fallback is configured" } },
+    ])).toBe(
+      "Requires Windows to run, but no Windows fallback is configured; Anti-cheat blocks Linux, and no Windows fallback is configured",
+    );
+    expect(formatPlayExclusionReasons([{ reason: null }])).toBeNull();
   });
 });

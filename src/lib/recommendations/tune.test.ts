@@ -28,7 +28,6 @@ const source = (source: "STEAM" | "ROM" | "OTHER_PLATFORM", alternativeSourceId:
 const candidate = (overrides: Partial<TuneCandidateInput> = {}): TuneCandidateInput => ({
   rawgId: 10,
   experience: "COUCH_GAMING",
-  playtimeHours: 4,
   releaseDate: "2020-01-01",
   genres: ["Puzzle"],
   tags: ["Co-op"],
@@ -38,9 +37,9 @@ const candidate = (overrides: Partial<TuneCandidateInput> = {}): TuneCandidateIn
 });
 
 describe("matchTuneCriteria", () => {
-  it("matches experience, duration, era, genres, tags, and casual maturity", () => {
+  it("matches experience, era, genres, tags, and casual maturity", () => {
     const match = matchTuneCriteria({ ...emptyTune, experience: "COUCH_GAMING", length: "SHORT", era: "Y2020_PLUS", genres: ["Puzzle"], tags: ["Co-op"], maturity: "CASUAL" }, candidate());
-    expect(match).toEqual({ points: 10, criteria: ["experience", "length", "genre", "tag", "era", "maturity"] });
+    expect(match).toEqual({ points: 10, criteria: ["experience", "genre", "tag", "era", "maturity"] });
   });
 
   it.each(["Teen", "Mature", "Adults Only"])("matches %s as mature", (rating) => {

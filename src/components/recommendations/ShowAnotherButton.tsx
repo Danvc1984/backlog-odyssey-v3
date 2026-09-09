@@ -27,6 +27,7 @@ interface ShowAnotherButtonProps {
 interface CardSlot {
   target: RecommendationCardTarget;
   name: string;
+  imageUrl: string | null | undefined;
   score: number;
   positive: unknown;
   negative: unknown;
@@ -53,6 +54,7 @@ export function ShowAnotherButton({
   const [slot, setSlot] = useState<CardSlot>({
     target,
     name,
+    imageUrl,
     score,
     positive,
     negative,
@@ -80,6 +82,7 @@ export function ShowAnotherButton({
           ? { kind: "PLAY_NEXT", gameId: rotated.gameId ?? "" }
           : { kind: "BUY", wishlistEntryId: rotated.wishlistEntryId ?? "" },
       name: rotated.name,
+      imageUrl: rotated.imageUrl,
       score: rotated.score,
       positive: rotated.positive,
       negative: rotated.negative,
@@ -99,7 +102,7 @@ export function ShowAnotherButton({
       caveats={slot.caveats}
       runId={runId}
       role={role}
-      imageUrl={imageUrl}
+      imageUrl={slot.imageUrl}
       offerDiscount={slot.offerDiscount}
       rotate={{ pending, exhausted, onRotate: () => void rotate() }}
     />

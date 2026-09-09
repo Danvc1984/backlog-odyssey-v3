@@ -676,9 +676,9 @@ describe("updateRecommendations", () => {
     const playCall = runCreate.mock.calls.find((call) => (call[0] as { data: { kind: string } }).data.kind === "PLAY_NEXT")!;
     const buyCall = runCreate.mock.calls.find((call) => (call[0] as { data: { kind: string } }).data.kind === "BUY")!;
     expect(playCall[0].data.items.create[0]).toMatchObject({ score: 40, negative: [{ factor: "calibration", label: "Dismissed 3 times", points: -10 }] });
-    expect(playCall[0].data.items.create[0].positive).toContainEqual({ factor: "interest", label: "Interest 4", points: 40 });
+    expect(playCall[0].data.items.create[0].positive).toContainEqual({ factor: "interest", label: "You have strong interest in this game", points: 40 });
     expect(buyCall[0].data.items.create[0]).toMatchObject({ score: 30, negative: [{ factor: "calibration", label: "Dismissed 6 times", points: -20 }] });
-    expect(buyCall[0].data.items.create[0].positive).toContainEqual({ factor: "interest", label: "Interest 3", points: 30 });
+    expect(buyCall[0].data.items.create[0].positive).toContainEqual({ factor: "interest", label: "You have some interest in this game", points: 30 });
     expect(feedbackGroupBy).toHaveBeenCalledTimes(1);
   });
 
@@ -781,8 +781,8 @@ describe("updateRecommendations", () => {
       score: 50,
     });
     expect(items[0].positive).toEqual([
-      { factor: "interest", label: "Interest 5", points: 50 },
-      { factor: "compat_bazzite", label: "Runs well on Linux", points: 0 },
+      { factor: "interest", label: "You have huge interest in this game", points: 50 },
+      { factor: "compat_bazzite", label: "Runs well on your Linux devices", points: 0 },
     ]);
     expect(items[0].caveats).toEqual([
       { factor: "anticheat", label: "Anti-cheat blocks Linux" },
@@ -901,13 +901,13 @@ describe("updateRecommendations", () => {
       wishlistEntry: { connect: { id: "wish-1" } },
       score: 35,
     });
-    expect(items[0].positive).toContainEqual({ factor: "offer_discount", label: "50% off", points: 5 });
+    expect(items[0].positive).toContainEqual({ factor: "offer_discount", label: "It is 50% off right now", points: 5 });
     expect(items[1]).toMatchObject({
       wishlistEntry: { connect: { id: "wish-2" } },
       score: 8 + 6,
     });
-    expect(items[1].positive).toContainEqual({ factor: "target_hit", label: "At or below target $350", points: 8 });
-    expect(items[1].positive).toContainEqual({ factor: "dlc_affinity", label: "Owned base game you enjoyed", points: 6 });
+    expect(items[1].positive).toContainEqual({ factor: "target_hit", label: "At or below your target price of $350", points: 8 });
+    expect(items[1].positive).toContainEqual({ factor: "dlc_affinity", label: "You already enjoyed the base game", points: 6 });
   });
 
   it("prunes runs older than the 12-month cutoff only", async () => {
@@ -1203,8 +1203,8 @@ describe("updateRecommendations re-ranking", () => {
     expect(items.map((item: { game: { connect: { id: string } } }) => item.game.connect.id)).toEqual(["game-zzz", "game-aaa"]);
     expect(items[0].score).toBe(45);
     expect(items[0].positive).toEqual(expect.arrayContaining([
-      { factor: "taste_profile", label: "RPG affinity", points: 3 },
-      { factor: "quality", label: "Metacritic 95", points: 2 },
+      { factor: "taste_profile", label: "Matches your taste for rpg games", points: 3 },
+      { factor: "quality", label: "Critics rate it highly (Metacritic 95)", points: 2 },
     ]));
     expect(playNextCall[0].data.context).toMatchObject({
       rerank: { mode: "RERANKED", applied: { taste: 1, steam: 0, environment: 0, quality: 1 } },
@@ -1232,7 +1232,7 @@ describe("updateRecommendations re-ranking", () => {
     expect(items[0].score).toBe(20 + 2 + 2);
     expect(items[0].positive).toEqual(expect.arrayContaining([
       { factor: "steam_recent", label: "Played recently on Steam", points: 2 },
-      { factor: "environment_fit", label: "Ready on your setup", points: 2 },
+      { factor: "environment_fit", label: "Runs well on your Linux devices", points: 2 },
     ]));
     expect(items[0].caveats).toContainEqual({
       factor: "limited_basis",
@@ -1283,8 +1283,8 @@ describe("updateRecommendations buy re-ranking", () => {
     expect(items.map((item: { wishlistEntry: { connect: { id: string } } }) => item.wishlistEntry.connect.id)).toEqual(["wish-rpg", "wish-plain"]);
     expect(items[0].score).toBe(45);
     expect(items[0].positive).toEqual(expect.arrayContaining([
-      { factor: "taste_profile", label: "RPG affinity", points: 3 },
-      { factor: "quality", label: "Metacritic 95", points: 2 },
+      { factor: "taste_profile", label: "Matches your taste for rpg games", points: 3 },
+      { factor: "quality", label: "Critics rate it highly (Metacritic 95)", points: 2 },
     ]));
     expect(buyCall[0].data.context).toMatchObject({
       rerank: { mode: "RERANKED", applied: { taste: 1, steam: 0, environment: 0, quality: 1 } },
@@ -1370,7 +1370,7 @@ describe("updateRecommendations buy re-ranking", () => {
     )!;
     const items = buyCall[0].data.items.create;
     expect(items[0].score).toBe(8 + 6 + 3);
-    expect(items[0].positive).toContainEqual({ factor: "taste_profile", label: "RPG affinity", points: 3 });
+    expect(items[0].positive).toContainEqual({ factor: "taste_profile", label: "Matches your taste for rpg games", points: 3 });
   });
 });
 
@@ -1401,14 +1401,24 @@ describe("rotateRecommendationRole", () => {
       DEAL: [],
     });
     itemFindFirst.mockResolvedValue({ id: "item-1", gameId: "game-1", wishlistEntryId: null });
-    gameFindUnique.mockResolvedValue({ name: "Game B" });
+    gameFindUnique.mockResolvedValue({
+      name: "Game B",
+      metadataSnapshots: [{ payload: { title: "Game B", genres: [], backgroundImageUrls: ["https://art.test/game-b.jpg"] } }],
+    });
 
     const result = await rotateRecommendationRole({ runId: "run-play", role: "BEST_FIT_1", itemId: "item-1" });
 
     expect(result.success).toBe(true);
     expect(result.data).toMatchObject({
       rotated: true,
-      item: { itemId: "item-1", role: "BEST_FIT_1", gameId: "game-a", name: "Game B", score: 30 },
+      item: {
+        itemId: "item-1",
+        role: "BEST_FIT_1",
+        gameId: "game-a",
+        name: "Game B",
+        imageUrl: "https://art.test/game-b.jpg",
+        score: 30,
+      },
     });
     expect(itemUpdateMany).toHaveBeenCalledWith({
       where: { id: "item-1", runId: "run-play", role: "BEST_FIT_1" },

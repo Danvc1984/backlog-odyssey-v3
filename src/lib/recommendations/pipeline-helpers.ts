@@ -218,7 +218,6 @@ export function tuneInput(payload: unknown, experience: string | null): TuneCand
     ? {
         rawgId: parsed.rawgId,
         experience,
-        playtimeHours: parsed.playtimeHours,
         releaseDate: parsed.releaseDate,
         genres: parsed.genres,
         tags: parsed.tags,
