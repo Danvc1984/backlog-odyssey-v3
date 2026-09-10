@@ -507,7 +507,7 @@
     names at Steam import time (import runs from the Settings Steam
     connection card)
 
-- [ ] 22. **Handheld suitability flag and handheld-aware recommendations** -
+- [x] 22. **Handheld suitability flag and handheld-aware recommendations** -
   owner-marked handheld-suitable games feeding environment-aware
   recommendations and compatibility presentation across catalog and wishlist
   - [x] 22a. **Handheld-suitable personal flag** - nullable flag on
@@ -524,19 +524,52 @@
     practical-fit penalty; setup changes re-derive affected runs per the
     existing rules
 
-- [ ] 23. **Playtime estimates from a dedicated provider** - replace RAWG
-  duration as the duration evidence source with IGDB and SteamSpy only,
-  feeding metadata display and the recommendation engine's duration signals
-  - [ ] 23a. **Playtime evidence provider** - IGDB `game_time_to_beats`
-    primary (identity via Steam App ID), SteamSpy median fallback when IGDB
-    has no row and RAWG is not a fallback; snapshot storage with attribution
-    and provenance, backfill through the existing re-enrichment patterns,
-    tolerant parsing; provider contract locked at spec time
-  - [ ] 23b. **Playtime display and duration wiring** - main/completionist
-    estimates on game and wishlist detail, durationBand derived only from
-    the new evidence, Tune length matching and the profile DURATION
-    dimension consuming it, RAWG playtimeHours retired from duration
-    derivation and estimates display; duration stays soft evidence only
+- [ ] 23. **IGDB as primary metadata, artwork, and playtime provider** -
+  replace RAWG completely with IGDB for catalog and wishlist evidence, keeping
+  SteamSpy as the duration-only fallback; provider data rebuilds from a clean
+  database restart that doubles as the new-provider workflow test
+  - [ ] 23a. **IGDB client and identity foundation** - Twitch
+    client-credentials token cache (about 60-day validity with proactive
+    refresh), 4 requests/second and max-8-concurrent rate limiting with
+    Retry-After handling, 10-second timeouts, Steam App ID identity resolution
+    through IGDB `external_games`, and normalized fuzzy-search matching with
+    high-confidence automatic fixing, persistent manual replacement, and
+    base-game/DLC category safety; ambiguous or incompatible candidates remain
+    unmatched for review; provider contract locked at spec time
+  - [ ] 23b. **Catalog IGDB enrichment** - IGDB-shaped metadata snapshot
+    (summary, genres/themes/keywords, involved companies, first release date,
+    ESRB age rating, separate IGDB aggregated, community, and total ratings
+    with counts, websites, alternative names, collections, franchise, explicit
+    DLC/expansion/remake relations, game modes), artwork and screenshot
+    capture with derived palettes and wide-image fallback order (artwork,
+    screenshot, cover, deterministic local fallback), post-import queueing,
+    individual and catalog-wide load actions with overwrite warnings, and
+    manual search with portrait cover candidates; dense metadata uses
+    progressive disclosure
+  - [ ] 23c. **Playtime evidence and duration wiring** - IGDB
+    `game_time_to_beats` primary (hastily, normally, and completely mapped to
+    history main, history + extras, and completionist), automatic SteamSpy
+    median fallback only when IGDB has no row and a confirmed Steam App ID
+    exists, and RAWG playtime used nowhere; attributed expandable duration
+    metadata and a three-profile preference captured in Welcome and editable
+    in Settings, whose selected estimate appears in Library/Wishlist and feeds
+    `durationBand`, Tune length matching, and the profile DURATION dimension;
+    duration remains soft evidence
+  - [ ] 23d. **Wishlist IGDB flows and identity suggestions** - fill-only
+    enrichment for base-game wishes, with explicit manual refresh/identity
+    changes allowed to replace snapshots, and automatic application of a Steam
+    App ID derived from any fixed high-confidence or manual IGDB match;
+    identity remains editable, and the retired RAWG store-links and
+    `storesearch` fallback are removed; wishlist metadata transfer on
+    acquisition uses the IGDB snapshot
+  - [ ] 23e. **Engine re-derivation and RAWG retirement** - recommendation
+    dimensions re-keyed to IGDB evidence (genres/themes/keywords, publisher,
+    era, maturity, total-rating quality with aggregated fallback and confidence,
+    collections-based series, duration), compatibility auto-queue moved behind
+    successful IGDB enrichment, attribution swap, RAWG client/env/code removal,
+    stale-snapshot retry presentation, and a documented clean-restart procedure
+    (personal export including all external IDs, wipe, empty-schema restore,
+    Steam re-import, IGDB enrichment)
 
 - [ ] 24. **Deployment and CI readiness** - Vercel/Supabase environment
   review, Vercel Cron daily run at 06:00 UTC-6 with `CRON_SECRET` enqueueing

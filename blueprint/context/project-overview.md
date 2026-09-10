@@ -23,8 +23,10 @@ outside scope. Alternative stores remain manual availability sources unless
 they offer a supported account-library API.
 
 Personal intent and explicit catalog choices are authoritative. Provider data
-from Steam, RAWG, ITAD, ProtonDB, AWAY, Wallhaven, IGDB, and SteamSpy is
-replaceable evidence: it never silently overwrites local data. Provider work is
+from Steam, IGDB, SteamSpy, ITAD, ProtonDB, AWAY, and Wallhaven is replaceable
+evidence: it never silently overwrites local data. IGDB is the primary
+metadata, artwork, and playtime provider, fully replacing RAWG as part of
+feature 23; SteamSpy is the duration-only fallback. Provider work is
 persistent, asynchronous, rate-limited, retryable up to three times, and
 failures preserve the last usable data.
 
@@ -58,11 +60,11 @@ The exact checked state is owned by blueprint/build-plan.md.
     Detail, Wishlist Detail, Collections, and Settings, plus the optional
     cached Wallhaven background with rotation, shuffle, attribution, fallback,
     and reduced-data hard-off.
-11. **[x] 17a-17d: Per-game themes and RAWG screenshots** - Version 3 snapshot
-    adding derived palettes and up to six screenshots, hero-band themes with
-    decorative accent tints on game detail and wishlist detail, a dedicated
-    screenshots carousel, and backfill through the existing re-enrichment
-    route.
+11. **[x] 17a-17d: Per-game themes and screenshots** - Derived palettes and up
+    to six screenshots captured during enrichment, hero-band themes with
+    decorative accent tints on game detail and wishlist detail, and a dedicated
+    screenshots carousel. Built on RAWG evidence at the time; feature 23
+    re-points the sources to IGDB.
 12. **[x] 18a-18c: Settings, export, and restore** - Consolidated Settings
     surfaces, versioned personal-data JSON export, and empty-schema-only
     import in one all-or-nothing transaction.
@@ -96,22 +98,27 @@ The exact checked state is owned by blueprint/build-plan.md.
     warning-colored missing-metadata note); Settings and onboarding
     (section regrouping, hydration fix, welcome theme choice, Steam-name
     symbol cleanup at import).
-16. **[ ] 22a-22b: Handheld suitability flag and handheld-aware
-    recommendations** - Owner-marked handheld-suitable personal flag on
-    catalog and wishlist entries (mirroring gameExperience); handheld-fit
-    factors with visible explanations where the setup has a Linux handheld,
-    including compatibility framed for the handheld target on Windows-primary
-    setups; the Windows-handheld rescue lifting the no-fallback hard
-    exclusion for flagged games with a visible explanation while non-flagged
-    games keep the heavy practical-fit penalty. 22a is specced in
-    `blueprint/context/current-feature.md`.
-17. **[ ] 23a-23b: Playtime estimates from a dedicated provider** - IGDB
-    `game_time_to_beats` primary with the SteamSpy median as the only
-    fallback (RAWG playtime is not a fallback), replaceable attributed
-    evidence keyed by the confirmed Steam App ID, estimates display on game
-    and wishlist detail, durationBand and Tune length wired to the new
-    evidence, and RAWG playtimeHours retired from duration derivation and
-    estimates display; duration stays soft evidence.
+16. **[x] 22a-22b: Handheld suitability flag and handheld-aware
+    recommendations** - Shipped and archived: owner-marked handheld-suitable
+    personal flag on catalog and wishlist entries (mirroring gameExperience);
+    handheld-fit factors with visible explanations where the setup has a Linux
+    handheld, including compatibility framed for the handheld target on
+    Windows-primary setups; the Windows-handheld rescue lifting the no-fallback
+    hard exclusion for flagged games with a visible explanation while
+    non-flagged games keep the heavy practical-fit penalty.
+17. **[ ] 23a-23e: IGDB as primary metadata, artwork, and playtime provider** -
+    Full RAWG replacement: IGDB client and identity foundation (Twitch token
+    cache, 4 rps / max-8-concurrent rate limiting with Retry-After, Steam App
+    ID resolution through `external_games`, high-confidence fuzzy matching and
+    persistent manual replacement); catalog IGDB snapshot with artwork,
+    palettes, screenshots, three rating fields,
+    collections/relations, and game modes; playtime evidence
+    (`game_time_to_beats` primary, SteamSpy median fallback, RAWG playtime
+    nowhere); three duration profiles across Welcome/Settings/Library/Wishlist
+    and recommendation scoring; editable, automatically applied IGDB App IDs
+    replacing `storesearch`; engine re-derivation and RAWG retirement
+    with a documented clean-restart procedure (personal export, wipe,
+    empty-schema restore, Steam re-import, IGDB enrichment).
 18. **[ ] 24: Deployment and CI readiness** - Vercel/Supabase, Cron covering
     prices plus the compatibility freshness sweep (a no-op while compatibility
     is inactive), smoke tests, Verify command, and automatic checks.
@@ -144,32 +151,39 @@ boundaries.
   unimported titles but never imports or links catalog records.
 - Game is catalog-only and represents a base game or DLC. LibraryEntry holds
   personal play state, main game, priority, interest, rating, environment,
-  game experience, notes, replayCandidate, hidden state, and (feature 22) a
-  nullable handheld-suitable flag.
+  game experience, notes, replayCandidate, hidden state, and a nullable
+  handheld-suitable flag (shipped in 22a).
 - ExternalGameId stores provider identities and provenance. GameAvailability is
   separate from origin, provider IDs, compatibility, and offer sellers.
 - Steam and ROM are built-in availability kinds. Other platform availability
   references reusable AlternativeSource, which has a normalized name, optional
   known-source key, icon metadata, and archive state. No source is inferred
   from legacy free text.
-- MetadataSnapshot is replaceable RAWG data with attribution. Feature 17 bumped
-  it to version 3: derived palette variants (primary plus dark/muted) and up
-  to six screenshot URLs (id, image, width, height; RAWG-hidden entries
-  filtered), tolerant of v1/v2 rows and backfilled by re-enrichment.
+- MetadataSnapshot is replaceable provider data with attribution. Feature 23
+  re-points it to an IGDB-shaped snapshot with a clean restart and no legacy
+  RAWG tolerance: summary, genres/themes/keywords, involved companies, first
+  release date, ESRB age rating, separate IGDB `aggregated_rating`, community
+  `rating`, and `total_rating` scores with sample counts, official website,
+  alternative names, collections/franchise plus explicit
+  DLC/expansion/remake relations and game modes as series/structural evidence,
+  artwork and screenshots at named IGDB image sizes, and the derived palette
+  (re-derived on re-enrichment). Compact cards use cover art; wide surfaces
+  fall back from artwork to screenshot, cover, then deterministic local art.
   PossibleDuplicate records review evidence. CatalogOperation enables scoped,
   reload-safe Undo for merge and delete.
-- Playtime evidence (feature 23) is replaceable, attributed IGDB/SteamSpy data
-  keyed by the confirmed Steam App ID; its storage shape is a spec decision
-  for 23a. RAWG `playtimeHours` stays in old snapshots but is no longer a
-  duration source.
+- Playtime evidence (feature 23) is replaceable, attributed IGDB
+  `game_time_to_beats` / SteamSpy data keyed by the confirmed Steam App ID.
+  It stores main (`hastily`), main-plus-extras (`normally`), and completionist
+  (`completely`) estimates. SteamSpy is fetched only when IGDB has no row.
+  RAWG `playtimeHours` is used nowhere: not a fallback, not displayed.
 
 ### Wishlist, pricing, compatibility, and recommendations
 
 - WishlistEntry stays independent from Game until explicit acquisition. It is an
   unowned base game or an unowned DLC linked to an owned base game, carrying
   the shared personal fields including the handheld-suitable flag.
-- WishlistMetadataSnapshot is independent RAWG evidence and follows the same
-  v3 contract for base-game wishes. UnresolvedSteamDlc, WishlistImportReview,
+- WishlistMetadataSnapshot is independent IGDB evidence following the same
+  contract for base-game wishes. UnresolvedSteamDlc, WishlistImportReview,
   and WishlistImportIgnore preserve manual review across owned sync and
   wishlist import.
 - DealOffer keeps valid Mexican offer alternatives. ItadIdentity caches
@@ -177,7 +191,9 @@ boundaries.
   offer, never one based on seller preference.
 - Target price is optional. Fresh target hits create opportunity signals;
   historical low is display-only. Offers stale after 48 hours cannot create a
-  strong opportunity signal.
+  strong opportunity signal. Wishlist Steam App ID suggestions derive from
+  IGDB `external_games` (the RAWG store-links and `storesearch` paths are
+  retired in feature 23).
 - CompatibilitySnapshot and EnvironmentCompatibility hold catalog evidence and
   WishlistCompatibilitySnapshot and WishlistEnvironmentCompatibility hold the
   parallel, read-only wishlist copies keyed to wishlist entries. The
@@ -199,26 +215,34 @@ boundaries.
 
 - Base-game delete explicitly lists and cascades DLC. Merge combines compatible
   relationships, surfaces conflicts, and never silently deletes equivalent DLC.
-- Steam import and sync are manual. Initial import queues RAWG work; later sync
+- Steam import and sync are manual. Initial import queues IGDB work; later sync
   does not. Recent activity is a separate cache, never a hidden sync/import.
 - ROM-only games are compatibility not applicable, not unknown. Mixed-source
   games may still receive Steam-keyed evidence.
 - A wish is priceable only with confirmed identity: Steam import, a
-  user-confirmed Steam URL/App ID, or an explicitly confirmed suggestion. When
-  RAWG store URLs are empty in practice, the App ID resolves through Steam's
-  keyless `storesearch` exact-name match behind the steam-slug trigger, still
-  suggestion-only until confirmed. Provenance is visible.
+  user-confirmed Steam URL/App ID, or an IGDB-derived App ID automatically
+  applied from a fixed identity (`external_games`). Provenance is visible and
+  the identity remains editable.
 - One explicit global Wishlist price action queues confirmed identities,
   prevents overlap, and reports refreshed, failed, and identity-required items.
 - ITAD is server-side, read-only, country=MX, batched, cached, and respects
   rate limits. The seller page is authoritative for activation; key stores warn
   that Mexico activation must be checked.
 - Playtime estimates come from IGDB's `game_time_to_beats` (hastily, normally,
-  completely plus sample count) with the SteamSpy median as the only fallback;
-  RAWG playtime is not a fallback and is retired from duration derivation and
-  estimates display. Estimates are replaceable, attributed evidence keyed by
-  the confirmed Steam App ID; games without provider rows show unknown
-  duration, like any other missing provider evidence.
+  completely plus sample count) with the SteamSpy median as the only fallback
+  when IGDB has no row and an App ID exists. `hastily` is history main,
+  `normally` is history plus extras, and `completely` is completionist; the
+  selected global duration profile controls default display and duration
+  scoring. RAWG's separate extra line disappears. RAWG playtime
+  is not a fallback and is retired from duration derivation and estimates
+  display. Estimates are replaceable, attributed evidence keyed by the
+  confirmed Steam App ID; games without provider rows show unknown duration,
+  like any other missing provider evidence. Duration stays soft evidence.
+- IGDB identity: catalog games resolve through `external_games` (uid = Steam
+  App ID); entries without an App ID use normalized fuzzy search with
+  ambiguous-candidate behavior. IGDB rate limits are 4 requests/second with a
+  maximum of 8 concurrent requests; exceeding them returns 429 with
+  Retry-After, handled like ITAD.
 
 ### OS setup, compatibility, and recommendations
 
@@ -228,7 +252,7 @@ boundaries.
   exists. All-Windows onboarding is the trivial path with no compatibility
   explanation step; onboarding ends with an optional start-now / not-now
   taste-setup offer (the import-flow entry point is unchanged).
-- The compatibility pipeline (ProtonDB and AWAY evidence, post-RAWG auto-queue,
+- The compatibility pipeline (ProtonDB and AWAY evidence, post-IGDB auto-queue,
   global sweeps, per-game refresh, ProtonDB card tags, and catalog/wishlist
   compatibility sections) is active only while the primary OS or the handheld
   is Linux. All-Windows setups see no compatibility flow anywhere, rendering
@@ -271,8 +295,8 @@ boundaries.
   not-playable Linux, or unknown Linux evidence where a READY floor applies)
   hard-excludes the game from all play roles with a visible, explained
   reason; a play role left empty is absent from the run. Second exception
-  (feature 22): that no-fallback exclusion does not apply to a game the
-  owner flagged as handheld-suitable when the setup includes a Windows
+  (feature 22b, shipped): that no-fallback exclusion does not apply to a game
+  the owner flagged as handheld-suitable when the setup includes a Windows
   handheld - the game remains playable there and the explanation says so;
   non-flagged games keep the heavy practical-fit penalty. The same evidence
   class never hard-excludes from Buy or wishlist discovery - there it is a
@@ -281,6 +305,14 @@ boundaries.
   or caveat where the setup has a Linux handheld (compatibility framed for
   the handheld target on Windows-primary setups), visible in explanations,
   never an eligibility gate by itself.
+- Recommendation metadata evidence comes from IGDB: genres, themes, keywords,
+  release era, publisher, sequel relationship where confidently known
+  (collections plus explicit structural relations; franchise as broader
+  context), ESRB context when available, and separate Steam-based and IGDB
+  community ratings with sample-size confidence. Publisher, release-era,
+  quality, series, genre/tag, duration, and mature or casual context are soft
+  evidence only; sparse provider data, low rating counts, or uncertain series
+  links lower confidence rather than fabricating preference.
 - Source tuning is an inclusive, modest Play Next boost. It does not exclude
   eligible games, affect Buy, or influence seller/offer selection.
 - Play Next provides two Best Fit roles, Out of the Box, and Change of Pace.
@@ -295,13 +327,14 @@ boundaries.
   in progress and follows the existing main-game decision; it never launches a
   game.
 
-### Themes, voice, and icons (Features 17 and 20)
+### Themes, voice, and icons (Features 17, 20, and 23)
 
-- Per-game themes derive server-side during RAWG enrichment and apply
-  read-only as a hero band plus decorative accent tints (headers, borders,
-  chips, dividers). Semantic tokens stay untouched; contrast overlays,
-  deterministic fallbacks, and reduced-data behavior apply.
-- RAWG screenshots render as a dedicated bottom carousel-style section on
+- Per-game themes derive server-side during IGDB enrichment (feature 23
+  re-points the RAWG-era source) and apply read-only as a hero band plus
+  decorative accent tints (headers, borders, chips, dividers). Semantic tokens
+  stay untouched; contrast overlays, deterministic fallbacks, and
+  reduced-data behavior apply.
+- IGDB screenshots render as a dedicated bottom carousel-style section on
   game detail and wishlist detail (base-game wishes), separate from the
   metadata block, with attribution and reduced-data token fallback.
 - Theme families are Dawn (cyan/purple) and Sunset (orange/yellow), each in
@@ -367,10 +400,10 @@ freshness, and operations are supporting sections.
   review, and catalog enrichment, with grid/list presentation.
 - /games/[id] - personal fields, availability, metadata, screenshots,
   derived-palette themed surfaces, compatibility, DLC, duplicate/recommendation
-  context, and RAWG actions.
-- /wishlist - independent wishes, RAWG, identity, global price refresh,
-  opportunities, Steam import/review, and acquisition, with focus/list
-  presentation.
+  context, and IGDB actions.
+- /wishlist - independent wishes, IGDB metadata, identity, global price
+  refresh, opportunities, Steam import/review, and acquisition, with
+  focus/list presentation.
 - /wishlist/[id] - metadata, screenshots and themed surfaces for base-game
   wishes, identity/provenance, offers, target, notes, interest,
   acquire/edit/delete, compatibility, and fill-only enrichment.
@@ -387,10 +420,15 @@ freshness, and operations are supporting sections.
   Prisma/PostgreSQL/Supabase, Auth.js/Google, Zod, Vitest, and Vercel.
 - Commands: pnpm dev on port 3500, pnpm build, pnpm start, pnpm lint,
   pnpm typecheck, and pnpm test.
-- Provider keys stay server-side. Feature 23 adds IGDB credentials (Twitch
-  client ID/secret, server-side) and keyless SteamSpy under the same
-  server-side rule. Production validates environment, database
-  migration, queue/scheduler behavior, and smoke tests.
+- Provider keys and credentials stay server-side. Feature 23 adds IGDB
+  credentials (Twitch client ID/secret, cached about-60-day client-credentials
+  token) and keyless SteamSpy under the same server-side rule, and retires
+  the RAWG key. Production validates environment, database migration,
+  queue/scheduler behavior, and smoke tests.
+- Feature 23 migrates provider data through a documented clean restart:
+  personal-data export (18b), database wipe, empty-schema restore (18c), Steam
+  re-import, then IGDB enrichment rebuilds provider data - doubling as the
+  new-provider workflow test. No legacy RAWG snapshots are preserved.
 - Feature 24 configures Vercel Cron and CRON_SECRET for a daily run at
   06:00 UTC-6 enqueueing the price refresh plus a compatibility freshness
   sweep for catalog and wishlist evidence older than the 180-day window; the
@@ -415,17 +453,19 @@ freshness, and operations are supporting sections.
   19c (the OS-aware recommendations parent and the Play environment fit
   child) following the 2026-09-07 renumbering. All are complete, so this is
   cosmetic; renaming the parent would clean the history.
-- Feature 23a leaves the playtime evidence storage shape and queueing
-  semantics as spec decisions (standalone evidence model versus a snapshot
-  payload key is open until then).
+- The project plan still calls the automatic IGDB identity path
+  "suggest-and-confirm" once in the Wishlist compatibility section, while its
+  identity section and build plan say a fixed IGDB match applies the App ID
+  automatically. Resolve that wording in the plan before implementation.
+- Feature 23 still needs implementation-level decisions in `/feature`, such as
+  the persisted rate-limit/token-cache coordination and exact snapshot schema.
 
 ## Next workflow action
 
-Features 1 through 21 are complete; **21a-21e** are archived under
-`blueprint/history/`. `blueprint/context/current-feature.md` holds the
-reviewed spec for **22a (Handheld-suitable personal flag)** - the next action
-is `/implement` to build its step 1. After 22a: **22b** (handheld-aware fit
-and context), then **23a-23b** (playtime), with deployment as **feature 24**.
+Features 1 through 22 are complete (22a and 22b are archived under
+`blueprint/history/`). `blueprint/context/current-feature.md` is empty - the
+next action is `/feature` to spec **23a (IGDB client and identity
+foundation)**, followed by 23b-23e, with deployment as **feature 24**.
 
 This overview is generated from the two plans and does not authorize code
 changes.

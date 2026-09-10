@@ -37,14 +37,14 @@ registration, and collaboration are outside the MVP.
 - Game detail, play state, personal fields, tags, collections, and availability.
 - Steam account linking, initial import, and independent manual synchronization.
 - Duplicate detection, review, dismiss, merge, delete, and short-lived Undo.
-- RAWG metadata enrichment for catalog and wishlist entries.
+- IGDB metadata, artwork, and playtime enrichment for catalog and wishlist entries.
 - DLC model with explicit base-game ownership.
 - Persistent manual-review queue for unresolved Steam DLC.
 - Independent wishlist for base games and DLC linked to owned catalog games.
 - Manual wishlist acquisition into the catalog with optional base-game play state update.
 - ITAD/Steam price enrichment for wishlist entries.
 - Optional MXN target prices, transparent valid-offer comparison, and purchase-opportunity signals.
-- Manual Steam wishlist import with conservative local matching, review queues, and RAWG follow-up for new base-game wishes.
+- Manual Steam wishlist import with conservative local matching, review queues, and IGDB follow-up for new base-game wishes.
 - First-login OS setup capturing the primary OS, an optional Windows
   fallback (offered only when the primary is Linux), and the handheld;
   the flow ends by offering the existing taste-setup as an optional next
@@ -66,7 +66,7 @@ registration, and collaboration are outside the MVP.
   wishlist offers, and provider-operation status.
 - Global visual foundation, design tokens, and comprehensive full-app UI review.
 - Optional Wallhaven background.
-- Per-game detail themes and RAWG screenshots on game and wishlist detail.
+- Per-game detail themes and IGDB screenshots on game and wishlist detail.
 - Dawn and Sunset palette families, Cinzel/Inter typography, official brand
   icons, and an Odyssey voice pass over expressive copy.
 - Settings and manual JSON export with empty-schema restore.
@@ -91,7 +91,7 @@ The following are explicitly outside the MVP:
 do not create provisional `Game` records.
 
 A wishlist entry represents either:
-- An unowned base game (independent entry, optionally enriched with RAWG).
+- An unowned base game (independent entry, optionally enriched with IGDB).
 - An unowned DLC for an already-owned catalog base game (requires a relation to
   an existing catalog `Game`).
 
@@ -103,7 +103,7 @@ store:
 - Target base game ID (required if type is DLC).
 - Notes, local interest, and an optional personal **Game experience / intention**.
 - Optional external identifiers.
-- Independent RAWG metadata snapshot (for base games).
+- Independent IGDB metadata snapshot (for base games).
 
 `Game experience / intention` is one user-selected value per catalog or
 wishlist game, initially one of: PC gaming, Multiplayer & co-op, Couch gaming,
@@ -166,7 +166,7 @@ When a wishlist item is acquired manually:
 1. **For a base game:**
    - The user chooses the acquisition source.
    - A real manual `Game` is created immediately.
-   - Wishlist metadata is copied into the game's RAWG snapshot.
+   - Wishlist metadata is copied into the game's IGDB snapshot.
    - The selected availability is added.
    - The wishlist entry is removed.
 2. **For a DLC:**
@@ -249,63 +249,74 @@ Merge and delete share a temporary `CatalogOperation` mechanism:
 - Expired snapshots are removed.
 - Permanent audit history is outside the MVP.
 
-## 7. Metadata and RAWG
+## 7. Metadata and IGDB
 
-RAWG initially enriches catalog entries on demand. Wishlist RAWG enrichment is
-added with the local wishlist feature and reuses this provider boundary.
+IGDB is the primary metadata, artwork, and playtime provider, fully replacing
+RAWG as part of the IGDB-as-primary-provider feature. Catalog and wishlist
+enrichment reuse this provider boundary. The transition is a clean restart: no
+legacy RAWG snapshots are preserved; provider data rebuilds after a database
+reset through the documented export, restore, and re-enrichment procedure.
 
 - Global catalog button opens a modal.
 - Detail pages have an individual load button.
-- Manual catalog forms suggest RAWG matches.
+- Manual catalog forms suggest IGDB matches.
 - Manual refresh warns before overwriting existing metadata.
 - Existing metadata is treated in the UI as present or absent.
-- RAWG snapshots are replaced, not historically retained.
+- IGDB snapshots are replaced, not historically retained.
+- A high-confidence automatic match or a user-selected match fixes the IGDB
+  identity until the user changes it. Incompatible base-game/DLC candidates
+  are never applied automatically; ambiguous candidates remain unmatched for
+  manual review.
 - Steam's initial import queues enrichment for every imported game.
-- Manual Steam synchronization does not automatically start RAWG enrichment.
-- RAWG failure never fails or rolls back Steam import.
+- Manual Steam synchronization does not automatically start IGDB enrichment.
+- IGDB failure never fails or rolls back Steam import.
 
 Initial metadata:
 
-- Main and alternate background images.
-- Genres.
-- Tags/gameplay styles.
-- Release date.
-- Short description.
-- Main, extra, and completionist playtime.
+- Cover artwork plus landscape artworks and screenshots for hero imagery.
+- Genres, themes, and keywords.
+- Release date (IGDB first release date).
+- Summary description.
 - Alternative names.
-- Developers and publishers.
-- ESRB rating when RAWG provides it; absent or incomplete ratings stay unknown
-  and never imply a maturity classification.
+- Developers and publishers (IGDB involved companies).
+- ESRB age rating when IGDB provides it; absent or incomplete ratings stay
+  unknown and never imply a maturity classification.
 - Official website.
-- RAWG updated date and local fetched date.
-- Ratings and Metacritic as secondary context.
-- RAWG URL.
+- IGDB updated date and local fetched date.
+- IGDB `aggregated_rating`, community `rating`, and `total_rating` are stored
+  as distinct attributed fields with their sample counts. `total_rating` is
+  the recommendation quality basis and `aggregated_rating` is its fallback;
+  no separate Steam-rating provider is introduced.
+- Collections, franchise, explicit DLC/expansion/remake relations, and game
+  modes with multiplayer modes stored as series and structural evidence.
 
-Videos, achievements, system requirements, franchises, and stores are
-deferred.
+Videos, achievements, and system requirements remain deferred.
 
-### Screenshots
+### Screenshots and artwork
 
-Screenshots arrive with the feature-17 enrichment pass alongside derived
+Screenshots and artwork arrive with the IGDB enrichment pass alongside derived
 palettes:
 
-- Source: `GET /games/{id}/screenshots`, one call with `page_size=6`;
-  entries carrying the RAWG `hidden` flag are filtered out.
-- Up to six screenshots (id, image URL, width, height) persist in the
-  replaceable RAWG snapshot. No binaries are stored.
-- The snapshot contract bumps to version 3; parsing stays tolerant of v1
-  and v2 rows, and re-enrichment backfills screenshots and palettes
-  through the existing enrichment route. No dedicated backfill action.
+- Source: the IGDB game's `screenshots` and `artworks` references, captured
+  in the same enrichment pass; up to six screenshots (image URL, width,
+  height) persist in the replaceable IGDB snapshot. No binaries are stored.
+- Compact/portrait spaces such as Library cards use the cover. Wide hero and
+  background spaces choose the first available resource in this order:
+  landscape artwork, screenshot, cover, then the existing deterministic
+  metadata-missing fallback. Hero and card imagery use IGDB's named image
+  sizes (for example `t_720p` and `t_screenshot_big`).
+- Palette derivation extracts the dominant-color palette from stored artwork
+  bytes exactly as before; re-enrichment re-derives it.
 - Display is a dedicated carousel-style section near the bottom of the
   catalog game detail page and the wishlist detail page (base-game
   wishes), separate from the metadata block.
 - Reduced-data mode renders the section as a token-only placeholder with
   zero image fetches; reduced motion keeps the carousel manual.
-- Attribution follows the existing RAWG images rule.
+- Attribution follows the provider images rule.
 
-RAWG attribution appears near RAWG data or images and in a
-`Powered by / Data and content providers` section. The key remains server-side
-and provider constraints are respected.
+IGDB attribution appears near IGDB data or images and in a
+`Powered by / Data and content providers` section. Credentials remain
+server-side and IGDB API and attribution constraints are respected.
 
 ### Playtime estimates
 
@@ -313,29 +324,34 @@ Dedicated playtime evidence replaces the RAWG duration number for duration
 banding and estimates display:
 
 - Sources: IGDB `game_time_to_beats` (hastily, normally, completely, and the
-  sample count) as primary evidence, with the SteamSpy median playtime as
-  fallback when IGDB has no row. RAWG `playtimeHours` is not a fallback:
+  sample count) as primary evidence, with SteamSpy median playtime fetched
+  automatically as fallback only when IGDB has no row and a confirmed Steam
+  App ID exists. RAWG `playtimeHours` is not a fallback:
   duration derivation and estimates display use the two providers only.
-- Identity keys off the confirmed Steam App ID like compatibility evidence;
-  IGDB mapping may resolve through IGDB external game IDs or a confirmed
-  name search with visible provenance.
+- Display mapping: the `hastily` average is the history-main estimate,
+  `normally` is history-plus-extras, and `completely` is the completionist
+  estimate. All available values and their source appear in a disclosure
+  control; the selected duration profile determines the initially visible
+  value. RAWG's separate extra line disappears.
+- Identity keys off the confirmed Steam App ID through IGDB `external_games`;
+  games without an App ID may resolve through a confirmed name search with
+  visible provenance.
 - Stored as replaceable, attributed evidence with provenance and a freshness
   window; failure preserves the last usable data and never blocks other
   enrichment.
-- Display appears on game detail and wishlist detail as main and
-  completionist estimates with attribution; games without provider rows show
-  unknown duration, like any other missing provider evidence.
-- Backfill runs through the existing re-enrichment patterns; queueing
-  semantics are a spec decision. Duration remains soft evidence in
+- Display appears on game detail and wishlist detail, and the selected
+  estimate also appears on Library and Wishlist cards. Games without provider
+  rows show unknown duration, like any other missing provider evidence.
+- Queueing semantics are a spec decision. Duration remains soft evidence in
   recommendations.
 
 ## 8. Asynchronous Enrichment and Provider Operations
 
 Manual entries and Steam imports are saved immediately and provider work runs
-asynchronously. The sequence is: save the record, run RAWG when available, then
-queue compatibility after a successful RAWG result. Metadata refresh repeats it.
+asynchronously. The sequence is: save the record, run IGDB when available, then
+queue compatibility after a successful IGDB result. Metadata refresh repeats it.
 Initial Steam import queues every imported game. The UI shows individual states
-and batch progress for Steam, RAWG, and compatibility. Provider work is persisted
+and batch progress for Steam, IGDB, and compatibility. Provider work is persisted
 in PostgreSQL, rate-limited, and processed in batches. Transient failures retry
 up to three times with increasing delay; final failures remain visible and can be
 manually retried. Failure never removes personal or prior valid provider data.
@@ -351,9 +367,9 @@ The first wishlist feature is provider-independent:
 - Base-game wishes are independent; DLC wishes link to owned catalog games.
 - Provider and external identifier are optional.
 - Notes and local interest are stored locally.
-- Wishlist forms and a global wishlist action suggest/load RAWG metadata for base games.
+- Wishlist forms and a global wishlist action suggest/load IGDB metadata for base games.
 - A base game can be acquired manually into the catalog.
-- Wishlist RAWG metadata transfers to the new catalog game when available.
+- Wishlist IGDB metadata transfers to the new catalog game when available.
 - The acquired base wishlist entry is removed.
 - Acquiring a wishlist DLC creates the catalog DLC under the base game and offers
   an optional prompt to update the base game's play state (e.g. `PLAN_TO_PLAY` or `replay: true`).
@@ -412,14 +428,11 @@ confirmed. Identity has three paths, each recording provenance:
 - **Manual entry**: the wish form accepts a Steam store URL or raw App ID;
   the URL is parsed and stored as user-confirmed identity. This also serves
   as the override path.
-- **RAWG suggestion**: wishlist RAWG enrichment captures Steam store links
-  when present. A derived App ID is stored only as a suggestion and requires
-  one-click confirmation before the entry is priced. Live data showed RAWG
-  store URLs empty in practice, so the App ID resolves through Steam's keyless
-  `storesearch` exact-name match behind the steam-slug trigger, still
-  suggestion-only until confirmed. The wishlist RAWG snapshot contract extends
-  to store links when present; the catalog snapshot contract stays
-  unchanged.
+- **IGDB suggestion**: IGDB enrichment resolves the wish's IGDB identity and
+  captures the Steam App ID from `external_games` when present. A derived
+  App ID from a fixed high-confidence or manual match is applied
+  automatically, remains editable, and replaces the retired RAWG store-links
+  path and the Steam `storesearch` fallback with an exact provider mapping.
 
 Provenance travels with the identity so the price queue's "confirmed
 identity" rule stays honest. ITAD mapping uses a cached
@@ -438,7 +451,7 @@ synchronization:
   later. It never runs automatically.
 - A newly imported base-game entry with a reliable, previously unknown Steam
   App ID creates a wishlist entry automatically with interest `2`/`5` and
-  empty notes, then queues the existing wishlist RAWG enrichment flow.
+  empty notes, then queues the existing wishlist IGDB enrichment flow.
   Existing local snapshots are never overwritten by import.
 - Local matching reuses the feature 7a normalized-name matcher. Any
   candidate - exact names included - goes to persistent review; linking is
@@ -468,13 +481,13 @@ by linking the card title in the wishlist list. It composes all available
 wishlist data in one place:
 
 - Name, base-game or DLC type, and the base-game link for DLC wishes.
-- Full RAWG metadata snapshot when present: description, genres, release
-  date, playtimes, artwork, and the RAWG source link.
-- The RAWG screenshots carousel and derived-palette themed surfaces when a
+- Full IGDB metadata snapshot when present: description, genres, release
+  date, playtimes, artwork, and the IGDB source link.
+- The IGDB screenshots carousel and derived-palette themed surfaces when a
   snapshot with artwork exists (base-game wishes; DLC wishes carry the
   owned base game's evidence instead).
-- Steam identity and provenance, including the add/edit/remove and
-  RAWG-suggestion confirm affordances.
+- Steam identity and provenance, including the add/edit/remove controls and
+  the automatically applied IGDB-derived identity.
 - Offer block: selected offer, alternatives, target price, opportunity
   badge, and freshness.
 - Notes and local interest.
@@ -486,10 +499,9 @@ Two per-entry actions exist on the detail page:
 
 - **Compatibility refresh** for base-game wishes with a confirmed Steam App
   ID. Inline, quiet, fail-silent like the auto-trigger.
-- **Fill-only RAWG enrichment**: enriches only when no snapshot exists yet,
-  matching the wishlist auto-enrich behavior. Wishlist data is informational,
-  so unlike the catalog there is no overwrite path - the button is hidden or
-  disabled once a snapshot is present.
+- **Fill-only IGDB enrichment**: automatic/batch enrichment runs only when no
+  snapshot exists. A user-requested refresh or changed IGDB identity may
+  replace the snapshot after an overwrite warning.
 
 These two actions are the only per-entry surfaces; batch progress and error
 details stay out of the wishlist.
@@ -575,7 +587,7 @@ already carried by the owned base game.
 
 Wishlist compatibility runs through its own jobs, separate from the catalog
 queue. Any confirmed identity auto-queues evidence silently - Steam import,
-manual URL/AppID paste, or RAWG suggest-and-confirm - as an inline call that
+manual URL/AppID paste, or IGDB suggest-and-confirm - as an inline call that
 catches and hides provider errors. A quiet async manual sweep covers existing
 confirmed-identity wishes: it confirms "sweep started", shows a completion
 toast, and persists a PriceRefresh-style run record with overlap protection;
@@ -585,7 +597,7 @@ page instead of batch progress or error surfaces.
 
 Freshness uses a single **180-day window** across all evidence types. Stale
 evidence keeps its values, shows its age, and produces a visible
-recommendation warning - never a penalty. Refresh triggers are the post-RAWG
+recommendation warning - never a penalty. Refresh triggers are the post-IGDB
 automatic queue and per-game manual refresh. A global compatibility sweep is
 already available from Settings; feature 18 may expand or relabel those
 controls. The deployment feature's daily cron enqueues a compatibility
@@ -614,9 +626,9 @@ factors such as:
 - Availability sources and any active play-next source tune.
 - Game experience / intention, intended environment, and compatibility.
 - Handheld-suitability personal flag on catalog and wishlist entries.
-- RAWG genres, tags, release era, publisher, sequel relationship where
-  confidently known, ESRB context when available, Metacritic, and
-  community-rating confidence.
+- IGDB genres, themes, keywords, release era, publisher, sequel relationship
+  where confidently known, ESRB context when available, and `total_rating`
+  with `aggregated_rating` fallback and sample-size confidence.
 - IGDB/SteamSpy playtime estimates with attribution when present; RAWG
   playtime is retired from duration derivation and estimates display.
 - Steam playtime and recency when available, with manually marked play history
@@ -684,7 +696,7 @@ factors such as:
   or replay-flagged grants one fixed boost tier named explicitly in the
   explanation ("base game X was completed"). Affinity never lowers a score.
 - Publisher, release-era, quality, series, genre/tag, duration, and mature or
-  casual context are soft evidence only. Sparse RAWG data, low rating counts,
+  casual context are soft evidence only. Sparse provider data, low rating counts,
   or uncertain series links lower confidence rather than fabricating preference.
 - No alphabetical tiebreak decides what a person sees. Near-equal qualified
   candidates use stable, weighted rotation and short exposure cooldowns.
@@ -780,7 +792,7 @@ empty state, and is reachable from the Library and Wishlist headers.
 
 The dashboard is the post-login front door and primarily a local composition
 view. It recalculates local summaries when it loads. It never silently runs a
-full Steam sync, imports games, or refreshes RAWG, pricing, or compatibility.
+full Steam sync, imports games, or refreshes IGDB, pricing, or compatibility.
 
 It displays:
 
@@ -790,7 +802,7 @@ It displays:
   `PLAYED_BEFORE / (NOT_STARTED + IN_PROGRESS + PLAYED_BEFORE)`. `ABANDONED`
   games appear separately and are excluded from the denominator.
 - Two independent, actionable coverage counts:
-  - catalog base games without a RAWG metadata snapshot;
+  - catalog base games without an IGDB metadata snapshot;
   - visible catalog games with an incomplete recommendation profile.
 - A recommendation profile is incomplete when `interest` is absent, or when
   interest is present but none of priority other than `NONE`, preferred
@@ -871,7 +883,7 @@ token-only fallbacks instead of remote artwork. These visual preferences are
 part of the feature-14 foundation; sessions, provider controls, queue
 operations, diagnostics, and JSON export remain feature 18.
 
-Existing RAWG artwork may appear in cards, carousels, and page moments only
+Existing IGDB artwork may appear in cards, carousels, and page moments only
 behind readable contrast overlays. Missing artwork and reduced-data mode use
 the deterministic abstract fallback system. Feature 14 does not derive or
 persist per-game palettes; that server-side enrichment concern remains feature
@@ -983,8 +995,8 @@ Wallhaven does not determine functional theme colors or override accessibility.
 
 ### Per-game detail theme
 
-Each game detail page may use its RAWG imagery and derived colors. Theme
-colors derive **server-side during RAWG enrichment**: a small dominant-color
+Each game detail page may use its IGDB imagery and derived colors. Theme
+colors derive **server-side during IGDB enrichment**: a small dominant-color
 palette (primary plus dark/muted variants) extracted from stored artwork,
 persisted in the replaceable snapshot, and applied read-only by the page
 under contrast overlays. Missing imagery or reduced-data mode uses the
@@ -1060,15 +1072,22 @@ Settings includes:
   extended with the Dawn/Sunset family selector.
 - Wallhaven enablement and refresh controls.
 - Reduced-data behavior.
+- A global duration profile (`history main`, `history + extras`, or
+  `completionist`) selected in Welcome and editable in Settings. It controls
+  the default duration shown across Library/Wishlist and the duration evidence
+  used by recommendations.
 - Manual provider refresh controls.
 - Queue progress and retry controls.
 - JSON export of irreplaceable data only.
 - Manual import of that export into an empty schema only.
 
-Manual export includes catalog and wishlist records, availability, external IDs,
-play states, notes, interest, ratings, tags, collections, settings, manual
-overrides, and recommendation-related personal decisions. Rebuildable RAWG,
-price, and compatibility snapshots are excluded.
+Manual export includes catalog and wishlist records, availability and
+alternative sources, all external IDs regardless of provenance, play states,
+notes, interest, ratings, tags, collections, settings (including duration
+profile), manual overrides, and recommendation-related personal decisions.
+Rebuildable IGDB/SteamSpy, price, compatibility, provider-operation, and
+recent-activity snapshots are excluded; Steam connections and credentials are
+never exported.
 
 Manual import restores the same personal data and only into an empty catalog
 and wishlist: the action refuses with a clear explanation while any record
@@ -1076,8 +1095,10 @@ exists, validates the file against the export schema version with Zod, and
 applies everything in one all-or-nothing transaction. Recommendation events,
 derived profiles, preferences, presets, and dismissal counters restore with
 their calibration behavior intact. Provider snapshots are never imported;
-after a restore, RAWG, price, and compatibility data rebuild only through
-the existing manual enrichment actions, never auto-queued. Automatic
+after a restore, IGDB, SteamSpy, price, and compatibility data rebuild only
+through the existing manual enrichment actions, never auto-queued. The
+documented provider transition then re-links/re-imports Steam so preserved IDs
+update existing records rather than duplicate them. Automatic
 encrypted off-site backups, rotation, and advanced restoration are future work.
 
 ## 15. Tech
