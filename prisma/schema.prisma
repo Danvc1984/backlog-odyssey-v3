@@ -29,6 +29,7 @@ enum Origin {
 enum MatchMethod {
   EXACT_STEAM_APP_ID
   MANUAL_RAWG_SEARCH
+  MANUAL_IGDB_SEARCH
   MANUAL_ITAD_LOOKUP
   INFERRED
 }
@@ -194,9 +195,17 @@ enum Provider {
   ARE_WE_ANTICHEAT_YET
   STEAM_DECK_VERIFIED
   RAWG
+  IGDB
   ITAD
   STEAM
   WALLHAVEN
+}
+
+model IgdbTokenCache {
+  id          Int      @id @default(1)
+  accessToken String   @db.Text
+  expiresAt   DateTime
+  updatedAt   DateTime @updatedAt
 }
 
 enum PriceIdentityProvenance {

@@ -528,7 +528,7 @@
   replace RAWG completely with IGDB for catalog and wishlist evidence, keeping
   SteamSpy as the duration-only fallback; provider data rebuilds from a clean
   database restart that doubles as the new-provider workflow test
-  - [ ] 23a. **IGDB client and identity foundation** - Twitch
+  - [x] 23a. **IGDB client and identity foundation** - Twitch
     client-credentials token cache (about 60-day validity with proactive
     refresh), 4 requests/second and max-8-concurrent rate limiting with
     Retry-After handling, 10-second timeouts, Steam App ID identity resolution

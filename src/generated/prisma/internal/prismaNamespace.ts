@@ -397,6 +397,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 
 export const ModelName = {
+  IgdbTokenCache: 'IgdbTokenCache',
   User: 'User',
   Account: 'Account',
   Session: 'Session',
@@ -454,10 +455,84 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "account" | "session" | "appSettings" | "steamConnection" | "steamRecentActivityCache" | "game" | "unresolvedSteamDlc" | "wishlistImportReview" | "wishlistImportIgnore" | "externalGameId" | "metadataSnapshot" | "enrichmentJob" | "personalTag" | "gameTag" | "collection" | "collectionMembership" | "libraryEntry" | "alternativeSource" | "gameAvailability" | "wishlistEntry" | "wishlistMetadataSnapshot" | "dealOffer" | "itadIdentity" | "priceRefresh" | "wishlistCompatSweep" | "compatibilitySnapshot" | "environmentCompatibility" | "wishlistCompatibilitySnapshot" | "wishlistEnvironmentCompatibility" | "possibleDuplicate" | "recommendationRun" | "recommendationItem" | "recommendationFeedback" | "recommendationEvent" | "recommendationProfile" | "recommendationPreference" | "recommendationTuneState" | "recommendationPreset" | "wallpaperState" | "syncRun" | "catalogOperation"
+    modelProps: "igdbTokenCache" | "user" | "account" | "session" | "appSettings" | "steamConnection" | "steamRecentActivityCache" | "game" | "unresolvedSteamDlc" | "wishlistImportReview" | "wishlistImportIgnore" | "externalGameId" | "metadataSnapshot" | "enrichmentJob" | "personalTag" | "gameTag" | "collection" | "collectionMembership" | "libraryEntry" | "alternativeSource" | "gameAvailability" | "wishlistEntry" | "wishlistMetadataSnapshot" | "dealOffer" | "itadIdentity" | "priceRefresh" | "wishlistCompatSweep" | "compatibilitySnapshot" | "environmentCompatibility" | "wishlistCompatibilitySnapshot" | "wishlistEnvironmentCompatibility" | "possibleDuplicate" | "recommendationRun" | "recommendationItem" | "recommendationFeedback" | "recommendationEvent" | "recommendationProfile" | "recommendationPreference" | "recommendationTuneState" | "recommendationPreset" | "wallpaperState" | "syncRun" | "catalogOperation"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
+    IgdbTokenCache: {
+      payload: Prisma.$IgdbTokenCachePayload<ExtArgs>
+      fields: Prisma.IgdbTokenCacheFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.IgdbTokenCacheFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IgdbTokenCachePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.IgdbTokenCacheFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IgdbTokenCachePayload>
+        }
+        findFirst: {
+          args: Prisma.IgdbTokenCacheFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IgdbTokenCachePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.IgdbTokenCacheFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IgdbTokenCachePayload>
+        }
+        findMany: {
+          args: Prisma.IgdbTokenCacheFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IgdbTokenCachePayload>[]
+        }
+        create: {
+          args: Prisma.IgdbTokenCacheCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IgdbTokenCachePayload>
+        }
+        createMany: {
+          args: Prisma.IgdbTokenCacheCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.IgdbTokenCacheCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IgdbTokenCachePayload>[]
+        }
+        delete: {
+          args: Prisma.IgdbTokenCacheDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IgdbTokenCachePayload>
+        }
+        update: {
+          args: Prisma.IgdbTokenCacheUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IgdbTokenCachePayload>
+        }
+        deleteMany: {
+          args: Prisma.IgdbTokenCacheDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.IgdbTokenCacheUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.IgdbTokenCacheUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IgdbTokenCachePayload>[]
+        }
+        upsert: {
+          args: Prisma.IgdbTokenCacheUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IgdbTokenCachePayload>
+        }
+        aggregate: {
+          args: Prisma.IgdbTokenCacheAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateIgdbTokenCache>
+        }
+        groupBy: {
+          args: Prisma.IgdbTokenCacheGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.IgdbTokenCacheGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.IgdbTokenCacheCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.IgdbTokenCacheCountAggregateOutputType> | number
+        }
+      }
+    }
     User: {
       payload: Prisma.$UserPayload<ExtArgs>
       fields: Prisma.UserFieldRefs
@@ -3605,6 +3680,16 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
+export const IgdbTokenCacheScalarFieldEnum = {
+  id: 'id',
+  accessToken: 'accessToken',
+  expiresAt: 'expiresAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type IgdbTokenCacheScalarFieldEnum = (typeof IgdbTokenCacheScalarFieldEnum)[keyof typeof IgdbTokenCacheScalarFieldEnum]
+
+
 export const UserScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -4231,6 +4316,20 @@ export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof Json
 
 
 /**
+ * Reference to a field of type 'Int'
+ */
+export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+/**
+ * Reference to a field of type 'Int[]'
+ */
+export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
  * Reference to a field of type 'String'
  */
 export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String'>
@@ -4255,20 +4354,6 @@ export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel
  * Reference to a field of type 'DateTime[]'
  */
 export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
-    
-
-
-/**
- * Reference to a field of type 'Int'
- */
-export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
-    
-
-
-/**
- * Reference to a field of type 'Int[]'
- */
-export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
     
 
 
@@ -4877,6 +4962,7 @@ export interface PrismaClientOptionsWithAdapter extends PrismaClientBaseOptions 
  */
 export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaClientOptionsWithAdapter
 export type GlobalOmitConfig = {
+  igdbTokenCache?: Prisma.IgdbTokenCacheOmit
   user?: Prisma.UserOmit
   account?: Prisma.AccountOmit
   session?: Prisma.SessionOmit

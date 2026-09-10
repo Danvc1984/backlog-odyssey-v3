@@ -51,6 +51,7 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
+  IgdbTokenCache: 'IgdbTokenCache',
   User: 'User',
   Account: 'Account',
   Session: 'Session',
@@ -109,6 +110,16 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 } as const)
 
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
+
+
+export const IgdbTokenCacheScalarFieldEnum = {
+  id: 'id',
+  accessToken: 'accessToken',
+  expiresAt: 'expiresAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type IgdbTokenCacheScalarFieldEnum = (typeof IgdbTokenCacheScalarFieldEnum)[keyof typeof IgdbTokenCacheScalarFieldEnum]
 
 
 export const UserScalarFieldEnum = {
