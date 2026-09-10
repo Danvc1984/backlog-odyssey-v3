@@ -236,6 +236,7 @@ export default async function GameDetailPage({
                   playSoon: game.libraryEntry.playSoon,
                   replayCandidate: game.libraryEntry.replayCandidate,
                   hidden: game.libraryEntry.hidden,
+                  handheldSuitable: game.libraryEntry.handheldSuitable,
                 }
               : null
           }

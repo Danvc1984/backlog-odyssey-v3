@@ -510,7 +510,7 @@
 - [ ] 22. **Handheld suitability flag and handheld-aware recommendations** -
   owner-marked handheld-suitable games feeding environment-aware
   recommendations and compatibility presentation across catalog and wishlist
-  - [ ] 22a. **Handheld-suitable personal flag** - nullable flag on
+  - [x] 22a. **Handheld-suitable personal flag** - nullable flag on
     LibraryEntry and WishlistEntry (mirroring gameExperience), edit
     affordances on game detail and wishlist edit/detail, Library filter,
     export/import schema updates

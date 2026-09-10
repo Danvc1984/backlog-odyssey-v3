@@ -95,6 +95,7 @@ describe("export schema: settings and catalog", () => {
       rating: 4,
       preferredEnvironment: "LINUX",
       gameExperience: "PC_GAMING",
+      handheldSuitable: true,
       compatOverrideStatus: "READY",
       compatOverrideReason: null,
       playSoon: false,
@@ -124,6 +125,7 @@ describe("export schema: settings and catalog", () => {
       gameId: "g1",
     };
     expect(libraryEntriesSchema.parse([library])).toHaveLength(1);
+    expect(libraryEntriesSchema.parse([library])[0].handheldSuitable).toBe(true);
     expect(availabilitySchema.parse([availability])).toHaveLength(1);
     expect(externalIdsSchema.parse([external])).toHaveLength(1);
     expect(
@@ -232,5 +234,6 @@ describe("export document schema", () => {
       onboardingCompleted: true,
     });
     expect(parsed.data.libraryEntries[0].preferredEnvironment).toBe("LINUX");
+    expect(parsed.data.libraryEntries[0].handheldSuitable).toBeUndefined();
   });
 });

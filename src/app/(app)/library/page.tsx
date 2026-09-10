@@ -20,6 +20,7 @@ import { getCompatibilityGate } from "@/lib/compat-gate";
 import { libraryCardMetadataView } from "@/lib/card-metadata-view";
 import { ListPaginationControls } from "@/components/list/ListPaginationControls";
 import { parsePage, parsePageSize, resolveRange } from "@/lib/list-pagination";
+import { parseHandheldSuitabilityFilter } from "@/lib/library-handheld-filter";
 
 interface LibrarySearchParams {
   q?: string;
@@ -32,6 +33,7 @@ interface LibrarySearchParams {
   view?: string;
   size?: string;
   page?: string;
+  handheld?: string;
 }
 
 type LibraryView = "grid" | "list";
@@ -45,7 +47,7 @@ export default async function LibraryPage({
 }: {
   searchParams: Promise<LibrarySearchParams>;
 }) {
-  const { q = "", source, alt, state, sort = "newest", collection, duplicates, view: viewParam, size: sizeParam, page: pageParam } =
+  const { q = "", source, alt, state, sort = "newest", collection, duplicates, view: viewParam, size: sizeParam, page: pageParam, handheld } =
     await searchParams;
   const view = normalizeLibraryView(viewParam);
   const size = parsePageSize(sizeParam);
@@ -100,6 +102,7 @@ export default async function LibraryPage({
         ? (state as "NOT_STARTED" | "IN_PROGRESS" | "PLAYED_BEFORE" | "ABANDONED")
         : undefined
       : undefined;
+  const handheldFilter = parseHandheldSuitabilityFilter(handheld);
 
   const [manualCollections, systemCollections, pendingUnresolvedDlc, alternativeSources, dataHealth, mainGameGames] = await Promise.all([
     prisma.collection.findMany({
@@ -187,6 +190,7 @@ export default async function LibraryPage({
       availability: availabilityFilter,
     },
     playState: stateFilter ?? undefined,
+    ...(handheldFilter !== undefined && { handheldSuitable: handheldFilter }),
     ...collectionWhere,
   };
   const orderBy = (() => {
@@ -365,7 +369,7 @@ export default async function LibraryPage({
       </div>
 
       {entries.length === 0 ? (
-        q || source || alt || state || (collection && collection !== "ALL") ? (
+        q || source || alt || state || (collection && collection !== "ALL") || handheldFilter !== undefined ? (
           <div className="mt-16 flex flex-col items-center gap-2 text-center">
             <p className="technical-label text-muted-foreground">Nothing beyond this horizon</p>
             <p className="text-lg font-medium">No games match those filters.</p>

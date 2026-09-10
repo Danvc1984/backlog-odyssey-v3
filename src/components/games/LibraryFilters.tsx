@@ -107,6 +107,10 @@ export function LibraryFilters({
   const sort = searchParams.get("sort") ?? "newest";
   const collection = searchParams.get("collection") ?? "ALL";
   const alternativeSource = searchParams.get("alt");
+  const handheldParam = searchParams.get("handheld");
+  const handheld = handheldParam === "marked" || handheldParam === "unmarked"
+    ? handheldParam
+    : "ALL";
 
   const systemCollections = collections.filter((c) => c.isSystem);
   const manualCollections = collections.filter((c) => !c.isSystem);
@@ -142,7 +146,8 @@ export function LibraryFilters({
     alternativeSource !== null ||
     source !== "ALL" ||
     state === "ABANDONED" ||
-    (collection !== null && collection !== "ALL");
+    (collection !== null && collection !== "ALL") ||
+    handheld !== "ALL";
 
   return (
     <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
@@ -279,6 +284,20 @@ export function LibraryFilters({
                         ))}
                       </SelectGroup>
                     )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <p className="technical-label mb-1.5 text-muted-foreground">Handheld</p>
+                <Select value={handheld} onValueChange={(v) => update("handheld", v)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent position="popper" align="start" className="w-56">
+                    <SelectItem value="ALL">Any handheld status</SelectItem>
+                    <SelectItem value="marked">Marked</SelectItem>
+                    <SelectItem value="unmarked">Unmarked</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

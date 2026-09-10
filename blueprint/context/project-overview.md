@@ -81,19 +81,21 @@ The exact checked state is owned by blueprint/build-plan.md.
     Cinzel/Inter typography, official brand icons with the dragon identity
     mark, the Odyssey voice sweep (20e), the Phosphor UI icon swap (20f),
     and cross-app acceptance (20g).
-15. **[ ] 21a-21e: Pre-deployment polish and improvements** -
-    Owner-reported fixes, one sub-feature per app section: global visual
-    fixes (favicon theme color, glow removal with offer-threshold
-    exceptions, sidebar minimize/maximize); Today (focus carousel, wallpaper
-    restore, activity/metrics fixes, natural-language recommendation
-    reasoning, tune-header visibility, no-fallback message validation);
-    Library (pagination 18/48/99, edit/change-state with scroll effect,
-    metadata warning, main-game selector, ProtonDB tag gating); Wishlist
-    (pagination with the size selector inside the shared pagination bar,
-    ITAD link, discounted counter, discount sorting,
-    library-style search, warning color); Settings and onboarding (section
-    regrouping, hydration fix, welcome theme choice, Steam-name symbol
-    cleanup at import).
+15. **[x] 21a-21e: Pre-deployment polish and improvements** - Shipped,
+    one sub-feature per app section: global visual fixes (theme-aware
+    favicon, glow removed except above-threshold offers, sidebar
+    minimize/maximize); Today (focus carousel over main and in-progress
+    games, wallpaper control restored, recent-activity fixes with image
+    backgrounds, natural-language reasoning chips, no generated card
+    descriptions, visible Tune header, no-fallback message validation,
+    data-health and freshness corrections); Library (18/48/99 page sizes,
+    detail-style edit and change-state with scroll effect, metadata warning,
+    clearer main-game selector, ProtonDB tag gating on all-Windows setups);
+    Wishlist (page sizes inside the shared pagination bar, ITAD link,
+    discounted-games counter, discount sorting, library-style search,
+    warning-colored missing-metadata note); Settings and onboarding
+    (section regrouping, hydration fix, welcome theme choice, Steam-name
+    symbol cleanup at import).
 16. **[ ] 22a-22b: Handheld suitability flag and handheld-aware
     recommendations** - Owner-marked handheld-suitable personal flag on
     catalog and wishlist entries (mirroring gameExperience); handheld-fit
@@ -101,7 +103,8 @@ The exact checked state is owned by blueprint/build-plan.md.
     including compatibility framed for the handheld target on Windows-primary
     setups; the Windows-handheld rescue lifting the no-fallback hard
     exclusion for flagged games with a visible explanation while non-flagged
-    games keep the heavy practical-fit penalty.
+    games keep the heavy practical-fit penalty. 22a is specced in
+    `blueprint/context/current-feature.md`.
 17. **[ ] 23a-23b: Playtime estimates from a dedicated provider** - IGDB
     `game_time_to_beats` primary with the SteamSpy median as the only
     fallback (RAWG playtime is not a fallback), replaceable attributed
@@ -141,7 +144,7 @@ boundaries.
   unimported titles but never imports or links catalog records.
 - Game is catalog-only and represents a base game or DLC. LibraryEntry holds
   personal play state, main game, priority, interest, rating, environment,
-  game experience, notes, replayCandidate, hidden state, and (feature 23) a
+  game experience, notes, replayCandidate, hidden state, and (feature 22) a
   nullable handheld-suitable flag.
 - ExternalGameId stores provider identities and provenance. GameAvailability is
   separate from origin, provider IDs, compatibility, and offer sellers.
@@ -155,9 +158,9 @@ boundaries.
   filtered), tolerant of v1/v2 rows and backfilled by re-enrichment.
   PossibleDuplicate records review evidence. CatalogOperation enables scoped,
   reload-safe Undo for merge and delete.
-- Playtime evidence (feature 24) is replaceable, attributed IGDB/SteamSpy data
+- Playtime evidence (feature 23) is replaceable, attributed IGDB/SteamSpy data
   keyed by the confirmed Steam App ID; its storage shape is a spec decision
-  for 24a. RAWG `playtimeHours` stays in old snapshots but is no longer a
+  for 23a. RAWG `playtimeHours` stays in old snapshots but is no longer a
   duration source.
 
 ### Wishlist, pricing, compatibility, and recommendations
@@ -268,7 +271,7 @@ boundaries.
   not-playable Linux, or unknown Linux evidence where a READY floor applies)
   hard-excludes the game from all play roles with a visible, explained
   reason; a play role left empty is absent from the run. Second exception
-  (feature 23): that no-fallback exclusion does not apply to a game the
+  (feature 22): that no-fallback exclusion does not apply to a game the
   owner flagged as handheld-suitable when the setup includes a Windows
   handheld - the game remains playable there and the explanation says so;
   non-flagged games keep the heavy practical-fit penalty. The same evidence
@@ -319,8 +322,8 @@ boundaries.
   their official SVGs from `public/` via the code-owned `brandIcon` field;
   ROM keeps `Disc3` and custom sources keep the neutral `Box` fallback. The
   dragon icon is the app's identity mark (favicon and nav brand), and the
-  ITAD icon marks the offers source. The general UI icon swap remains the
-  gated final step (20f) awaiting the owner's premium/custom set.
+  ITAD icon marks the offers source. The general UI icon set swap shipped in
+  20f as the Phosphor set; a later premium set remains a post-MVP swap.
 
 ## Today and visual direction
 
@@ -384,7 +387,7 @@ freshness, and operations are supporting sections.
   Prisma/PostgreSQL/Supabase, Auth.js/Google, Zod, Vitest, and Vercel.
 - Commands: pnpm dev on port 3500, pnpm build, pnpm start, pnpm lint,
   pnpm typecheck, and pnpm test.
-- Provider keys stay server-side. Feature 24 adds IGDB credentials (Twitch
+- Provider keys stay server-side. Feature 23 adds IGDB credentials (Twitch
   client ID/secret, server-side) and keyless SteamSpy under the same
   server-side rule. Production validates environment, database
   migration, queue/scheduler behavior, and smoke tests.
@@ -405,24 +408,24 @@ freshness, and operations are supporting sections.
   the approved spec made searches game-driven - main game title first, then
   in-progress titles, no fixed keyword list. The plan can be updated to match
   the shipped behavior; nothing else depends on it.
+- Interest range mismatch: project-plan.md section 11 states Interest
+  (`0-5`), but the implemented personal field and all surfaces use 1-5.
+  Likely a plan typo; update the plan or confirm the range.
 - Duplicate numbering in build-plan.md: two checked items carry the label
   19c (the OS-aware recommendations parent and the Play environment fit
   child) following the 2026-09-07 renumbering. All are complete, so this is
   cosmetic; renaming the parent would clean the history.
-- The general UI icon set choice is the owner's; it gates only 20f.
-- Feature 24a leaves the playtime evidence storage shape and queueing
+- Feature 23a leaves the playtime evidence storage shape and queueing
   semantics as spec decisions (standalone evidence model versus a snapshot
   payload key is open until then).
 
 ## Next workflow action
 
-**21a** and **21b** are complete and archived under `blueprint/history/`;
-`blueprint/context/current-feature.md` is the reset stub. Remaining
-unchecked: **21c (Library)**, **21d (Wishlist)**, **21e (Settings and
-onboarding)**, then **22 (handheld flag)** and **23 (playtime)**, with
-deployment as **feature 24**. The owner chose to finish feature 21 before
-the new features: run `/feature 21c` (bare `/feature` also picks 21c as the
-first unchecked item) to spec the next sub-feature.
+Features 1 through 21 are complete; **21a-21e** are archived under
+`blueprint/history/`. `blueprint/context/current-feature.md` holds the
+reviewed spec for **22a (Handheld-suitable personal flag)** - the next action
+is `/implement` to build its step 1. After 22a: **22b** (handheld-aware fit
+and context), then **23a-23b** (playtime), with deployment as **feature 24**.
 
 This overview is generated from the two plans and does not authorize code
 changes.

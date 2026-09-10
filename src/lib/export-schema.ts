@@ -57,6 +57,7 @@ const libraryEntrySchema = z.object({
   rating: z.number().int().nullable(),
   preferredEnvironment: z.enum(["LINUX", "STEAM_DECK", "WINDOWS"]).nullable(),
   gameExperience: z.enum(["PC_GAMING", "MULTIPLAYER_COOP", "COUCH_GAMING", "ON_THE_GO"]).nullable(),
+  handheldSuitable: z.boolean().nullable().optional(),
   compatOverrideStatus: z
     .enum(["READY", "READY_WITH_TINKERING", "FALLBACK_RECOMMENDED", "REQUIRED", "UNKNOWN"])
     .nullable(),
@@ -147,6 +148,7 @@ const wishlistEntrySchema = z.object({
   baseGameId: z.string().nullable(),
   interest: z.number().int().nullable(),
   gameExperience: z.enum(["PC_GAMING", "MULTIPLAYER_COOP", "COUCH_GAMING", "ON_THE_GO"]).nullable(),
+  handheldSuitable: z.boolean().nullable().optional(),
   targetPriceMxn: z.string().nullable(),
   notes: z.string().nullable(),
   steamAppId: z.string().nullable(),

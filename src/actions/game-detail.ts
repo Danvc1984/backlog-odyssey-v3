@@ -20,6 +20,7 @@ const updatePersonalFieldsSchema = z.object({
     .enum(["PC_GAMING", "MULTIPLAYER_COOP", "COUCH_GAMING", "ON_THE_GO"])
     .optional()
     .nullable(),
+  handheldSuitable: z.boolean().optional().nullable(),
   notes: z.string().optional().nullable(),
 });
 
@@ -49,6 +50,7 @@ export async function updatePersonalFields(
           preferredEnvironment: data.preferredEnvironment,
         }),
         ...(data.gameExperience !== undefined && { gameExperience: data.gameExperience }),
+        ...(data.handheldSuitable !== undefined && { handheldSuitable: data.handheldSuitable }),
         ...(data.notes !== undefined && { notes: data.notes }),
       },
     });

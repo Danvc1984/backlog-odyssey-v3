@@ -216,7 +216,10 @@ export async function restoreExportDocument(db: TxDb, document: ExportDocument):
 
   if (data.libraryEntries.length > 0) {
     await db.libraryEntry.createMany({
-      data: reviveRows(data.libraryEntries, DATE_FIELDS.libraryEntries),
+      data: reviveRows(data.libraryEntries, DATE_FIELDS.libraryEntries).map((entry) => ({
+        ...entry,
+        handheldSuitable: entry.handheldSuitable ?? null,
+      })),
     });
   }
   restored.libraryEntries = data.libraryEntries.length;
@@ -242,7 +245,12 @@ export async function restoreExportDocument(db: TxDb, document: ExportDocument):
   restored.collectionMemberships = data.collectionMemberships.length;
 
   if (data.wishlist.length > 0) {
-    await db.wishlistEntry.createMany({ data: reviveRows(data.wishlist, DATE_FIELDS.wishlist) });
+    await db.wishlistEntry.createMany({
+      data: reviveRows(data.wishlist, DATE_FIELDS.wishlist).map((entry) => ({
+        ...entry,
+        handheldSuitable: entry.handheldSuitable ?? null,
+      })),
+    });
   }
   restored.wishlist = data.wishlist.length;
 

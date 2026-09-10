@@ -187,6 +187,60 @@ describe("assertEmptySchema", () => {
 });
 
 describe("restoreExportDocument", () => {
+  it("restores marked and unmarked handheld options, defaulting old rows to null", async () => {
+    const { db } = mockTxDb();
+    const doc = minimalDocument();
+    doc.data.libraryEntries = [
+      {
+        id: "l1",
+        gameId: "g1",
+        playState: "NOT_STARTED",
+        isMainGame: false,
+        priority: "NONE",
+        interest: null,
+        rating: null,
+        preferredEnvironment: null,
+        gameExperience: null,
+        handheldSuitable: true,
+        compatOverrideStatus: null,
+        compatOverrideReason: null,
+        playSoon: false,
+        replayCandidate: false,
+        hidden: false,
+        notes: null,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: "l2",
+        gameId: "g2",
+        playState: "NOT_STARTED",
+        isMainGame: false,
+        priority: "NONE",
+        interest: null,
+        rating: null,
+        preferredEnvironment: null,
+        gameExperience: null,
+        compatOverrideStatus: null,
+        compatOverrideReason: null,
+        playSoon: false,
+        replayCandidate: false,
+        hidden: false,
+        notes: null,
+        createdAt: now,
+        updatedAt: now,
+      },
+    ];
+
+    await restoreExportDocument(db, doc);
+
+    const rows = (db.libraryEntry.createMany as ReturnType<typeof vi.fn>).mock.calls[0][0].data;
+    expect(rows).toEqual([
+      expect.objectContaining({ id: "l1", handheldSuitable: true }),
+      expect.objectContaining({ id: "l2", handheldSuitable: null }),
+    ]);
+  });
+
   it("inserts in the documented order with base games before DLCs", async () => {
     const { db, callOrder } = mockTxDb();
     const doc = minimalDocument();

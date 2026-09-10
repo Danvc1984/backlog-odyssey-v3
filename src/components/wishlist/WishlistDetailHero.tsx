@@ -15,6 +15,7 @@ export function WishlistDetailHero({
   imageUrl,
   interest,
   gameExperience,
+  handheldSuitable,
   addedAt,
   baseGame,
 }: {
@@ -24,6 +25,7 @@ export function WishlistDetailHero({
   imageUrl: string | null;
   interest: number | null;
   gameExperience: string | null;
+  handheldSuitable: boolean | null;
   addedAt: string;
   baseGame: { id: string; name: string } | null;
 }) {
@@ -62,6 +64,9 @@ export function WishlistDetailHero({
             <p className="mt-2 text-xs text-muted-foreground">
               Experience: {gameExperience.replaceAll("_", " ").toLowerCase()}
             </p>
+          )}
+          {handheldSuitable === true && (
+            <p className="mt-2 text-xs text-muted-foreground">Handheld option</p>
           )}
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <WishlistInterestRating entryId={id} entryName={name} interest={interest} />

@@ -129,6 +129,14 @@ export default async function SettingsPage() {
         />
       </section>
       <section className="space-y-6">
+        <h2>Appearance</h2>
+        <AppearanceSection
+          initialWallpaperEnabled={appSettings?.wallpaperEnabled ?? true}
+          poolCachedAt={wallpaperState?.cachedAt ?? null}
+          lastError={wallpaperState?.lastError ?? null}
+        />
+      </section>
+      <section className="space-y-6">
         <h2>Steam and catalog sources</h2>
         <SteamConnectionCard
           connected={Boolean(steamConnection)}
@@ -140,6 +148,13 @@ export default async function SettingsPage() {
         />
         <UnresolvedDlcReviewCard items={unresolvedDlcs} baseGames={baseGames} />
         <AlternativeSourcesCard sources={sources} />
+      </section>
+      <section className="space-y-6">
+        <h2>Recommendations</h2>
+        <RecommendationProfileSection
+          profile={profile}
+          preferences={preferences}
+        />
       </section>
       <section className="space-y-6">
         <h2>Provider queues</h2>
@@ -176,21 +191,6 @@ export default async function SettingsPage() {
               gameId: job.game.id,
               gameName: job.game.name,
             }))}
-        />
-      </section>
-      <section className="space-y-6">
-        <h2>Appearance</h2>
-        <AppearanceSection
-          initialWallpaperEnabled={appSettings?.wallpaperEnabled ?? true}
-          poolCachedAt={wallpaperState?.cachedAt ?? null}
-          lastError={wallpaperState?.lastError ?? null}
-        />
-      </section>
-      <section className="space-y-6">
-        <h2>Recommendations</h2>
-        <RecommendationProfileSection
-          profile={profile}
-          preferences={preferences}
         />
       </section>
       <section className="space-y-6">

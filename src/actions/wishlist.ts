@@ -32,6 +32,7 @@ const updateWishlistEntrySchema = z
       .enum(["PC_GAMING", "MULTIPLAYER_COOP", "COUCH_GAMING", "ON_THE_GO"])
       .optional()
       .nullable(),
+    handheldSuitable: z.boolean().optional().nullable(),
     notes: z.string().optional().nullable(),
     steamAppId: z.string().trim().regex(/^\d{1,10}$/).optional().nullable(),
     baseGameId: z.string().trim().min(1).optional(),

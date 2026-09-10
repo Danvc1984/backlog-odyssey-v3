@@ -29,6 +29,7 @@ interface WishlistCardProps {
     baseGameId: string | null;
     interest: number | null;
     gameExperience: string | null;
+    handheldSuitable: boolean | null;
     notes: string | null;
     offerView: WishlistOffersView;
     compatTag: CompatTag;

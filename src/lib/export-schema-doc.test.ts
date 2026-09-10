@@ -82,6 +82,7 @@ describe("export document schema", () => {
         baseGameId: null,
         interest: 5,
         gameExperience: null,
+        handheldSuitable: null,
         targetPriceMxn: "899.00",
         notes: null,
         steamAppId: "1245620",

@@ -63,6 +63,7 @@ export default async function WishlistPage({
         baseGameId: true,
         interest: true,
         gameExperience: true,
+        handheldSuitable: true,
         notes: true,
         steamAppId: true,
         steamAppIdProvenance: true,

@@ -23,7 +23,7 @@ import type { RawgSearchCandidate } from "@/lib/rawg-types";
 import { GAME_EXPERIENCE_LABELS, PERSONAL_FIELD_HELP } from "@/lib/personal-field-help";
 
 interface EditWishlistDialogProps {
-  entry: { id: string; name: string; type: string; baseGameId: string | null; interest: number | null; gameExperience: string | null };
+  entry: { id: string; name: string; type: string; baseGameId: string | null; interest: number | null; gameExperience: string | null; handheldSuitable: boolean | null };
   baseGames: { id: string; name: string }[];
 }
 
@@ -34,6 +34,7 @@ export function EditWishlistDialog({ entry, baseGames }: EditWishlistDialogProps
   const [interest, setInterest] = useState(String(entry.interest ?? 5));
   const [baseGameId, setBaseGameId] = useState(entry.baseGameId ?? "");
   const [gameExperience, setGameExperience] = useState(entry.gameExperience ?? "");
+  const [handheldSuitable, setHandheldSuitable] = useState(entry.handheldSuitable === true);
   const [candidates, setCandidates] = useState<RawgSearchCandidate[]>([]);
   const [selectedRawgId, setSelectedRawgId] = useState<number | null>(null);
   const [rawgPage, setRawgPage] = useState(1);
@@ -82,6 +83,7 @@ export function EditWishlistDialog({ entry, baseGames }: EditWishlistDialogProps
       name,
       interest: Number(interest),
       gameExperience: gameExperience === "" ? null : gameExperience as keyof typeof GAME_EXPERIENCE_LABELS,
+      handheldSuitable: handheldSuitable ? true : null,
       ...(entry.type === "DLC" && { baseGameId }),
     });
     setSubmitting(false);
@@ -186,6 +188,16 @@ export function EditWishlistDialog({ entry, baseGames }: EditWishlistDialogProps
               </SelectContent>
             </Select>
           </div>
+          <Label className="flex items-center gap-2 text-sm font-medium">
+            <input
+              type="checkbox"
+              checked={handheldSuitable}
+              disabled={submitting}
+              onChange={(event) => setHandheldSuitable(event.target.checked)}
+              className="size-4 accent-primary disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            Handheld option
+          </Label>
           {entry.type === "DLC" && (
             <div className="grid gap-2">
               <Label htmlFor={`edit-wishlist-parent-${entry.id}`}>Base game</Label>

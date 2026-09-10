@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { updatePlayState } from "@/actions/game-detail";
+import { updatePersonalFields, updatePlayState } from "@/actions/game-detail";
 import type { UpdatePlayStateInput } from "@/actions/game-detail";
 
 type PlayStateData = {
@@ -21,6 +21,7 @@ type PlayStateData = {
   playSoon: boolean;
   replayCandidate: boolean;
   hidden: boolean;
+  handheldSuitable: boolean | null;
 };
 
 type PlayStateValue = "NOT_STARTED" | "IN_PROGRESS" | "PLAYED_BEFORE" | "ABANDONED";
@@ -38,7 +39,6 @@ const TOGGLES: { key: ToggleKey; label: string }[] = [
   { key: "isMainGame", label: "Main game" },
   { key: "playSoon", label: "Play soon" },
   { key: "replayCandidate", label: "Replay candidate" },
-  { key: "hidden", label: "Hidden" },
 ];
 
 export function PlayStateSection({
@@ -57,6 +57,7 @@ export function PlayStateSection({
     playSoon: libraryEntry?.playSoon ?? false,
     replayCandidate: libraryEntry?.replayCandidate ?? false,
     hidden: libraryEntry?.hidden ?? false,
+    handheldSuitable: libraryEntry?.handheldSuitable === true,
   });
 
   if (!libraryEntry) {
@@ -104,6 +105,24 @@ export function PlayStateSection({
     });
   };
 
+  const toggleHandheldOption = () => {
+    if (saving) return;
+    const previous = values.handheldSuitable;
+    const next = !previous;
+    setValues((v) => ({ ...v, handheldSuitable: next }));
+    setSaving(true);
+    setError(null);
+    void updatePersonalFields(gameId, { handheldSuitable: next ? true : null }).then((result) => {
+      setSaving(false);
+      if (result.success) {
+        toast.success("Personal fields saved");
+      } else {
+        setValues((v) => ({ ...v, handheldSuitable: previous }));
+        setError(result.error ?? "Failed to update handheld option");
+      }
+    });
+  };
+
   return (
     <div className="grid gap-4">
       <div className="grid gap-2">
@@ -142,6 +161,28 @@ export function PlayStateSection({
             {t.label}
           </Label>
         ))}
+        <Label className="flex items-center gap-2 text-sm font-medium">
+          <input
+            type="checkbox"
+            checked={values.handheldSuitable}
+            disabled={saving}
+            onChange={toggleHandheldOption}
+            className="size-4 accent-primary disabled:cursor-not-allowed disabled:opacity-50"
+          />
+          Handheld option
+        </Label>
+        <Label
+          className="flex items-center gap-2 text-sm font-medium"
+        >
+          <input
+            type="checkbox"
+            checked={values.hidden}
+            disabled={saving}
+            onChange={() => toggle("hidden")}
+            className="size-4 accent-primary disabled:cursor-not-allowed disabled:opacity-50"
+          />
+          Hidden
+        </Label>
       </div>
 
       {saving && (

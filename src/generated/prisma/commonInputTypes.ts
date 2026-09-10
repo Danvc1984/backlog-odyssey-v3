@@ -536,6 +536,11 @@ export type EnumGameExperienceNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumGameExperienceNullableFilter<$PrismaModel> | $Enums.GameExperience | null
 }
 
+export type BoolNullableFilter<$PrismaModel = never> = {
+  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedBoolNullableFilter<$PrismaModel> | boolean | null
+}
+
 export type EnumCompatibilityStatusNullableFilter<$PrismaModel = never> = {
   equals?: $Enums.CompatibilityStatus | Prisma.EnumCompatibilityStatusFieldRefInput<$PrismaModel> | null
   in?: $Enums.CompatibilityStatus[] | Prisma.ListEnumCompatibilityStatusFieldRefInput<$PrismaModel> | null
@@ -581,6 +586,14 @@ export type EnumGameExperienceNullableWithAggregatesFilter<$PrismaModel = never>
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumGameExperienceNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumGameExperienceNullableFilter<$PrismaModel>
+}
+
+export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedBoolNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedBoolNullableFilter<$PrismaModel>
 }
 
 export type EnumCompatibilityStatusNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -1403,6 +1416,11 @@ export type NestedEnumGameExperienceNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumGameExperienceNullableFilter<$PrismaModel> | $Enums.GameExperience | null
 }
 
+export type NestedBoolNullableFilter<$PrismaModel = never> = {
+  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedBoolNullableFilter<$PrismaModel> | boolean | null
+}
+
 export type NestedEnumCompatibilityStatusNullableFilter<$PrismaModel = never> = {
   equals?: $Enums.CompatibilityStatus | Prisma.EnumCompatibilityStatusFieldRefInput<$PrismaModel> | null
   in?: $Enums.CompatibilityStatus[] | Prisma.ListEnumCompatibilityStatusFieldRefInput<$PrismaModel> | null
@@ -1448,6 +1466,14 @@ export type NestedEnumGameExperienceNullableWithAggregatesFilter<$PrismaModel = 
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumGameExperienceNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumGameExperienceNullableFilter<$PrismaModel>
+}
+
+export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedBoolNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedBoolNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumCompatibilityStatusNullableWithAggregatesFilter<$PrismaModel = never> = {

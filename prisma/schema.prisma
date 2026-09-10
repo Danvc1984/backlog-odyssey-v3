@@ -471,6 +471,7 @@ model LibraryEntry {
   rating               Int?
   preferredEnvironment Environment?
   gameExperience       GameExperience?
+  handheldSuitable     Boolean?
   compatOverrideStatus CompatibilityStatus?
   compatOverrideReason String?
   playSoon             Boolean              @default(false)
@@ -523,6 +524,7 @@ model WishlistEntry {
   baseGameId           String?
   interest             Int?
   gameExperience       GameExperience?
+  handheldSuitable     Boolean?
   targetPriceMxn       Decimal? @db.Decimal(10, 2)
   notes                String?
   steamAppId           String?

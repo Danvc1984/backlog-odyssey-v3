@@ -45,6 +45,7 @@ export default async function WishlistDetailPage({
         baseGameId: true,
         interest: true,
         gameExperience: true,
+        handheldSuitable: true,
         notes: true,
         steamAppId: true,
         steamAppIdProvenance: true,
@@ -171,6 +172,7 @@ export default async function WishlistDetailPage({
         imageUrl={metadata?.backgroundImageUrls[0] ?? null}
         interest={entry.interest}
         gameExperience={entry.gameExperience}
+        handheldSuitable={entry.handheldSuitable}
         addedAt={entry.createdAt.toLocaleDateString("en-US", {
           year: "numeric",
           month: "short",
@@ -312,6 +314,7 @@ export default async function WishlistDetailPage({
                 baseGameId: entry.baseGameId,
                 interest: entry.interest,
                 gameExperience: entry.gameExperience,
+                handheldSuitable: entry.handheldSuitable,
               }}
               baseGames={baseGames}
               showDelete={false}
