@@ -1,9 +1,15 @@
 ---
 name: fix
-description: Document an ad-hoc bug fix or small change (one not in the build plan) into blueprint/context/current-feature.md so it runs through the same build loop. Writes a short fix spec and stops; then /implement builds it and /complete logs it to blueprint/history/fixes/ and merges. Use when the user runs /fix, reports a bug, or asks to fix or change something that isn't a planned build-plan feature.
+description: Write a current-feature.md spec for an ad-hoc bug fix or small unplanned change, then stop before implementation. Use for /fix, confirmed bugs, or small changes that do not belong in the build plan.
 ---
 
 # fix - document an ad-hoc fix, then build it like anything else
+
+**Context reuse:** Reuse any required file already loaded in project instructions or the current session. Read it again only if absent, changed, or exact current bytes or line references are needed.
+
+**First action:** Before project inspection, preflight, or any other tool call,
+publish `running` to `blueprint/.state/run.json` using the dashboard activity
+contract in `AGENTS.md`.
 
 Where this sits in the workflow:
 
@@ -30,10 +36,16 @@ while a spec is active, repair its findings through `/implement` instead.
 
 Pull context from `blueprint/context/project-overview.md` and `blueprint/context/coding-standards.md`,
 then write a short spec to `blueprint/context/current-feature.md` (this file holds whatever
-is being built now, feature or fix). Keep it lighter than a feature spec:
+is being built now, feature or fix). Its first heading must be exactly
+`# Fix: <title>`, and it must retain the `**Type:** Fix` contract below. Keep it
+lighter than a feature spec:
 
 - **Title** - the bug or change in a few words.
 - **Type:** Fix  (so `/complete` logs it to `blueprint/history/fixes/`, not `blueprint/history/features/`).
+- **Status:** not started - `/implement` updates this durable workflow state as
+  work and verification progress.
+- **Branch:** the full fix branch from the configured prefix plus the fix title
+  in lowercase kebab-case.
 - **Fixes:** `<finding id>` - only when the fix targets a ledger finding. The
   stamp makes the repair traceable: `/implement` marks that finding `fixed`
   when the repairing step lands, and `/audit` re-reviews it before it closes.
