@@ -1,5 +1,5 @@
 import type { CompatibilityStatus } from "@/generated/prisma/client";
-import { deriveWindowsFallbackExists, type OsSetup } from "@/lib/os-setup";
+import { deriveWindowsFallbackExists, linuxDevicePhrase, type OsSetup } from "@/lib/os-setup";
 import type { CompatEvidenceInput, ExplanationCaveat, ExplanationFactor } from "./types";
 
 export const COMPAT_STALENESS_DAYS = 180;
@@ -52,6 +52,9 @@ export function buildCompatContext(
     caveats.push({
       factor: STATUS_CAVEAT_FACTORS[effective],
       label:
+        setup && effective === "READY_WITH_TINKERING"
+          ? `Needs tinkering on ${linuxDevicePhrase(setup)}`
+          :
         setup && effective === "FALLBACK_RECOMMENDED" && !deriveWindowsFallbackExists(setup)
           ? "Windows fallback recommended, but none is configured"
           : CAVEAT_LABELS[STATUS_CAVEAT_FACTORS[effective]],

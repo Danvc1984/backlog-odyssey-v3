@@ -37,7 +37,9 @@ export type ExplanationFactorKey =
   | "tune_match"
   | "tune_thin_pool"
   | "source_tune"
-  | "second_chance";
+  | "second_chance"
+  | "handheld_fit"
+  | "handheld_rescue";
 
 export const RERANK_TASTE_CLAMP = 3;
 export const RERANK_TASTE_TOTAL_CAP = 12;
@@ -58,6 +60,7 @@ export const TUNE_MATCH_POINTS = 5;
 export const TUNE_TOTAL_CAP = 10;
 export const SOURCE_TUNE_MATCH_POINTS = 3;
 export const BUY_PRACTICAL_FIT_PENALTY = -10;
+export const HANDHELD_FIT_POINTS = 2;
 
 export interface SourceTune {
   steam: boolean;
@@ -107,6 +110,7 @@ export interface RerankAppliedFactors {
   steam: number;
   environment: number;
   quality: number;
+  handheld: number;
 }
 
 export interface RerankRunContext {
@@ -144,6 +148,7 @@ export interface PlayNextLibraryView {
   replayCandidate: boolean;
   hidden: boolean;
   isMainGame: boolean;
+  handheldSuitable?: boolean | null;
 }
 
 export interface PlayNextCandidate {

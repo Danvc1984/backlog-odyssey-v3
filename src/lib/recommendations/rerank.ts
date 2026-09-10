@@ -18,6 +18,7 @@ import {
   RERANK_SUPPORT_FULL_STRENGTH,
   RERANK_TASTE_CLAMP,
   RERANK_TASTE_TOTAL_CAP,
+  HANDHELD_FIT_POINTS,
   STEAM_ACTIVITY_POINTS,
   STEAM_RECENCY_WINDOW_DAYS,
 } from "./types";
@@ -295,6 +296,7 @@ export interface RerankPlayInput {
   steam: SteamActivityInput;
   envStatus: CompatibilityStatus | null;
   primaryOs?: "LINUX" | "WINDOWS";
+  handheldFit?: boolean;
   quality: QualityInput;
 }
 
@@ -317,7 +319,7 @@ export function rerankPlayCandidates(
   now: Date,
 ): { items: RerankedPlayItem[]; pool: RerankedPlayItem[]; context: RerankRunContext } {
   const mode = resolveRerankMode(profile);
-  const applied: RerankAppliedFactors = { taste: 0, steam: 0, environment: 0, quality: 0 };
+  const applied: RerankAppliedFactors = { taste: 0, steam: 0, environment: 0, quality: 0, handheld: 0 };
 
   const scored = pool.map((candidate) => {
     const steamFactor = scoreSteamActivity(candidate.steam, now);
@@ -330,6 +332,16 @@ export function rerankPlayCandidates(
     if (envFactor) {
       if (envFactor.points >= 0) positive.push(envFactor);
       else negative.push(envFactor);
+    }
+    if (candidate.handheldFit) {
+      const factor: ExplanationFactor = {
+        factor: "handheld_fit",
+        label: "Marked as a handheld option",
+        points: HANDHELD_FIT_POINTS,
+      };
+      positive.push(factor);
+      score += factor.points;
+      applied.handheld += 1;
     }
 
     let tasteCounted = false;
@@ -401,6 +413,7 @@ export interface RerankBuyInput {
   practicality: PlayPracticality | null;
   envStatus: CompatibilityStatus | null;
   primaryOs?: "LINUX" | "WINDOWS";
+  handheldFit?: boolean;
 }
 
 export interface RerankedBuyItem {
@@ -421,7 +434,7 @@ export function rerankBuyCandidates(
   preferences: readonly TastePreference[],
 ): { items: RerankedBuyItem[]; pool: RerankedBuyItem[]; context: RerankRunContext } {
   const mode = resolveRerankMode(profile);
-  const applied: RerankAppliedFactors = { taste: 0, steam: 0, environment: 0, quality: 0 };
+  const applied: RerankAppliedFactors = { taste: 0, steam: 0, environment: 0, quality: 0, handheld: 0 };
 
   const scored = pool.map((candidate) => {
     const positive = [...candidate.positive];
@@ -431,6 +444,17 @@ export function rerankBuyCandidates(
     let tasteCounted = false;
     let qualityCounted = false;
     let tastePoints = 0;
+
+    if (candidate.handheldFit) {
+      const factor: ExplanationFactor = {
+        factor: "handheld_fit",
+        label: "Marked as a handheld option",
+        points: HANDHELD_FIT_POINTS,
+      };
+      positive.push(factor);
+      score += factor.points;
+      applied.handheld += 1;
+    }
 
     if (candidate.practicality?.kind === "EXCLUDED") {
       const factor: ExplanationFactor = {

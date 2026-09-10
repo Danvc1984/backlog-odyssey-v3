@@ -28,7 +28,7 @@ import { GameDetailHero } from "@/components/games/GameDetailHero";
 import { GameThemeScope } from "@/components/games/GameThemeScope";
 import { SectionCard, StatusPill } from "@/components/ui/detail-card";
 import { resolvePagePalette } from "@/lib/game-theme";
-import { deriveWindowsFallbackExists } from "@/lib/os-setup";
+import { deriveWindowsFallbackExists, linuxDevicePhrase } from "@/lib/os-setup";
 import { getCompatibilityGate } from "@/lib/compat-gate";
 import { availableEnvironments } from "@/lib/recommendations/environment-fit";
 
@@ -173,6 +173,9 @@ export default async function GameDetailPage({
       hasWindowsFallback: false,
       handheldOs: "NONE",
     },
+  );
+  const configuredLinuxDevicePhrase = linuxDevicePhrase(
+    compatibilityGate.setup ?? { primaryOs: "LINUX", handheldOs: "NONE" },
   );
 
   return (
@@ -328,6 +331,7 @@ export default async function GameDetailPage({
         antiCheat={antiCheat}
         awayUrl={antiCheat && steamAppId ? awayGameUrl(steamAppId) : null}
         hasWindowsFallback={compatibilityGate.setup ? deriveWindowsFallbackExists(compatibilityGate.setup) : false}
+        linuxDevicePhrase={configuredLinuxDevicePhrase}
         override={
           game.libraryEntry?.compatOverrideStatus
             ? {

@@ -514,7 +514,7 @@
     LibraryEntry and WishlistEntry (mirroring gameExperience), edit
     affordances on game detail and wishlist edit/detail, Library filter,
     export/import schema updates
-  - [ ] 22b. **Handheld-aware fit and context** - engine factors with visible
+  - [x] 22b. **Handheld-aware fit and context** - engine factors with visible
     explanations: a handheld-fit boost or caveat where the setup has a Linux
     handheld (including the Windows-primary case, where compatibility
     evidence is framed for the handheld target), and the Windows-handheld

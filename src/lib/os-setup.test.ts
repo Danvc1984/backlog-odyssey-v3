@@ -5,6 +5,7 @@ import {
   deriveWindowsFallbackExists,
   isCompatibilityActive,
   isTrivialPath,
+  linuxDevicePhrase,
   linuxTargetsExist,
   osSetupSchema,
 } from "./os-setup";
@@ -35,6 +36,14 @@ describe("os setup contract", () => {
     expect(isCompatibilityActive(setup({ primaryOs: "LINUX", hasWindowsFallback: true }))).toBe(true);
     expect(isCompatibilityActive(setup({ primaryOs: "WINDOWS", handheldOs: "LINUX" }))).toBe(true);
     expect(isCompatibilityActive(setup({ primaryOs: "WINDOWS", handheldOs: "WINDOWS" }))).toBe(false);
+  });
+
+  it("describes the Linux device used by the setup", () => {
+    expect(linuxDevicePhrase(setup())).toBe("Linux");
+    expect(linuxDevicePhrase(setup({ primaryOs: "LINUX", handheldOs: "LINUX" }))).toBe("Linux");
+    expect(linuxDevicePhrase(setup({ primaryOs: "LINUX", handheldOs: "WINDOWS" }))).toBe("Linux");
+    expect(linuxDevicePhrase(setup({ primaryOs: "WINDOWS", handheldOs: "NONE" }))).toBe("Linux");
+    expect(linuxDevicePhrase(setup({ primaryOs: "WINDOWS", handheldOs: "LINUX" }))).toBe("your Linux handheld");
   });
 
   it("rejects a fallback on a Windows primary", () => {

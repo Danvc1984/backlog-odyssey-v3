@@ -58,6 +58,19 @@ describe("buildCompatContext", () => {
     ).toEqual({ positives: [], caveats: [] });
   });
 
+  it("frames tinkering for the Linux handheld on a Windows primary", () => {
+    expect(buildCompatContext(input({ protonDbStatus: "READY_WITH_TINKERING" }), now, {
+      primaryOs: "WINDOWS",
+      hasWindowsFallback: false,
+      handheldOs: "LINUX",
+    }).caveats).toEqual([
+      { factor: "compat_tinkering", label: "Needs tinkering on your Linux handheld" },
+    ]);
+    expect(buildCompatContext(input({ protonDbStatus: "READY_WITH_TINKERING" }), now, linuxOnly).caveats).toEqual([
+      { factor: "compat_tinkering", label: "Needs tinkering on Linux" },
+    ]);
+  });
+
   it("maps each non-ready status to its caveat factor", () => {
     expect(buildCompatContext(input({ protonDbStatus: "READY_WITH_TINKERING" }), now).caveats).toEqual([
       { factor: "compat_tinkering", label: "Needs tinkering on Linux" },

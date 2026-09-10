@@ -27,6 +27,7 @@ export async function loadCandidates(client: Prisma.TransactionClient) {
           isMainGame: true,
           gameExperience: true,
           preferredEnvironment: true,
+          handheldSuitable: true,
           compatOverrideStatus: true,
           compatOverrideReason: true,
         },
@@ -129,6 +130,7 @@ export async function loadBuyCandidates(client: Prisma.TransactionClient) {
       updatedAt: true,
       baseGameId: true,
       gameExperience: true,
+      handheldSuitable: true,
       steamAppId: true,
       steamAppIdProvenance: true,
       metadataSnapshot: { select: { payload: true } },
@@ -155,6 +157,7 @@ export async function loadBuyCandidates(client: Prisma.TransactionClient) {
       wishViews: new Map<string, {
         payload: unknown;
         gameExperience: string | null;
+        handheldSuitable: boolean | null;
         compatEvidence: CompatEvidenceInput | null;
         envCompat: { environment: Environment; status: CompatibilityStatus }[];
       }>(),
@@ -204,6 +207,7 @@ export async function loadBuyCandidates(client: Prisma.TransactionClient) {
         {
           payload: entry.metadataSnapshot?.payload ?? null,
           gameExperience: entry.gameExperience ?? null,
+          handheldSuitable: entry.handheldSuitable,
           compatEvidence: compatEvidenceForWish(entry),
           envCompat: entry.envCompat ?? [],
         },

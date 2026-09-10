@@ -24,7 +24,7 @@ import { GameThemeScope } from "@/components/games/GameThemeScope";
 import { ScreenshotsSection } from "@/components/games/ScreenshotsSection";
 import { resolvePagePalette } from "@/lib/game-theme";
 import { resolvePageScreenshots } from "@/lib/screenshot-view";
-import { deriveWindowsFallbackExists } from "@/lib/os-setup";
+import { deriveWindowsFallbackExists, linuxDevicePhrase } from "@/lib/os-setup";
 import { getCompatibilityGate } from "@/lib/compat-gate";
 import { SourceIcon } from "@/components/sources/SourceIcon";
 
@@ -109,6 +109,9 @@ export default async function WishlistDetailPage({
     },
   });
   const buyItem = latestBuyRun?.items[0] ?? null;
+  const configuredLinuxDevicePhrase = linuxDevicePhrase(
+    compatibilityGate.setup ?? { primaryOs: "LINUX", handheldOs: "NONE" },
+  );
 
   const ownSnapshot = entry.metadataSnapshot;
   const themePayload = entry.metadataSnapshot?.payload ?? null;
@@ -260,6 +263,7 @@ export default async function WishlistDetailPage({
           protonDb={protonDb ? { tier: protonDb.tier } : null}
           antiCheat={antiCheat}
           hasWindowsFallback={compatibilityGate.setup ? deriveWindowsFallbackExists(compatibilityGate.setup) : false}
+          linuxDevicePhrase={configuredLinuxDevicePhrase}
           environments={entry.envCompat.map((row) => ({
             environment: row.environment,
             status: row.status,

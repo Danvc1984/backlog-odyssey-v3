@@ -76,9 +76,19 @@ function excludedReason(factor: string, label: string): { factor: string; label:
   return { factor, label };
 }
 
+function canUseWindowsHandheldRescue(setup: OsSetup, handheldSuitable: boolean | undefined): boolean {
+  return (
+    handheldSuitable === true &&
+    setup.primaryOs === "LINUX" &&
+    setup.handheldOs === "WINDOWS" &&
+    !deriveWindowsFallbackExists(setup)
+  );
+}
+
 export function classifyPlayPracticality(
   setup: OsSetup,
   evidence: CompatEvidenceInput,
+  handheldSuitable?: boolean,
 ): PlayPracticality {
   if (evidence.romOnly || !compatContributes(setup)) {
     return { kind: "PLAYABLE", reason: evidence.romOnly ? ROM_REASON : undefined };
@@ -92,8 +102,15 @@ export function classifyPlayPracticality(
     evidence.hasSteamIdentity &&
     evidence.overrideStatus === null &&
     (evidence.awayStatus === "Denied" || evidence.awayStatus === "Broken");
+  const canRescue = canUseWindowsHandheldRescue(setup, handheldSuitable);
 
   if (setup.primaryOs === "LINUX" && !fallbackExists && blockedByAntiCheat) {
+    if (canRescue) {
+      return {
+        kind: "SOFT",
+        reason: excludedReason("handheld_rescue", "Anti-cheat blocks Linux, but your Windows handheld can run it"),
+      };
+    }
     return {
       kind: "EXCLUDED",
       reason: excludedReason("anticheat", "Anti-cheat blocks Linux, and no Windows fallback is configured"),
@@ -101,6 +118,12 @@ export function classifyPlayPracticality(
   }
 
   if (setup.primaryOs === "LINUX" && !fallbackExists && effectiveStatus === "REQUIRED") {
+    if (canRescue) {
+      return {
+        kind: "SOFT",
+        reason: excludedReason("handheld_rescue", "Needs Windows, but your Windows handheld can run it"),
+      };
+    }
     return {
       kind: "EXCLUDED",
       reason: excludedReason("compat_required", "Requires Windows to run, but no Windows fallback is configured"),

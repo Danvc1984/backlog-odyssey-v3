@@ -92,6 +92,43 @@ describe("environment fit", () => {
     });
   });
 
+  it.each([
+    ["anti-cheat", evidence({ awayStatus: "Denied" }), "Anti-cheat blocks Linux, but your Windows handheld can run it"],
+    ["required", evidence({ protonDbStatus: "REQUIRED" }), "Needs Windows, but your Windows handheld can run it"],
+  ] as const)("rescues flagged %s evidence on a Windows handheld", (_label, candidateEvidence, label) => {
+    expect(classifyPlayPracticality({ ...linuxOnly, handheldOs: "WINDOWS" }, candidateEvidence, true)).toEqual({
+      kind: "SOFT",
+      reason: { factor: "handheld_rescue", label },
+    });
+  });
+
+  it.each([
+    ["Linux only", linuxOnly],
+    ["Linux with fallback", linuxWithFallback],
+    ["Windows primary with Linux handheld", windowsPrimaryLinuxHandheld],
+    ["all-Windows", allWindows],
+  ] as const)("keeps flagged behavior unchanged on %s", (_label, setup) => {
+    for (const candidateEvidence of [
+      evidence({ awayStatus: "Denied" }),
+      evidence({ protonDbStatus: "REQUIRED" }),
+    ]) {
+      expect(classifyPlayPracticality(setup, candidateEvidence, true)).toEqual(
+        classifyPlayPracticality(setup, candidateEvidence, false),
+      );
+    }
+  });
+
+  it("keeps the excluded result for an unflagged Windows-handheld candidate", () => {
+    expect(classifyPlayPracticality(
+      { ...linuxOnly, handheldOs: "WINDOWS" },
+      evidence({ protonDbStatus: "REQUIRED" }),
+      false,
+    )).toEqual({
+      kind: "EXCLUDED",
+      reason: { factor: "compat_required", label: "Requires Windows to run, but no Windows fallback is configured" },
+    });
+  });
+
   it("lets personal overrides win and keeps ROM and unknown evidence soft", () => {
     expect(classifyPlayPracticality(linuxOnly, evidence({ overrideStatus: "READY", protonDbStatus: "REQUIRED", awayStatus: "Denied" }))).toEqual({ kind: "PLAYABLE" });
     expect(classifyPlayPracticality(linuxOnly, evidence({ romOnly: true, protonDbStatus: "REQUIRED" }))).toEqual({

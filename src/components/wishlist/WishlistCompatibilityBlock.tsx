@@ -26,6 +26,7 @@ interface WishlistCompatibilityBlockProps {
   protonDb: { tier: ProtonDbTier } | null;
   antiCheat: AntiCheatEvidence | null;
   hasWindowsFallback: boolean;
+  linuxDevicePhrase: string;
   environments: EnvironmentRow[];
   latestSnapshotAt: Date | null;
 }
@@ -113,6 +114,7 @@ export function WishlistCompatibilityBlock({
   protonDb,
   antiCheat,
   hasWindowsFallback,
+  linuxDevicePhrase,
   environments,
   latestSnapshotAt,
 }: WishlistCompatibilityBlockProps) {
@@ -198,7 +200,9 @@ export function WishlistCompatibilityBlock({
               <div key={row.environment} className="rounded-md border border-border p-3">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm font-medium">
-                    {ENVIRONMENT_LABELS[row.environment] ?? row.environment}
+                    {row.environment === "LINUX" && linuxDevicePhrase === "your Linux handheld"
+                      ? "Linux handheld"
+                      : ENVIRONMENT_LABELS[row.environment] ?? row.environment}
                   </span>
                   {statusBadge(row.status)}
                 </div>

@@ -438,6 +438,7 @@ interface CandidateRowShape {
     isMainGame: boolean;
     gameExperience?: "PC_GAMING" | "MULTIPLAYER_COOP" | "COUCH_GAMING" | "ON_THE_GO" | null;
     preferredEnvironment?: "LINUX" | "STEAM_DECK" | "WINDOWS" | null;
+    handheldSuitable?: boolean | null;
   };
   externalIds: { externalId: string }[];
   availability: {
@@ -499,6 +500,7 @@ interface BuyRowShape {
   targetPriceMxn: string | null;
   updatedAt: Date;
   baseGameId: string | null;
+  handheldSuitable?: boolean | null;
   offers: Array<{
     price: string | null;
     currency: string;
@@ -580,6 +582,54 @@ describe("updateRecommendations", () => {
       },
     });
     expect(playCall?.[0].data.items.create).toEqual([]);
+  });
+
+  it("keeps a flagged game in Play Next through Windows-handheld rescue", async () => {
+    appSettingsFindUnique.mockResolvedValue({
+      primaryOs: "LINUX",
+      hasWindowsFallback: false,
+      handheldOs: "WINDOWS",
+      onboardingCompleted: true,
+    });
+    gameFindMany.mockResolvedValue([
+      { ...baseRow(), id: "flagged", name: "Flagged", libraryEntry: libraryEntry({ handheldSuitable: true }) },
+      { ...baseRow(), id: "unflagged", name: "Unflagged", libraryEntry: libraryEntry({ handheldSuitable: false }) },
+    ]);
+
+    const result = await updateRecommendations();
+
+    expect(result).toMatchObject({ success: true, data: { playNextEligible: 1, playNextItems: 1 } });
+    const playCall = runCreate.mock.calls.find((call) => (call[0] as { data: { kind: string } }).data.kind === "PLAY_NEXT");
+    expect(playCall?.[0].data.context).toMatchObject({
+      play: { exclusions: [{ id: "unflagged", name: "Unflagged", reason: { factor: "anticheat" } }] },
+    });
+    expect(playCall?.[0].data.items.create[0]).toMatchObject({ game: { connect: { id: "flagged" } } });
+    expect(playCall?.[0].data.items.create[0].caveats).toContainEqual({
+      factor: "handheld_rescue",
+      label: "Anti-cheat blocks Linux, but your Windows handheld can run it",
+    });
+  });
+
+  it("boosts a flagged game when the Linux target is a handheld", async () => {
+    appSettingsFindUnique.mockResolvedValue({
+      primaryOs: "WINDOWS",
+      hasWindowsFallback: false,
+      handheldOs: "LINUX",
+      onboardingCompleted: true,
+    });
+    gameFindMany.mockResolvedValue([
+      { ...baseRow(), libraryEntry: libraryEntry({ handheldSuitable: true }) },
+    ]);
+
+    const result = await updateRecommendations();
+
+    expect(result).toMatchObject({ success: true, data: { playNextEligible: 1, playNextItems: 1 } });
+    const playCall = runCreate.mock.calls.find((call) => (call[0] as { data: { kind: string } }).data.kind === "PLAY_NEXT");
+    expect(playCall?.[0].data.items.create[0].positive).toContainEqual({
+      factor: "handheld_fit",
+      label: "Marked as a handheld option",
+      points: 2,
+    });
   });
 
   it("applies tune points before cold-start selection and records the tune context", async () => {
@@ -1245,6 +1295,76 @@ describe("updateRecommendations re-ranking", () => {
 });
 
 describe("updateRecommendations buy re-ranking", () => {
+  it("uses rescue instead of the heavy practical-fit penalty for a flagged wish", async () => {
+    appSettingsFindUnique.mockResolvedValue({
+      primaryOs: "LINUX",
+      hasWindowsFallback: false,
+      handheldOs: "WINDOWS",
+      onboardingCompleted: true,
+    });
+    gameFindMany.mockResolvedValueOnce([]);
+    const compatibility = {
+      steamAppId: "620",
+      steamAppIdProvenance: "USER",
+      metadataSnapshot: { payload: null },
+      compatSnapshots: [{ provider: "PROTONDB", result: { status: "REQUIRED" }, fetchedAt: new Date("2026-09-01") }],
+      envCompat: [{ environment: "LINUX" as const, status: "REQUIRED" as const }],
+    };
+    wishlistFindMany.mockResolvedValue([
+      { ...buyRow({ id: "flagged" }), handheldSuitable: true, ...compatibility },
+      { ...buyRow({ id: "unflagged" }), handheldSuitable: false, ...compatibility },
+    ]);
+
+    const result = await updateRecommendations();
+
+    expect(result.success).toBe(true);
+    const buyCall = runCreate.mock.calls.find((call) => (call[0] as { data: { kind: string } }).data.kind === "BUY")!;
+    const items = buyCall[0].data.items.create as Array<{
+      wishlistEntry: { connect: { id: string } };
+      score: number;
+      negative: Array<{ factor: string; points: number }>;
+      caveats: Array<{ factor: string; label: string }>;
+    }>;
+    const flagged = items.find((item) => item.wishlistEntry.connect.id === "flagged")!;
+    const unflagged = items.find((item) => item.wishlistEntry.connect.id === "unflagged")!;
+    expect(flagged.score).toBe(17);
+    expect(unflagged.score).toBe(10);
+    expect(flagged.negative).not.toContainEqual(expect.objectContaining({ factor: "practical_fit", points: -10 }));
+    expect(flagged.caveats).toContainEqual({
+      factor: "handheld_rescue",
+      label: "Needs Windows, but your Windows handheld can run it",
+    });
+    expect(unflagged.negative).toContainEqual(expect.objectContaining({ factor: "practical_fit", points: -10 }));
+  });
+
+  it("boosts a flagged DLC wish without compatibility evidence on a Linux handheld setup", async () => {
+    appSettingsFindUnique.mockResolvedValue({
+      primaryOs: "LINUX",
+      hasWindowsFallback: false,
+      handheldOs: "LINUX",
+      onboardingCompleted: true,
+    });
+    gameFindMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ id: "base-1", availability: [{ source: "STEAM" }], libraryEntry: null }]);
+    wishlistFindMany.mockResolvedValue([
+      { ...buyRow({ id: "dlc-1", type: "DLC", baseGameId: "base-1" }), handheldSuitable: true, metadataSnapshot: null, compatSnapshots: [], envCompat: [] },
+    ]);
+
+    const result = await updateRecommendations();
+
+    expect(result.success).toBe(true);
+    const buyCall = runCreate.mock.calls.find((call) => (call[0] as { data: { kind: string } }).data.kind === "BUY")!;
+    const item = buyCall[0].data.items.create[0];
+    expect(item.score).toBe(22);
+    expect(item.positive).toContainEqual({
+      factor: "handheld_fit",
+      label: "Marked as a handheld option",
+      points: 2,
+    });
+    expect(item.caveats).toEqual([{ factor: "limited_basis", label: "Cold start: limited history, showing a varied mix" }]);
+  });
+
   it("re-ranks buy items by taste and quality, keeping the tiebreak chain for equal adjusted scores", async () => {
     vi.mocked(rebuildRecommendationProfile).mockResolvedValue({
       windowEnd: "2026-01-01T00:00:00.000Z",

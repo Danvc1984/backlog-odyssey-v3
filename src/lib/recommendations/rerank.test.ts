@@ -5,6 +5,7 @@ import {
   limitedBasisCaveat,
   resolveRerankMode,
   rerankBuyCandidates,
+  rerankPlayCandidates,
   scoreEnvironmentFit,
   scoreQuality,
   scoreSteamActivity,
@@ -387,5 +388,63 @@ describe("buy practical fit", () => {
     );
 
     expect(result.pool[0]).toMatchObject({ id: "windows", score: 10, positive: [], negative: [], caveats: [limitedBasisCaveat()] });
+  });
+});
+
+describe("handheld fit", () => {
+  const playCandidate = (handheldFit?: boolean) => ({
+    id: "game-1",
+    name: "Portal 2",
+    baselineScore: 10,
+    positive: [],
+    negative: [],
+    dimensionValues: {},
+    steam: { playState: null, replayCandidate: false, steamLastPlayed: null },
+    envStatus: null,
+    quality: { metacriticScore: null, rating: null },
+    handheldFit,
+  });
+
+  const buyCandidate = (handheldFit?: boolean): RerankBuyInput => ({
+    id: "wish-1",
+    baselineScore: 10,
+    positive: [],
+    negative: [],
+    caveats: [],
+    dimensionValues: {},
+    quality: { metacriticScore: null, rating: null },
+    tiebreak: { historicalLowGap: null, updatedAt: new Date("2026-01-01"), id: "wish-1" },
+    freshDiscount: null,
+    isFresh: false,
+    isKeyshop: false,
+    practicality: null,
+    envStatus: null,
+    handheldFit,
+  });
+
+  it("adds the handheld factor to Play and counts it", () => {
+    const result = rerankPlayCandidates([playCandidate(true)], profile({}), noPreferences, new Date("2026-01-01"));
+
+    expect(result.pool[0]).toMatchObject({
+      score: 12,
+      positive: [{ factor: "handheld_fit", label: "Marked as a handheld option", points: 2 }],
+    });
+    expect(result.context.applied.handheld).toBe(1);
+  });
+
+  it("adds the handheld factor to Buy and does not add it when unmarked", () => {
+    const result = rerankBuyCandidates(
+      [buyCandidate(true), { ...buyCandidate(false), id: "wish-2" }],
+      profile({}),
+      noPreferences,
+    );
+
+    expect(result.pool[0]).toMatchObject({
+      id: "wish-1",
+      score: 12,
+      positive: [{ factor: "handheld_fit", label: "Marked as a handheld option", points: 2 }],
+    });
+    expect(result.pool[1]).toMatchObject({ id: "wish-2", score: 10, positive: [] });
+    expect(result.context.applied.handheld).toBe(1);
   });
 });

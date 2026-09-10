@@ -47,6 +47,7 @@ interface PlayRow {
     replayCandidate: boolean;
     gameExperience: GameExperience | null;
     preferredEnvironment: Environment | null;
+    handheldSuitable: boolean | null;
   } | null;
   availability: Array<{
     source: "STEAM" | "OTHER_PLATFORM" | "ROM";
@@ -76,6 +77,7 @@ export function buildPlayPipeline(
   preferences: TastePreference[],
   now: Date,
   secondChanceIds: string[],
+  rescueCaveats: ReadonlyMap<string, ExplanationCaveat>,
 ) {
   const rerankInputs: RerankPlayInput[] = pool.map((item) => {
     const row = rows.get(item.id);
@@ -96,7 +98,10 @@ export function buildPlayPipeline(
       baselineScore: item.score,
       positive: item.positive,
       negative: item.negative,
-      caveats: item.caveats,
+      caveats: [
+        ...item.caveats,
+        ...(rescueCaveats.has(item.id) ? [rescueCaveats.get(item.id)!] : []),
+      ],
       dimensionValues,
       steam: {
         playState: row.libraryEntry?.playState ?? null,
@@ -105,6 +110,7 @@ export function buildPlayPipeline(
       },
       envStatus: resolvePlayEnvStatus(setup, row.libraryEntry?.preferredEnvironment ?? null, row.envCompat),
       primaryOs: setup.primaryOs,
+      handheldFit: setup.handheldOs === "LINUX" && row.libraryEntry?.handheldSuitable === true,
       quality: {
         metacriticScore: parsedPayload?.metacriticScore ?? null,
         rating: parsedPayload?.rating ?? null,
@@ -137,6 +143,7 @@ export function buildPlayPipeline(
 interface BuyView {
   payload: unknown;
   gameExperience: string | null;
+  handheldSuitable: boolean | null;
   compatEvidence: CompatEvidenceInput | null;
   envCompat: Array<{ environment: Environment; status: CompatibilityStatus }>;
 }
@@ -154,12 +161,18 @@ export function buildBuyPipeline(
     const view = wishViews.get(item.id);
     const payload = view?.payload ?? null;
     const parsedPayload = parseRawgMetadataPayload(payload);
+    const practicality = view?.compatEvidence
+      ? classifyPlayPracticality(setup, view.compatEvidence, view.handheldSuitable ?? undefined)
+      : null;
+    const rescueCaveat = practicality?.kind === "SOFT" && practicality.reason.factor === "handheld_rescue"
+      ? [{ factor: "handheld_rescue" as const, label: practicality.reason.label }]
+      : [];
     return {
       id: item.id,
       baselineScore: item.score,
       positive: item.positive,
       negative: item.negative,
-      caveats: item.caveats,
+      caveats: [...item.caveats, ...rescueCaveat],
       dimensionValues: resolveCandidateDimensionValues(payload, {
         gameExperience: view?.gameExperience ?? null,
         preferredEnvironment: null,
@@ -174,11 +187,12 @@ export function buildBuyPipeline(
         id: item.id,
       },
       ...getBuyDealInputs(buyCandidateById.get(item.id)!, now),
-      practicality: view?.compatEvidence ? classifyPlayPracticality(setup, view.compatEvidence) : null,
+      practicality,
       envStatus: view?.compatEvidence
         ? resolvePlayEnvStatus(setup, null, view.envCompat)
         : null,
       primaryOs: setup.primaryOs,
+      handheldFit: setup.handheldOs === "LINUX" && view?.handheldSuitable === true,
     };
   });
   const buyRerank = rerankBuyCandidates(buyRerankInputs, profile, preferences);
@@ -411,10 +425,21 @@ export async function runRecommendationPipeline(tx: Prisma.TransactionClient) {
       const evidenceById = new Map(rows.map((row) => [row.id, compatEvidenceFor(row)]));
       const rowById = new Map(rows.map((row) => [row.id, row]));
       const playEligibleCandidates = candidates.filter(isEligibleForPlayNext);
+      const rescueCaveats = new Map<string, ExplanationCaveat>();
       const playExclusions = playEligibleCandidates.flatMap((candidate) => {
         const row = rowById.get(candidate.id);
         if (!row) return [];
-        const practicality = classifyPlayPracticality(setup, evidenceById.get(row.id)!);
+        const practicality = classifyPlayPracticality(
+          setup,
+          evidenceById.get(row.id)!,
+          row.libraryEntry?.handheldSuitable ?? undefined,
+        );
+        if (practicality.kind === "SOFT" && practicality.reason.factor === "handheld_rescue") {
+          rescueCaveats.set(row.id, {
+            factor: "handheld_rescue",
+            label: practicality.reason.label,
+          });
+        }
         return practicality.kind === "EXCLUDED" ? [{ id: row.id, name: row.name, reason: practicality.reason }] : [];
       });
       const excludedIds = new Set(playExclusions.map((exclusion) => exclusion.id));
@@ -499,6 +524,7 @@ export async function runRecommendationPipeline(tx: Prisma.TransactionClient) {
         preferences,
         now,
         secondChanceIds,
+        rescueCaveats,
       );
 
       const enteredBuyInterest = new Map(buyCandidates.map((candidate) => [candidate.id, candidate.interest]));
