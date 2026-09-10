@@ -3,10 +3,13 @@ const OWNED_GAMES_ENDPOINT =
 const STORE_SEARCH_ENDPOINT = "https://store.steampowered.com/api/storesearch/";
 const STEAM_WISHLIST_ENDPOINT =
   "https://api.steampowered.com/IWishlistService/GetWishlist/v1/";
+const STEAM_APP_LIST_ENDPOINT =
+  "https://api.steampowered.com/IStoreService/GetAppList/v1/";
 const RECENTLY_PLAYED_ENDPOINT =
   "https://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v0001/";
 const STORE_DETAILS_CONCURRENCY = 8;
 const STEAM_REQUEST_TIMEOUT_MS = 15_000;
+const STEAM_APP_LIST_PAGE_SIZE = 50_000;
 
 export interface OwnedGame {
   appid: number;
@@ -89,6 +92,19 @@ interface SteamWishlistItem {
 interface SteamWishlistResponse {
   response?: {
     items?: unknown;
+  };
+}
+
+interface SteamAppListItem {
+  appid?: unknown;
+  name?: unknown;
+}
+
+interface SteamAppListResponse {
+  response?: {
+    apps?: unknown;
+    have_more_results?: unknown;
+    last_appid?: unknown;
   };
 }
 
@@ -293,19 +309,25 @@ export async function fetchSteamWishlist(
       return { games: [], status: "EMPTY" };
     }
 
-    const details = await fetchOwnedGameDetails(
-      wishlist.map((game) => game.appid),
-      fetchFn,
-    );
+    const appids = wishlist.map((game) => game.appid);
+    const [gameNames, dlcNames] = await Promise.all([
+      fetchSteamAppList(appids, "games", apiKey, fetchFn),
+      fetchSteamAppList(appids, "dlc", apiKey, fetchFn),
+    ]);
+    const details = await fetchOwnedGameDetails([...dlcNames.keys()], fetchFn);
     const games = wishlist.flatMap((game) => {
+      const name = gameNames.get(game.appid) ?? dlcNames.get(game.appid);
       const detail = details.get(game.appid);
-      if (!detail || typeof detail.name !== "string" || detail.name.trim().length === 0) {
+      if (typeof name !== "string" || name.trim().length === 0) {
         return [];
       }
-      const normalized: SteamWishlistGame = { appid: game.appid, name: detail.name };
-      if (detail.type === "dlc" && Number.isInteger(detail.fullGameAppId)) {
+      const normalized: SteamWishlistGame = { appid: game.appid, name };
+      const fullGameAppId = detail?.fullGameAppId;
+      if (dlcNames.has(game.appid)) {
         normalized.type = "DLC";
-        normalized.steamBaseAppId = String(detail.fullGameAppId);
+        if (Number.isInteger(fullGameAppId)) {
+          normalized.steamBaseAppId = String(fullGameAppId);
+        }
       }
       return [normalized];
     });
@@ -441,6 +463,99 @@ export async function fetchRecentlyPlayedGames(
   } catch {
     return { status: "UNAVAILABLE" };
   }
+}
+
+async function fetchSteamAppList(
+  appids: readonly number[],
+  kind: "games" | "dlc",
+  apiKey: string,
+  fetchFn: typeof fetch,
+): Promise<Map<number, string>> {
+  const targetAppids = new Set(appids);
+  const names = new Map<number, string>();
+  if (targetAppids.size === 0) return names;
+
+  const minAppid = Math.min(...targetAppids);
+  const maxAppid = Math.max(...targetAppids);
+  let lastAppid = Math.max(0, minAppid - 1);
+
+  while (true) {
+    const payload = await fetchSteamAppListPage(kind, apiKey, lastAppid, fetchFn);
+    if (!payload) return names;
+    const apps = payload?.response?.apps;
+    if (!Array.isArray(apps) || apps.length === 0) return names;
+    addSteamAppNames(apps, targetAppids, names);
+
+    const nextAppid = getNextAppListCursor(payload, lastAppid, maxAppid);
+    if (nextAppid === null) return names;
+    lastAppid = nextAppid;
+  }
+}
+
+async function fetchSteamAppListPage(
+  kind: "games" | "dlc",
+  apiKey: string,
+  lastAppid: number,
+  fetchFn: typeof fetch,
+): Promise<SteamAppListResponse | null> {
+  const input = {
+    include_games: kind === "games",
+    include_dlc: kind === "dlc",
+    include_software: kind === "games",
+    include_videos: false,
+    include_hardware: false,
+    last_appid: lastAppid,
+    max_results: STEAM_APP_LIST_PAGE_SIZE,
+  };
+  const params = new URLSearchParams({
+    key: apiKey,
+    format: "json",
+    input_json: JSON.stringify(input),
+  });
+
+  try {
+    const response = await fetchWithTimeout(
+      fetchFn,
+      `${STEAM_APP_LIST_ENDPOINT}?${params}`,
+    );
+    return response.ok ? (await response.json()) as SteamAppListResponse : null;
+  } catch {
+    return null;
+  }
+}
+
+function addSteamAppNames(
+  apps: unknown[],
+  targetAppids: Set<number>,
+  names: Map<number, string>,
+): void {
+  for (const value of apps) {
+    if (!value || typeof value !== "object") continue;
+    const app = value as SteamAppListItem;
+    if (
+      isFiniteNumber(app.appid) &&
+      Number.isInteger(app.appid) &&
+      targetAppids.has(app.appid) &&
+      typeof app.name === "string" &&
+      app.name.trim().length > 0
+    ) {
+      names.set(app.appid, app.name);
+    }
+  }
+}
+
+function getNextAppListCursor(
+  payload: SteamAppListResponse,
+  lastAppid: number,
+  maxAppid: number,
+): number | null {
+  const nextAppid = parseSteamAppId(payload.response?.last_appid);
+  return payload.response?.have_more_results === true &&
+    nextAppid !== null &&
+    nextAppid > lastAppid &&
+    nextAppid < maxAppid
+    ? nextAppid
+    : null;
 }
 
 async function fetchWithTimeout(

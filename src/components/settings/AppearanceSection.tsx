@@ -7,49 +7,11 @@ import { ArrowClockwiseIcon, ShuffleIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { setWallpaperEnabled, refreshWallpaper, shuffleWallpaper } from "@/actions/wallpaper";
 import { useVisualPreferences } from "@/components/preferences/VisualPreferencesProvider";
+import { SegmentedControl, type Option } from "@/components/preferences/SegmentedControl";
 import { formatMexicoTimestamp } from "@/lib/format-times";
 import type { DataSetting, MotionSetting, ThemeFamily } from "@/lib/visual-preferences";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "@/components/ui/detail-card";
-
-interface Option<T extends string> {
-  value: T;
-  label: string;
-}
-
-interface SegmentedControlProps<T extends string> {
-  value: T;
-  options: readonly Option<T>[];
-  onChange: (value: T) => void;
-  label: string;
-}
-
-function SegmentedControl<T extends string>({ value, options, onChange, label }: SegmentedControlProps<T>) {
-  return (
-    <div
-      role="group"
-      aria-label={label}
-      className="inline-flex items-center gap-1 rounded-lg border border-border bg-input p-1"
-    >
-      {options.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          aria-pressed={value === option.value}
-          onClick={() => onChange(option.value)}
-          className={cn(
-            "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-            value === option.value
-              ? "bg-card-alt text-signal-strong"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          {option.label}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 interface SettingRowProps {
   title: string;

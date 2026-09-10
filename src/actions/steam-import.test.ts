@@ -188,6 +188,28 @@ describe("importSteamGames", () => {
     expect(queueRawgForImportedGames).toHaveBeenCalledWith(["game-new"]);
   });
 
+  it("strips trademark symbols from imported names", async () => {
+    vi.mocked(fetchOwnedGames).mockResolvedValue([
+      {
+        appid: 10,
+        name: "Portal™ (Deluxe)®",
+        playtimeForever: 120,
+        rtimeLastPlayed: 1700000000,
+      },
+    ]);
+
+    const result = await importSteamGames();
+
+    expect(result).toEqual(expect.objectContaining({
+      success: true,
+      data: expect.objectContaining({ imported: 1, updated: 0 }),
+    }));
+    expect(createGame).toHaveBeenCalledWith({
+      data: expect.objectContaining({ name: "Portal (Deluxe)" }),
+      select: { id: true },
+    });
+  });
+
   it("keeps a committed Steam import successful when RAWG scheduling fails", async () => {
     vi.mocked(fetchOwnedGames).mockResolvedValue([
       { appid: 10, name: "Portal", playtimeForever: 120, rtimeLastPlayed: 1700000000 },

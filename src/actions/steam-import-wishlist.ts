@@ -5,6 +5,7 @@ import { friendlyActionError } from "@/lib/action-error";
 import { requireUser } from "@/lib/auth-guard";
 import { normalizeName } from "@/lib/duplicate-utils";
 import { prisma } from "@/lib/prisma";
+import { stripTrademarkSymbols } from "@/lib/steam-utils";
 import { fetchSteamWishlist, type SteamWishlistGame } from "@/lib/steam-api";
 import {
   requireSteamFlowContext,
@@ -295,7 +296,10 @@ export async function importSteamWishlist(): Promise<
         error: "Steam wishlist appears empty or private",
       };
     }
-    const games = wishlist.games;
+    const games = wishlist.games.map((game) => ({
+      ...game,
+      name: stripTrademarkSymbols(game.name),
+    }));
 
     const appIds = [...new Set(games.flatMap((game) => [
       String(game.appid),

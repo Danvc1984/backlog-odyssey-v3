@@ -257,22 +257,20 @@ describe("fetchSteamWishlist", () => {
   });
 
   it("fetches wishlist app IDs and enriches names and DLC details", async () => {
-    fetchMock
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ response: { items: [{ appid: 10 }, { appid: 51 }] } }), { status: 200 }),
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ "10": { success: true, data: { name: "Portal", type: "game" } } }), { status: 200 }),
-      )
-      .mockImplementation(async (url: string | URL) => {
-        const appid = new URL(url).searchParams.get("appids");
-        const data = appid === "51"
-          ? { name: "Expansion", type: "dlc", fullgame: { appid: "10" } }
-          : { name: "Portal", type: "game" };
-        return new Response(JSON.stringify({ [appid ?? ""]: { success: true, data } }), {
-          status: 200,
-        });
-      });
+    fetchMock.mockImplementation(async (url: string | URL) => {
+      const parsedUrl = new URL(url);
+      if (parsedUrl.pathname.includes("GetWishlist")) {
+        return new Response(JSON.stringify({ response: { items: [{ appid: 10 }, { appid: 51 }] } }), { status: 200 });
+      }
+      if (parsedUrl.pathname.includes("GetAppList")) {
+        const input = JSON.parse(parsedUrl.searchParams.get("input_json") ?? "{}");
+        const apps = input.include_games
+          ? [{ appid: 10, name: "Portal" }]
+          : [{ appid: 51, name: "Expansion" }];
+        return new Response(JSON.stringify({ response: { apps, have_more_results: false, last_appid: apps[0].appid } }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ "51": { success: true, data: { name: "Expansion", type: "dlc", fullgame: { appid: "10" } } } }), { status: 200 });
+    });
 
     await expect(fetchSteamWishlist("76561198000000000", "test-key")).resolves.toEqual({
       games: [
@@ -286,6 +284,74 @@ describe("fetchSteamWishlist", () => {
     expect(url.pathname).toBe("/IWishlistService/GetWishlist/v1/");
     expect(url.searchParams.get("steamid")).toBe("76561198000000000");
     expect(url.searchParams.get("key")).toBe("test-key");
+    const appListUrl = new URL(
+      fetchMock.mock.calls.find(([input]) => String(input).includes("GetAppList"))?.[0] as string,
+    );
+    expect(JSON.parse(appListUrl.searchParams.get("input_json") ?? "{}")).toMatchObject({
+      include_games: true,
+      include_dlc: false,
+      include_software: true,
+      max_results: 50_000,
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+  });
+
+  it("uses app-list names and keeps DLCs when optional detail lookup fails", async () => {
+    fetchMock.mockImplementation(async (url: string | URL) => {
+      const parsedUrl = new URL(url);
+      if (parsedUrl.pathname.includes("GetWishlist")) {
+        return new Response(JSON.stringify({ response: { items: [{ appid: 10 }, { appid: 51 }, { appid: 99 }] } }), { status: 200 });
+      }
+      if (parsedUrl.pathname.includes("GetAppList")) {
+        const input = JSON.parse(parsedUrl.searchParams.get("input_json") ?? "{}");
+        const apps = input.include_games
+          ? [{ appid: 10, name: "Portal" }, { appid: 99, name: "Another Game" }]
+          : [{ appid: 51, name: "Expansion" }];
+        return new Response(JSON.stringify({ response: { apps, have_more_results: false, last_appid: 99 } }), { status: 200 });
+      }
+      return new Response("rate limited", { status: 403 });
+    });
+
+    await expect(fetchSteamWishlist("steam-id", "test-key")).resolves.toEqual({
+      games: [
+        { appid: 10, name: "Portal" },
+        { appid: 51, name: "Expansion", type: "DLC" },
+        { appid: 99, name: "Another Game" },
+      ],
+      status: "OK",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+  });
+
+  it("follows app-list pagination only until the largest requested app ID", async () => {
+    let gameListCalls = 0;
+    fetchMock.mockImplementation(async (url: string | URL) => {
+      const parsedUrl = new URL(url);
+      if (parsedUrl.pathname.includes("GetWishlist")) {
+        return new Response(JSON.stringify({ response: { items: [{ appid: 10 }, { appid: 30 }] } }), { status: 200 });
+      }
+      if (parsedUrl.pathname.includes("GetAppList")) {
+        const input = JSON.parse(parsedUrl.searchParams.get("input_json") ?? "{}");
+        if (!input.include_games) {
+          return new Response(JSON.stringify({ response: { apps: [], have_more_results: false } }), { status: 200 });
+        }
+        gameListCalls += 1;
+        const apps = gameListCalls === 1
+          ? [{ appid: 10, name: "Portal" }]
+          : [{ appid: 30, name: "Portal 2" }];
+        return new Response(JSON.stringify({ response: { apps, have_more_results: gameListCalls === 1, last_appid: apps[0].appid } }), { status: 200 });
+      }
+      return new Response(JSON.stringify({}), { status: 200 });
+    });
+
+    await expect(fetchSteamWishlist("steam-id", "test-key")).resolves.toMatchObject({
+      games: [
+        { appid: 10, name: "Portal" },
+        { appid: 30, name: "Portal 2" },
+      ],
+      status: "OK",
+    });
+    expect(gameListCalls).toBe(2);
   });
 
   it("returns an empty list for an empty wishlist", async () => {

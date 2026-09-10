@@ -5,13 +5,10 @@ import { SteamConnectionCard } from "@/components/steam/SteamConnectionCard";
 import { UnresolvedDlcReviewCard } from "@/components/steam/UnresolvedDlcReviewCard";
 import { CompatibilitySweepPanel } from "@/components/games/CompatibilitySweepPanel";
 import { AppearanceSection } from "@/components/settings/AppearanceSection";
-import { SessionCard } from "@/components/settings/SessionCard";
-import { EnvironmentCard } from "@/components/settings/EnvironmentCard";
+import { AccountCard } from "@/components/settings/AccountCard";
 import { WishlistImportStatusCard } from "@/components/settings/WishlistImportStatusCard";
 import { PriceStatusCard } from "@/components/settings/PriceStatusCard";
-import { EnrichmentQueueCard } from "@/components/settings/EnrichmentQueueCard";
-import { DataExportCard } from "@/components/settings/DataExportCard";
-import { DataImportCard } from "@/components/settings/DataImportCard";
+import { PersonalDataCard } from "@/components/settings/PersonalDataCard";
 import { getLatestCompatBatchStatus } from "@/lib/compat-batch-runner";
 import { RecommendationProfileSection } from "@/components/recommendations/RecommendationProfileSection";
 import { AlternativeSourcesCard } from "@/components/sources/AlternativeSourcesCard";
@@ -120,71 +117,90 @@ export default async function SettingsPage() {
           Keep the ship&apos;s connections, appearance, provider upkeep, and recommendation course in your hands.
         </p>
       </div>
-      <SessionCard
-        email={session.user?.email ?? null}
-        signOutAction={async () => {
-          "use server";
-          await signOut();
-        }}
-      />
-      <EnvironmentCard settings={appSettings} />
-      <WishlistImportStatusCard
-        openReviews={openWishlistImportReviews}
-        ignored={ignoredWishlistImports}
-      />
-      <PriceStatusCard lastRun={latestPriceRefresh} />
-      <EnrichmentQueueCard
-        jobs={enrichmentJobs.map((job) => ({
-          id: job.id,
-          provider: job.provider,
-          status: job.status,
-          stage: job.stage,
-          error: job.lastErrorMessage,
-          finishedAt: job.finishedAt,
-          gameId: job.game.id,
-          gameName: job.game.name,
-        }))}
-      />
-      <SteamConnectionCard
-        connected={Boolean(steamConnection)}
-        steamId64={steamConnection?.steamId64 ?? null}
-      />
-      <AppearanceSection
-        initialWallpaperEnabled={appSettings?.wallpaperEnabled ?? true}
-        poolCachedAt={wallpaperState?.cachedAt ?? null}
-        lastError={wallpaperState?.lastError ?? null}
-      />
-
-      <CompatibilitySweepPanel
-        compatibilityActive={appSettings ? isCompatibilityActive(appSettings) : false}
-        initialBatch={latestCompatBatch?.data ?? null}
-        initialRawgBatch={
-          (latestRawgBatch?.data ?? null) as RawgBatchView | null
-        }
-        initialWishlistRun={
-          latestWishlistSweep.data
-            ? {
-                id: latestWishlistSweep.data.id,
-                status: latestWishlistSweep.data.status,
-                counts: latestWishlistSweep.data.counts,
-                requestedAt: latestWishlistSweep.data.requestedAt,
-                finishedAt: latestWishlistSweep.data.finishedAt,
-              }
-            : null
-        }
-      />
-      <RecommendationProfileSection
-        profile={profile}
-        preferences={preferences}
-      />
-      <AlternativeSourcesCard sources={sources} />
-      <UnresolvedDlcReviewCard items={unresolvedDlcs} baseGames={baseGames} />
-      <DataExportCard
-        gameCount={exportGameCount}
-        wishlistCount={exportWishlistCount}
-        recommendationRunCount={exportRecommendationRunCount}
-      />
-      <DataImportCard />
+      <section className="space-y-6">
+        <h2>Account</h2>
+        <AccountCard
+          email={session.user?.email ?? null}
+          signOutAction={async () => {
+            "use server";
+            await signOut();
+          }}
+          settings={appSettings}
+        />
+      </section>
+      <section className="space-y-6">
+        <h2>Steam and catalog sources</h2>
+        <SteamConnectionCard
+          connected={Boolean(steamConnection)}
+          steamId64={steamConnection?.steamId64 ?? null}
+        />
+        <WishlistImportStatusCard
+          openReviews={openWishlistImportReviews}
+          ignored={ignoredWishlistImports}
+        />
+        <UnresolvedDlcReviewCard items={unresolvedDlcs} baseGames={baseGames} />
+        <AlternativeSourcesCard sources={sources} />
+      </section>
+      <section className="space-y-6">
+        <h2>Provider queues</h2>
+        <PriceStatusCard lastRun={latestPriceRefresh} />
+        <CompatibilitySweepPanel
+          compatibilityActive={appSettings ? isCompatibilityActive(appSettings) : false}
+          initialBatch={latestCompatBatch?.data ?? null}
+          initialRawgBatch={
+            (latestRawgBatch?.data ?? null) as RawgBatchView | null
+          }
+          initialWishlistRun={
+            latestWishlistSweep.data
+              ? {
+                  id: latestWishlistSweep.data.id,
+                  status: latestWishlistSweep.data.status,
+                  counts: latestWishlistSweep.data.counts,
+                  requestedAt: latestWishlistSweep.data.requestedAt,
+                  finishedAt: latestWishlistSweep.data.finishedAt,
+                }
+              : null
+          }
+          failedJobs={enrichmentJobs
+            .filter((job) => job.status === "FAILED")
+            .sort(
+              (a, b) =>
+                (b.finishedAt?.getTime() ?? 0) - (a.finishedAt?.getTime() ?? 0),
+            )
+            .slice(0, 10)
+            .map((job) => ({
+              id: job.id,
+              provider: job.provider,
+              error: job.lastErrorMessage,
+              finishedAt: job.finishedAt,
+              gameId: job.game.id,
+              gameName: job.game.name,
+            }))}
+        />
+      </section>
+      <section className="space-y-6">
+        <h2>Appearance</h2>
+        <AppearanceSection
+          initialWallpaperEnabled={appSettings?.wallpaperEnabled ?? true}
+          poolCachedAt={wallpaperState?.cachedAt ?? null}
+          lastError={wallpaperState?.lastError ?? null}
+        />
+      </section>
+      <section className="space-y-6">
+        <h2>Recommendations</h2>
+        <RecommendationProfileSection
+          profile={profile}
+          preferences={preferences}
+        />
+      </section>
+      <section className="space-y-6">
+        <h2>Personal data</h2>
+        <PersonalDataCard
+          gameCount={exportGameCount}
+          wishlistCount={exportWishlistCount}
+          recommendationRunCount={exportRecommendationRunCount}
+        />
+      </section>
     </div>
   );
 }

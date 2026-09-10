@@ -91,16 +91,15 @@ describe("syncSteamPlaytime", () => {
 
   it("reactivates a discarded unresolved DLC when it remains absent", async () => {
     findManyExternalId.mockResolvedValue([]);
-    vi.mocked(fetchOwnedGames).mockResolvedValue([
-      {
-        appid: 200,
-        name: "Expansion",
-        playtimeForever: 0,
-        rtimeLastPlayed: 0,
-        type: "DLC",
-        steamBaseAppId: "100",
-      },
-    ]);
+    const dlc = {
+      appid: 200,
+      name: "Expansion™",
+      playtimeForever: 0,
+      rtimeLastPlayed: 0,
+      type: "DLC" as const,
+      steamBaseAppId: "100",
+    };
+    vi.mocked(fetchOwnedGames).mockResolvedValue([dlc]);
 
     await syncSteamPlaytime();
 
@@ -114,6 +113,7 @@ describe("syncSteamPlaytime", () => {
         discardedAt: null,
       },
     });
+    expect(dlc.name).toBe("Expansion™");
   });
 
   it("returns a failed result when Steam returns no games", async () => {

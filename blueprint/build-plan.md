@@ -461,7 +461,7 @@
     contrast, reduced-motion, and reduced-data review of every primary
     route
 
-- [ ] 21. **Pre-deployment polish and improvements** - owner-reported fixes
+- [x] 21. **Pre-deployment polish and improvements** - owner-reported fixes
   organized one sub-feature per app section
   - [x] 21a. **Global visual fixes** - favicon respects the active theme
     color instead of being overwritten with cyan; remove the glow effect
@@ -500,7 +500,7 @@
     replace the redundant opportunity signals with a discounted-games
     counter; sorting by discount; efficient search matching the library
     search behavior; warning color for the missing-metadata note
-  - [ ] 21e. **Settings and onboarding** - rearrange and group settings
+  - [x] 21e. **Settings and onboarding** - rearrange and group settings
     sections by concern; fix the hydration mismatch on hard reload with
     stored visual preferences; add an app theme choice (family and mode) to
     the welcome onboarding; strip trademark and copyright symbols from game

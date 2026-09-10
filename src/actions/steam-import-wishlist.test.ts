@@ -98,6 +98,21 @@ describe("importSteamWishlist", () => {
     });
   });
 
+  it("strips trademark symbols from imported wishlist names", async () => {
+    vi.mocked(fetchSteamWishlist).mockResolvedValue({
+      games: [{ appid: 10, name: "Portal™ (Deluxe)®" }],
+      status: "OK",
+    });
+
+    const result = await importSteamWishlist();
+
+    expect(result).toMatchObject({ success: true, data: { created: 1 } });
+    expect(createWishlist).toHaveBeenCalledWith({
+      data: expect.objectContaining({ name: "Portal (Deluxe)" }),
+      select: expect.any(Object),
+    });
+  });
+
   it("returns a clear error for an empty or private wishlist", async () => {
     const result = await importSteamWishlist();
 

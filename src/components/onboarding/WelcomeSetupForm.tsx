@@ -1,13 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useTheme } from "next-themes";
 import { updateOsSetup } from "@/actions/settings";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SegmentedControl, type Option } from "@/components/preferences/SegmentedControl";
+import { useVisualPreferences } from "@/components/preferences/VisualPreferencesProvider";
+import type { ThemeFamily } from "@/lib/visual-preferences";
 import type { OsSetup } from "@/lib/os-setup";
+
+const themeModeOptions: Option<string>[] = [
+  { value: "system", label: "System" },
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+];
+
+const familyOptions: Option<ThemeFamily>[] = [
+  { value: "dawn", label: "Dawn" },
+  { value: "sunset", label: "Sunset" },
+];
 
 export function WelcomeSetupForm({ gameCount }: { gameCount: number }) {
   const [primaryOs, setPrimaryOs] = useState<OsSetup["primaryOs"]>("LINUX");
@@ -15,6 +30,14 @@ export function WelcomeSetupForm({ gameCount }: { gameCount: number }) {
   const [handheldOs, setHandheldOs] = useState<OsSetup["handheldOs"]>("NONE");
   const [saving, setSaving] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const { family, setFamily } = useVisualPreferences();
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setMounted(true), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const save = async () => {
     setSaving(true);
@@ -86,6 +109,22 @@ export function WelcomeSetupForm({ gameCount }: { gameCount: number }) {
             <SelectItem value="WINDOWS">Windows</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+      <div className="grid gap-4 rounded-lg border border-border p-4">
+        <p className="text-sm font-medium">App theme</p>
+        <div className="grid gap-2">
+          <Label>Palette family</Label>
+          <SegmentedControl value={family} options={familyOptions} onChange={setFamily} label="Palette family" />
+        </div>
+        <div className="grid gap-2">
+          <Label>Theme mode</Label>
+          <SegmentedControl
+            value={mounted ? theme ?? "system" : "system"}
+            options={themeModeOptions}
+            onChange={setTheme}
+            label="Theme mode"
+          />
+        </div>
       </div>
       <Button type="button" onClick={() => void save()} disabled={saving}>{saving ? "Saving..." : "Save setup"}</Button>
     </div>

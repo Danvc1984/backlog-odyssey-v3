@@ -4,7 +4,7 @@ import { requireUser } from "@/lib/auth-guard";
 import { friendlyActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
 import { fetchOwnedGames } from "@/lib/steam-api";
-import { lastPlayedDate } from "@/lib/steam-utils";
+import { lastPlayedDate, stripTrademarkSymbols } from "@/lib/steam-utils";
 import { upsertUnresolvedSteamDlc, requireSteamFlowContext } from "@/lib/steam-flow";
 
 interface SyncCounts {
@@ -86,7 +86,10 @@ export async function syncSteamPlaytime() {
 
           if (!gameId) {
             if (game.type === "DLC") {
-              await upsertUnresolvedSteamDlc(tx, String(game.appid), game);
+              await upsertUnresolvedSteamDlc(tx, String(game.appid), {
+                ...game,
+                name: stripTrademarkSymbols(game.name),
+              });
             }
             result.skipped += 1;
             continue;

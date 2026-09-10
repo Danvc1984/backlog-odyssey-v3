@@ -71,8 +71,14 @@ function readStoredPreferences(): VisualPreferencesState {
   }
 }
 
+const DEFAULT_STATE: VisualPreferencesState = {
+  motion: "system",
+  data: "system",
+  family: "dawn",
+};
+
 export function VisualPreferencesProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<VisualPreferencesState>(readStoredPreferences);
+  const [state, setState] = useState<VisualPreferencesState>(DEFAULT_STATE);
   const [systemReducedMotion, setSystemReducedMotion] = useState(false);
   const [systemReducedData, setSystemReducedData] = useState(false);
   const stateRef = useRef(state);
@@ -104,7 +110,12 @@ export function VisualPreferencesProvider({ children }: { children: ReactNode })
   }, []);
 
   useEffect(() => {
-    commit(stateRef.current);
+    const adopt = window.setTimeout(() => {
+      const stored = readStoredPreferences();
+      stateRef.current = stored;
+      commit(stored);
+    }, 0);
+    return () => window.clearTimeout(adopt);
   }, [commit]);
 
   useEffect(() => {

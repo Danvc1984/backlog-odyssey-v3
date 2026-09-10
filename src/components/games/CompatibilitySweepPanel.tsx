@@ -18,13 +18,26 @@ import {
   RawgBatchEnrichmentPanel,
 } from "@/components/games/RawgBatchEnrichmentPanel";
 import type { RawgBatchView } from "@/lib/rawg-batch-runner";
+import { EnrichmentRetryButton } from "@/components/settings/EnrichmentRetryButton";
 
 interface CompatibilitySweepPanelProps {
   compatibilityActive: boolean;
   initialBatch: CompatBatchView | null;
   initialRawgBatch: RawgBatchView | null;
   initialWishlistRun: WishlistCompatSweepRunView | null;
+  failedJobs: FailedEnrichmentJobView[];
 }
+
+export interface FailedEnrichmentJobView {
+  id: string;
+  provider: string;
+  error: string | null;
+  finishedAt: Date | null;
+  gameId: string;
+  gameName: string;
+}
+
+const RETRYABLE_PROVIDERS = ["RAWG", "PROTONDB", "ARE_WE_ANTICHEAT_YET"];
 
 interface BatchEndpointResult {
   success: boolean;
@@ -65,6 +78,7 @@ export function CompatibilitySweepPanel({
   initialBatch,
   initialRawgBatch,
   initialWishlistRun,
+  failedJobs,
 }: CompatibilitySweepPanelProps) {
   const router = useRouter();
   const [batch, setBatch] = useState<CompatBatchView | null>(
@@ -266,6 +280,38 @@ export function CompatibilitySweepPanel({
 
         {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
       </div>
+
+      {failedJobs.length > 0 && (
+        <div className="mt-4 border-t border-border pt-4">
+          <h4 className="text-sm font-medium">Failed enrichment jobs</h4>
+          <ul className="mt-2 space-y-2 text-sm">
+            {failedJobs.map((job) => (
+              <li
+                key={job.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border px-3 py-2"
+              >
+                <div className="min-w-0">
+                  <Link
+                    href={`/games/${job.gameId}`}
+                    className="block font-medium text-foreground hover:underline"
+                  >
+                    {job.gameName}
+                  </Link>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {job.provider.replaceAll("_", " ").toLowerCase()}
+                    {job.error ? ` - ${job.error}` : ""}
+                  </p>
+                </div>
+                <div className="shrink-0">
+                  {RETRYABLE_PROVIDERS.includes(job.provider) && (
+                    <EnrichmentRetryButton jobId={job.id} />
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {compatibilityActive && <WishlistCompatSweepPanel initialRun={initialWishlistRun} />}
     </SectionCard>

@@ -4,7 +4,7 @@ import { fetchOwnedGames, type OwnedGame } from "@/lib/steam-api";
 import { requireUser } from "@/lib/auth-guard";
 import { friendlyActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
-import { lastPlayedDate } from "@/lib/steam-utils";
+import { lastPlayedDate, stripTrademarkSymbols } from "@/lib/steam-utils";
 import {
   reconcileWishlistImportDlcs,
   upsertUnresolvedSteamDlc,
@@ -149,7 +149,9 @@ export async function importSteamGames() {
       };
     }
 
-    const games = await fetchOwnedGames(context.steamId64, context.apiKey);
+    const games = (await fetchOwnedGames(context.steamId64, context.apiKey)).map(
+      (game) => ({ ...game, name: stripTrademarkSymbols(game.name) }),
+    );
     const orderedGames = [...games].sort(
       (left, right) => Number(left.type === "DLC") - Number(right.type === "DLC"),
     );
