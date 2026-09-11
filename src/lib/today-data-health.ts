@@ -9,7 +9,7 @@ export interface TodayDataHealth {
     total: number;
   };
   abandoned: number;
-  rawgMetadata: { covered: number; total: number; missing: CoverageTitle[] };
+  igdbMetadata: { covered: number; total: number; missing: CoverageTitle[] };
   recommendationProfile: {
     complete: number;
     total: number;
@@ -35,7 +35,7 @@ export const todayDataHealthGameSelect = {
     },
   },
   metadataSnapshots: {
-    where: { provider: "RAWG" },
+    where: { provider: "IGDB" },
     select: { id: true },
   },
 } as const;
@@ -69,7 +69,7 @@ export function computeAbandonedCount(rows: readonly TodayDataHealthGameRow[]): 
   return rows.filter((row) => row.libraryEntry?.playState === "ABANDONED").length;
 }
 
-export function computeRawgCoverage(
+export function computeIgdbCoverage(
   rows: readonly TodayDataHealthGameRow[],
 ): { covered: number; total: number; missing: CoverageTitle[] } {
   const missing = rows
@@ -123,7 +123,7 @@ export async function loadTodayDataHealth(
   return {
     activeBacklog: computeActiveBacklogProgress(rows),
     abandoned: computeAbandonedCount(rows),
-    rawgMetadata: computeRawgCoverage(rows),
+    igdbMetadata: computeIgdbCoverage(rows),
     recommendationProfile: computeProfileCoverage(rows),
   };
 }

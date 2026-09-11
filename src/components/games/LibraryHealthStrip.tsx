@@ -167,8 +167,8 @@ export function LibraryHealthStrip({
       <Tile
         kind="warning"
         eyebrow="Provider metadata"
-        value={health.rawgMetadata.missing.length}
-        detail="games missing RAWG coverage"
+        value={health.igdbMetadata.missing.length}
+        detail="games missing IGDB coverage"
       />
       <Tile
         kind="opportunity"

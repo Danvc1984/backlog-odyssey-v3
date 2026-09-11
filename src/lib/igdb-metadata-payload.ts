@@ -101,7 +101,7 @@ function screenshots(value: unknown): IgdbScreenshot[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((item) => {
     if (!isRecord(item)) return [];
-    const image = imageUrl(item.image_id, "t_screenshot_big");
+    const image = imageUrl(item.image_id, "t_1080p");
     if (!image) return [];
     return [{
       image,
@@ -124,10 +124,20 @@ export function parseIgdbGameToPayload(
 ): IgdbMetadataPayload {
   const raw: Record<string, unknown> = isRecord(game) ? game : {};
   const slug = typeof raw.slug === "string" && raw.slug.trim() ? raw.slug : null;
-  const cover = isRecord(raw.cover) ? imageUrl(raw.cover.image_id, "t_cover_big") : null;
-  const artworks = Array.isArray(raw.artworks)
-    ? raw.artworks.flatMap((item) => isRecord(item) ? imageUrl(item.image_id, "t_720p") ?? [] : []).slice(0, 6)
+  const cover = isRecord(raw.cover) ? imageUrl(raw.cover.image_id, "t_cover_big_2x") : null;
+  const artworkEntries = Array.isArray(raw.artworks)
+    ? raw.artworks.flatMap((item) => {
+      if (!isRecord(item)) return [];
+      const image = imageUrl(item.image_id, "t_720p");
+      const imageType = isRecord(item.image_type) && typeof item.image_type.name === "string"
+        ? item.image_type.name.trim().toLowerCase()
+        : "";
+      if (!image || !["key art", "artwork", "concept art"].includes(imageType)) return [];
+      return [{ image, isConceptArt: imageType === "concept art" }];
+    })
     : [];
+  const artworks = artworkEntries.filter((item) => !item.isConceptArt).map((item) => item.image).slice(0, 6);
+  const conceptArt = artworkEntries.filter((item) => item.isConceptArt).map((item) => item.image).slice(0, 6);
   const esrb = Array.isArray(raw.age_ratings)
     ? raw.age_ratings.find((item) => isRecord(item) && item.category === 1 && positiveInteger(item.rating))
     : null;
@@ -162,6 +172,7 @@ export function parseIgdbGameToPayload(
     multiplayerModes: multiplayerModes(raw.multiplayer_modes),
     coverUrl: cover,
     artworkUrls: artworks,
+    conceptArtUrls: conceptArt,
     screenshots: screenshots(raw.screenshots),
     igdbUpdatedAt: nullableDate(raw.updated_at),
     attribution: {

@@ -10,7 +10,7 @@ import {
   upsertUnresolvedSteamDlc,
   requireSteamFlowContext,
 } from "@/lib/steam-flow";
-import { queueRawgForImportedGames } from "@/lib/rawg-import-queue";
+import { queueIgdbForImportedGames } from "@/lib/igdb-import-queue";
 
 type ImportGameResult =
   | { kind: "imported"; gameId: string }
@@ -182,17 +182,17 @@ export async function importSteamGames() {
       },
     });
 
-    const noRawgQueueWork = { batchId: null, queued: 0, skipped: 0 };
+    const noIgdbQueueWork = { batchId: null, queued: 0, skipped: 0 };
     try {
-      const rawgQueue = createdGameIds.length > 0
-        ? await queueRawgForImportedGames(createdGameIds)
-        : noRawgQueueWork;
+      const igdbQueue = createdGameIds.length > 0
+        ? await queueIgdbForImportedGames(createdGameIds)
+        : noIgdbQueueWork;
       return {
         success: true as const,
         data: {
           imported,
           updated,
-          rawgQueue: { status: "QUEUED" as const, ...rawgQueue },
+          igdbQueue: { status: "QUEUED" as const, ...igdbQueue },
         },
         error: null,
       };
@@ -202,7 +202,7 @@ export async function importSteamGames() {
         data: {
           imported,
           updated,
-          rawgQueue: { status: "DEFERRED" as const, queued: 0, skipped: 0, batchId: null },
+          igdbQueue: { status: "DEFERRED" as const, queued: 0, skipped: 0, batchId: null },
         },
         error: null,
       };
@@ -210,7 +210,7 @@ export async function importSteamGames() {
   } catch (err) {
     if (createdGameIds.length > 0) {
       try {
-        await queueRawgForImportedGames(createdGameIds);
+        await queueIgdbForImportedGames(createdGameIds);
       } catch {
         // Enrichment scheduling must not mask the original import failure.
       }

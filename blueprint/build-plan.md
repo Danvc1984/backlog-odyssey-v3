@@ -536,7 +536,7 @@
     high-confidence automatic fixing, persistent manual replacement, and
     base-game/DLC category safety; ambiguous or incompatible candidates remain
     unmatched for review; provider contract locked at spec time
-  - [ ] 23b. **Catalog IGDB enrichment** - IGDB-shaped metadata snapshot
+  - [x] 23b. **Catalog IGDB enrichment** - IGDB-shaped metadata snapshot
     (summary, genres/themes/keywords, involved companies, first release date,
     ESRB age rating, separate IGDB aggregated, community, and total ratings
     with counts, websites, alternative names, collections, franchise, explicit

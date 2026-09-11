@@ -3,7 +3,7 @@ import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
-type Provider = "RAWG" | "PROTONDB";
+type Provider = "RAWG" | "IGDB" | "PROTONDB";
 
 export async function readSyncRunBatch<TRecord>(
   provider: Provider,

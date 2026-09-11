@@ -41,6 +41,7 @@ const EMPTY_COVER_ART_META: LibraryCardMetadataView = {
   metacriticScore: null,
   playtimeHours: null,
   esrbName: null,
+  wideImageUrl: null,
 };
 
 function formatPlaytime(hours: number): string {
@@ -51,8 +52,8 @@ function formatPlaytime(hours: number): string {
   return minutes > 0 ? `${wholeHours}h ${minutes}m` : `${wholeHours}h`;
 }
 
-function Cover({ entry, compact }: { entry: LibraryGameCardEntry; compact: boolean }) {
-  const imageUrl = entry.game.metadata?.imageUrl ?? null;
+function Cover({ entry, variant }: { entry: LibraryGameCardEntry; variant: "grid" | "list" }) {
+  const imageUrl = (variant === "grid" ? entry.game.metadata?.imageUrl : entry.game.metadata?.wideImageUrl) ?? null;
 
   return (
     <WishlistCover
@@ -60,8 +61,10 @@ function Cover({ entry, compact }: { entry: LibraryGameCardEntry; compact: boole
       title={entry.game.name}
       imageUrl={imageUrl}
       href={`/games/${entry.game.id}`}
-      className={compact ? "aspect-[4/3] w-32 shrink-0" : "aspect-[16/10]"}
-      showTitle={!compact}
+      className={variant === "list" ? "h-full min-h-44 w-full" : "aspect-[25/24]"}
+      showTitle={variant === "grid"}
+      fit={variant === "grid" ? "contain" : "cover"}
+      backgroundBlur={variant === "grid" ? "blur-xl" : "blur-2xl"}
     />
   );
 }
@@ -138,7 +141,7 @@ function CardDetails({
 }) {
   const releaseYear = releaseDate?.slice(0, 4);
   const stats = [
-    rating === null ? null : `RAWG ${rating.toFixed(1)}`,
+    rating === null ? null : `IGDB total ${rating.toFixed(1)}`,
     metacriticScore === null ? null : `MC ${metacriticScore}`,
     playtimeHours === null ? null : formatPlaytime(playtimeHours),
     esrbName ? `ESRB ${esrbName}` : null,
@@ -157,7 +160,7 @@ function CardDetails({
       )}
       {missingDescription && (
         <p className="text-xs text-warning-text">
-          RAWG metadata is not available yet. Use Edit to search and choose a match.
+          IGDB metadata is not available yet. Use Edit to search and choose a match.
         </p>
       )}
       {genres.length > 0 && (
@@ -247,30 +250,32 @@ export function LibraryGameCard({
 }) {
   if (variant === "list") {
     return (
-      <article className="overflow-hidden rounded-lg border border-border bg-primary/5 shadow-card">
-        <div className="flex items-center gap-4 p-3 sm:p-4">
-          <Cover entry={entry} compact />
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex min-w-0 flex-wrap items-center gap-3">
-                <h3 className="min-w-0 text-base font-bold leading-snug tracking-[-0.02em]">
-                  <Link href={`/games/${entry.game.id}`} className="hover:underline">
-                    {entry.game.name}
-                  </Link>
-                </h3>
-                <LibraryInterestRating
-                  gameId={entry.game.id}
-                  gameName={entry.game.name}
-                  interest={entry.interest}
-                />
-                {entry.compatTag && <ProtonDbTag tag={entry.compatTag} />}
-              </div>
+      <article className="flex min-h-44 overflow-hidden rounded-lg border border-border bg-primary/5 shadow-card">
+        <div className="w-40 shrink-0 sm:w-48 lg:w-64 xl:w-80 min-[1600px]:w-96">
+          <Cover entry={entry} variant="list" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-3 p-4 pb-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-3">
+              <h3 className="min-w-0 text-base font-bold leading-snug tracking-[-0.02em]">
+                <Link href={`/games/${entry.game.id}`} className="hover:underline">
+                  {entry.game.name}
+                </Link>
+              </h3>
+              <LibraryInterestRating
+                gameId={entry.game.id}
+                gameName={entry.game.name}
+                interest={entry.interest}
+              />
+              {entry.compatTag && <ProtonDbTag tag={entry.compatTag} />}
+            </div>
+            <div className="shrink-0">
               <MockActions gameId={entry.game.id} />
             </div>
           </div>
-        </div>
-        <div className="min-w-0">
-          <CardBody entry={entry} variant="list" includeControls={false} />
+          <div className="min-w-0">
+            <CardBody entry={entry} variant="list" includeControls={false} />
+          </div>
         </div>
       </article>
     );
@@ -278,7 +283,7 @@ export function LibraryGameCard({
 
   return (
     <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-primary/5 shadow-card">
-      <Cover entry={entry} compact={false} />
+      <Cover entry={entry} variant="grid" />
       <CardBody entry={entry} variant="grid" />
     </article>
   );

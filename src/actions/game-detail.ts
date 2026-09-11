@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { logRecommendationEvent, playStateTransitionKind } from "@/lib/recommendations/events";
 import { getOrCreateUnspecifiedSource } from "@/lib/sources/store";
+import { revalidatePath } from "next/cache";
 
 const updatePersonalFieldsSchema = z.object({
   priority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH"]).optional(),
@@ -88,6 +89,7 @@ export async function updateGameName(
       where: { id: gameId },
       data: { name: parsed.data.name },
     });
+    revalidatePath(`/games/${gameId}`);
 
     return { success: true as const, data: game, error: null };
   } catch (err) {

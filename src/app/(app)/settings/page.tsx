@@ -12,8 +12,7 @@ import { PersonalDataCard } from "@/components/settings/PersonalDataCard";
 import { getLatestCompatBatchStatus } from "@/lib/compat-batch-runner";
 import { RecommendationProfileSection } from "@/components/recommendations/RecommendationProfileSection";
 import { AlternativeSourcesCard } from "@/components/sources/AlternativeSourcesCard";
-import { type RawgBatchView } from "@/lib/rawg-batch-runner";
-import { getLatestRawgBatchStatus } from "@/lib/rawg-batch-runner";
+import { type IgdbBatchView, getLatestIgdbBatchStatus } from "@/lib/igdb-batch-runner";
 import { getLatestWishlistCompatSweep } from "@/actions/wishlist-compatibility";
 import { isCompatibilityActive } from "@/lib/os-setup";
 
@@ -25,7 +24,7 @@ export default async function SettingsPage() {
     unresolvedDlcs,
     baseGames,
     latestCompatBatch,
-    latestRawgBatch,
+    latestIgdbBatch,
     latestWishlistSweep,
     profile,
     preferences,
@@ -69,7 +68,7 @@ export default async function SettingsPage() {
       orderBy: { name: "asc" },
     }),
     getLatestCompatBatchStatus(),
-    getLatestRawgBatchStatus(),
+    getLatestIgdbBatchStatus(),
     getLatestWishlistCompatSweep(),
     prisma.recommendationProfile.findUnique({
       where: { id: 1 },
@@ -162,8 +161,8 @@ export default async function SettingsPage() {
         <CompatibilitySweepPanel
           compatibilityActive={appSettings ? isCompatibilityActive(appSettings) : false}
           initialBatch={latestCompatBatch?.data ?? null}
-          initialRawgBatch={
-            (latestRawgBatch?.data ?? null) as RawgBatchView | null
+          initialIgdbBatch={
+            (latestIgdbBatch?.data ?? null) as IgdbBatchView | null
           }
           initialWishlistRun={
             latestWishlistSweep.data

@@ -14,6 +14,8 @@ export function WishlistCover({
   href,
   className,
   showTitle = true,
+  fit = "contain",
+  backgroundBlur = "blur-2xl",
 }: {
   id: string;
   title: string;
@@ -21,6 +23,8 @@ export function WishlistCover({
   href?: string;
   className?: string;
   showTitle?: boolean;
+  fit?: "contain" | "cover";
+  backgroundBlur?: "blur-xl" | "blur-2xl";
 }) {
   const { resolvedData } = useVisualPreferences();
   const presentation = resolveCoverPresentation({ title, imageUrl, resolvedData });
@@ -35,7 +39,7 @@ export function WishlistCover({
   return (
     <div className={cn(baseClassName, presentation.kind === "image" ? "bg-card" : gradientFor(id))}>
       {presentation.kind === "image" && presentation.imageUrl ? (
-        <ArtworkBackdrop src={presentation.imageUrl} />
+        <ArtworkBackdrop src={presentation.imageUrl} fit={fit} backgroundBlur={backgroundBlur} />
       ) : (
         <div className="flex h-full items-center justify-center px-6 text-center text-lg font-semibold text-foreground">
           {showTitle && (

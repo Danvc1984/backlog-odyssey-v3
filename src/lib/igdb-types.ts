@@ -75,7 +75,10 @@ export interface IgdbGameResponse {
   remasters?: Array<{ id?: number; name?: string | null }> | null;
   standalone_expansions?: Array<{ id?: number; name?: string | null }> | null;
   cover?: { image_id?: string | null } | null;
-  artworks?: Array<{ image_id?: string | null }> | null;
+  artworks?: Array<{
+    image_id?: string | null;
+    image_type?: { name?: string | null } | null;
+  }> | null;
   screenshots?: Array<{
     image_id?: string | null;
     width?: number | null;
@@ -169,6 +172,7 @@ export interface IgdbMetadataPayload {
   multiplayerModes: string[];
   coverUrl: string | null;
   artworkUrls: string[];
+  conceptArtUrls?: string[];
   screenshots: IgdbScreenshot[];
   igdbUpdatedAt: string | null;
   attribution: IgdbMetadataAttribution;

@@ -30,7 +30,10 @@ describe("IGDB metadata payload", () => {
       dlcs: [{ id: 50, name: "DLC" }],
       remasters: [{ id: 51, name: "Remaster" }],
       cover: { image_id: "cover-id" },
-      artworks: Array.from({ length: 7 }, (_, index) => ({ image_id: `art-${index}` })),
+      artworks: Array.from({ length: 7 }, (_, index) => ({
+        image_id: `art-${index}`,
+        image_type: { name: "Artwork" },
+      })),
       screenshots: Array.from({ length: 7 }, (_, index) => ({ image_id: `screen-${index}`, width: 1920, height: 1080 })),
       aggregated_rating: 90,
       aggregated_rating_count: 10,
@@ -69,7 +72,7 @@ describe("IGDB metadata payload", () => {
       ],
       gameModes: ["Single-player"],
       multiplayerModes: ["LAN", "Online co-op"],
-      coverUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big/cover-id.jpg",
+      coverUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/cover-id.jpg",
       artworkUrls: [
         "https://images.igdb.com/igdb/image/upload/t_720p/art-0.jpg",
         "https://images.igdb.com/igdb/image/upload/t_720p/art-1.jpg",
@@ -78,8 +81,9 @@ describe("IGDB metadata payload", () => {
         "https://images.igdb.com/igdb/image/upload/t_720p/art-4.jpg",
         "https://images.igdb.com/igdb/image/upload/t_720p/art-5.jpg",
       ],
+      conceptArtUrls: [],
       screenshots: Array.from({ length: 6 }, (_, index) => ({
-        image: `https://images.igdb.com/igdb/image/upload/t_screenshot_big/screen-${index}.jpg`,
+        image: `https://images.igdb.com/igdb/image/upload/t_1080p/screen-${index}.jpg`,
         width: 1920,
         height: 1080,
       })),
@@ -123,5 +127,27 @@ describe("IGDB metadata payload", () => {
       screenshots: [],
       palette: null,
     });
+  });
+
+  it("keeps only key art, artwork, and concept art", () => {
+    const payload = parseIgdbGameToPayload({
+      id: 42,
+      name: "Portal 2",
+      artworks: [
+        { image_id: "key-art", image_type: { name: "Key Art" } },
+        { image_id: "regular", image_type: { name: "Artwork" } },
+        { image_id: "concept", image_type: { name: "Concept Art" } },
+        { image_id: "logo", image_type: { name: "Logo" } },
+        { image_id: "untyped" },
+      ],
+    }, fetchedAt);
+
+    expect(payload.artworkUrls).toEqual([
+      "https://images.igdb.com/igdb/image/upload/t_720p/key-art.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/regular.jpg",
+    ]);
+    expect(payload.conceptArtUrls).toEqual([
+      "https://images.igdb.com/igdb/image/upload/t_720p/concept.jpg",
+    ]);
   });
 });

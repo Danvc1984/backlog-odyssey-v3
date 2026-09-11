@@ -20,12 +20,28 @@ import {
 
 const IGDB_API_BASE_URL = "https://api.igdb.com/v4";
 const REQUEST_TIMEOUT_MS = 10_000;
+export const IGDB_SEARCH_PAGE_SIZE = 30;
+
+const SEARCH_STOP_WORDS = new Set(["a", "an", "and", "for", "in", "of", "on", "the", "to"]);
+
+function typoTolerantSearchTerm(title: string): string {
+  const terms = title
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter((term) => term.length >= 3 && !SEARCH_STOP_WORDS.has(term.toLowerCase()));
+  return [...terms].sort((left, right) => right.length - left.length)[0] ?? title.trim();
+}
 
 export interface IgdbRequestOptions {
   fetchFn?: typeof fetch;
   delayFn?: (milliseconds: number) => Promise<void>;
   maxAttempts?: number;
   endpoint?: "games" | "external_games";
+  offset?: number;
+  searchTerm?: string;
 }
 
 export type IgdbRequestResult =
@@ -237,7 +253,10 @@ async function fetchGameById(
   id: number,
   options: IgdbRequestOptions,
 ): Promise<IgdbLookupResult<IgdbGameResponse | null>> {
-  const result = await requestIgdb(`fields *; where id = ${id}; limit 1;`, options);
+  const result = await requestIgdb(
+    `fields id,slug,name,summary,first_release_date,genres.name,themes.name,keywords.name,involved_companies.company.id,involved_companies.company.name,involved_companies.developer,involved_companies.publisher,age_ratings.category,age_ratings.rating,websites.url,websites.category,alternative_names.name,collection.id,collection.name,franchise.id,franchise.name,game_type,category,game_modes.id,multiplayer_modes.*,dlcs.id,dlcs.name,expansions.id,expansions.name,expanded_games.id,expanded_games.name,forks.id,forks.name,ports.id,ports.name,remakes.id,remakes.name,remasters.id,remasters.name,standalone_expansions.id,standalone_expansions.name,cover.image_id,artworks.image_id,artworks.image_type.name,screenshots.image_id,screenshots.width,screenshots.height,aggregated_rating,aggregated_rating_count,rating,rating_count,total_rating,total_rating_count,updated_at; where id = ${id}; limit 1;`,
+    options,
+  );
   if (!result.ok) return result;
   const games = parseGameList(result.data);
   return games === null
@@ -268,32 +287,77 @@ export async function resolveIgdbGameBySteamAppId(
   return { ok: true, data: games };
 }
 
-export async function searchIgdbCandidates(
+export async function searchIgdbCandidatePage(
   title: string,
   options: IgdbRequestOptions = {},
-): Promise<IgdbLookupResult<IgdbSearchCandidate[]>> {
-  const escapedTitle = title.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-  const result = await requestIgdb(
-    `search "${escapedTitle}"; fields id,slug,name,alternative_names.name,category,first_release_date,cover.image_id; limit 10;`,
+): Promise<IgdbLookupResult<IgdbSearchCandidate[]> & { searchTerm?: string | null }> {
+  const offset = Number.isInteger(options.offset) && (options.offset ?? 0) >= 0
+    ? options.offset
+    : 0;
+  const requestPage = (searchTerm: string) => requestIgdb(
+    `search "${searchTerm.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"; fields id,slug,name,alternative_names.name,category,first_release_date,cover.image_id; limit ${IGDB_SEARCH_PAGE_SIZE}; offset ${offset};`,
     options,
   );
+  const primaryTerm = options.searchTerm?.trim() || title.trim();
+  let searchTerm = primaryTerm;
+  let result = await requestPage(primaryTerm);
+  if (offset === 0 && !options.searchTerm && result.ok && Array.isArray(result.data) && result.data.length === 0) {
+    const anchor = typoTolerantSearchTerm(title);
+    if (anchor && anchor.toLowerCase() !== primaryTerm.toLowerCase()) {
+      searchTerm = anchor;
+      result = await requestPage(anchor);
+    }
+  }
   if (!result.ok) return result;
   if (!Array.isArray(result.data)) {
     return { ok: false, error: { category: "MALFORMED_RESPONSE", message: "IGDB returned invalid search data" } };
   }
-  return { ok: true, data: result.data.map(parseCandidate).filter((candidate): candidate is IgdbSearchCandidate => candidate !== null) };
+  const candidates = result.data.map(parseCandidate).filter((candidate): candidate is IgdbSearchCandidate => candidate !== null);
+  return {
+    ok: true,
+    data: candidates
+      .map((candidate) => ({ ...candidate, score: candidateScore(title, candidate) }))
+      .sort((left, right) => (right.score ?? 0) - (left.score ?? 0)),
+    searchTerm,
+  };
 }
 
-function isCompatible(requested: IgdbCategoryClass, candidate: IgdbSearchCandidate): boolean {
-  const candidateClass = classifyIgdbCategory({ category: candidate.category, game_type: null });
+export async function searchIgdbCandidates(
+  title: string,
+  options: IgdbRequestOptions = {},
+): Promise<IgdbLookupResult<IgdbSearchCandidate[]>> {
+  const result = await searchIgdbCandidatePage(title, options);
+  if (!result.ok) return result;
+  return { ok: true, data: result.data };
+}
+
+function isCompatible(
+  requested: IgdbCategoryClass,
+  candidate: { category?: number | null; game_type?: number | null },
+): boolean {
+  const candidateClass = classifyIgdbCategory({
+    category: candidate.category,
+    game_type: candidate.game_type ?? null,
+  });
   return candidateClass === requested;
 }
 
 function candidateScore(title: string, candidate: IgdbSearchCandidate): number {
   return Math.max(
-    fuzzyMatch(title, candidate.name).score,
-    ...candidate.alternativeNames.map((name) => fuzzyMatch(title, name).score),
+    titleScore(title, candidate.name),
+    ...candidate.alternativeNames.map((name) => titleScore(title, name)),
   );
+}
+
+function titleScore(title: string, candidateName: string): number {
+  const query = normalizeName(title);
+  const candidate = normalizeName(candidateName);
+  if (candidate === query) return 1;
+  if (candidate.startsWith(`${query} `)) {
+    return Math.max(0.9, 0.98 - (candidate.length - query.length) / 500);
+  }
+  if (candidate.includes(query)) return 0.75;
+  return fuzzyMatch(title, candidateName).score;
 }
 
 export async function matchIgdbGame(
@@ -318,7 +382,7 @@ export async function matchIgdbGame(
     if (resolved.data.length === 1) {
       const game = resolved.data[0];
       const candidate = candidateFromGame(game);
-      if (isCompatible(request.category, candidate)) {
+      if (isCompatible(request.category, game)) {
         return { outcome: "MATCHED", matchMethod: "EXACT_STEAM_APP_ID", game };
       }
       return { outcome: "AMBIGUOUS", candidates: [candidate] };
@@ -340,12 +404,16 @@ export async function matchIgdbGame(
   );
   const top = exact ?? ranked[0];
   const secondScore = ranked.find((candidate) => candidate.id !== top.id)?.score ?? 0;
-  if (!isCompatible(request.category, top) || (!exact && (top.score ?? 0) < 0.9) || (!exact && (top.score ?? 0) - secondScore < 0.05)) {
+  const confidentTitleMatch = exact !== undefined || ((top.score ?? 0) >= 0.9 && (top.score ?? 0) - secondScore >= 0.05);
+  const knownIncompatibleCategory = top.category !== null && !isCompatible(request.category, top);
+  if (!confidentTitleMatch || knownIncompatibleCategory) {
     return { outcome: "AMBIGUOUS", candidates: ranked };
   }
   const game = await fetchGameById(top.id, options);
   if (!game.ok) return { outcome: "UNAVAILABLE", error: game.error };
-  return game.data
-    ? { outcome: "MATCHED", matchMethod: "INFERRED", game: game.data }
-    : { outcome: "NOT_FOUND" };
+  if (!game.data) return { outcome: "NOT_FOUND" };
+  if (!isCompatible(request.category, game.data)) {
+    return { outcome: "AMBIGUOUS", candidates: ranked };
+  }
+  return { outcome: "MATCHED", matchMethod: "INFERRED", game: game.data };
 }

@@ -56,6 +56,7 @@ function Spotlight({ game }: { game: TodayHeroGame }) {
           title={game.name}
           imageUrl={game.imageUrl}
           code={isMainGame ? "MAIN / 001" : "PLAY / 001"}
+          fit="cover"
           className="min-h-48 lg:h-full"
         />
         <div className="flex flex-col justify-between gap-6 p-6">

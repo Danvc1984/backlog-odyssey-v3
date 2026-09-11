@@ -8,7 +8,7 @@ import { WishlistOfferAlternatives } from "@/components/wishlist/WishlistOfferAl
 import { WishlistOfferSection } from "@/components/wishlist/WishlistOfferSection";
 import { WishlistCompatibilityBlock } from "@/components/wishlist/WishlistCompatibilityBlock";
 import { WishlistRawgFillButton } from "@/components/wishlist/WishlistRawgFillButton";
-import { MetadataSection } from "@/components/games/MetadataSection";
+import { RawgMetadataSection } from "@/components/games/RawgMetadataSection";
 import { RecommendationItemCard } from "@/components/recommendations/RecommendationItemCard";
 import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
 import { buildEntryOfferView } from "@/lib/offer-selection";
@@ -186,7 +186,7 @@ export default async function WishlistDetailPage({
 
       {metadata ? (
         <div className="space-y-2">
-          <MetadataSection
+          <RawgMetadataSection
             payload={metadata}
             sourceUrl={resolvedSnapshot?.sourceUrl ?? null}
             fetchedAt={resolvedSnapshot?.fetchedAt ?? null}

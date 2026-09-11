@@ -19,6 +19,8 @@ import {
   classifyIgdbCategory,
   matchIgdbGame,
   requestIgdb,
+  searchIgdbCandidatePage,
+  searchIgdbCandidates,
 } from "./igdb-api";
 
 describe("IGDB request boundary", () => {
@@ -110,7 +112,7 @@ describe("IGDB request boundary", () => {
   it("resolves Steam App IDs before title search", async () => {
     fetchMock
       .mockResolvedValueOnce(new Response(JSON.stringify([{ game: 42 }, { game: 42 }]), { status: 200 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify([{ id: 42, name: "Portal 2", category: 0 }]), { status: 200 }));
+      .mockResolvedValueOnce(new Response(JSON.stringify([{ id: 42, name: "Portal 2", game_type: 0 }]), { status: 200 }));
 
     await expect(matchIgdbGame({ title: "Wrong title", category: "MAIN_GAME", steamAppId: "620" }, { fetchFn: fetchMock })).resolves.toMatchObject({
       outcome: "MATCHED",
@@ -130,6 +132,15 @@ describe("IGDB request boundary", () => {
 
     await expect(matchIgdbGame({ title: "Portal 2", category: "MAIN_GAME" }, { fetchFn: fetchMock })).resolves.toMatchObject({ outcome: "MATCHED", matchMethod: "INFERRED", game: { id: 10 } });
     await expect(matchIgdbGame({ title: "The Witcher 3 Wild Hunt", category: "MAIN_GAME" }, { fetchFn: fetchMock })).resolves.toMatchObject({ outcome: "MATCHED", matchMethod: "INFERRED", game: { id: 11 } });
+  });
+
+  it("validates a title match with missing search category from the full game", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify([{ id: 42, name: "Portal 2", category: null, alternative_names: [] }]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([{ id: 42, name: "Portal 2", game_type: 0 }]), { status: 200 }));
+
+    await expect(matchIgdbGame({ title: "Portal 2", category: "MAIN_GAME" }, { fetchFn: fetchMock }))
+      .resolves.toMatchObject({ outcome: "MATCHED", matchMethod: "INFERRED", game: { id: 42 } });
   });
 
   it("refuses incompatible automatic categories and reports ranked candidates", async () => {
@@ -160,5 +171,42 @@ describe("IGDB request boundary", () => {
 
     await expect(matchIgdbGame({ title: "Missing", category: "MAIN_GAME" }, { fetchFn: fetchMock })).resolves.toEqual({ outcome: "NOT_FOUND" });
     await expect(matchIgdbGame({ title: "Unavailable", category: "MAIN_GAME" }, { fetchFn: fetchMock, maxAttempts: 1 })).resolves.toMatchObject({ outcome: "UNAVAILABLE", error: { category: "HTTP" } });
+  });
+
+  it("threads an offset into paged candidate searches", async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify([]), { status: 200 }));
+
+    await expect(searchIgdbCandidates("Portal 2", { fetchFn: fetchMock, offset: 10 }))
+      .resolves.toEqual({ ok: true, data: [] });
+    expect(fetchMock.mock.calls[0][1]).toEqual(expect.objectContaining({
+      body: expect.stringContaining("limit 30; offset 10;"),
+    }));
+  });
+
+  it("ranks title-prefix candidates ahead of less-specific matches", async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify([
+      { id: 1, name: "Event Horizon", alternative_names: [] },
+      { id: 2, name: "Horizon Forbidden West", alternative_names: [] },
+      { id: 3, name: "Horizon Zero Dawn", alternative_names: [] },
+    ]), { status: 200 }));
+
+    await expect(searchIgdbCandidatePage("horizon", { fetchFn: fetchMock }))
+      .resolves.toMatchObject({ data: [
+        { id: 3, name: "Horizon Zero Dawn" },
+        { id: 2, name: "Horizon Forbidden West" },
+        { id: 1, name: "Event Horizon" },
+      ] });
+  });
+
+  it("uses a typo-tolerant anchor for the initial candidate search", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }));
+
+    await searchIgdbCandidates("Horizon zedro daw", { fetchFn: fetchMock });
+
+    expect(fetchMock.mock.calls[1][1]).toEqual(expect.objectContaining({
+      body: expect.stringContaining('search "Horizon";'),
+    }));
   });
 });

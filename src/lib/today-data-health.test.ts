@@ -6,7 +6,7 @@ import {
   computeActiveBacklogProgress,
   computeAbandonedCount,
   computeProfileCoverage,
-  computeRawgCoverage,
+  computeIgdbCoverage,
   loadTodayDataHealth,
   type TodayDataHealthGameRow,
 } from "./today-data-health";
@@ -52,13 +52,13 @@ describe("computeActiveBacklogProgress", () => {
   });
 });
 
-describe("computeRawgCoverage", () => {
-  it("counts games with a RAWG metadata snapshot over the full universe", () => {
+describe("computeIgdbCoverage", () => {
+  it("counts games with an IGDB metadata snapshot over the full universe", () => {
     const rows = [
       row({ id: "a", metadataSnapshots: [{ id: "snap-1" }] }),
       row({ id: "b" }),
     ];
-    expect(computeRawgCoverage(rows)).toEqual({
+    expect(computeIgdbCoverage(rows)).toEqual({
       covered: 1,
       total: 2,
       missing: [{ id: "b", name: "Game 1" }],
@@ -72,7 +72,7 @@ describe("computeRawgCoverage", () => {
       row({ id: "m", name: "Metroid" }),
       row({ id: "covered", name: "Covered", metadataSnapshots: [{ id: "snap-1" }] }),
     ];
-    expect(computeRawgCoverage(rows).missing).toEqual([
+    expect(computeIgdbCoverage(rows).missing).toEqual([
       { id: "a", name: "alpha" },
       { id: "m", name: "Metroid" },
       { id: "z", name: "Zelda" },
@@ -230,7 +230,7 @@ describe("loadTodayDataHealth", () => {
           },
         },
         metadataSnapshots: {
-          where: { provider: "RAWG" },
+          where: { provider: "IGDB" },
           select: { id: true },
         },
       },
@@ -238,7 +238,7 @@ describe("loadTodayDataHealth", () => {
     expect(health).toEqual({
       activeBacklog: { playedBefore: 0, inProgress: 1, notStarted: 1, total: 2 },
       abandoned: 1,
-      rawgMetadata: {
+      igdbMetadata: {
         covered: 1,
         total: 3,
         missing: [{ id: "incomplete", name: "Alpha" }, { id: "abandoned", name: "Zeta" }],

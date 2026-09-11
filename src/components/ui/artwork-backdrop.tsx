@@ -3,9 +3,11 @@ import Image from "next/image";
 export function ArtworkBackdrop({
   src,
   fit = "contain",
+  backgroundBlur = "blur-2xl",
 }: {
   src: string;
   fit?: "contain" | "cover";
+  backgroundBlur?: "blur-xl" | "blur-2xl";
 }) {
   return (
     <>
@@ -14,7 +16,7 @@ export function ArtworkBackdrop({
         alt=""
         fill
         sizes="(min-width: 1280px) 33vw, 100vw"
-        className="z-0 scale-110 object-cover blur-2xl opacity-85"
+        className={`z-0 scale-110 object-cover ${backgroundBlur} opacity-85`}
         loading="lazy"
         unoptimized
       />

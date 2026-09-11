@@ -414,6 +414,7 @@ model EnrichmentJob {
   nextAttemptAt    DateTime?
   candidatePayload Json?
   selectedRawgId   Int?
+  selectedIgdbId   Int?
   lastErrorCode    String?
   lastErrorMessage String?
   startedAt        DateTime?

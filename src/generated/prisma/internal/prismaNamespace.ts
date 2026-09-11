@@ -3867,6 +3867,7 @@ export const EnrichmentJobScalarFieldEnum = {
   nextAttemptAt: 'nextAttemptAt',
   candidatePayload: 'candidatePayload',
   selectedRawgId: 'selectedRawgId',
+  selectedIgdbId: 'selectedIgdbId',
   lastErrorCode: 'lastErrorCode',
   lastErrorMessage: 'lastErrorMessage',
   startedAt: 'startedAt',

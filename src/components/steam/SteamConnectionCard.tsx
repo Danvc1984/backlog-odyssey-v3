@@ -61,11 +61,11 @@ export function SteamConnectionCard({
       toast.success(
         `Imported ${result.data.imported} new games, updated ${result.data.updated} existing`,
       );
-      if (result.data.rawgQueue.status === "DEFERRED") {
-        toast.warning("RAWG queue scheduling was deferred. Your Steam import is complete.");
+      if (result.data.igdbQueue.status === "DEFERRED") {
+        toast.warning("IGDB queue scheduling was deferred. Your Steam import is complete.");
       } else {
         toast.success(
-          `RAWG enrichment: queued ${result.data.rawgQueue.queued}, skipped ${result.data.rawgQueue.skipped}`,
+          `IGDB enrichment: queued ${result.data.igdbQueue.queued}, skipped ${result.data.igdbQueue.skipped}`,
         );
       }
       router.refresh();

@@ -6,9 +6,10 @@ import { SectionCard } from "@/components/ui/detail-card";
 import { Carousel } from "@/components/ui/Carousel";
 import { gradientFor } from "@/lib/cover-gradient";
 import { externalUrl } from "@/lib/external-url";
+import type { IgdbScreenshot } from "@/lib/igdb-types";
 import type { RawgScreenshotEntry } from "@/lib/rawg-types";
 
-function CreditLine({ sourceUrl }: { sourceUrl: string | null }) {
+function CreditLine({ sourceUrl, provider }: { sourceUrl: string | null; provider: "RAWG" | "IGDB" }) {
   const href = externalUrl(sourceUrl);
   if (href) {
     return (
@@ -18,34 +19,49 @@ function CreditLine({ sourceUrl }: { sourceUrl: string | null }) {
         rel="noreferrer"
         className="text-xs text-muted-foreground underline-offset-4 hover:underline"
       >
-        Screenshots via RAWG
+        Artwork and screenshots via {provider}
       </a>
     );
   }
-  return <span className="text-xs text-muted-foreground">Screenshots via RAWG</span>;
+  return <span className="text-xs text-muted-foreground">Artwork and screenshots via {provider}</span>;
 }
 
 export function ScreenshotsSection({
   id,
   title,
   screenshots,
+  artworkUrls = [],
+  conceptArtUrls = [],
+  coverUrl = null,
   sourceUrl,
+  provider,
 }: {
   id: string;
   title: string;
-  screenshots: readonly RawgScreenshotEntry[];
+  screenshots: readonly (IgdbScreenshot | RawgScreenshotEntry)[];
+  artworkUrls?: readonly string[];
+  conceptArtUrls?: readonly string[];
+  coverUrl?: string | null;
   sourceUrl: string | null;
+  provider?: "RAWG" | "IGDB";
 }) {
   const { resolvedData } = useVisualPreferences();
   const reducedData = resolvedData === "on";
 
-  if (screenshots.length === 0) return null;
+  const media = [
+    ...(coverUrl ? [{ image: coverUrl, kind: "Key art" }] : []),
+    ...artworkUrls.map((image) => ({ image, kind: "Artwork" })),
+    ...conceptArtUrls.map((image) => ({ image, kind: "Concept art" })),
+    ...screenshots.map((screenshot) => ({ image: screenshot.image, kind: "Screenshot" })),
+  ].filter((item, index, all) => all.findIndex((candidate) => candidate.image === item.image) === index);
 
-  const slides = screenshots.map((screenshot, index) => {
+  if (media.length === 0) return null;
+
+  const slides = media.map((item, index) => {
     if (reducedData) {
       return (
         <div
-          key={String(screenshot.rawgId)}
+          key={`${item.image}-${index}`}
           aria-hidden="true"
           className={`${gradientFor(`${id}-${index}`)} flex h-24 items-end rounded-lg`}
         >
@@ -54,10 +70,10 @@ export function ScreenshotsSection({
       );
     }
     return (
-      <div key={String(screenshot.rawgId)} className="relative aspect-video overflow-hidden rounded-lg border border-border bg-card">
+      <div key={`${item.image}-${index}`} className="relative aspect-video overflow-hidden rounded-lg border border-border bg-card">
         <Image
-          src={screenshot.image}
-          alt={`Screenshot ${index + 1} of ${title}`}
+          src={item.image}
+          alt={`${item.kind} ${index + 1} of ${title}`}
           fill
           sizes="(min-width: 1280px) 33vw, 100vw"
           className="object-contain"
@@ -69,9 +85,9 @@ export function ScreenshotsSection({
   });
 
   return (
-    <SectionCard eyebrow="Media" title="Screenshots">
-      <Carousel label="Screenshots" slides={slides} />
-      <CreditLine sourceUrl={sourceUrl} />
+    <SectionCard eyebrow="Media" title="Artwork and screenshots">
+      <Carousel label="Artwork and screenshots" slides={slides} />
+      <CreditLine sourceUrl={sourceUrl} provider={provider ?? "RAWG"} />
     </SectionCard>
   );
 }

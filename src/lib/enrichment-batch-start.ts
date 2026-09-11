@@ -4,7 +4,7 @@ import { Prisma } from "@/generated/prisma/client";
 import type { SyncStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
-type Provider = "RAWG" | "PROTONDB";
+type Provider = "RAWG" | "IGDB" | "PROTONDB";
 
 interface BatchRecord {
   id: string;

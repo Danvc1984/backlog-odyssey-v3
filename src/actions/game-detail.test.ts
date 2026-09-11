@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("@/lib/auth-guard", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 vi.mock("server-only", () => ({}));
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/recommendations/events", () => ({
   logRecommendationEvent: vi.fn(),
   playStateTransitionKind: vi.fn((previous: string, next: string) => {

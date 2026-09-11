@@ -5,12 +5,13 @@ import { requireUser } from "@/lib/auth-guard";
 import { friendlyActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
 import { runRawgEnrichmentJob } from "@/lib/rawg-job-runner";
+import { runIgdbEnrichmentJob } from "@/lib/igdb-job-runner";
 import { runCompatJob } from "@/lib/compat-job-runner";
 import { getCompatibilityGate } from "@/lib/compat-gate";
 
 const retryInputSchema = z.object({ jobId: z.string().min(1) }).strict();
 
-const RETRYABLE_PROVIDERS = ["RAWG", "PROTONDB", "ARE_WE_ANTICHEAT_YET"] as const;
+const RETRYABLE_PROVIDERS = ["RAWG", "IGDB", "PROTONDB", "ARE_WE_ANTICHEAT_YET"] as const;
 
 export async function retryEnrichmentJob(input: unknown) {
   try {
@@ -35,6 +36,7 @@ export async function retryEnrichmentJob(input: unknown) {
         lastErrorMessage: true,
         candidatePayload: true,
         selectedRawgId: true,
+        selectedIgdbId: true,
         finishedAt: true,
       },
     });
@@ -67,9 +69,10 @@ export async function retryEnrichmentJob(input: unknown) {
       select: { id: true },
     });
 
-    const runResult =
-      job.provider === "RAWG"
-        ? await runRawgEnrichmentJob(requeued.id)
+    const runResult = job.provider === "RAWG"
+      ? await runRawgEnrichmentJob(requeued.id)
+      : job.provider === "IGDB"
+        ? await runIgdbEnrichmentJob(requeued.id)
         : await runCompatJob(requeued.id);
 
     return { success: true as const, data: runResult, error: null };

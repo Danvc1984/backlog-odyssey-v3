@@ -8,7 +8,7 @@ vi.mock("@/lib/steam-flow", () => ({
   reconcileWishlistImportDlcs: vi.fn(),
   upsertUnresolvedSteamDlc: vi.fn(),
 }));
-vi.mock("@/lib/rawg-import-queue", () => ({ queueRawgForImportedGames: vi.fn() }));
+vi.mock("@/lib/igdb-import-queue", () => ({ queueIgdbForImportedGames: vi.fn() }));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
@@ -18,7 +18,7 @@ import {
   requireSteamFlowContext,
   upsertUnresolvedSteamDlc,
 } from "@/lib/steam-flow";
-import { queueRawgForImportedGames } from "@/lib/rawg-import-queue";
+import { queueIgdbForImportedGames as queueRawgForImportedGames } from "@/lib/igdb-import-queue";
 import { importSteamGames } from "./steam-import";
 
 describe("importSteamGames", () => {
@@ -94,7 +94,7 @@ describe("importSteamGames", () => {
       data: {
         imported: 1,
         updated: 0,
-        rawgQueue: { status: "QUEUED", batchId: "batch-1", queued: 1, skipped: 0 },
+        igdbQueue: { status: "QUEUED", batchId: "batch-1", queued: 1, skipped: 0 },
       },
       error: null,
     });
@@ -155,7 +155,7 @@ describe("importSteamGames", () => {
     expect(result.data).toEqual({
       imported: 0,
       updated: 1,
-      rawgQueue: { status: "QUEUED", batchId: null, queued: 0, skipped: 0 },
+      igdbQueue: { status: "QUEUED", batchId: null, queued: 0, skipped: 0 },
     });
     expect(updateManyAvailability).toHaveBeenCalledWith({
       where: { gameId: "game-1", source: "STEAM" },
@@ -221,7 +221,7 @@ describe("importSteamGames", () => {
       data: {
         imported: 1,
         updated: 0,
-        rawgQueue: { status: "DEFERRED", batchId: null, queued: 0, skipped: 0 },
+        igdbQueue: { status: "DEFERRED", batchId: null, queued: 0, skipped: 0 },
       },
       error: null,
     });

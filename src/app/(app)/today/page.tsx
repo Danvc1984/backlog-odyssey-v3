@@ -31,6 +31,7 @@ import { rankTodayOffers } from "@/lib/today-offers";
 import { loadTodayOperations } from "@/lib/today-operations";
 import { TodayOperations } from "@/components/today/TodayOperations";
 import { formatMexicoTimestamp } from "@/lib/format-times";
+import { igdbLibraryCardMetadataView } from "@/lib/card-metadata-view";
 import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
 import { SectionCard } from "@/components/ui/detail-card";
 import { buildEntryOfferView } from "@/lib/offer-selection";
@@ -84,7 +85,7 @@ export default async function TodayPage() {
               select: {
                 name: true,
                 metadataSnapshots: {
-                  where: { provider: "RAWG" },
+                  where: { provider: "IGDB" },
                   orderBy: { fetchedAt: "desc" },
                   take: 1,
                   select: { payload: true },
@@ -111,7 +112,7 @@ export default async function TodayPage() {
                   select: {
                     name: true,
                     metadataSnapshots: {
-                      where: { provider: "RAWG" },
+                      where: { provider: "IGDB" },
                       orderBy: { fetchedAt: "desc" },
                       take: 1,
                       select: { payload: true },
@@ -155,7 +156,7 @@ export default async function TodayPage() {
         name: true,
         libraryEntry: { select: { isMainGame: true, playState: true } },
         metadataSnapshots: {
-          where: { provider: "RAWG" },
+          where: { provider: "IGDB" },
           orderBy: { fetchedAt: "desc" },
           take: 1,
           select: { payload: true },
@@ -194,8 +195,7 @@ export default async function TodayPage() {
     name: game.name,
     libraryEntry: game.libraryEntry,
     imageUrl:
-      parseRawgMetadataPayload(game.metadataSnapshots[0]?.payload)
-        ?.backgroundImageUrls[0] ?? null,
+      igdbLibraryCardMetadataView(game.metadataSnapshots[0]?.payload)?.wideImageUrl ?? null,
   }));
   const todayOffers = rankTodayOffers(
     wishlistEntries.map(({ id, name, targetPriceMxn, offers }) => ({
@@ -228,8 +228,7 @@ export default async function TodayPage() {
   const items = latestPlayNextRun?.items ?? [];
   const buyItems = latestBuyRun?.items ?? [];
   const playItemCover = (item: (typeof items)[number]) =>
-    parseRawgMetadataPayload(item.game?.metadataSnapshots[0]?.payload)
-      ?.backgroundImageUrls[0] ?? null;
+    igdbLibraryCardMetadataView(item.game?.metadataSnapshots[0]?.payload)?.wideImageUrl ?? null;
   const buyItemCover = (item: (typeof buyItems)[number]) =>
     parseRawgMetadataPayload(item.wishlistEntry?.metadataSnapshot?.payload)
       ?.backgroundImageUrls[0] ??
@@ -261,7 +260,7 @@ export default async function TodayPage() {
             select: {
               id: true,
               metadataSnapshots: {
-                where: { provider: "RAWG" },
+                where: { provider: "IGDB" },
                 orderBy: { fetchedAt: "desc" },
                 take: 1,
                 select: { payload: true },
@@ -277,8 +276,7 @@ export default async function TodayPage() {
       {
         gameId: row.game.id,
         imageUrl:
-          parseRawgMetadataPayload(row.game.metadataSnapshots[0]?.payload)
-            ?.backgroundImageUrls[0] ?? null,
+          igdbLibraryCardMetadataView(row.game.metadataSnapshots[0]?.payload)?.wideImageUrl ?? null,
       },
     ]),
   );
@@ -549,9 +547,9 @@ export default async function TodayPage() {
           />
           <div className="mt-4 grid gap-2">
             <CoverageDialog
-              label="games missing RAWG metadata"
+              label="games missing IGDB metadata"
               basis="Based on provider metadata coverage for visible base games."
-              titles={dataHealth.rawgMetadata.missing}
+              titles={dataHealth.igdbMetadata.missing}
             />
             <CoverageDialog
               label="games with incomplete recommendation profiles"

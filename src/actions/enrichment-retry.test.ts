@@ -3,12 +3,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/auth-guard", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 vi.mock("@/lib/rawg-job-runner", () => ({ runRawgEnrichmentJob: vi.fn() }));
+vi.mock("@/lib/igdb-job-runner", () => ({ runIgdbEnrichmentJob: vi.fn() }));
 vi.mock("@/lib/compat-job-runner", () => ({ runCompatJob: vi.fn() }));
 vi.mock("@/lib/compat-gate", () => ({ getCompatibilityGate: vi.fn() }));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { runRawgEnrichmentJob } from "@/lib/rawg-job-runner";
+import { runIgdbEnrichmentJob } from "@/lib/igdb-job-runner";
 import { runCompatJob } from "@/lib/compat-job-runner";
 import { getCompatibilityGate } from "@/lib/compat-gate";
 import { retryEnrichmentJob } from "./enrichment-retry";
@@ -62,6 +64,7 @@ beforeEach(() => {
   mockFindUnique.mockResolvedValue(failedRawgJob());
   mockUpdate.mockResolvedValue({ id: "job-1" });
   vi.mocked(runRawgEnrichmentJob).mockResolvedValue(mockRunnerResult);
+  vi.mocked(runIgdbEnrichmentJob).mockResolvedValue(mockRunnerResult as never);
   vi.mocked(runCompatJob).mockResolvedValue(mockRunnerResult);
 });
 
@@ -94,6 +97,21 @@ describe("retryEnrichmentJob", () => {
     mockFindUnique.mockResolvedValue({ ...failedRawgJob(), provider: "ARE_WE_ANTICHEAT_YET" });
     await retryEnrichmentJob({ jobId: "job-1" });
     expect(runCompatJob).toHaveBeenCalledTimes(2);
+  });
+
+  it("retries IGDB and preserves the selected match fields", async () => {
+    mockFindUnique.mockResolvedValue({
+      ...failedRawgJob(),
+      provider: "IGDB",
+      selectedRawgId: null,
+      selectedIgdbId: 456,
+      candidatePayload: { candidates: [{ id: 456 }] },
+    });
+    await retryEnrichmentJob({ jobId: "job-1" });
+    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      data: { status: "QUEUED", attempt: 0, nextAttemptAt: null, lastErrorCode: null, lastErrorMessage: null },
+    }));
+    expect(runIgdbEnrichmentJob).toHaveBeenCalledWith("job-1");
   });
 
   it("rejects a non-FAILED job without any write", async () => {

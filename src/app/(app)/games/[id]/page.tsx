@@ -9,21 +9,21 @@ import { DeleteGameDialog } from "@/components/games/DeleteGameDialog";
 import { AvailabilityEditor } from "@/components/games/AvailabilityEditor";
 import { GameNameForm } from "@/components/games/GameNameForm";
 import { MetadataSection } from "@/components/games/MetadataSection";
+import { IgdbEnrichmentPanel } from "@/components/games/IgdbEnrichmentPanel";
 import { HashScrollTarget } from "@/components/ui/HashScrollTarget";
-import { RawgEnrichmentPanel } from "@/components/games/RawgEnrichmentPanel";
 import { DlcSection } from "@/components/games/DlcSection";
 import { ScreenshotsSection } from "@/components/games/ScreenshotsSection";
 import { ParentBaseGameBanner } from "@/components/games/ParentBaseGameBanner";
 import { CatalogSteamIdentityForm } from "@/components/games/CatalogSteamIdentityForm";
 import { CompatibilitySection } from "@/components/games/CompatibilitySection";
 import { CalibrationNote } from "@/components/recommendations/CalibrationNote";
-import { rawgJobSelect, toRawgEnrichmentJobView } from "@/lib/rawg-job-view";
+import { igdbJobSelect, toIgdbEnrichmentJobView } from "@/lib/igdb-job-view";
 import { compatJobSelect } from "@/lib/compat-job";
 import { awayGameUrl } from "@/lib/away-api";
 import { parseProtonDbSummary, PROTONDB_APP_URL } from "@/lib/protondb-api";
 import { parseAntiCheatEvidence } from "@/lib/compat-evidence";
-import type { RawgMetadataPayload } from "@/lib/rawg-types";
-import { resolvePageScreenshots } from "@/lib/screenshot-view";
+import type { IgdbMetadataPayload } from "@/lib/igdb-types";
+import { resolveIgdbPageScreenshots } from "@/lib/screenshot-view";
 import { GameDetailHero } from "@/components/games/GameDetailHero";
 import { GameThemeScope } from "@/components/games/GameThemeScope";
 import { SectionCard, StatusPill } from "@/components/ui/detail-card";
@@ -74,7 +74,7 @@ export default async function GameDetailPage({
           orderBy: [{ interest: "desc" }, { name: "asc" }],
         },
         metadataSnapshots: {
-          where: { provider: "RAWG" },
+          where: { provider: "IGDB" },
           orderBy: { fetchedAt: "desc" },
           take: 1,
           select: { payload: true, sourceUrl: true, fetchedAt: true },
@@ -84,8 +84,8 @@ export default async function GameDetailPage({
           select: { provider: true, result: true, fetchedAt: true },
         },
         enrichmentJobs: {
-          where: { provider: { in: ["RAWG", "PROTONDB"] } },
-          select: { ...rawgJobSelect, ...compatJobSelect },
+          where: { provider: { in: ["IGDB", "PROTONDB"] } },
+          select: { ...igdbJobSelect, ...compatJobSelect },
         },
       },
     }),
@@ -137,12 +137,12 @@ export default async function GameDetailPage({
       ? possibleDuplicate.gameB.name
       : possibleDuplicate.gameA.name
     : null;
-  const rawgSnapshot = game.metadataSnapshots[0];
-  const rawgPayload = rawgSnapshot
-    ? (rawgSnapshot.payload as unknown as RawgMetadataPayload)
+  const igdbSnapshot = game.metadataSnapshots[0];
+  const igdbJob = game.enrichmentJobs.find((job) => job.provider === "IGDB");
+  const igdbPayload = igdbSnapshot
+    ? (igdbSnapshot.payload as unknown as IgdbMetadataPayload)
     : null;
-  const rawgJob = game.enrichmentJobs.find((job) => job.provider === "RAWG");
-  const screenshots = resolvePageScreenshots(rawgPayload);
+  const screenshots = resolveIgdbPageScreenshots(igdbPayload);
   const compatJob = game.enrichmentJobs.find(
     (job) => job.provider === "PROTONDB",
   );
@@ -179,7 +179,7 @@ export default async function GameDetailPage({
   );
 
   return (
-    <GameThemeScope palette={resolvePagePalette(rawgPayload)}>
+    <GameThemeScope palette={resolvePagePalette(igdbPayload)}>
       <div className="space-y-8">
         <HashScrollTarget />
       <p className="technical-label text-muted-foreground">
@@ -203,16 +203,24 @@ export default async function GameDetailPage({
         interest={game.libraryEntry?.interest ?? null}
         isInLibrary={game.libraryEntry !== null}
         imageUrl={
-          rawgPayload && Array.isArray(rawgPayload.backgroundImageUrls)
-            ? (rawgPayload.backgroundImageUrls[0] ?? null)
+            igdbPayload
+              ? (igdbPayload.artworkUrls[0] ?? igdbPayload.screenshots[0]?.image ?? igdbPayload.coverUrl ?? null)
             : null
         }
       />
 
       <MetadataSection
-        payload={rawgPayload}
-        sourceUrl={rawgSnapshot?.sourceUrl ?? null}
-        fetchedAt={rawgSnapshot?.fetchedAt ?? null}
+        payload={igdbPayload}
+        sourceUrl={igdbSnapshot?.sourceUrl ?? null}
+        fetchedAt={igdbSnapshot?.fetchedAt ?? null}
+      />
+
+      <IgdbEnrichmentPanel
+        gameId={game.id}
+        catalogName={game.name}
+        initialJob={igdbJob ? toIgdbEnrichmentJobView(igdbJob) : null}
+        hasIgdbSnapshot={igdbSnapshot !== undefined}
+        igdbTitle={igdbPayload?.name ?? null}
       />
 
       <SectionCard
@@ -299,14 +307,6 @@ export default async function GameDetailPage({
           dismissalCount={playDismissalCount}
         />
       </SectionCard>
-
-      <RawgEnrichmentPanel
-        gameId={game.id}
-        catalogName={game.name}
-        initialJob={rawgJob ? toRawgEnrichmentJobView(rawgJob) : null}
-        hasRawgSnapshot={game.metadataSnapshots.length > 0}
-        rawgTitle={rawgPayload?.title ?? null}
-      />
 
       {compatibilityGate.active && game.type === "BASE_GAME" && (
         <CompatibilitySection
@@ -435,7 +435,11 @@ export default async function GameDetailPage({
         id={game.id}
         title={game.name}
         screenshots={screenshots}
-        sourceUrl={rawgSnapshot?.sourceUrl ?? rawgPayload?.rawgUrl ?? null}
+        artworkUrls={igdbPayload?.artworkUrls}
+        conceptArtUrls={igdbPayload?.conceptArtUrls}
+        coverUrl={igdbPayload?.coverUrl}
+        sourceUrl={igdbSnapshot?.sourceUrl ?? igdbPayload?.attribution.sourceUrl ?? null}
+        provider="IGDB"
       />
 
       <SectionCard

@@ -17,7 +17,7 @@ import {
 import { availabilitySourcePresentation } from "@/lib/sources/known-sources";
 import { deriveCompatTag } from "@/lib/protondb-tags";
 import { getCompatibilityGate } from "@/lib/compat-gate";
-import { libraryCardMetadataView } from "@/lib/card-metadata-view";
+import { igdbLibraryCardMetadataView } from "@/lib/card-metadata-view";
 import { ListPaginationControls } from "@/components/list/ListPaginationControls";
 import { parsePage, parsePageSize, resolveRange } from "@/lib/list-pagination";
 import { parseHandheldSuitabilityFilter } from "@/lib/library-handheld-filter";
@@ -226,7 +226,7 @@ export default async function LibraryPage({
               select: { id: true, name: true },
             },
             metadataSnapshots: {
-              where: { provider: "RAWG" },
+              where: { provider: "IGDB" },
               select: { id: true, payload: true },
             },
             _count: {
@@ -265,7 +265,7 @@ export default async function LibraryPage({
   const entriesWithTiers = entries.map((entry) => {
     const { metadataSnapshots, ...game } = entry.game;
     const metadata = metadataSnapshots
-      .map((snapshot) => libraryCardMetadataView(snapshot.payload))
+      .map((snapshot) => igdbLibraryCardMetadataView(snapshot.payload))
       .find((view) => view !== null) ?? null;
 
     return {

@@ -34,7 +34,7 @@ export * from "./enums"
  * // Fetch zero or more IgdbTokenCaches
  * const igdbTokenCaches = await prisma.igdbTokenCache.findMany()
  * ```
- * 
+ *
  * Read more in our [docs](https://pris.ly/d/client).
  */
 export const PrismaClient = $Class.getPrismaClientClass()

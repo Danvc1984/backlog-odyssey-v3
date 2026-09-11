@@ -12,7 +12,7 @@ import { LibraryGameCard, type LibraryGameCardEntry } from "@/components/games/L
 import { StatusPill } from "@/components/ui/detail-card";
 import { deriveCompatTag } from "@/lib/protondb-tags";
 import { getCompatibilityGate } from "@/lib/compat-gate";
-import { libraryCardMetadataView } from "@/lib/card-metadata-view";
+import { igdbLibraryCardMetadataView } from "@/lib/card-metadata-view";
 
 interface CollectionSearchParams {
   q?: string;
@@ -55,7 +55,7 @@ function toLibraryEntry(entry: {
 
   const { metadataSnapshots } = entry.game;
   const metadata = metadataSnapshots
-    .map((snapshot) => libraryCardMetadataView(snapshot.payload))
+    .map((snapshot) => igdbLibraryCardMetadataView(snapshot.payload))
     .find((view) => view !== null) ?? null;
 
   return {
@@ -101,7 +101,7 @@ function collectionGameInclude() {
     },
     baseGame: { select: { id: true, name: true } },
     metadataSnapshots: {
-      where: { provider: "RAWG" as const },
+      where: { provider: "IGDB" as const },
       select: { id: true, payload: true },
     },
     _count: { select: { dlcs: true, collections: true } },

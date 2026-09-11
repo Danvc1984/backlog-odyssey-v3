@@ -14,16 +14,16 @@ import {
   type WishlistCompatSweepRunView,
 } from "@/components/wishlist/WishlistCompatSweepPanel";
 import {
-  RawgBatchEnrichmentButton,
-  RawgBatchEnrichmentPanel,
-} from "@/components/games/RawgBatchEnrichmentPanel";
-import type { RawgBatchView } from "@/lib/rawg-batch-runner";
+  IgdbBatchEnrichmentButton,
+  IgdbBatchEnrichmentPanel,
+} from "@/components/games/IgdbBatchEnrichmentPanel";
+import type { IgdbBatchView } from "@/lib/igdb-batch-runner";
 import { EnrichmentRetryButton } from "@/components/settings/EnrichmentRetryButton";
 
 interface CompatibilitySweepPanelProps {
   compatibilityActive: boolean;
   initialBatch: CompatBatchView | null;
-  initialRawgBatch: RawgBatchView | null;
+  initialIgdbBatch: IgdbBatchView | null;
   initialWishlistRun: WishlistCompatSweepRunView | null;
   failedJobs: FailedEnrichmentJobView[];
 }
@@ -37,7 +37,7 @@ export interface FailedEnrichmentJobView {
   gameName: string;
 }
 
-const RETRYABLE_PROVIDERS = ["RAWG", "PROTONDB", "ARE_WE_ANTICHEAT_YET"];
+const RETRYABLE_PROVIDERS = ["IGDB", "PROTONDB", "ARE_WE_ANTICHEAT_YET"];
 
 interface BatchEndpointResult {
   success: boolean;
@@ -76,7 +76,7 @@ function terminalBatchMessage(batch: CompatBatchView): string {
 export function CompatibilitySweepPanel({
   compatibilityActive,
   initialBatch,
-  initialRawgBatch,
+  initialIgdbBatch,
   initialWishlistRun,
   failedJobs,
 }: CompatibilitySweepPanelProps) {
@@ -196,11 +196,11 @@ export function CompatibilitySweepPanel({
   return (
     <SectionCard
       eyebrow="Provider maintenance"
-      title={compatibilityActive ? "Enrichment and compatibility" : "RAWG enrichment"}
+      title={compatibilityActive ? "Enrichment and compatibility" : "IGDB enrichment"}
       id="compatibility-sweep-heading"
       description={compatibilityActive
-        ? "Enrich RAWG metadata and refresh ProtonDB and AWAY evidence by library domain."
-        : "Enrich RAWG metadata for eligible catalog games."}
+        ? "Enrich IGDB metadata and refresh ProtonDB and AWAY evidence by library domain."
+        : "Enrich IGDB metadata for eligible catalog games."}
     >
       <div>
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -211,7 +211,7 @@ export function CompatibilitySweepPanel({
             </p>
           </div>
           <div className="flex flex-wrap justify-end gap-2">
-            <RawgBatchEnrichmentButton />
+            <IgdbBatchEnrichmentButton />
             {compatibilityActive && <Button
                 type="button"
                 variant="outline"
@@ -224,7 +224,7 @@ export function CompatibilitySweepPanel({
           </div>
         </div>
 
-        <RawgBatchEnrichmentPanel initialBatch={initialRawgBatch} embedded />
+        <IgdbBatchEnrichmentPanel initialBatch={initialIgdbBatch} embedded />
 
         {compatibilityActive && batch && (
           <div className="mt-4 space-y-3 text-sm">

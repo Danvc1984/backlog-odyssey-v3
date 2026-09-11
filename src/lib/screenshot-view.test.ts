@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolvePageScreenshots } from "@/lib/screenshot-view";
+import { resolveIgdbPageScreenshots, resolvePageScreenshots } from "@/lib/screenshot-view";
 
 const screenshot = (overrides: Partial<{ rawgId: number; image: string; width: number | null; height: number | null }> = {}) => ({
   rawgId: 1,
@@ -43,5 +43,24 @@ describe("resolvePageScreenshots", () => {
       screenshot(),
       screenshot({ rawgId: 4, width: null, height: 720 }),
     ]);
+  });
+});
+
+describe("resolveIgdbPageScreenshots", () => {
+  it("returns valid IGDB screenshots and caps the list", () => {
+    const row = { screenshots: Array.from({ length: 8 }, (_, index) => ({
+      image: `https://images.example/${index}.jpg`,
+      width: 1920,
+      height: 1080,
+    })) };
+    expect(resolveIgdbPageScreenshots(row)).toHaveLength(6);
+  });
+
+  it("filters malformed IGDB screenshot entries", () => {
+    expect(resolveIgdbPageScreenshots({ screenshots: [
+      { image: "https://images.example/valid.jpg", width: null, height: null },
+      { image: "" },
+      { image: "https://images.example/bad.jpg", width: "wide" },
+    ] })).toEqual([{ image: "https://images.example/valid.jpg", width: null, height: null }]);
   });
 });
