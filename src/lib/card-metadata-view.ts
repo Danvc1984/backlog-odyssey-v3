@@ -38,7 +38,7 @@ function parseIgdbCardPayload(value: unknown): IgdbMetadataPayload | null {
   if (typeof value !== "object" || value === null) return null;
   const payload = value as Partial<IgdbMetadataPayload>;
   return payload.schemaVersion === 1 && typeof payload.name === "string" &&
-    typeof payload.summary === "string" && Array.isArray(payload.genres) &&
+    (payload.summary === null || typeof payload.summary === "string") && Array.isArray(payload.genres) &&
     Array.isArray(payload.developers) && payload.ratings !== null &&
     typeof payload.ratings === "object"
     ? (value as IgdbMetadataPayload)
@@ -47,6 +47,7 @@ function parseIgdbCardPayload(value: unknown): IgdbMetadataPayload | null {
 
 export function igdbLibraryCardMetadataView(
   value: unknown,
+  durationHours: number | null = null,
 ): LibraryCardMetadataView | null {
   const payload = parseIgdbCardPayload(value);
   if (!payload) return null;
@@ -60,7 +61,7 @@ export function igdbLibraryCardMetadataView(
     releaseDate: payload.firstReleaseDate,
     rating,
     metacriticScore: null,
-    playtimeHours: null,
+    playtimeHours: durationHours,
     esrbName: payload.esrbRating,
   };
 }

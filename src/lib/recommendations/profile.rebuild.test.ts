@@ -20,7 +20,7 @@ describe("rebuildRecommendationProfile", () => {
       recommendationEvent: { findMany: vi.fn().mockResolvedValue([
         {
           kind: "COMPLETION", gameId: "g1", wishlistEntryId: null, createdAt: now,
-          payload: null, game: { libraryEntry: { gameExperience: "PC_GAMING", preferredEnvironment: "LINUX" }, metadataSnapshots: [{ payload: payload() }] }, wishlistEntry: null,
+          payload: null, game: { libraryEntry: { gameExperience: "PC_GAMING", preferredEnvironment: "LINUX" }, metadataSnapshots: [{ payload: payload() }], playtimeEvidence: { provider: "IGDB", payload: { normallySeconds: 9 * 3600 } } }, wishlistEntry: null,
         },
         {
           kind: "START", gameId: "g1", wishlistEntryId: null, createdAt: new Date("2025-07-05T00:00:00.000Z"),
@@ -34,6 +34,7 @@ describe("rebuildRecommendationProfile", () => {
     expect(result.dimensions.GENRE.RPG).toMatchObject({ weight: 2.5, support: 2 });
     expect(result.dimensions.MATURITY.Mature).toMatchObject({ weight: 2, support: 1 });
     expect(result.dimensions.SERIES["Game 2"]).toMatchObject({ weight: 2, support: 1 });
+    expect(result.dimensions.DURATION.MEDIUM).toMatchObject({ weight: 2, support: 1 });
     expect(client.recommendationProfile.upsert).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 1 } }));
   });
 

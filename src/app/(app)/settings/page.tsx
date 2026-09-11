@@ -15,6 +15,7 @@ import { AlternativeSourcesCard } from "@/components/sources/AlternativeSourcesC
 import { type IgdbBatchView, getLatestIgdbBatchStatus } from "@/lib/igdb-batch-runner";
 import { getLatestWishlistCompatSweep } from "@/actions/wishlist-compatibility";
 import { isCompatibilityActive } from "@/lib/os-setup";
+import { DurationProfileCard } from "@/components/settings/DurationProfileCard";
 
 export default async function SettingsPage() {
   const session = await requireUser();
@@ -49,6 +50,7 @@ export default async function SettingsPage() {
         onboardingCompleted: true,
         priceCountry: true,
         timeZone: true,
+        durationProfile: true,
       },
     }),
     prisma.unresolvedSteamDlc.findMany({
@@ -150,6 +152,7 @@ export default async function SettingsPage() {
       </section>
       <section className="space-y-6">
         <h2>Recommendations</h2>
+        <DurationProfileCard initialProfile={appSettings?.durationProfile ?? "NORMALLY"} />
         <RecommendationProfileSection
           profile={profile}
           preferences={preferences}

@@ -233,18 +233,12 @@ export function CompatibilitySection({
             </div>
           </div>
 
-          {windowsFallback ? <div className="flex flex-col gap-3 rounded-lg border border-border p-3 sm:flex-row sm:items-center sm:justify-between">
+          {windowsFallback && <div className="flex flex-col gap-3 rounded-lg border border-border p-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-medium">Windows</p>
               <p className="text-xs text-muted-foreground">{windowsFallback.source}</p>
             </div>
             <Badge label={windowsFallback.label} className={STATUS_CLASSES[windowsFallback.status]} />
-          </div> : <div className="flex flex-col gap-3 rounded-lg border border-border p-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-medium">Windows</p>
-              <p className="text-xs text-muted-foreground">No Windows fallback is configured for this setup.</p>
-            </div>
-            <Badge label="Not configured" className={STATUS_CLASSES.UNKNOWN} />
           </div>}
           </div>
         </>

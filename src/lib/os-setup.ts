@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const primaryOsSchema = z.enum(["LINUX", "WINDOWS"]);
 export const handheldOsSchema = z.enum(["NONE", "LINUX", "WINDOWS"]);
+export const durationProfileSchema = z.enum(["HASTILY", "NORMALLY", "COMPLETELY"]);
 
 export const osSetupSchema = z
   .object({
@@ -9,6 +10,7 @@ export const osSetupSchema = z
     hasWindowsFallback: z.boolean(),
     handheldOs: handheldOsSchema,
     onboardingCompleted: z.boolean(),
+    durationProfile: durationProfileSchema.optional(),
   })
   .strict()
   .superRefine((setup, context) => {

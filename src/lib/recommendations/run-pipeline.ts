@@ -6,6 +6,7 @@ import { rebuildRecommendationProfile } from "@/lib/recommendations/profile";
 import { RUN_RETENTION_DAYS, tuneContextSchema, type TuneContext } from "@/lib/recommendations/types";
 import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
 import { resolveCandidateDimensionValues } from "@/lib/recommendations/profile";
+import { resolveDurationEstimate, type DurationProfile } from "@/lib/playtime-evidence";
 import { rerankPlayCandidates, type RerankPlayInput, type TastePreference } from "@/lib/recommendations/rerank";
 import { rerankBuyCandidates, type RerankBuyInput } from "@/lib/recommendations/rerank";
 import { assignPlayRoles } from "@/lib/recommendations/roles";
@@ -57,6 +58,7 @@ interface PlayRow {
   envCompat: Array<{ environment: Environment; status: CompatibilityStatus }>;
   externalIds: Array<{ externalId: string }>;
   compatSnapshots: Array<{ provider: string; result: unknown; fetchedAt: Date }>;
+  playtimeEvidence: { provider: string; payload: unknown } | null;
 }
 
 interface SourceTunedPlayItem {
@@ -78,16 +80,19 @@ export function buildPlayPipeline(
   now: Date,
   secondChanceIds: string[],
   rescueCaveats: ReadonlyMap<string, ExplanationCaveat>,
+  durationProfile: DurationProfile,
 ) {
   const rerankInputs: RerankPlayInput[] = pool.map((item) => {
     const row = rows.get(item.id);
     if (!row) throw new Error(`Missing recommendation row for ${item.id}`);
     const payload = row.metadataSnapshots[0]?.payload;
     const parsedPayload = parseRawgMetadataPayload(payload);
+    const durationHours = resolveDurationEstimate(row.playtimeEvidence, durationProfile)?.hours ?? null;
     const dimensionValues = resolveCandidateDimensionValues(payload, {
       gameExperience: row.libraryEntry?.gameExperience ?? null,
       preferredEnvironment: row.libraryEntry?.preferredEnvironment ?? null,
       configuredEnvironments: availableEnvironments(setup),
+      durationHours,
     });
     const steamRow = row.availability.find(
       (availability) => availability.source === "STEAM" && availability.steamLastPlayed !== null,
@@ -373,13 +378,14 @@ export async function pruneAndRebuild(
   client: Prisma.TransactionClient,
   now: Date,
   configuredEnvironments: readonly Environment[] = ["LINUX"],
+  durationProfile: DurationProfile = "NORMALLY",
 ) {
   const pruneCutoff = new Date(now.getTime() - RUN_RETENTION_DAYS * 24 * 60 * 60 * 1000);
   const pruned = await client.recommendationRun.deleteMany({
     where: { createdAt: { lt: pruneCutoff } },
   });
   const prunedEvents = await pruneRecommendationEvents(client, now);
-  const profile = await rebuildRecommendationProfile(client, now, configuredEnvironments);
+  const profile = await rebuildRecommendationProfile(client, now, configuredEnvironments, durationProfile);
   const tuneState = await client.recommendationTuneState.findUnique({
     where: { id: 1 },
     select: { playTune: true, buyTune: true },
@@ -400,7 +406,7 @@ export async function runRecommendationPipeline(tx: Prisma.TransactionClient) {
       const settings = tx.appSettings
         ? await tx.appSettings.findUnique({
             where: { id: 1 },
-            select: { primaryOs: true, hasWindowsFallback: true, handheldOs: true, onboardingCompleted: true },
+            select: { primaryOs: true, hasWindowsFallback: true, handheldOs: true, onboardingCompleted: true, durationProfile: true },
           })
         : null;
       const setup: OsSetup = settings ?? {
@@ -409,10 +415,12 @@ export async function runRecommendationPipeline(tx: Prisma.TransactionClient) {
         handheldOs: "NONE",
         onboardingCompleted: false,
       };
+      const durationProfile = settings?.durationProfile ?? "NORMALLY";
       const { pruned, prunedEvents, profile, playTune, buyTune } = await pruneAndRebuild(
         tx,
         now,
         availableEnvironments(setup),
+        durationProfile,
       );
 
       const rows = await loadCandidates(tx);
@@ -491,7 +499,11 @@ export async function runRecommendationPipeline(tx: Prisma.TransactionClient) {
       const preferences = (await tx.recommendationPreference.findMany()) as TastePreference[];
       const playTuneInputs = new Map(rows.map((row) => [
         row.id,
-        tuneInput(row.metadataSnapshots[0]?.payload, row.libraryEntry?.gameExperience ?? null),
+        tuneInput(
+          row.metadataSnapshots[0]?.payload,
+          row.libraryEntry?.gameExperience ?? null,
+          resolveDurationEstimate(row.playtimeEvidence, durationProfile)?.hours ?? null,
+        ),
       ]));
       const playPool = baselinePool.map((item) => ({ ...item, caveats: [] as ExplanationCaveat[] }));
       const tunedPlayPool = applyTune(playPool, playTune, playTuneInputs, 4);
@@ -525,6 +537,7 @@ export async function runRecommendationPipeline(tx: Prisma.TransactionClient) {
         now,
         secondChanceIds,
         rescueCaveats,
+        durationProfile,
       );
 
       const enteredBuyInterest = new Map(buyCandidates.map((candidate) => [candidate.id, candidate.interest]));

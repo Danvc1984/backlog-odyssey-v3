@@ -21,6 +21,7 @@ import { igdbLibraryCardMetadataView } from "@/lib/card-metadata-view";
 import { ListPaginationControls } from "@/components/list/ListPaginationControls";
 import { parsePage, parsePageSize, resolveRange } from "@/lib/list-pagination";
 import { parseHandheldSuitabilityFilter } from "@/lib/library-handheld-filter";
+import { resolveDurationEstimate, type DurationProfile } from "@/lib/playtime-evidence";
 
 interface LibrarySearchParams {
   q?: string;
@@ -104,7 +105,7 @@ export default async function LibraryPage({
       : undefined;
   const handheldFilter = parseHandheldSuitabilityFilter(handheld);
 
-  const [manualCollections, systemCollections, pendingUnresolvedDlc, alternativeSources, dataHealth, mainGameGames] = await Promise.all([
+  const [manualCollections, systemCollections, pendingUnresolvedDlc, alternativeSources, dataHealth, mainGameGames, appSettings] = await Promise.all([
     prisma.collection.findMany({
       where: { isSystem: false },
       orderBy: { name: "asc" },
@@ -130,6 +131,7 @@ export default async function LibraryPage({
         libraryEntry: { select: { isMainGame: true, playState: true } },
       },
     }),
+    prisma.appSettings.findUnique({ where: { id: 1 }, select: { durationProfile: true } }),
   ]);
 
   const systemDef =
@@ -229,6 +231,9 @@ export default async function LibraryPage({
               where: { provider: "IGDB" },
               select: { id: true, payload: true },
             },
+            playtimeEvidence: {
+              select: { provider: true, payload: true },
+            },
             _count: {
               select: { dlcs: true, collections: true },
             },
@@ -263,9 +268,13 @@ export default async function LibraryPage({
     : entriesResult;
 
   const entriesWithTiers = entries.map((entry) => {
-    const { metadataSnapshots, ...game } = entry.game;
+    const { metadataSnapshots, playtimeEvidence, ...game } = entry.game;
+    const duration = resolveDurationEstimate(
+      playtimeEvidence,
+      (appSettings?.durationProfile ?? "NORMALLY") as DurationProfile,
+    );
     const metadata = metadataSnapshots
-      .map((snapshot) => igdbLibraryCardMetadataView(snapshot.payload))
+      .map((snapshot) => igdbLibraryCardMetadataView(snapshot.payload, duration?.hours ?? null))
       .find((view) => view !== null) ?? null;
 
     return {

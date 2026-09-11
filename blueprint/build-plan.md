@@ -546,7 +546,7 @@
     individual and catalog-wide load actions with overwrite warnings, and
     manual search with portrait cover candidates; dense metadata uses
     progressive disclosure
-  - [ ] 23c. **Playtime evidence and duration wiring** - IGDB
+  - [x] 23c. **Playtime evidence and duration wiring** - IGDB
     `game_time_to_beats` primary (hastily, normally, and completely mapped to
     history main, history + extras, and completionist), automatic SteamSpy
     median fallback only when IGDB has no row and a confirmed Steam App ID

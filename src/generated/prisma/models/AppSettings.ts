@@ -45,6 +45,7 @@ export type AppSettingsMinAggregateOutputType = {
   timeZone: string | null
   wallpaperEnabled: boolean | null
   reducedData: boolean | null
+  durationProfile: $Enums.DurationProfile | null
   steamDailySyncEnabled: boolean | null
   itadDailyRefresh: boolean | null
   createdAt: Date | null
@@ -62,6 +63,7 @@ export type AppSettingsMaxAggregateOutputType = {
   timeZone: string | null
   wallpaperEnabled: boolean | null
   reducedData: boolean | null
+  durationProfile: $Enums.DurationProfile | null
   steamDailySyncEnabled: boolean | null
   itadDailyRefresh: boolean | null
   createdAt: Date | null
@@ -79,6 +81,7 @@ export type AppSettingsCountAggregateOutputType = {
   timeZone: number
   wallpaperEnabled: number
   reducedData: number
+  durationProfile: number
   steamDailySyncEnabled: number
   itadDailyRefresh: number
   createdAt: number
@@ -106,6 +109,7 @@ export type AppSettingsMinAggregateInputType = {
   timeZone?: true
   wallpaperEnabled?: true
   reducedData?: true
+  durationProfile?: true
   steamDailySyncEnabled?: true
   itadDailyRefresh?: true
   createdAt?: true
@@ -123,6 +127,7 @@ export type AppSettingsMaxAggregateInputType = {
   timeZone?: true
   wallpaperEnabled?: true
   reducedData?: true
+  durationProfile?: true
   steamDailySyncEnabled?: true
   itadDailyRefresh?: true
   createdAt?: true
@@ -140,6 +145,7 @@ export type AppSettingsCountAggregateInputType = {
   timeZone?: true
   wallpaperEnabled?: true
   reducedData?: true
+  durationProfile?: true
   steamDailySyncEnabled?: true
   itadDailyRefresh?: true
   createdAt?: true
@@ -244,6 +250,7 @@ export type AppSettingsGroupByOutputType = {
   timeZone: string
   wallpaperEnabled: boolean
   reducedData: boolean
+  durationProfile: $Enums.DurationProfile
   steamDailySyncEnabled: boolean
   itadDailyRefresh: boolean
   createdAt: Date
@@ -284,6 +291,7 @@ export type AppSettingsWhereInput = {
   timeZone?: Prisma.StringFilter<"AppSettings"> | string
   wallpaperEnabled?: Prisma.BoolFilter<"AppSettings"> | boolean
   reducedData?: Prisma.BoolFilter<"AppSettings"> | boolean
+  durationProfile?: Prisma.EnumDurationProfileFilter<"AppSettings"> | $Enums.DurationProfile
   steamDailySyncEnabled?: Prisma.BoolFilter<"AppSettings"> | boolean
   itadDailyRefresh?: Prisma.BoolFilter<"AppSettings"> | boolean
   createdAt?: Prisma.DateTimeFilter<"AppSettings"> | Date | string
@@ -301,6 +309,7 @@ export type AppSettingsOrderByWithRelationInput = {
   timeZone?: Prisma.SortOrder
   wallpaperEnabled?: Prisma.SortOrder
   reducedData?: Prisma.SortOrder
+  durationProfile?: Prisma.SortOrder
   steamDailySyncEnabled?: Prisma.SortOrder
   itadDailyRefresh?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -321,6 +330,7 @@ export type AppSettingsWhereUniqueInput = Prisma.AtLeast<{
   timeZone?: Prisma.StringFilter<"AppSettings"> | string
   wallpaperEnabled?: Prisma.BoolFilter<"AppSettings"> | boolean
   reducedData?: Prisma.BoolFilter<"AppSettings"> | boolean
+  durationProfile?: Prisma.EnumDurationProfileFilter<"AppSettings"> | $Enums.DurationProfile
   steamDailySyncEnabled?: Prisma.BoolFilter<"AppSettings"> | boolean
   itadDailyRefresh?: Prisma.BoolFilter<"AppSettings"> | boolean
   createdAt?: Prisma.DateTimeFilter<"AppSettings"> | Date | string
@@ -338,6 +348,7 @@ export type AppSettingsOrderByWithAggregationInput = {
   timeZone?: Prisma.SortOrder
   wallpaperEnabled?: Prisma.SortOrder
   reducedData?: Prisma.SortOrder
+  durationProfile?: Prisma.SortOrder
   steamDailySyncEnabled?: Prisma.SortOrder
   itadDailyRefresh?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -363,6 +374,7 @@ export type AppSettingsScalarWhereWithAggregatesInput = {
   timeZone?: Prisma.StringWithAggregatesFilter<"AppSettings"> | string
   wallpaperEnabled?: Prisma.BoolWithAggregatesFilter<"AppSettings"> | boolean
   reducedData?: Prisma.BoolWithAggregatesFilter<"AppSettings"> | boolean
+  durationProfile?: Prisma.EnumDurationProfileWithAggregatesFilter<"AppSettings"> | $Enums.DurationProfile
   steamDailySyncEnabled?: Prisma.BoolWithAggregatesFilter<"AppSettings"> | boolean
   itadDailyRefresh?: Prisma.BoolWithAggregatesFilter<"AppSettings"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"AppSettings"> | Date | string
@@ -380,6 +392,7 @@ export type AppSettingsCreateInput = {
   timeZone?: string
   wallpaperEnabled?: boolean
   reducedData?: boolean
+  durationProfile?: $Enums.DurationProfile
   steamDailySyncEnabled?: boolean
   itadDailyRefresh?: boolean
   createdAt?: Date | string
@@ -397,6 +410,7 @@ export type AppSettingsUncheckedCreateInput = {
   timeZone?: string
   wallpaperEnabled?: boolean
   reducedData?: boolean
+  durationProfile?: $Enums.DurationProfile
   steamDailySyncEnabled?: boolean
   itadDailyRefresh?: boolean
   createdAt?: Date | string
@@ -414,6 +428,7 @@ export type AppSettingsUpdateInput = {
   timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   wallpaperEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reducedData?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  durationProfile?: Prisma.EnumDurationProfileFieldUpdateOperationsInput | $Enums.DurationProfile
   steamDailySyncEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   itadDailyRefresh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -431,6 +446,7 @@ export type AppSettingsUncheckedUpdateInput = {
   timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   wallpaperEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reducedData?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  durationProfile?: Prisma.EnumDurationProfileFieldUpdateOperationsInput | $Enums.DurationProfile
   steamDailySyncEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   itadDailyRefresh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -448,6 +464,7 @@ export type AppSettingsCreateManyInput = {
   timeZone?: string
   wallpaperEnabled?: boolean
   reducedData?: boolean
+  durationProfile?: $Enums.DurationProfile
   steamDailySyncEnabled?: boolean
   itadDailyRefresh?: boolean
   createdAt?: Date | string
@@ -465,6 +482,7 @@ export type AppSettingsUpdateManyMutationInput = {
   timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   wallpaperEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reducedData?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  durationProfile?: Prisma.EnumDurationProfileFieldUpdateOperationsInput | $Enums.DurationProfile
   steamDailySyncEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   itadDailyRefresh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -482,6 +500,7 @@ export type AppSettingsUncheckedUpdateManyInput = {
   timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   wallpaperEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reducedData?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  durationProfile?: Prisma.EnumDurationProfileFieldUpdateOperationsInput | $Enums.DurationProfile
   steamDailySyncEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   itadDailyRefresh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -499,6 +518,7 @@ export type AppSettingsCountOrderByAggregateInput = {
   timeZone?: Prisma.SortOrder
   wallpaperEnabled?: Prisma.SortOrder
   reducedData?: Prisma.SortOrder
+  durationProfile?: Prisma.SortOrder
   steamDailySyncEnabled?: Prisma.SortOrder
   itadDailyRefresh?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -520,6 +540,7 @@ export type AppSettingsMaxOrderByAggregateInput = {
   timeZone?: Prisma.SortOrder
   wallpaperEnabled?: Prisma.SortOrder
   reducedData?: Prisma.SortOrder
+  durationProfile?: Prisma.SortOrder
   steamDailySyncEnabled?: Prisma.SortOrder
   itadDailyRefresh?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -537,6 +558,7 @@ export type AppSettingsMinOrderByAggregateInput = {
   timeZone?: Prisma.SortOrder
   wallpaperEnabled?: Prisma.SortOrder
   reducedData?: Prisma.SortOrder
+  durationProfile?: Prisma.SortOrder
   steamDailySyncEnabled?: Prisma.SortOrder
   itadDailyRefresh?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -563,6 +585,10 @@ export type EnumHandheldOsFieldUpdateOperationsInput = {
   set?: $Enums.HandheldOs
 }
 
+export type EnumDurationProfileFieldUpdateOperationsInput = {
+  set?: $Enums.DurationProfile
+}
+
 
 
 export type AppSettingsSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -576,6 +602,7 @@ export type AppSettingsSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   timeZone?: boolean
   wallpaperEnabled?: boolean
   reducedData?: boolean
+  durationProfile?: boolean
   steamDailySyncEnabled?: boolean
   itadDailyRefresh?: boolean
   createdAt?: boolean
@@ -593,6 +620,7 @@ export type AppSettingsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   timeZone?: boolean
   wallpaperEnabled?: boolean
   reducedData?: boolean
+  durationProfile?: boolean
   steamDailySyncEnabled?: boolean
   itadDailyRefresh?: boolean
   createdAt?: boolean
@@ -610,6 +638,7 @@ export type AppSettingsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   timeZone?: boolean
   wallpaperEnabled?: boolean
   reducedData?: boolean
+  durationProfile?: boolean
   steamDailySyncEnabled?: boolean
   itadDailyRefresh?: boolean
   createdAt?: boolean
@@ -627,13 +656,14 @@ export type AppSettingsSelectScalar = {
   timeZone?: boolean
   wallpaperEnabled?: boolean
   reducedData?: boolean
+  durationProfile?: boolean
   steamDailySyncEnabled?: boolean
   itadDailyRefresh?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type AppSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "theme" | "primaryOs" | "hasWindowsFallback" | "handheldOs" | "onboardingCompleted" | "priceCountry" | "timeZone" | "wallpaperEnabled" | "reducedData" | "steamDailySyncEnabled" | "itadDailyRefresh" | "createdAt" | "updatedAt", ExtArgs["result"]["appSettings"]>
+export type AppSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "theme" | "primaryOs" | "hasWindowsFallback" | "handheldOs" | "onboardingCompleted" | "priceCountry" | "timeZone" | "wallpaperEnabled" | "reducedData" | "durationProfile" | "steamDailySyncEnabled" | "itadDailyRefresh" | "createdAt" | "updatedAt", ExtArgs["result"]["appSettings"]>
 
 export type $AppSettingsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "AppSettings"
@@ -649,6 +679,7 @@ export type $AppSettingsPayload<ExtArgs extends runtime.Types.Extensions.Interna
     timeZone: string
     wallpaperEnabled: boolean
     reducedData: boolean
+    durationProfile: $Enums.DurationProfile
     steamDailySyncEnabled: boolean
     itadDailyRefresh: boolean
     createdAt: Date
@@ -1086,6 +1117,7 @@ export interface AppSettingsFieldRefs {
   readonly timeZone: Prisma.FieldRef<"AppSettings", 'String'>
   readonly wallpaperEnabled: Prisma.FieldRef<"AppSettings", 'Boolean'>
   readonly reducedData: Prisma.FieldRef<"AppSettings", 'Boolean'>
+  readonly durationProfile: Prisma.FieldRef<"AppSettings", 'DurationProfile'>
   readonly steamDailySyncEnabled: Prisma.FieldRef<"AppSettings", 'Boolean'>
   readonly itadDailyRefresh: Prisma.FieldRef<"AppSettings", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"AppSettings", 'DateTime'>

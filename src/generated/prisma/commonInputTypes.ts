@@ -215,6 +215,13 @@ export type EnumHandheldOsFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumHandheldOsFilter<$PrismaModel> | $Enums.HandheldOs
 }
 
+export type EnumDurationProfileFilter<$PrismaModel = never> = {
+  equals?: $Enums.DurationProfile | Prisma.EnumDurationProfileFieldRefInput<$PrismaModel>
+  in?: $Enums.DurationProfile[] | Prisma.ListEnumDurationProfileFieldRefInput<$PrismaModel>
+  notIn?: $Enums.DurationProfile[] | Prisma.ListEnumDurationProfileFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumDurationProfileFilter<$PrismaModel> | $Enums.DurationProfile
+}
+
 export type EnumThemeWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.Theme | Prisma.EnumThemeFieldRefInput<$PrismaModel>
   in?: $Enums.Theme[] | Prisma.ListEnumThemeFieldRefInput<$PrismaModel>
@@ -251,6 +258,16 @@ export type EnumHandheldOsWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumHandheldOsFilter<$PrismaModel>
   _max?: Prisma.NestedEnumHandheldOsFilter<$PrismaModel>
+}
+
+export type EnumDurationProfileWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.DurationProfile | Prisma.EnumDurationProfileFieldRefInput<$PrismaModel>
+  in?: $Enums.DurationProfile[] | Prisma.ListEnumDurationProfileFieldRefInput<$PrismaModel>
+  notIn?: $Enums.DurationProfile[] | Prisma.ListEnumDurationProfileFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumDurationProfileWithAggregatesFilter<$PrismaModel> | $Enums.DurationProfile
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumDurationProfileFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumDurationProfileFilter<$PrismaModel>
 }
 
 export type JsonNullableFilter<$PrismaModel = never> =
@@ -472,6 +489,23 @@ export type EnumProviderWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumProviderFilter<$PrismaModel>
   _max?: Prisma.NestedEnumProviderFilter<$PrismaModel>
+}
+
+export type EnumPlaytimeProviderFilter<$PrismaModel = never> = {
+  equals?: $Enums.PlaytimeProvider | Prisma.EnumPlaytimeProviderFieldRefInput<$PrismaModel>
+  in?: $Enums.PlaytimeProvider[] | Prisma.ListEnumPlaytimeProviderFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PlaytimeProvider[] | Prisma.ListEnumPlaytimeProviderFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPlaytimeProviderFilter<$PrismaModel> | $Enums.PlaytimeProvider
+}
+
+export type EnumPlaytimeProviderWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PlaytimeProvider | Prisma.EnumPlaytimeProviderFieldRefInput<$PrismaModel>
+  in?: $Enums.PlaytimeProvider[] | Prisma.ListEnumPlaytimeProviderFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PlaytimeProvider[] | Prisma.ListEnumPlaytimeProviderFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPlaytimeProviderWithAggregatesFilter<$PrismaModel> | $Enums.PlaytimeProvider
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPlaytimeProviderFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPlaytimeProviderFilter<$PrismaModel>
 }
 
 export type EnumEnrichmentJobStatusFilter<$PrismaModel = never> = {
@@ -1149,6 +1183,13 @@ export type NestedEnumHandheldOsFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumHandheldOsFilter<$PrismaModel> | $Enums.HandheldOs
 }
 
+export type NestedEnumDurationProfileFilter<$PrismaModel = never> = {
+  equals?: $Enums.DurationProfile | Prisma.EnumDurationProfileFieldRefInput<$PrismaModel>
+  in?: $Enums.DurationProfile[] | Prisma.ListEnumDurationProfileFieldRefInput<$PrismaModel>
+  notIn?: $Enums.DurationProfile[] | Prisma.ListEnumDurationProfileFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumDurationProfileFilter<$PrismaModel> | $Enums.DurationProfile
+}
+
 export type NestedEnumThemeWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.Theme | Prisma.EnumThemeFieldRefInput<$PrismaModel>
   in?: $Enums.Theme[] | Prisma.ListEnumThemeFieldRefInput<$PrismaModel>
@@ -1185,6 +1226,16 @@ export type NestedEnumHandheldOsWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumHandheldOsFilter<$PrismaModel>
   _max?: Prisma.NestedEnumHandheldOsFilter<$PrismaModel>
+}
+
+export type NestedEnumDurationProfileWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.DurationProfile | Prisma.EnumDurationProfileFieldRefInput<$PrismaModel>
+  in?: $Enums.DurationProfile[] | Prisma.ListEnumDurationProfileFieldRefInput<$PrismaModel>
+  notIn?: $Enums.DurationProfile[] | Prisma.ListEnumDurationProfileFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumDurationProfileWithAggregatesFilter<$PrismaModel> | $Enums.DurationProfile
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumDurationProfileFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumDurationProfileFilter<$PrismaModel>
 }
 
 export type NestedJsonNullableFilter<$PrismaModel = never> =
@@ -1352,6 +1403,23 @@ export type NestedEnumProviderWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumProviderFilter<$PrismaModel>
   _max?: Prisma.NestedEnumProviderFilter<$PrismaModel>
+}
+
+export type NestedEnumPlaytimeProviderFilter<$PrismaModel = never> = {
+  equals?: $Enums.PlaytimeProvider | Prisma.EnumPlaytimeProviderFieldRefInput<$PrismaModel>
+  in?: $Enums.PlaytimeProvider[] | Prisma.ListEnumPlaytimeProviderFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PlaytimeProvider[] | Prisma.ListEnumPlaytimeProviderFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPlaytimeProviderFilter<$PrismaModel> | $Enums.PlaytimeProvider
+}
+
+export type NestedEnumPlaytimeProviderWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PlaytimeProvider | Prisma.EnumPlaytimeProviderFieldRefInput<$PrismaModel>
+  in?: $Enums.PlaytimeProvider[] | Prisma.ListEnumPlaytimeProviderFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PlaytimeProvider[] | Prisma.ListEnumPlaytimeProviderFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPlaytimeProviderWithAggregatesFilter<$PrismaModel> | $Enums.PlaytimeProvider
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPlaytimeProviderFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPlaytimeProviderFilter<$PrismaModel>
 }
 
 export type NestedEnumEnrichmentJobStatusFilter<$PrismaModel = never> = {

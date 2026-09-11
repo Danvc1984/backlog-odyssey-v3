@@ -12,6 +12,13 @@ import { SegmentedControl, type Option } from "@/components/preferences/Segmente
 import { useVisualPreferences } from "@/components/preferences/VisualPreferencesProvider";
 import type { ThemeFamily } from "@/lib/visual-preferences";
 import type { OsSetup } from "@/lib/os-setup";
+import type { DurationProfile } from "@/generated/prisma/client";
+
+const durationOptions = [
+  { value: "HASTILY", label: "Main story" },
+  { value: "NORMALLY", label: "Main + extras" },
+  { value: "COMPLETELY", label: "Completionist" },
+] as const;
 
 const themeModeOptions: Option<string>[] = [
   { value: "system", label: "System" },
@@ -30,6 +37,7 @@ export function WelcomeSetupForm({ gameCount }: { gameCount: number }) {
   const [handheldOs, setHandheldOs] = useState<OsSetup["handheldOs"]>("NONE");
   const [saving, setSaving] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [durationProfile, setDurationProfile] = useState<DurationProfile>("NORMALLY");
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
   const { family, setFamily } = useVisualPreferences();
@@ -41,7 +49,7 @@ export function WelcomeSetupForm({ gameCount }: { gameCount: number }) {
 
   const save = async () => {
     setSaving(true);
-    const result = await updateOsSetup({ primaryOs, hasWindowsFallback, handheldOs, onboardingCompleted: true });
+    const result = await updateOsSetup({ primaryOs, hasWindowsFallback, handheldOs, onboardingCompleted: true, durationProfile });
     setSaving(false);
     if (!result.success) {
       toast.error(result.error ?? "Could not save setup");
@@ -92,6 +100,16 @@ export function WelcomeSetupForm({ gameCount }: { gameCount: number }) {
             <SelectItem value="WINDOWS">Windows</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="welcome-duration-profile">Duration profile</Label>
+        <Select value={durationProfile} onValueChange={(value) => setDurationProfile(value as DurationProfile)}>
+          <SelectTrigger id="welcome-duration-profile"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {durationOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">Uses IGDB main story, main plus extras, or completionist estimates.</p>
       </div>
       {primaryOs === "LINUX" && (
         <label className="flex items-center gap-2 text-sm">

@@ -64,6 +64,7 @@ export const ModelName = {
   WishlistImportIgnore: 'WishlistImportIgnore',
   ExternalGameId: 'ExternalGameId',
   MetadataSnapshot: 'MetadataSnapshot',
+  PlaytimeEvidence: 'PlaytimeEvidence',
   EnrichmentJob: 'EnrichmentJob',
   PersonalTag: 'PersonalTag',
   GameTag: 'GameTag',
@@ -173,6 +174,7 @@ export const AppSettingsScalarFieldEnum = {
   timeZone: 'timeZone',
   wallpaperEnabled: 'wallpaperEnabled',
   reducedData: 'reducedData',
+  durationProfile: 'durationProfile',
   steamDailySyncEnabled: 'steamDailySyncEnabled',
   itadDailyRefresh: 'itadDailyRefresh',
   createdAt: 'createdAt',
@@ -284,6 +286,18 @@ export const MetadataSnapshotScalarFieldEnum = {
 } as const
 
 export type MetadataSnapshotScalarFieldEnum = (typeof MetadataSnapshotScalarFieldEnum)[keyof typeof MetadataSnapshotScalarFieldEnum]
+
+
+export const PlaytimeEvidenceScalarFieldEnum = {
+  id: 'id',
+  gameId: 'gameId',
+  provider: 'provider',
+  payload: 'payload',
+  sourceUrl: 'sourceUrl',
+  fetchedAt: 'fetchedAt'
+} as const
+
+export type PlaytimeEvidenceScalarFieldEnum = (typeof PlaytimeEvidenceScalarFieldEnum)[keyof typeof PlaytimeEvidenceScalarFieldEnum]
 
 
 export const EnrichmentJobScalarFieldEnum = {

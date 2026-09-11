@@ -109,6 +109,12 @@ enum Theme {
   SYSTEM
 }
 
+enum DurationProfile {
+  HASTILY
+  NORMALLY
+  COMPLETELY
+}
+
 enum RecommendationKind {
   PLAY_NEXT
   BUY
@@ -201,6 +207,11 @@ enum Provider {
   WALLHAVEN
 }
 
+enum PlaytimeProvider {
+  IGDB
+  STEAMSPY
+}
+
 model IgdbTokenCache {
   id          Int      @id @default(1)
   accessToken String   @db.Text
@@ -273,6 +284,7 @@ model AppSettings {
   timeZone              String   @default("America/Mexico_City") // IANA; Mexico eliminated DST in 2023, permanently UTC-6
   wallpaperEnabled      Boolean  @default(true)
   reducedData           Boolean  @default(false)
+  durationProfile       DurationProfile @default(NORMALLY)
   steamDailySyncEnabled Boolean  @default(true)
   itadDailyRefresh      Boolean  @default(true)
   createdAt             DateTime @default(now())
@@ -317,6 +329,7 @@ model Game {
   dlcs                Game[]                     @relation("DLCToBase")
   externalIds         ExternalGameId[]
   metadataSnapshots   MetadataSnapshot[]
+  playtimeEvidence    PlaytimeEvidence?
   enrichmentJobs      EnrichmentJob[]
   libraryEntry        LibraryEntry?
   availability        GameAvailability[]
@@ -399,6 +412,17 @@ model MetadataSnapshot {
   game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
   @@index([gameId, provider])
+}
+
+model PlaytimeEvidence {
+  id         String           @id @default(cuid())
+  gameId     String           @unique
+  provider   PlaytimeProvider
+  payload    Json
+  sourceUrl  String?
+  fetchedAt  DateTime         @default(now())
+
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
 }
 
 model EnrichmentJob {

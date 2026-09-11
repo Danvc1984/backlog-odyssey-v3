@@ -8,7 +8,7 @@ vi.mock("@/lib/recommendations/run-pipeline", () => ({ runRecommendationPipeline
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { runRecommendationPipeline } from "@/lib/recommendations/run-pipeline";
-import { updateOsSetup } from "./settings";
+import { updateDurationProfile, updateOsSetup } from "./settings";
 
 const transaction = vi.fn();
 const settingsUpsert = vi.fn();
@@ -76,6 +76,9 @@ beforeEach(() => {
   };
   transaction.mockImplementation(async (callback: (value: typeof tx) => unknown) => callback(tx));
   (prisma as unknown as { $transaction: typeof transaction }).$transaction = transaction;
+  (prisma as unknown as { appSettings: { upsert: typeof settingsUpsert } }).appSettings = {
+    upsert: settingsUpsert,
+  };
 });
 
 describe("updateOsSetup", () => {
@@ -110,5 +113,41 @@ describe("updateOsSetup", () => {
 
     expect(result).toEqual({ success: false, data: null, error: "Invalid OS setup" });
     expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it("persists a duration profile without rederiving compatibility or recommendations", async () => {
+    const result = await updateDurationProfile({ durationProfile: "COMPLETELY" });
+
+    expect(result.success).toBe(true);
+    expect(settingsUpsert).toHaveBeenCalledWith({
+      where: { id: 1 },
+      create: { id: 1, durationProfile: "COMPLETELY" },
+      update: { durationProfile: "COMPLETELY" },
+    });
+    expect(transaction).not.toHaveBeenCalled();
+    expect(runRecommendationPipeline).not.toHaveBeenCalled();
+  });
+
+  it("rejects an invalid duration profile before persistence", async () => {
+    const result = await updateDurationProfile({ durationProfile: "INVALID" });
+
+    expect(result).toEqual({ success: false, data: null, error: "Invalid duration profile" });
+    expect(settingsUpsert).not.toHaveBeenCalled();
+  });
+
+  it("accepts durationProfile in OS setup and leaves it absent when omitted", async () => {
+    await updateOsSetup({ ...validSetup, durationProfile: "HASTILY" });
+    expect(settingsUpsert).toHaveBeenCalledWith(expect.objectContaining({
+      create: expect.objectContaining({ durationProfile: "HASTILY" }),
+      update: expect.objectContaining({ durationProfile: "HASTILY" }),
+    }));
+
+    settingsUpsert.mockClear();
+    await updateOsSetup(validSetup);
+    expect(settingsUpsert).toHaveBeenCalledWith({
+      where: { id: 1 },
+      create: { id: 1, ...validSetup },
+      update: validSetup,
+    });
   });
 });

@@ -113,6 +113,16 @@ describe("candidate dimension resolution", () => {
     ).toEqual({ EXPERIENCE: ["REPLAYING"] });
   });
 
+  it("adds a duration band when duration evidence resolves to hours", () => {
+    expect(
+      resolveCandidateDimensionValues(null, {
+        gameExperience: null,
+        preferredEnvironment: null,
+        durationHours: 9,
+      }),
+    ).toEqual({ DURATION: ["MEDIUM"] });
+  });
+
   it("skips a preferred environment that is not configured", () => {
     expect(
       resolveCandidateDimensionValues(null, {

@@ -19,6 +19,13 @@ export interface IgdbProviderError {
   status?: number;
 }
 
+export interface IgdbGameTimeToBeats {
+  count: number | null;
+  hastilySeconds: number | null;
+  normallySeconds: number | null;
+  completelySeconds: number | null;
+}
+
 export type IgdbCategoryClass = "MAIN_GAME" | "DLC" | "NEVER_AUTO";
 
 export interface IgdbSearchCandidate {

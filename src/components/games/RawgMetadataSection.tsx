@@ -23,7 +23,6 @@ export function RawgMetadataSection({ payload, sourceUrl, fetchedAt }: { payload
         <Field label="Released" value={payload.releaseDate} />
         <Field label="Rating" value={payload.rating === null ? null : `${payload.rating.toFixed(1)} / 5`} />
         <Field label="Metacritic" value={payload.metacriticScore === null ? null : `${payload.metacriticScore} / 100`} />
-        <Field label="Playtime" value={payload.playtimeHours === null ? null : `${payload.playtimeHours} hours`} />
         <Field label="ESRB" value={payload.esrbRating?.name ?? null} />
         <Values label="Genres" values={payload.genres} />
         <Values label="Alternative names" values={payload.alternativeNames} />

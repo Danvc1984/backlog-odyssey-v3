@@ -49,6 +49,23 @@ describe("card metadata views", () => {
     });
   });
 
+  it("keeps duration cards when an IGDB summary is absent", () => {
+    expect(igdbLibraryCardMetadataView({
+      schemaVersion: 1,
+      name: "Portal 2",
+      summary: null,
+      coverUrl: "https://images.example/cover.jpg",
+      artworkUrls: [],
+      screenshots: [],
+      genres: [],
+      developers: [],
+      ratings: { total: { score: null, count: null }, aggregated: { score: null, count: null } },
+    }, 12)).toMatchObject({
+      description: null,
+      playtimeHours: 12,
+    });
+  });
+
   it("projects the library cover and card metadata", () => {
     expect(libraryCardMetadataView(payload)).toEqual({
       imageUrl: "https://example.com/portal-2.jpg",

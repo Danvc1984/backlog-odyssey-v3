@@ -51,6 +51,7 @@ export async function loadCandidates(client: Prisma.TransactionClient) {
         take: 1,
         select: { payload: true },
       },
+      playtimeEvidence: { select: { provider: true, payload: true } },
       envCompat: { select: { environment: true, status: true } },
     },
   });
@@ -216,7 +217,7 @@ export async function loadBuyCandidates(client: Prisma.TransactionClient) {
   };
 }
 
-export function tuneInput(payload: unknown, experience: string | null): TuneCandidateInput {
+export function tuneInput(payload: unknown, experience: string | null, durationHours: number | null = null): TuneCandidateInput {
   const parsed = parseRawgMetadataPayload(payload);
   return parsed
     ? {
@@ -227,8 +228,9 @@ export function tuneInput(payload: unknown, experience: string | null): TuneCand
         tags: parsed.tags,
         esrbRating: parsed.esrbRating,
         seriesGames: parsed.seriesGames,
+        durationHours,
       }
-    : { experience };
+    : { experience, durationHours };
 }
 
 type CalibrationKind = "PLAY_NEXT" | "BUY";

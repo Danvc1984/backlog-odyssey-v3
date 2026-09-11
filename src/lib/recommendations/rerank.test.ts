@@ -160,13 +160,16 @@ describe("scoreTaste", () => {
     expect(result).toEqual({ points: 0, factors: [] });
   });
 
-  it("does not use duration as a recommendation signal", () => {
+  it("uses duration as a recommendation signal", () => {
     const result = scoreTaste({
       profile: profile({ DURATION: { SHORT: { weight: 9, support: 4 } } }),
       dimensionValues: dims({ DURATION: ["SHORT"] }),
       preferences: noPreferences,
     });
-    expect(result).toEqual({ points: 0, factors: [] });
+    expect(result).toEqual({
+      points: 3,
+      factors: [{ factor: "taste_profile", label: "Matches your preference for short games", points: 3 }],
+    });
   });
 
   it("matches preference values case-sensitively", () => {

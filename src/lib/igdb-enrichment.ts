@@ -30,6 +30,10 @@ export type IgdbSnapshotPersistenceResult =
       error: { code: "PERSISTENCE_FAILED"; message: string };
     };
 
+export type PlaytimeEvidencePersistenceResult =
+  | { success: true; data: { gameId: string; provider: "IGDB" | "STEAMSPY" }; error: null }
+  | { success: false; data: null; error: { code: "PERSISTENCE_FAILED"; message: string } };
+
 export interface IgdbSnapshotPersistenceOptions {
   fetchImage?: typeof fetch;
 }
@@ -181,6 +185,30 @@ export async function persistIgdbSnapshot(
       success: false,
       data: null,
       error: { code: "PERSISTENCE_FAILED", message: "IGDB metadata could not be saved" },
+    };
+  }
+}
+
+export async function persistPlaytimeEvidence(
+  gameId: string,
+  provider: "IGDB" | "STEAMSPY",
+  payload: Prisma.InputJsonValue,
+  sourceUrl: string | null,
+  fetchedAt: Date,
+): Promise<PlaytimeEvidencePersistenceResult> {
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.playtimeEvidence.deleteMany({ where: { gameId } });
+      await tx.playtimeEvidence.create({
+        data: { gameId, provider, payload, sourceUrl, fetchedAt },
+      });
+    });
+    return { success: true, data: { gameId, provider }, error: null };
+  } catch {
+    return {
+      success: false,
+      data: null,
+      error: { code: "PERSISTENCE_FAILED", message: "Playtime evidence could not be saved" },
     };
   }
 }

@@ -2,6 +2,7 @@ import type { IgdbMetadataPayload, IgdbNamedValue, IgdbRelation } from "@/lib/ig
 import { externalUrl } from "@/lib/external-url";
 import { SectionCard } from "@/components/ui/detail-card";
 import { ArrowSquareOutIcon } from "@phosphor-icons/react/ssr";
+import { resolveDurationEstimate, resolveDurationOptions, type DurationProfile, type PlaytimeEvidenceRow } from "@/lib/playtime-evidence";
 
 function Field({ label, value }: { label: string; value: string | null }) {
   if (!value) return null;
@@ -50,13 +51,24 @@ export function MetadataSection({
   payload,
   sourceUrl,
   fetchedAt,
+  durationEvidence,
+  durationProfile,
 }: {
   payload: IgdbMetadataPayload | null;
   sourceUrl: string | null;
   fetchedAt: Date | null;
+  durationEvidence: (PlaytimeEvidenceRow & { sourceUrl: string | null; fetchedAt: Date }) | null;
+  durationProfile: DurationProfile;
 }) {
   const source = externalUrl(sourceUrl ?? payload?.attribution.sourceUrl ?? null);
   const website = externalUrl(payload?.officialWebsite ?? null);
+  const duration = resolveDurationEstimate(durationEvidence, durationProfile);
+  const durationOptions = resolveDurationOptions(durationEvidence);
+  const formatDuration = (hours: number) => {
+    const wholeHours = Math.floor(hours);
+    const minutes = Math.round((hours - wholeHours) * 60);
+    return minutes === 60 ? `${wholeHours + 1}h` : `${wholeHours}h${minutes > 0 ? ` ${minutes}m` : ""}`;
+  };
 
   return (
     <SectionCard eyebrow="Metadata" title="Game details" id="igdb-metadata-heading">
@@ -92,6 +104,29 @@ export function MetadataSection({
               <Relations relations={payload.relations} />
             </dl>
           </details>
+
+          {durationEvidence && (
+            <div className="border-t border-border pt-4">
+              <p className="text-xs text-muted-foreground">Duration</p>
+              {duration ? (
+                <p className="mt-1 text-sm">
+                  ~{formatDuration(duration.hours)}
+                  {duration.sampleCount === null ? "" : ` (${duration.sampleCount.toLocaleString()} reports)`}
+                </p>
+              ) : <p className="mt-1 text-sm text-muted-foreground">Duration unknown</p>}
+              {durationOptions.length > 0 && (
+                <details className="mt-3">
+                  <summary className="cursor-pointer text-xs font-semibold">All duration estimates</summary>
+                  <dl className="mt-3 grid gap-3 sm:grid-cols-3">
+                    {durationOptions.map((option) => (
+                      <Field key={option.label} label={option.label} value={`~${formatDuration(option.estimate.hours)}${option.estimate.sampleCount === null ? "" : ` (${option.estimate.sampleCount.toLocaleString()} reports)`}`} />
+                    ))}
+                  </dl>
+                </details>
+              )}
+              {durationEvidence.sourceUrl && <a className="mt-3 inline-flex items-center gap-1 text-xs underline-offset-4 hover:underline" href={durationEvidence.sourceUrl} target="_blank" rel="noreferrer">Source <ArrowSquareOutIcon aria-hidden="true" className="size-3" /></a>}
+            </div>
+          )}
 
           <div className="flex flex-col gap-3 border-t border-border pt-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             {website && <a href={website} target="_blank" rel="noreferrer" className="text-sm text-primary underline-offset-4 hover:underline">Visit official website</a>}

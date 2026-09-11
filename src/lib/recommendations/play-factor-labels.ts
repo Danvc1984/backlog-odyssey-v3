@@ -7,6 +7,10 @@ function readableValue(value: string): string {
     Y2005_2014: "games from 2005 to 2014",
     Y2015_2019: "games from 2015 to 2019",
     Y2020_PLUS: "games from 2020 onward",
+    SHORT: "short games",
+    MEDIUM: "medium-length games",
+    LONG: "long games",
+    VERY_LONG: "very long games",
   };
   return labels[value] ?? value.replaceAll("_", " ").toLowerCase();
 }

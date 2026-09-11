@@ -1,6 +1,6 @@
 import { deriveSequelRelationship } from "@/lib/rawg-enrichment";
 import type { RawgSeriesEntry } from "@/lib/rawg-types";
-import { eraBucket } from "@/lib/recommendations/profile";
+import { durationBand, eraBucket } from "@/lib/recommendations/profile";
 import type {
   ExplanationFactor,
   SourceTune,
@@ -21,6 +21,7 @@ export interface TuneCandidateInput {
   tags?: string[];
   esrbRating?: { name: string } | null;
   seriesGames?: RawgSeriesEntry[];
+  durationHours?: number | null;
 }
 
 export interface TuneMatch {
@@ -125,6 +126,7 @@ export function matchTuneCriteria(tune: TuneContext, candidate: TuneCandidateInp
   if (tune.tags.some((tag) => candidate.tags?.includes(tag))) criteria.push("tag");
   if (tune.sequelPosture && matchesSequelPosture(tune.sequelPosture, candidate)) criteria.push("sequelPosture");
   if (tune.era && tune.era === eraBucket(candidate.releaseDate ?? null)) criteria.push("era");
+  if (tune.length && tune.length === durationBand(candidate.durationHours ?? null)) criteria.push("length");
   if (matchesMaturity(tune.maturity, candidate.esrbRating?.name ?? null)) criteria.push("maturity");
 
   return {

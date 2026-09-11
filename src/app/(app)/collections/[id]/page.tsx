@@ -13,6 +13,7 @@ import { StatusPill } from "@/components/ui/detail-card";
 import { deriveCompatTag } from "@/lib/protondb-tags";
 import { getCompatibilityGate } from "@/lib/compat-gate";
 import { igdbLibraryCardMetadataView } from "@/lib/card-metadata-view";
+import { resolveDurationEstimate, type DurationProfile } from "@/lib/playtime-evidence";
 
 interface CollectionSearchParams {
   q?: string;
@@ -43,19 +44,21 @@ function toLibraryEntry(entry: {
     type: string;
     baseGame: { id: string; name: string } | null;
     metadataSnapshots: { id: string; payload?: unknown }[];
+    playtimeEvidence: { provider: string; payload: unknown } | null;
     _count: { dlcs: number; collections: number };
     externalIds: { externalId: string }[];
     compatSnapshots: { result: unknown; fetchedAt: Date }[];
     availability: LibraryGameCardEntry["game"]["availability"];
   };
-}, compatibilityActive: boolean): LibraryGameCardEntry {
+}, compatibilityActive: boolean, durationProfile: DurationProfile): LibraryGameCardEntry {
   const isRomOnly =
     entry.game.availability.some((availability) => availability.source === "ROM") &&
     !entry.game.availability.some((availability) => availability.source === "STEAM");
 
   const { metadataSnapshots } = entry.game;
+  const duration = resolveDurationEstimate(entry.game.playtimeEvidence, durationProfile);
   const metadata = metadataSnapshots
-    .map((snapshot) => igdbLibraryCardMetadataView(snapshot.payload))
+    .map((snapshot) => igdbLibraryCardMetadataView(snapshot.payload, duration?.hours ?? null))
     .find((view) => view !== null) ?? null;
 
   return {
@@ -104,6 +107,9 @@ function collectionGameInclude() {
       where: { provider: "IGDB" as const },
       select: { id: true, payload: true },
     },
+    playtimeEvidence: {
+      select: { provider: true, payload: true },
+    },
     _count: { select: { dlcs: true, collections: true } },
   };
 }
@@ -116,7 +122,11 @@ export default async function CollectionDetailPage({
   searchParams: Promise<CollectionSearchParams>;
 }) {
   const [{ id }, { q = "", sort = "newest" }] = await Promise.all([params, searchParams]);
-  const compatibilityGate = await getCompatibilityGate();
+  const [compatibilityGate, appSettings] = await Promise.all([
+    getCompatibilityGate(),
+    prisma.appSettings.findUnique({ where: { id: 1 }, select: { durationProfile: true } }),
+  ]);
+  const durationProfile = (appSettings?.durationProfile ?? "NORMALLY") as DurationProfile;
   const isSystem = isSystemCollectionId(id);
   const systemDef = isSystem ? getSystemCollectionDefinition(id) : undefined;
   let name = "";
@@ -130,7 +140,7 @@ export default async function CollectionDetailPage({
       where: systemDef.where,
       include: { game: { include: collectionGameInclude() } },
     });
-    rows = entries.map((entry) => toLibraryEntry(entry, compatibilityGate.active));
+    rows = entries.map((entry) => toLibraryEntry(entry, compatibilityGate.active, durationProfile));
   } else {
     const collection = await prisma.collection.findUnique({
       where: { id },
@@ -153,7 +163,7 @@ export default async function CollectionDetailPage({
     color = collection.color;
     rows = collection.members
       .filter((member) => member.game.libraryEntry !== null)
-      .map((member) => toLibraryEntry({ ...member.game.libraryEntry!, game: member.game }, compatibilityGate.active));
+      .map((member) => toLibraryEntry({ ...member.game.libraryEntry!, game: member.game }, compatibilityGate.active, durationProfile));
   }
 
   const query = q.trim().toLocaleLowerCase();

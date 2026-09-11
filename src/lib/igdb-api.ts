@@ -12,6 +12,7 @@ import {
   IGDB_STEAM_EXTERNAL_CATEGORY,
   type IgdbCategoryClass,
   type IgdbGameResponse,
+  type IgdbGameTimeToBeats,
   type IgdbMatchRequest,
   type IgdbMatchResult,
   type IgdbProviderError,
@@ -39,7 +40,7 @@ export interface IgdbRequestOptions {
   fetchFn?: typeof fetch;
   delayFn?: (milliseconds: number) => Promise<void>;
   maxAttempts?: number;
-  endpoint?: "games" | "external_games";
+  endpoint?: "games" | "external_games" | "game_time_to_beats";
   offset?: number;
   searchTerm?: string;
 }
@@ -70,13 +71,13 @@ async function fetchIgdb(
   query: string,
   accessToken: string,
   clientId: string,
-  endpoint: "games" | "external_games",
+  endpoint: "games" | "external_games" | "game_time_to_beats",
 ): Promise<Response> {
   return withIgdbRateLimit(async () => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     try {
-      return fetchFn(`${IGDB_API_BASE_URL}/${endpoint}`, {
+      return await fetchFn(`${IGDB_API_BASE_URL}/${endpoint}`, {
         method: "POST",
         headers: {
           "Client-ID": clientId,
@@ -285,6 +286,36 @@ export async function resolveIgdbGameBySteamAppId(
     if (result.data) games.push(result.data);
   }
   return { ok: true, data: games };
+}
+
+function positiveNumberOrNull(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
+}
+
+export async function fetchIgdbGameTimeToBeats(
+  igdbId: number,
+  options: IgdbRequestOptions = {},
+): Promise<IgdbLookupResult<IgdbGameTimeToBeats | null>> {
+  if (!Number.isSafeInteger(igdbId) || igdbId <= 0) return { ok: true, data: null };
+  const result = await requestIgdb(
+    `fields game_id,count,hastily,normally,completely; where game_id = ${igdbId}; limit 1;`,
+    { ...options, endpoint: "game_time_to_beats" },
+  );
+  if (!result.ok) return result;
+  if (!Array.isArray(result.data)) {
+    return { ok: false, error: { category: "MALFORMED_RESPONSE", message: "IGDB returned invalid time-to-beats data" } };
+  }
+  const row = result.data[0];
+  if (!isRecord(row)) return { ok: true, data: null };
+  return {
+    ok: true,
+    data: {
+      count: positiveNumberOrNull(row.count),
+      hastilySeconds: positiveNumberOrNull(row.hastily),
+      normallySeconds: positiveNumberOrNull(row.normally),
+      completelySeconds: positiveNumberOrNull(row.completely),
+    },
+  };
 }
 
 export async function searchIgdbCandidatePage(

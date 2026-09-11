@@ -2,17 +2,20 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
-vi.mock("@/lib/igdb-api", () => ({ matchIgdbGame: vi.fn() }));
+vi.mock("@/lib/igdb-api", () => ({ fetchIgdbGameTimeToBeats: vi.fn(), matchIgdbGame: vi.fn() }));
+vi.mock("@/lib/steamspy-api", () => ({ fetchSteamSpyMedian: vi.fn() }));
 vi.mock("@/lib/igdb-enrichment", () => ({
   persistIgdbIdentity: vi.fn(),
+  persistPlaytimeEvidence: vi.fn(),
   persistIgdbSnapshot: vi.fn(),
 }));
 vi.mock("@/lib/compat-queue", () => ({ queueCompatibilityForGame: vi.fn() }));
 
 import { prisma } from "@/lib/prisma";
 import { queueCompatibilityForGame } from "@/lib/compat-queue";
-import { matchIgdbGame } from "@/lib/igdb-api";
-import { persistIgdbIdentity, persistIgdbSnapshot } from "@/lib/igdb-enrichment";
+import { fetchIgdbGameTimeToBeats, matchIgdbGame } from "@/lib/igdb-api";
+import { fetchSteamSpyMedian } from "@/lib/steamspy-api";
+import { persistIgdbIdentity, persistIgdbSnapshot, persistPlaytimeEvidence } from "@/lib/igdb-enrichment";
 import { runIgdbEnrichmentJob } from "./igdb-job-runner";
 
 const game = { id: 42, slug: "portal-2", name: "Portal 2", category: 0 };
@@ -45,6 +48,7 @@ function job(overrides: Record<string, unknown> = {}) {
       name: "Portal 2",
       type: "BASE_GAME",
       availability: [{ steamAppId: "620" }],
+      externalIds: [],
     },
     ...overrides,
   };
@@ -64,6 +68,9 @@ describe("IGDB job runner", () => {
     vi.mocked(matchIgdbGame).mockResolvedValue({ outcome: "NOT_FOUND" });
     vi.mocked(persistIgdbIdentity).mockResolvedValue({ success: true, data: { gameId: "game-1", igdbId: 42 }, error: null });
     vi.mocked(persistIgdbSnapshot).mockResolvedValue({ success: true, data: { gameId: "game-1", fetchedAt: new Date() }, error: null });
+    vi.mocked(fetchIgdbGameTimeToBeats).mockResolvedValue({ ok: true, data: null });
+    vi.mocked(fetchSteamSpyMedian).mockResolvedValue({ ok: true, data: null });
+    vi.mocked(persistPlaytimeEvidence).mockResolvedValue({ success: true, data: { gameId: "game-1", provider: "IGDB" }, error: null });
     vi.mocked(queueCompatibilityForGame).mockResolvedValue(null);
   });
 
@@ -99,6 +106,35 @@ describe("IGDB job runner", () => {
     expect(persistIgdbSnapshot).toHaveBeenCalledWith("game-1", game, expect.any(Date));
     expect(queueCompatibilityForGame).toHaveBeenCalledWith("game-1");
     expect(result).toMatchObject({ success: true, data: { status: "SUCCEEDED", progress: 100 } });
+  });
+
+  it("persists IGDB time-to-beats and does not call SteamSpy", async () => {
+    vi.mocked(matchIgdbGame).mockResolvedValue({ outcome: "MATCHED", matchMethod: "INFERRED", game });
+    vi.mocked(fetchIgdbGameTimeToBeats).mockResolvedValue({ ok: true, data: { count: 4, hastilySeconds: 3_600, normallySeconds: null, completelySeconds: null } });
+
+    await runIgdbEnrichmentJob("job-1");
+
+    expect(persistPlaytimeEvidence).toHaveBeenCalledWith("game-1", "IGDB", expect.objectContaining({ count: 4 }), "https://www.igdb.com/games/portal-2", expect.any(Date));
+    expect(fetchSteamSpyMedian).not.toHaveBeenCalled();
+  });
+
+  it("falls back to SteamSpy only without usable IGDB time-to-beats and a confirmed app ID", async () => {
+    vi.mocked(matchIgdbGame).mockResolvedValue({ outcome: "MATCHED", matchMethod: "INFERRED", game });
+    vi.mocked(fetchSteamSpyMedian).mockResolvedValue({ ok: true, data: { medianForeverMinutes: 900 } });
+
+    await runIgdbEnrichmentJob("job-1");
+
+    expect(fetchSteamSpyMedian).toHaveBeenCalledWith("620");
+    expect(persistPlaytimeEvidence).toHaveBeenCalledWith("game-1", "STEAMSPY", { appId: "620", medianForeverMinutes: 900 }, "https://steamspy.com/app/620", expect.any(Date));
+  });
+
+  it("does not call SteamSpy without a confirmed app ID", async () => {
+    vi.mocked(matchIgdbGame).mockResolvedValue({ outcome: "MATCHED", matchMethod: "INFERRED", game });
+    findFirst.mockResolvedValue(job({ game: { ...job().game, availability: [], externalIds: [] } }));
+
+    await runIgdbEnrichmentJob("job-1");
+
+    expect(fetchSteamSpyMedian).not.toHaveBeenCalled();
   });
 
   it("does not hide an identity conflict behind a successful snapshot", async () => {

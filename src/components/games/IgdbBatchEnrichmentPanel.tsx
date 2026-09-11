@@ -7,13 +7,14 @@ import { startIgdbCatalogEnrichment } from "@/actions/igdb-batch-enrichment";
 import { Button } from "@/components/ui/button";
 import type { IgdbBatchView } from "@/lib/igdb-batch-runner";
 
-export function IgdbBatchEnrichmentButton() {
+export function IgdbBatchEnrichmentButton({ onStarted }: { onStarted?: (batchId: string) => void }) {
   const [busy, setBusy] = useState(false);
   const start = async () => {
     setBusy(true);
     try {
       const result = await startIgdbCatalogEnrichment({});
       if (!result.success) throw new Error(result.error ?? "Failed to queue IGDB catalog enrichment");
+      onStarted?.(result.data.batchId);
       toast.success(result.data.kind === "ACTIVE_BATCH" ? "IGDB catalog enrichment is already running." : "IGDB catalog enrichment queued.");
     } catch (error) { toast.error(error instanceof Error ? error.message : "Failed to queue IGDB catalog enrichment"); }
     finally { setBusy(false); }
@@ -21,7 +22,7 @@ export function IgdbBatchEnrichmentButton() {
   return <Button type="button" size="sm" disabled={busy} onClick={() => void start()}>{busy ? "Starting..." : "Enrich catalog with IGDB"}</Button>;
 }
 
-export function IgdbBatchEnrichmentPanel({ initialBatch, embedded = false }: { initialBatch: IgdbBatchView | null; embedded?: boolean }) {
+export function IgdbBatchEnrichmentPanel({ initialBatch, embedded = false, refreshBatchId = null }: { initialBatch: IgdbBatchView | null; embedded?: boolean; refreshBatchId?: string | null }) {
   const [batch, setBatch] = useState(initialBatch);
   const [error, setError] = useState<string | null>(null);
   const lastStatus = useRef<string | null>(null);
@@ -31,6 +32,14 @@ export function IgdbBatchEnrichmentPanel({ initialBatch, embedded = false }: { i
     if (!response.ok || !result.success || !result.data) throw new Error(result.error ?? "Failed to update IGDB catalog enrichment");
     return result.data;
   }, []);
+  useEffect(() => {
+    if (!refreshBatchId || refreshBatchId === batch?.id) return;
+    let cancelled = false;
+    void request(refreshBatchId, "GET")
+      .then((latest) => { if (!cancelled) setBatch(latest); })
+      .catch((caught) => { if (!cancelled) setError(caught instanceof Error ? caught.message : "Failed to load IGDB catalog enrichment"); });
+    return () => { cancelled = true; };
+  }, [batch?.id, refreshBatchId, request]);
   useEffect(() => {
     if (!batch || batch.status !== "RUNNING") return;
     let cancelled = false;

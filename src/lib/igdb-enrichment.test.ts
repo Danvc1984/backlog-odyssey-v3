@@ -9,6 +9,7 @@ import { extractPaletteFromImageBytes } from "./palette";
 import {
   persistIgdbIdentity,
   persistIgdbSnapshot,
+  persistPlaytimeEvidence,
   selectIgdbPaletteSources,
 } from "./igdb-enrichment";
 import type { IgdbGameResponse, IgdbMatchResult } from "./igdb-types";
@@ -19,10 +20,13 @@ const create = vi.fn();
 const transaction = vi.fn();
 const deleteSnapshots = vi.fn();
 const createSnapshot = vi.fn();
-const tx = {
+const deletePlaytimeEvidence = vi.fn();
+const createPlaytimeEvidence = vi.fn();
+  const tx = {
   externalGameId: { findUnique, deleteMany, create },
   metadataSnapshot: { deleteMany: deleteSnapshots, create: createSnapshot },
-};
+  playtimeEvidence: { deleteMany: deletePlaytimeEvidence, create: createPlaytimeEvidence },
+  };
 
 const matched: IgdbMatchResult = {
   outcome: "MATCHED",
@@ -50,6 +54,8 @@ describe("IGDB identity persistence", () => {
     create.mockResolvedValue({ id: "identity-1" });
     deleteSnapshots.mockResolvedValue({ count: 1 });
     createSnapshot.mockResolvedValue({ id: "snapshot-1" });
+    deletePlaytimeEvidence.mockResolvedValue({ count: 1 });
+    createPlaytimeEvidence.mockResolvedValue({ id: "evidence-1" });
     vi.mocked(extractPaletteFromImageBytes).mockResolvedValue(null);
   });
 
@@ -119,6 +125,18 @@ describe("IGDB identity persistence", () => {
     });
     expect(deleteMany).not.toHaveBeenCalled();
     expect(create).not.toHaveBeenCalled();
+  });
+
+  it("replaces playtime evidence in its own transaction", async () => {
+    await expect(persistPlaytimeEvidence(
+      "game-1",
+      "IGDB",
+      { count: 4, hastilySeconds: 3_600, normallySeconds: 7_200, completelySeconds: null },
+      "https://www.igdb.com/games/portal-2",
+      new Date("2026-09-11T12:00:00.000Z"),
+    )).resolves.toMatchObject({ success: true, data: { gameId: "game-1", provider: "IGDB" } });
+    expect(deletePlaytimeEvidence).toHaveBeenCalledWith({ where: { gameId: "game-1" } });
+    expect(createPlaytimeEvidence).toHaveBeenCalledWith({ data: expect.objectContaining({ gameId: "game-1", provider: "IGDB" }) });
   });
 
   it("replaces only the existing IGDB identity rows", async () => {

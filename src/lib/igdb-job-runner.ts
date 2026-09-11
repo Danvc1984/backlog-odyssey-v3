@@ -3,8 +3,9 @@ import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { queueCompatibilityForGame } from "@/lib/compat-queue";
-import { matchIgdbGame } from "@/lib/igdb-api";
-import { persistIgdbIdentity, persistIgdbSnapshot } from "@/lib/igdb-enrichment";
+import { fetchIgdbGameTimeToBeats, matchIgdbGame } from "@/lib/igdb-api";
+import { fetchSteamSpyMedian } from "@/lib/steamspy-api";
+import { persistIgdbIdentity, persistIgdbSnapshot, persistPlaytimeEvidence } from "@/lib/igdb-enrichment";
 import {
   IGDB_JOB_MAX_ATTEMPTS,
   igdbJobProgress,
@@ -36,6 +37,10 @@ const runnerJobSelect = {
         orderBy: { addedAt: "asc" as const },
         select: { steamAppId: true },
       },
+      externalIds: {
+        where: { namespace: "STEAM_APP" },
+        select: { externalId: true },
+      },
     },
   },
 } as const;
@@ -46,6 +51,7 @@ type RunnerJob = IgdbJobRecord & {
     name: string;
     type: "BASE_GAME" | "DLC";
     availability: Array<{ steamAppId: string | null }>;
+    externalIds: Array<{ externalId: string }>;
   };
 };
 
@@ -119,6 +125,20 @@ async function handleUnavailable(
   }
 
   return updateFailedJob(job, error.category, message, job.progress);
+}
+
+async function persistDurationEvidence(job: RunnerJob, igdbId: number, slug: string | null): Promise<void> {
+  const steamAppId = job.game.externalIds[0]?.externalId ?? job.game.availability.find((entry) => entry.steamAppId)?.steamAppId ?? null;
+  const igdbResult = await fetchIgdbGameTimeToBeats(igdbId);
+  if (igdbResult.ok && igdbResult.data !== null && [igdbResult.data.hastilySeconds, igdbResult.data.normallySeconds, igdbResult.data.completelySeconds].some((value) => value !== null)) {
+    await persistPlaytimeEvidence(job.game.id, "IGDB", igdbResult.data as unknown as Prisma.InputJsonValue, slug ? `https://www.igdb.com/games/${slug}` : null, new Date());
+    return;
+  }
+  if (!steamAppId) return;
+  const steamSpyResult = await fetchSteamSpyMedian(steamAppId);
+  if (steamSpyResult.ok && steamSpyResult.data) {
+    await persistPlaytimeEvidence(job.game.id, "STEAMSPY", { appId: steamAppId, ...steamSpyResult.data }, `https://steamspy.com/app/${steamAppId}`, new Date());
+  }
 }
 
 export async function runIgdbEnrichmentJob(
@@ -210,6 +230,12 @@ export async function runIgdbEnrichmentJob(
   }
   if (!persistedSnapshot.success) {
     return updateFailedJob(job, persistedSnapshot.error.code, persistedSnapshot.error.message, igdbJobProgress("PERSISTING"));
+  }
+
+  try {
+    await persistDurationEvidence(job, result.game.id, result.game.slug ?? null);
+  } catch {
+    // Duration evidence is supplementary and must not fail metadata enrichment.
   }
 
   try {

@@ -172,6 +172,13 @@ function CardDetails({
           ))}
         </div>
       )}
+      {!listView && playtimeHours !== null && (
+        <div className="flex flex-wrap gap-1.5">
+          <span className="rounded-md border border-border px-2 py-0.5 text-xs">
+            {formatPlaytime(playtimeHours)}
+          </span>
+        </div>
+      )}
       {listView && (developers.length > 0 || releaseYear || stats.length > 0) && (
         <div className="contents text-xs text-muted-foreground">
           {developers[0] && <span>{developers[0]}</span>}

@@ -327,6 +327,7 @@ describe("restoreExportDocument", () => {
       timeZone: "America/Mexico_City",
       wallpaperEnabled: true,
       reducedData: false,
+      durationProfile: "NORMALLY",
       steamDailySyncEnabled: true,
       itadDailyRefresh: true,
       createdAt: now,
@@ -337,6 +338,9 @@ describe("restoreExportDocument", () => {
 
     const counts = await restoreExportDocument(db, doc);
     expect(callOrder).toEqual(["appSettings", "recommendationProfile", "recommendationTuneState"]);
+    expect((db.appSettings.createMany as ReturnType<typeof vi.fn>).mock.calls[0][0].data).toEqual([
+      expect.objectContaining({ id: 1, durationProfile: "NORMALLY" }),
+    ]);
     expect(counts.settings).toBe(1);
     expect(counts.recommendationProfile).toBe(1);
     expect(counts.recommendationTuneState).toBe(1);

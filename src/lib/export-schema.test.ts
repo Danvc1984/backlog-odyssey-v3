@@ -24,6 +24,7 @@ describe("export schema: settings and catalog", () => {
       timeZone: "America/Mexico_City",
       wallpaperEnabled: true,
       reducedData: false,
+      durationProfile: "NORMALLY",
       steamDailySyncEnabled: true,
       itadDailyRefresh: true,
       createdAt: now,
@@ -232,6 +233,7 @@ describe("export document schema", () => {
       hasWindowsFallback: true,
       handheldOs: "LINUX",
       onboardingCompleted: true,
+      durationProfile: "NORMALLY",
     });
     expect(parsed.data.libraryEntries[0].preferredEnvironment).toBe("LINUX");
     expect(parsed.data.libraryEntries[0].handheldSuitable).toBeUndefined();

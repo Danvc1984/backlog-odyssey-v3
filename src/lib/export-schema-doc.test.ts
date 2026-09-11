@@ -21,6 +21,7 @@ function emptyData(): ExportDocument["data"] {
       timeZone: "America/Mexico_City",
       wallpaperEnabled: true,
       reducedData: false,
+      durationProfile: "NORMALLY",
       steamDailySyncEnabled: true,
       itadDailyRefresh: true,
       createdAt: now,

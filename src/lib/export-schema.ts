@@ -14,6 +14,7 @@ const appSettingsSchema = z.object({
   timeZone: z.string(),
   wallpaperEnabled: z.boolean(),
   reducedData: z.boolean(),
+  durationProfile: z.enum(["HASTILY", "NORMALLY", "COMPLETELY"]),
   steamDailySyncEnabled: z.boolean(),
   itadDailyRefresh: z.boolean(),
   createdAt: isoDateTime,
@@ -358,6 +359,7 @@ function migrateLegacyDocument(input: unknown): unknown {
                   ? "LINUX"
                   : "NONE",
             onboardingCompleted: true,
+            durationProfile: "NORMALLY",
           }
         : null,
       libraryEntries: parsed.data.data.libraryEntries.map((entry) => ({

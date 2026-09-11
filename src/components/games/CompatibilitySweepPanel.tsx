@@ -84,6 +84,7 @@ export function CompatibilitySweepPanel({
   const [batch, setBatch] = useState<CompatBatchView | null>(
     compatibilityActive ? initialBatch : null,
   );
+  const [igdbBatchId, setIgdbBatchId] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dismissedGameIds, setDismissedGameIds] = useState<Set<string>>(new Set());
@@ -211,7 +212,7 @@ export function CompatibilitySweepPanel({
             </p>
           </div>
           <div className="flex flex-wrap justify-end gap-2">
-            <IgdbBatchEnrichmentButton />
+            <IgdbBatchEnrichmentButton onStarted={setIgdbBatchId} />
             {compatibilityActive && <Button
                 type="button"
                 variant="outline"
@@ -224,7 +225,7 @@ export function CompatibilitySweepPanel({
           </div>
         </div>
 
-        <IgdbBatchEnrichmentPanel initialBatch={initialIgdbBatch} embedded />
+        <IgdbBatchEnrichmentPanel initialBatch={initialIgdbBatch} refreshBatchId={igdbBatchId} embedded />
 
         {compatibilityActive && batch && (
           <div className="mt-4 space-y-3 text-sm">

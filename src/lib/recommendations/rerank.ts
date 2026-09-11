@@ -84,7 +84,6 @@ function derivedContributions(
 ): TasteContribution[] {
   const contributions: TasteContribution[] = [];
   for (const dimension of profileDimensionKeys()) {
-    if (dimension === "DURATION") continue;
     const values = dimensionValues[dimension];
     if (!values || values.length === 0) continue;
 
@@ -138,7 +137,6 @@ function overrideContributions(
 ): TasteContribution[] {
   const contributions: TasteContribution[] = [];
   for (const dimension of profileDimensionKeys()) {
-    if (dimension === "DURATION") continue;
     const values = dimensionValues[dimension];
     if (!values || values.length === 0) continue;
 

@@ -147,6 +147,15 @@ export const Theme = {
 export type Theme = (typeof Theme)[keyof typeof Theme]
 
 
+export const DurationProfile = {
+  HASTILY: 'HASTILY',
+  NORMALLY: 'NORMALLY',
+  COMPLETELY: 'COMPLETELY'
+} as const
+
+export type DurationProfile = (typeof DurationProfile)[keyof typeof DurationProfile]
+
+
 export const RecommendationKind = {
   PLAY_NEXT: 'PLAY_NEXT',
   BUY: 'BUY'
@@ -273,6 +282,14 @@ export const Provider = {
 } as const
 
 export type Provider = (typeof Provider)[keyof typeof Provider]
+
+
+export const PlaytimeProvider = {
+  IGDB: 'IGDB',
+  STEAMSPY: 'STEAMSPY'
+} as const
+
+export type PlaytimeProvider = (typeof PlaytimeProvider)[keyof typeof PlaytimeProvider]
 
 
 export const PriceIdentityProvenance = {

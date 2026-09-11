@@ -31,6 +31,7 @@ import { resolvePagePalette } from "@/lib/game-theme";
 import { deriveWindowsFallbackExists, linuxDevicePhrase } from "@/lib/os-setup";
 import { getCompatibilityGate } from "@/lib/compat-gate";
 import { availableEnvironments } from "@/lib/recommendations/environment-fit";
+import type { DurationProfile } from "@/lib/playtime-evidence";
 
 export default async function GameDetailPage({
   params,
@@ -45,6 +46,7 @@ export default async function GameDetailPage({
     playDismissalCount,
     savedSources,
     compatibilityGate,
+    appSettings,
   ] = await Promise.all([
     prisma.game.findUnique({
       where: { id },
@@ -78,6 +80,9 @@ export default async function GameDetailPage({
           orderBy: { fetchedAt: "desc" },
           take: 1,
           select: { payload: true, sourceUrl: true, fetchedAt: true },
+        },
+        playtimeEvidence: {
+          select: { provider: true, payload: true, sourceUrl: true, fetchedAt: true },
         },
         compatSnapshots: {
           orderBy: { fetchedAt: "desc" },
@@ -114,6 +119,7 @@ export default async function GameDetailPage({
       select: { id: true, name: true, archivedAt: true },
     }),
     getCompatibilityGate(),
+    prisma.appSettings.findUnique({ where: { id: 1 }, select: { durationProfile: true } }),
   ]);
 
   if (!game) {
@@ -138,6 +144,8 @@ export default async function GameDetailPage({
       : possibleDuplicate.gameA.name
     : null;
   const igdbSnapshot = game.metadataSnapshots[0];
+  const durationEvidence = game.playtimeEvidence;
+  const durationProfile = (appSettings?.durationProfile ?? "NORMALLY") as DurationProfile;
   const igdbJob = game.enrichmentJobs.find((job) => job.provider === "IGDB");
   const igdbPayload = igdbSnapshot
     ? (igdbSnapshot.payload as unknown as IgdbMetadataPayload)
@@ -213,6 +221,8 @@ export default async function GameDetailPage({
         payload={igdbPayload}
         sourceUrl={igdbSnapshot?.sourceUrl ?? null}
         fetchedAt={igdbSnapshot?.fetchedAt ?? null}
+        durationEvidence={durationEvidence}
+        durationProfile={durationProfile}
       />
 
       <IgdbEnrichmentPanel

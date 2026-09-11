@@ -9,6 +9,9 @@ import { parseProtonDbSummary } from "@/lib/protondb-api";
 import { osSetupSchema } from "@/lib/os-setup";
 import { runRecommendationPipeline } from "@/lib/recommendations/run-pipeline";
 import { prisma } from "@/lib/prisma";
+import { z } from "zod";
+
+const durationProfileSchema = z.enum(["HASTILY", "NORMALLY", "COMPLETELY"]);
 
 function rowsFromSnapshots(
   name: string,
@@ -101,5 +104,25 @@ export async function updateOsSetup(input: unknown) {
       data: null,
       error: friendlyActionError(error, "Failed to update OS setup"),
     };
+  }
+}
+
+export async function updateDurationProfile(input: unknown) {
+  try {
+    await requireUser();
+    const parsed = durationProfileSchema.safeParse(
+      typeof input === "object" && input !== null && "durationProfile" in input
+        ? input.durationProfile
+        : undefined,
+    );
+    if (!parsed.success) return { success: false as const, data: null, error: "Invalid duration profile" };
+    const settings = await prisma.appSettings.upsert({
+      where: { id: 1 },
+      create: { id: 1, durationProfile: parsed.data },
+      update: { durationProfile: parsed.data },
+    });
+    return { success: true as const, data: settings, error: null };
+  } catch (error) {
+    return { success: false as const, data: null, error: friendlyActionError(error, "Failed to update duration profile") };
   }
 }

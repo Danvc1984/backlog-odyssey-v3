@@ -17,6 +17,7 @@ vi.mock("./igdb-rate-limit", () => ({
 
 import {
   classifyIgdbCategory,
+  fetchIgdbGameTimeToBeats,
   matchIgdbGame,
   requestIgdb,
   searchIgdbCandidatePage,
@@ -90,6 +91,25 @@ describe("IGDB request boundary", () => {
       ok: false,
       error: { category: "NETWORK", message: "IGDB could not be reached" },
     });
+  });
+
+  it("keeps the abort timer active until the fetch settles", async () => {
+    vi.useFakeTimers();
+    let signal: AbortSignal | undefined;
+    let resolveFetch: ((response: Response) => void) | undefined;
+    fetchMock.mockImplementation((_input: string, init: RequestInit) => {
+      signal = init.signal as AbortSignal;
+      return new Promise<Response>((resolve) => { resolveFetch = resolve; });
+    });
+
+    const resultPromise = requestIgdb("fields id;", { fetchFn: fetchMock, maxAttempts: 1 });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(signal?.aborted).toBe(false);
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(signal?.aborted).toBe(true);
+    resolveFetch?.(new Response("[]", { status: 200 }));
+    await expect(resultPromise).resolves.toEqual({ ok: true, data: [] });
+    vi.useRealTimers();
   });
 
   it("does not retry other client errors", async () => {
@@ -181,6 +201,28 @@ describe("IGDB request boundary", () => {
     expect(fetchMock.mock.calls[0][1]).toEqual(expect.objectContaining({
       body: expect.stringContaining("limit 30; offset 10;"),
     }));
+  });
+
+  it("parses game time to beats values and treats non-positive values as absent", async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify([{
+      count: 12,
+      hastily: 3_600,
+      normally: 7_200,
+      completely: 0,
+    }]), { status: 200 }));
+
+    await expect(fetchIgdbGameTimeToBeats(42, { fetchFn: fetchMock })).resolves.toEqual({
+      ok: true,
+      data: { count: 12, hastilySeconds: 3_600, normallySeconds: 7_200, completelySeconds: null },
+    });
+    expect(fetchMock.mock.calls[0][1]).toEqual(expect.objectContaining({ body: expect.stringContaining("game_id = 42") }));
+    expect(fetchMock.mock.calls[0][0]).toBe("https://api.igdb.com/v4/game_time_to_beats");
+  });
+
+  it("returns null when game time to beats has no row", async () => {
+    fetchMock.mockResolvedValue(new Response("[]", { status: 200 }));
+
+    await expect(fetchIgdbGameTimeToBeats(42, { fetchFn: fetchMock })).resolves.toEqual({ ok: true, data: null });
   });
 
   it("ranks title-prefix candidates ahead of less-specific matches", async () => {

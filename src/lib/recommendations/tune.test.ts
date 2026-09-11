@@ -70,6 +70,12 @@ describe("matchTuneCriteria", () => {
     expect(matchTuneCriteria(allCriteria, candidate()).points).toBe(10);
     expect(matchTuneCriteria(emptyTune, candidate()).points).toBe(0);
   });
+
+  it("matches a candidate's duration band to the length tune", () => {
+    const match = matchTuneCriteria({ ...emptyTune, length: "SHORT" }, candidate({ durationHours: 4 }));
+    expect(match).toEqual({ points: 5, criteria: ["length"] });
+    expect(matchTuneCriteria({ ...emptyTune, length: "LONG" }, candidate({ durationHours: 4 })).criteria).toEqual([]);
+  });
 });
 
 describe("countTuneMatches", () => {
