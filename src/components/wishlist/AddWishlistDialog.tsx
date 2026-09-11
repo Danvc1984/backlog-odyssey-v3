@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { createWishlistEntry } from "@/actions/wishlist";
-import { enrichWishlistEntryWithRawg, searchWishlistRawg } from "@/actions/wishlist-rawg";
+import { enrichWishlistEntryWithIgdb, searchWishlistIgdb } from "@/actions/wishlist-igdb";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { RawgSearchCandidate } from "@/lib/rawg-types";
+import type { IgdbSearchCandidate } from "@/lib/igdb-types";
 
 interface AddWishlistDialogProps {
   baseGames: { id: string; name: string }[];
@@ -48,9 +48,9 @@ export function AddWishlistDialog({
   const [name, setName] = useState("");
   const [interest, setInterest] = useState("5");
   const [baseGameId, setBaseGameId] = useState(initialBaseGameId);
-  const [candidates, setCandidates] = useState<RawgSearchCandidate[]>([]);
-  const [selectedRawgId, setSelectedRawgId] = useState<number | null>(null);
-  const [rawgPage, setRawgPage] = useState(1);
+  const [candidates, setCandidates] = useState<IgdbSearchCandidate[]>([]);
+  const [selectedIgdbId, setSelectedIgdbId] = useState<number | null>(null);
+  const [igdbPage, setIgdbPage] = useState(1);
   const [searching, setSearching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,32 +61,32 @@ export function AddWishlistDialog({
     setInterest("5");
     setBaseGameId(initialBaseGameId);
     setCandidates([]);
-    setSelectedRawgId(null);
-    setRawgPage(1);
+    setSelectedIgdbId(null);
+    setIgdbPage(1);
     setError(null);
   };
 
-  const searchRawg = async () => {
+  const searchIgdb = async () => {
     setSearching(true);
     setError(null);
-    const result = await searchWishlistRawg({ title: name });
+    const result = await searchWishlistIgdb({ title: name });
     setSearching(false);
     if (!result.success) {
-      setError(result.error ?? "RAWG search failed");
+      setError(result.error ?? "IGDB search failed");
       return;
     }
     setCandidates(result.data);
-    setSelectedRawgId(null);
-    setRawgPage(1);
+    setSelectedIgdbId(null);
+    setIgdbPage(1);
   };
 
-  const loadMoreRawg = async () => {
-    const nextPage = rawgPage + 1;
+  const loadMoreIgdb = async () => {
+    const nextPage = igdbPage + 1;
     setSearching(true);
-    const result = await searchWishlistRawg({ title: name, page: nextPage });
+    const result = await searchWishlistIgdb({ title: name, page: nextPage });
     setSearching(false);
     if (!result.success) {
-      setError(result.error ?? "RAWG search failed");
+      setError(result.error ?? "IGDB search failed");
       return;
     }
     const knownIds = new Set(candidates.map((candidate) => candidate.id));
@@ -94,7 +94,7 @@ export function AddWishlistDialog({
       ...current,
       ...result.data.filter((candidate) => !knownIds.has(candidate.id)),
     ]);
-    setRawgPage(nextPage);
+    setIgdbPage(nextPage);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -115,12 +115,14 @@ export function AddWishlistDialog({
     }
 
     let metadataError: string | null = null;
-    if (type === "BASE_GAME" && selectedRawgId !== null) {
-      const enrichment = await enrichWishlistEntryWithRawg({
+    let enrichmentResult: Awaited<ReturnType<typeof enrichWishlistEntryWithIgdb>> | null = null;
+    if (type === "BASE_GAME" && selectedIgdbId !== null) {
+      enrichmentResult = await enrichWishlistEntryWithIgdb({
         wishlistEntryId: result.data.id,
-        rawgId: selectedRawgId,
+        igdbId: selectedIgdbId,
+        confirmOverwrite: true,
       });
-      if (!enrichment.success) metadataError = enrichment.error;
+      if (!enrichmentResult.success) metadataError = enrichmentResult.error;
     }
 
     setSubmitting(false);
@@ -128,7 +130,9 @@ export function AddWishlistDialog({
     reset();
     router.refresh();
     toast.success(`Added "${name}" to wishlist`);
-    if (metadataError) toast.error(`Wishlist saved, but RAWG failed: ${metadataError}`);
+    if (metadataError) toast.error(`Wishlist saved, but IGDB failed: ${metadataError}`);
+    else if (enrichmentResult?.success && !("kind" in enrichmentResult.data) && enrichmentResult.data.steamAppIdApplied) toast.success(`Steam App ${enrichmentResult.data.steamAppIdApplied} applied from IGDB`);
+    if (enrichmentResult?.success && !("kind" in enrichmentResult.data) && enrichmentResult.data.steamAppIdConflict) toast.warning(enrichmentResult.data.steamAppIdConflict);
   };
 
   return (
@@ -145,7 +149,7 @@ export function AddWishlistDialog({
           {triggerLabel}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Add to your horizon</DialogTitle>
           <DialogDescription>Keep a base game or DLC in view for a future voyage.</DialogDescription>
@@ -164,11 +168,11 @@ export function AddWishlistDialog({
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="wishlist-name">Name and RAWG match</Label>
+            <Label htmlFor="wishlist-name">Name and IGDB match</Label>
             <div className="flex gap-2">
               <Input id="wishlist-name" value={name} onChange={(event) => setName(event.target.value)} required />
               {type === "BASE_GAME" && (
-                <Button type="button" variant="outline" onClick={() => void searchRawg()} disabled={searching || !name.trim()}>
+                <Button type="button" variant="outline" onClick={() => void searchIgdb()} disabled={searching || !name.trim()}>
                   <MagnifyingGlassIcon />
                   {searching ? "Searching" : "Search"}
                 </Button>
@@ -194,12 +198,12 @@ export function AddWishlistDialog({
           )}
           {type === "BASE_GAME" && (
             <div className="grid gap-2">
-              <Label>RAWG selection (optional)</Label>
-              {selectedRawgId !== null && (
+              <Label>IGDB selection (optional)</Label>
+              {selectedIgdbId !== null && (
                 <div className="rounded-md border border-primary bg-primary/10 p-3 text-sm">
-                  <p className="font-medium">Selected RAWG match</p>
-                  <p>{candidates.find((candidate) => candidate.id === selectedRawgId)?.name}</p>
-                  <Button type="button" variant="link" size="sm" className="h-auto px-0" onClick={() => setSelectedRawgId(null)}>
+                  <p className="font-medium">Selected IGDB match</p>
+                  <p>{candidates.find((candidate) => candidate.id === selectedIgdbId)?.name}</p>
+                  <Button type="button" variant="link" size="sm" className="h-auto px-0" onClick={() => setSelectedIgdbId(null)}>
                     Clear selection
                   </Button>
                 </div>
@@ -210,19 +214,28 @@ export function AddWishlistDialog({
                     <button
                       key={candidate.id}
                       type="button"
-                      className={`rounded-md px-2 py-1 text-left text-sm hover:bg-muted ${selectedRawgId === candidate.id ? "bg-muted" : ""}`}
+                      className={`flex gap-3 rounded-md px-2 py-2 text-left text-sm hover:bg-muted ${selectedIgdbId === candidate.id ? "bg-muted" : ""}`}
                       onClick={() => {
-                        setSelectedRawgId(candidate.id);
+                        setSelectedIgdbId(candidate.id);
                         setName(candidate.name);
                       }}
                     >
-                      {candidate.name}
-                      {candidate.released ? ` (${candidate.released.slice(0, 4)})` : ""}
+                      <span
+                        className="size-16 shrink-0 rounded bg-muted bg-cover bg-center"
+                        style={candidate.coverUrl ? { backgroundImage: `url(${candidate.coverUrl})` } : undefined}
+                        aria-hidden="true"
+                      />
+                      <span className="min-w-0 self-center">
+                        <span className="block font-medium">{candidate.name}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {candidate.firstReleaseDate ? new Date(candidate.firstReleaseDate).toLocaleDateString("en-US", { year: "numeric" }) : "Release date unavailable"}
+                        </span>
+                      </span>
                     </button>
                   ))}
-                  {candidates.length >= rawgPage * 5 && (
-                    <Button type="button" variant="ghost" size="sm" onClick={() => void loadMoreRawg()} disabled={searching}>
-                      {searching ? "Loading..." : "Load more RAWG matches"}
+                  {candidates.length >= igdbPage * 30 && (
+                    <Button type="button" variant="ghost" size="sm" onClick={() => void loadMoreIgdb()} disabled={searching}>
+                      {searching ? "Loading..." : "Load more IGDB matches"}
                     </Button>
                   )}
                 </div>

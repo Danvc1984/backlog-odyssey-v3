@@ -22,6 +22,11 @@ export type IgdbPersistenceResult =
       error: { code: "NOT_MATCHED" | "IGDB_ID_CONFLICT" | "PERSISTENCE_FAILED"; message: string };
     };
 
+export type DerivedSteamIdentityResult = {
+  applied: boolean;
+  conflictName: string | null;
+};
+
 export type IgdbSnapshotPersistenceResult =
   | { success: true; data: { gameId: string; fetchedAt: Date }; error: null }
   | {
@@ -110,6 +115,46 @@ export async function persistIgdbIdentity(
   }
 }
 
+export async function persistDerivedSteamAppId(
+  gameId: string,
+  steamAppId: string,
+): Promise<DerivedSteamIdentityResult> {
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const existing = await tx.externalGameId.findUnique({
+        where: {
+          namespace_externalId: {
+            namespace: "STEAM_APP",
+            externalId: steamAppId,
+          },
+        },
+        select: { gameId: true, game: { select: { name: true } } },
+      });
+
+      if (existing) {
+        return {
+          applied: false,
+          conflictName: existing.gameId === gameId ? null : existing.game.name,
+        };
+      }
+
+      await tx.externalGameId.create({
+        data: {
+          namespaceId: steamAppId,
+          namespace: "STEAM_APP",
+          externalId: steamAppId,
+          matchMethod: "EXACT_STEAM_APP_ID",
+          gameId,
+        },
+      });
+
+      return { applied: true, conflictName: null };
+    });
+  } catch {
+    return { applied: false, conflictName: null };
+  }
+}
+
 export function selectIgdbPaletteSources(
   payload: Pick<IgdbMetadataPayload, "artworkUrls" | "screenshots" | "coverUrl">,
 ): string[] {
@@ -120,7 +165,7 @@ export function selectIgdbPaletteSources(
   ].filter((url): url is string => typeof url === "string" && url.trim().length > 0);
 }
 
-async function captureIgdbPalette(
+export async function captureIgdbPalette(
   payload: IgdbMetadataPayload,
   fetchImage: typeof fetch,
 ): Promise<IgdbMetadataPayload["palette"]> {

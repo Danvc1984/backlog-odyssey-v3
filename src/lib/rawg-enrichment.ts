@@ -1,7 +1,6 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
-import { findSteamAppIdByName } from "./steam-api";
 import { Prisma } from "@/generated/prisma/client";
 import {
   RAWG_EXTERNAL_NAMESPACE,
@@ -12,9 +11,6 @@ import {
   type RawgMetadataPayload,
   type RawgPersistenceResult,
   type RawgSeriesEntry,
-  type RawgStoreEntry,
-  type RawgWishlistMetadataPayload,
-  type WishlistStoreLink,
 } from "./rawg-types";
 
 type RawgTransactionClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
@@ -62,8 +58,6 @@ export function toRawgMetadataPayload(
   };
 }
 
-const STEAM_STORE_SLUG = "steam";
-
 export function deriveSequelRelationship(
   current: { rawgId: number; releaseDate: string | null },
   series: readonly RawgSeriesEntry[],
@@ -85,31 +79,6 @@ export function deriveSequelRelationship(
       return !Number.isNaN(released) && released > currentReleased;
     })
     .sort((a, b) => new Date(a.released).getTime() - new Date(b.released).getTime());
-}
-
-export function hasRawgSteamStore(stores: RawgStoreEntry[]): boolean {
-  return stores.some((entry) => entry.storeSlug === STEAM_STORE_SLUG);
-}
-
-export async function resolveWishlistStoreLink(
-  game: RawgGameDetails,
-  findSteamAppId: (name: string) => Promise<WishlistStoreLink | null> = findSteamAppIdByName,
-): Promise<WishlistStoreLink | null> {
-  if (!hasRawgSteamStore(game.stores)) {
-    return null;
-  }
-  return findSteamAppId(game.name);
-}
-
-export function toWishlistMetadataPayload(
-  game: RawgGameDetails,
-  fetchedAt: Date,
-  storeLink: WishlistStoreLink | null = null,
-): RawgWishlistMetadataPayload {
-  return {
-    ...toRawgMetadataPayload(game, fetchedAt),
-    storeLink,
-  };
 }
 
 async function persistMatchedRawgGame(

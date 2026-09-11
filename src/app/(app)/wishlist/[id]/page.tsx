@@ -3,14 +3,15 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { WishlistEntryActions } from "@/components/wishlist/WishlistEntryActions";
 import { WishlistIdentity } from "@/components/wishlist/WishlistIdentity";
-import { wishlistIdentitySnapshotView } from "@/lib/wishlist-identity-view";
 import { WishlistOfferAlternatives } from "@/components/wishlist/WishlistOfferAlternatives";
 import { WishlistOfferSection } from "@/components/wishlist/WishlistOfferSection";
 import { WishlistCompatibilityBlock } from "@/components/wishlist/WishlistCompatibilityBlock";
-import { WishlistRawgFillButton } from "@/components/wishlist/WishlistRawgFillButton";
-import { RawgMetadataSection } from "@/components/games/RawgMetadataSection";
+import { WishlistIgdbEnrichmentControl } from "@/components/wishlist/WishlistIgdbEnrichmentControl";
+import { MetadataSection } from "@/components/games/MetadataSection";
 import { RecommendationItemCard } from "@/components/recommendations/RecommendationItemCard";
-import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
+import { parseIgdbMetadataPayload } from "@/lib/igdb-metadata-payload";
+import type { WishlistIgdbSnapshotPayload } from "@/lib/wishlist-igdb-enrichment";
+import type { DurationProfile } from "@/lib/playtime-evidence";
 import { buildEntryOfferView } from "@/lib/offer-selection";
 import { getWishlistCompatibilityEligibility } from "@/lib/wishlist-compatibility";
 import { parseAntiCheatEvidence } from "@/lib/compat-evidence";
@@ -23,7 +24,7 @@ import { DeleteWishlistEntrySection } from "@/components/wishlist/DeleteWishlist
 import { GameThemeScope } from "@/components/games/GameThemeScope";
 import { ScreenshotsSection } from "@/components/games/ScreenshotsSection";
 import { resolvePagePalette } from "@/lib/game-theme";
-import { resolvePageScreenshots } from "@/lib/screenshot-view";
+import { resolveIgdbPageScreenshots } from "@/lib/screenshot-view";
 import { deriveWindowsFallbackExists, linuxDevicePhrase } from "@/lib/os-setup";
 import { getCompatibilityGate } from "@/lib/compat-gate";
 import { SourceIcon } from "@/components/sources/SourceIcon";
@@ -34,7 +35,7 @@ export default async function WishlistDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [entry, baseGames, buyDismissalCount, compatibilityGate] = await Promise.all([
+  const [entry, baseGames, buyDismissalCount, compatibilityGate, appSettings] = await Promise.all([
     prisma.wishlistEntry.findUnique({
       where: { id },
       select: {
@@ -70,15 +71,15 @@ export default async function WishlistDetailPage({
             id: true,
             name: true,
             metadataSnapshots: {
-              where: { provider: "RAWG" },
+              where: { provider: "IGDB" },
               orderBy: { fetchedAt: "desc" },
               take: 1,
-              select: { payload: true, sourceUrl: true, fetchedAt: true },
+              select: { provider: true, payload: true, sourceUrl: true, fetchedAt: true },
             },
           },
         },
         metadataSnapshot: {
-          select: { payload: true, sourceUrl: true, fetchedAt: true },
+          select: { provider: true, payload: true, sourceUrl: true, fetchedAt: true },
         },
       },
     }),
@@ -91,6 +92,7 @@ export default async function WishlistDetailPage({
       where: { wishlistEntryId: id, kind: "BUY" },
     }),
     getCompatibilityGate(),
+    prisma.appSettings.findUnique({ where: { id: 1 }, select: { durationProfile: true } }),
   ]);
 
   if (!entry) {
@@ -113,16 +115,26 @@ export default async function WishlistDetailPage({
     compatibilityGate.setup ?? { primaryOs: "LINUX", handheldOs: "NONE" },
   );
 
-  const ownSnapshot = entry.metadataSnapshot;
-  const themePayload = entry.metadataSnapshot?.payload ?? null;
-  const screenshots = resolvePageScreenshots(themePayload);
+  const ownSnapshot = entry.metadataSnapshot?.provider === "IGDB" ? entry.metadataSnapshot : null;
   const inheritedSnapshot = entry.baseGame?.metadataSnapshots[0] ?? null;
-  const ownMetadata = parseRawgMetadataPayload(ownSnapshot?.payload);
-  const inheritedMetadata = parseRawgMetadataPayload(
+  const ownMetadata = parseIgdbMetadataPayload(ownSnapshot?.payload);
+  const inheritedMetadata = parseIgdbMetadataPayload(
     inheritedSnapshot?.payload,
   );
   const metadata = ownMetadata ?? inheritedMetadata;
   const resolvedSnapshot = ownMetadata ? ownSnapshot : inheritedSnapshot;
+  const resolvedPayload = metadata as WishlistIgdbSnapshotPayload | null;
+  const themePayload = resolvedPayload;
+  const screenshots = resolveIgdbPageScreenshots(resolvedPayload);
+  const durationEvidence = resolvedPayload?.durationEvidence
+    ? {
+        provider: resolvedPayload.durationEvidence.provider,
+        payload: resolvedPayload.durationEvidence.payload,
+        sourceUrl: resolvedPayload.durationEvidence.sourceUrl,
+        fetchedAt: new Date(resolvedPayload.durationEvidence.fetchedAt),
+      }
+    : null;
+  const durationProfile = (appSettings?.durationProfile ?? "NORMALLY") as DurationProfile;
   const offerView = buildEntryOfferView(
     entry.offers,
     entry.targetPriceMxn,
@@ -172,7 +184,7 @@ export default async function WishlistDetailPage({
         id={entry.id}
         name={entry.name}
         type={entry.type}
-        imageUrl={metadata?.backgroundImageUrls[0] ?? null}
+        imageUrl={metadata ? (metadata.artworkUrls[0] ?? metadata.screenshots[0]?.image ?? metadata.coverUrl ?? null) : null}
         interest={entry.interest}
         gameExperience={entry.gameExperience}
         handheldSuitable={entry.handheldSuitable}
@@ -186,10 +198,12 @@ export default async function WishlistDetailPage({
 
       {metadata ? (
         <div className="space-y-2">
-          <RawgMetadataSection
+          <MetadataSection
             payload={metadata}
             sourceUrl={resolvedSnapshot?.sourceUrl ?? null}
             fetchedAt={resolvedSnapshot?.fetchedAt ?? null}
+            durationEvidence={durationEvidence}
+            durationProfile={durationProfile}
           />
           {!ownMetadata && inheritedMetadata && (
             <p className="text-xs text-muted-foreground">
@@ -199,13 +213,13 @@ export default async function WishlistDetailPage({
         </div>
       ) : (
         <p className="text-sm text-warning-text">
-          RAWG metadata is not available yet. Use Edit to search and choose a
+          IGDB metadata is not available yet. Use Edit to search and choose a
           match.
         </p>
       )}
 
-      {!entry.metadataSnapshot && entry.type === "BASE_GAME" && (
-        <WishlistRawgFillButton wishlistEntryId={entry.id} />
+      {entry.type === "BASE_GAME" && (
+        <WishlistIgdbEnrichmentControl wishlistEntryId={entry.id} hasSnapshot={ownSnapshot !== null} />
       )}
 
       <SectionCard
@@ -250,7 +264,7 @@ export default async function WishlistDetailPage({
             positive={buyItem.positive}
             negative={buyItem.negative}
             caveats={buyItem.caveats}
-            imageUrl={metadata?.backgroundImageUrls[0] ?? null}
+            imageUrl={metadata ? (metadata.artworkUrls[0] ?? metadata.screenshots[0]?.image ?? metadata.coverUrl ?? null) : null}
             offerDiscount={offerView.selected?.discount ?? null}
           />
         </SectionCard>
@@ -289,21 +303,6 @@ export default async function WishlistDetailPage({
             entryName={entry.name}
             steamAppId={entry.steamAppId}
             provenance={entry.steamAppIdProvenance}
-            snapshot={
-              entry.metadataSnapshot
-                ? (() => {
-                    const snapshot = wishlistIdentitySnapshotView(
-                      entry.metadataSnapshot.payload,
-                    );
-                    return snapshot
-                      ? {
-                          ...snapshot,
-                          fetchedAt: entry.metadataSnapshot.fetchedAt,
-                        }
-                      : null;
-                  })()
-                : null
-            }
           />
           <div className="grid justify-items-end gap-2">
             <CalibrationNote
@@ -335,7 +334,11 @@ export default async function WishlistDetailPage({
         id={entry.id}
         title={entry.name}
         screenshots={screenshots}
-        sourceUrl={entry.metadataSnapshot?.sourceUrl ?? ownMetadata?.rawgUrl ?? null}
+        artworkUrls={metadata?.artworkUrls}
+        conceptArtUrls={metadata?.conceptArtUrls}
+        coverUrl={metadata?.coverUrl}
+        sourceUrl={resolvedSnapshot?.sourceUrl ?? null}
+        provider="IGDB"
       />
 
       <DeleteWishlistEntrySection entryId={entry.id} entryName={entry.name} />

@@ -7,6 +7,7 @@ import {
   gamesSchema,
   libraryEntriesSchema,
   settingsSchema,
+  wishlistSchema,
 } from "./export-schema";
 
 const now = "2026-09-04T12:00:00.000Z";
@@ -164,6 +165,26 @@ describe("export schema: settings and catalog", () => {
 });
 
 describe("export document schema", () => {
+  it("round-trips the IGDB suggestion provenance", () => {
+    const wishlistEntry = {
+      id: "w1",
+      name: "Portal 2",
+      type: "BASE_GAME",
+      baseGameId: null,
+      interest: null,
+      gameExperience: null,
+      handheldSuitable: null,
+      targetPriceMxn: null,
+      notes: null,
+      steamAppId: "620",
+      steamAppIdProvenance: "IGDB_SUGGESTION",
+      createdAt: now,
+      updatedAt: now,
+    } as const;
+
+    expect(wishlistSchema.parse([wishlistEntry])).toEqual([wishlistEntry]);
+  });
+
   it("maps a version 1 environment into the current settings shape", () => {
     const legacyEntry = {
       id: "l1",

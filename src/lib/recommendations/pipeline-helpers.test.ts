@@ -2,7 +2,9 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import { compatEvidenceFor, compatEvidenceForWish } from "./pipeline-helpers";
+import { compatEvidenceFor, compatEvidenceForWish, tuneInput } from "./pipeline-helpers";
+import { resolveCandidateDimensionValues } from "./profile";
+import { matchTuneCriteria } from "./tune";
 
 describe("compatEvidenceFor", () => {
   it("maps the personal compatibility override and reason", () => {
@@ -59,5 +61,39 @@ describe("compatEvidenceForWish", () => {
 
   it("does not inherit compatibility evidence for DLC wishes", () => {
     expect(compatEvidenceForWish({ ...baseRow, type: "DLC" })).toBeNull();
+  });
+});
+
+describe("wishlist duration inputs", () => {
+  const tune = {
+    experience: null,
+    length: "MEDIUM" as const,
+    genres: [],
+    tags: [],
+    sequelPosture: null,
+    era: null,
+    maturity: null,
+  };
+
+  it("adds IGDB duration to Buy dimensions and length tuning", () => {
+    const snapshot = { durationEvidence: { provider: "IGDB", payload: { normallySeconds: 9 * 3600 } } };
+    const input = tuneInput(snapshot, null, 9);
+
+    expect(resolveCandidateDimensionValues(snapshot, { gameExperience: null, preferredEnvironment: null, durationHours: input.durationHours })).toMatchObject({ DURATION: ["MEDIUM"] });
+    expect(matchTuneCriteria(tune, input).criteria).toContain("length");
+  });
+
+  it("adds SteamSpy duration and leaves absent evidence soft", () => {
+    const steamSpyInput = tuneInput(
+      { durationEvidence: { provider: "STEAMSPY", payload: { medianForeverMinutes: 2_400 } } },
+      null,
+      40,
+    );
+    expect(resolveCandidateDimensionValues(null, { gameExperience: null, preferredEnvironment: null, durationHours: steamSpyInput.durationHours })).toMatchObject({ DURATION: ["LONG"] });
+    expect(matchTuneCriteria({ ...tune, length: "LONG" }, steamSpyInput).criteria).toContain("length");
+
+    const absent = tuneInput({ summary: "No duration evidence" }, null, null);
+    expect(resolveCandidateDimensionValues(null, { gameExperience: null, preferredEnvironment: null, durationHours: absent.durationHours }).DURATION).toBeUndefined();
+    expect(matchTuneCriteria(tune, absent).criteria).not.toContain("length");
   });
 });

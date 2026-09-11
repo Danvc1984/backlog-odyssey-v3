@@ -148,6 +148,7 @@ export function buildPlayPipeline(
 interface BuyView {
   payload: unknown;
   gameExperience: string | null;
+  durationHours: number | null;
   handheldSuitable: boolean | null;
   compatEvidence: CompatEvidenceInput | null;
   envCompat: Array<{ environment: Environment; status: CompatibilityStatus }>;
@@ -181,6 +182,7 @@ export function buildBuyPipeline(
       dimensionValues: resolveCandidateDimensionValues(payload, {
         gameExperience: view?.gameExperience ?? null,
         preferredEnvironment: null,
+        durationHours: view?.durationHours ?? null,
       }),
       quality: {
         metacriticScore: parsedPayload?.metacriticScore ?? null,
@@ -452,7 +454,7 @@ export async function runRecommendationPipeline(tx: Prisma.TransactionClient) {
       });
       const excludedIds = new Set(playExclusions.map((exclusion) => exclusion.id));
       const eligible = playEligibleCandidates.filter((candidate) => !excludedIds.has(candidate.id));
-      const { candidates: buyCandidates, wishViews } = await loadBuyCandidates(tx);
+      const { candidates: buyCandidates, wishViews } = await loadBuyCandidates(tx, durationProfile);
       const buyEvidenceById = new Map(
         [...wishViews.entries()]
           .flatMap(([id, view]) => view.compatEvidence ? [[id, view.compatEvidence] as const] : []),
@@ -559,7 +561,7 @@ export async function runRecommendationPipeline(tx: Prisma.TransactionClient) {
         dismissalCounts,
       );
       const buyTuneInputs = new Map(
-        [...wishViews.entries()].map(([id, view]) => [id, tuneInput(view.payload, view.gameExperience)]),
+        [...wishViews.entries()].map(([id, view]) => [id, tuneInput(view.payload, view.gameExperience, view.durationHours)]),
       );
       const tunedBuyPool = applyTune(buyBaselinePool, buyTune, buyTuneInputs, 3);
       const { buyRerank, buyRoles, buyPoolById, buyItems } = buildBuyPipeline(

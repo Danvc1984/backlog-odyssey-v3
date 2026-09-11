@@ -7,7 +7,7 @@ vi.mock("@/lib/steam-flow", () => ({
   requireSteamFlowContext: vi.fn(),
   upsertUnresolvedSteamDlc: vi.fn(),
 }));
-vi.mock("@/lib/wishlist-rawg-queue", () => ({
+vi.mock("@/lib/wishlist-igdb-queue", () => ({
   autoEnrichWishlistEntries: vi.fn().mockResolvedValue({ enriched: 0, skipped: 0 }),
 }));
 vi.mock("@/lib/wishlist-compatibility-runner", () => ({
@@ -19,7 +19,7 @@ import { prisma } from "@/lib/prisma";
 import { fetchSteamWishlist } from "@/lib/steam-api";
 import { requireSteamFlowContext, upsertUnresolvedSteamDlc } from "@/lib/steam-flow";
 import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
-import { autoEnrichWishlistEntries } from "@/lib/wishlist-rawg-queue";
+import { autoEnrichWishlistEntries } from "@/lib/wishlist-igdb-queue";
 import { enrichImportedWishlist, importSteamWishlist } from "./steam-import-wishlist";
 
 const findManyExternalId = vi.fn();

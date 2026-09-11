@@ -4,6 +4,7 @@ import { Prisma, type CompatibilityStatus, type Environment } from "@/generated/
 import { parseAntiCheatEvidence } from "@/lib/compat-evidence";
 import { parseProtonDbSummary } from "@/lib/protondb-api";
 import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
+import { resolveWishlistDurationEstimate, type DurationProfile } from "@/lib/playtime-evidence";
 import { type BuyCandidate, type BuyOffer } from "@/lib/recommendations/buy";
 import { buildCalibrationFactor } from "@/lib/recommendations/calibration";
 import { countTuneMatches, matchTuneCriteria, type TuneCandidateInput } from "@/lib/recommendations/tune";
@@ -120,7 +121,10 @@ export function compatEvidenceForWish(row: {
   };
 }
 
-export async function loadBuyCandidates(client: Prisma.TransactionClient) {
+export async function loadBuyCandidates(
+  client: Prisma.TransactionClient,
+  durationProfile: DurationProfile = "NORMALLY",
+) {
   const entries = await client.wishlistEntry.findMany({
     select: {
       id: true,
@@ -158,6 +162,7 @@ export async function loadBuyCandidates(client: Prisma.TransactionClient) {
       wishViews: new Map<string, {
         payload: unknown;
         gameExperience: string | null;
+        durationHours: number | null;
         handheldSuitable: boolean | null;
         compatEvidence: CompatEvidenceInput | null;
         envCompat: { environment: Environment; status: CompatibilityStatus }[];
@@ -208,6 +213,7 @@ export async function loadBuyCandidates(client: Prisma.TransactionClient) {
         {
           payload: entry.metadataSnapshot?.payload ?? null,
           gameExperience: entry.gameExperience ?? null,
+          durationHours: resolveWishlistDurationEstimate(entry.metadataSnapshot?.payload, durationProfile)?.hours ?? null,
           handheldSuitable: entry.handheldSuitable,
           compatEvidence: compatEvidenceForWish(entry),
           envCompat: entry.envCompat ?? [],

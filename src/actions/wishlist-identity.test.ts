@@ -9,11 +9,9 @@ vi.mock("@/lib/wishlist-compatibility-runner", () => ({
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
-import { identityConflictMessage } from "@/lib/wishlist-identity-view";
+import { identityConflictMessage } from "@/lib/wishlist-identity";
 import {
-  confirmRawgSuggestedIdentity,
   confirmSteamImportIdentity,
-  dismissRawgIdentitySuggestion,
   removeWishlistIdentity,
   resolveManualSteamAppId,
   setWishlistIdentity,
@@ -22,7 +20,6 @@ import {
 const mockFindUnique = vi.fn();
 const mockFindFirst = vi.fn();
 const mockUpdate = vi.fn();
-const mockUpdateMany = vi.fn();
 const transaction = vi.fn();
 
 function configurePrisma() {
@@ -31,9 +28,6 @@ function configurePrisma() {
     findUnique: mockFindUnique,
     findFirst: mockFindFirst,
     update: mockUpdate,
-  };
-  (prisma as unknown as { wishlistMetadataSnapshot: Record<string, ReturnType<typeof vi.fn>> }).wishlistMetadataSnapshot = {
-    updateMany: mockUpdateMany,
   };
 }
 
@@ -48,7 +42,6 @@ beforeEach(() => {
   (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
   mockFindUnique.mockResolvedValue({ id: "wish-1" });
   mockFindFirst.mockResolvedValue(null);
-  mockUpdateMany.mockResolvedValue({ count: 1 });
   mockUpdate.mockImplementation(async ({ data }) => ({
     id: "wish-1",
     ...data,
@@ -184,110 +177,6 @@ describe("resolveManualSteamAppId", () => {
   });
 });
 
-describe("confirmRawgSuggestedIdentity", () => {
-  const suggestionSnapshot = {
-    payload: {
-      storeLink: {
-        steamUrl: "https://store.steampowered.com/app/620/Portal_2/",
-        steamAppId: "620",
-      },
-    },
-  };
-
-  it("confirms the snapshot suggestion with RAWG_SUGGESTION provenance", async () => {
-    mockFindUnique.mockResolvedValue({
-      id: "wish-1",
-      steamAppId: null,
-      metadataSnapshot: suggestionSnapshot,
-    });
-
-    const result = await confirmRawgSuggestedIdentity({ wishlistEntryId: "wish-1" });
-
-    expect(result.success).toBe(true);
-    expect(mockUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: { steamAppId: "620", steamAppIdProvenance: "RAWG_SUGGESTION" },
-      }),
-    );
-  });
-
-  it("blocks duplicates using the suggested App ID", async () => {
-    mockFindUnique.mockResolvedValue({
-      id: "wish-1",
-      steamAppId: null,
-      metadataSnapshot: suggestionSnapshot,
-    });
-    mockFindFirst.mockResolvedValue({ id: "wish-9", name: "Hades II" });
-
-    const result = await confirmRawgSuggestedIdentity({ wishlistEntryId: "wish-1" });
-
-    expect(result.success).toBe(false);
-    expect(result.error).toBe(identityConflictMessage("620", "Hades II"));
-    expect(mockUpdate).not.toHaveBeenCalled();
-  });
-
-  it("refuses when the entry already has a confirmed identity", async () => {
-    mockFindUnique.mockResolvedValue({
-      id: "wish-1",
-      steamAppId: "570",
-      metadataSnapshot: suggestionSnapshot,
-    });
-
-    const result = await confirmRawgSuggestedIdentity({ wishlistEntryId: "wish-1" });
-
-    expect(result.success).toBe(false);
-    expect(mockUpdate).not.toHaveBeenCalled();
-  });
-
-  it("refuses when the snapshot carries no store link", async () => {
-    mockFindUnique.mockResolvedValue({
-      id: "wish-1",
-      steamAppId: null,
-      metadataSnapshot: { payload: {} },
-    });
-
-    const result = await confirmRawgSuggestedIdentity({ wishlistEntryId: "wish-1" });
-
-    expect(result.error).toBe("No RAWG store-link suggestion to confirm");
-  });
-});
-
-describe("dismissRawgIdentitySuggestion", () => {
-  it("stamps the dismissal inside the snapshot payload", async () => {
-    const payload = {
-      storeLink: {
-        steamUrl: "https://store.steampowered.com/app/620/Portal_2/",
-        steamAppId: "620",
-      },
-      rawgId: 123,
-    };
-    mockFindUnique.mockResolvedValue({
-      id: "wish-1",
-      metadataSnapshot: { payload },
-    });
-
-    const result = await dismissRawgIdentitySuggestion({ wishlistEntryId: "wish-1" });
-
-    expect(result.success).toBe(true);
-    expect(mockUpdateMany).toHaveBeenCalledTimes(1);
-    const call = mockUpdateMany.mock.calls[0][0] as { data: { payload: Record<string, unknown> } };
-    expect(call.data.payload.rawgId).toBe(123);
-    expect(typeof call.data.payload.storeLinkDismissedAt).toBe("string");
-  });
-
-  it("is a no-op success without a snapshot or store link", async () => {
-    mockFindUnique.mockResolvedValue({ id: "wish-1", metadataSnapshot: null });
-    const noSnapshot = await dismissRawgIdentitySuggestion({ wishlistEntryId: "wish-1" });
-    expect(noSnapshot.success).toBe(true);
-    expect(mockUpdateMany).not.toHaveBeenCalled();
-
-    mockFindUnique.mockResolvedValue({ id: "wish-1", metadataSnapshot: { payload: {} } });
-    const noLink = await dismissRawgIdentitySuggestion({ wishlistEntryId: "wish-1" });
-    expect(noLink.success).toBe(true);
-    expect(mockUpdateMany).not.toHaveBeenCalled();
-  });
-});
-
 describe("compatibility auto-trigger on identity confirmation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -300,7 +189,6 @@ describe("compatibility auto-trigger on identity confirmation", () => {
     );
     mockFindUnique.mockResolvedValue({ id: "wish-1" });
     mockFindFirst.mockResolvedValue(null);
-    mockUpdateMany.mockResolvedValue({ count: 1 });
   });
 
   it("triggers one silent refresh after a manual identity save on a base game", async () => {
@@ -338,9 +226,8 @@ describe("compatibility auto-trigger on identity confirmation", () => {
     expect(silentlyRefreshWishlistCompatibility).not.toHaveBeenCalled();
   });
 
-  it("does not trigger on identity removal or suggestion dismissal", async () => {
+  it("does not trigger on identity removal", async () => {
     await removeWishlistIdentity({ wishlistEntryId: "wish-1" });
-    await dismissRawgIdentitySuggestion({ wishlistEntryId: "wish-1" });
 
     expect(silentlyRefreshWishlistCompatibility).not.toHaveBeenCalled();
   });
@@ -363,31 +250,4 @@ describe("compatibility auto-trigger on identity confirmation", () => {
     expect(silentlyRefreshWishlistCompatibility).toHaveBeenCalledWith("wish-1");
   });
 
-  it("triggers one silent refresh after confirming the RAWG suggestion", async () => {
-    mockFindUnique.mockResolvedValue({
-      id: "wish-1",
-      type: "BASE_GAME",
-      steamAppId: null,
-      metadataSnapshot: {
-        payload: {
-          storeLink: {
-            steamUrl: "https://store.steampowered.com/app/620/Portal_2/",
-            steamAppId: "620",
-          },
-        },
-      },
-    });
-    mockUpdate.mockResolvedValue({
-      id: "wish-1",
-      type: "BASE_GAME",
-      steamAppId: "620",
-      steamAppIdProvenance: "RAWG_SUGGESTION",
-    });
-
-    const result = await confirmRawgSuggestedIdentity({ wishlistEntryId: "wish-1" });
-
-    expect(result.success).toBe(true);
-    expect(silentlyRefreshWishlistCompatibility).toHaveBeenCalledTimes(1);
-    expect(silentlyRefreshWishlistCompatibility).toHaveBeenCalledWith("wish-1");
-  });
 });

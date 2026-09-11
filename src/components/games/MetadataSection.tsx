@@ -15,7 +15,7 @@ function Values({ label, values }: { label: string; values: readonly string[] })
     <div>
       <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd className="mt-1 flex flex-wrap gap-1.5">
-        {values.map((value) => <span key={value} className="rounded-md border border-border bg-muted/30 px-2 py-0.5 text-xs">{value}</span>)}
+        {values.map((value, index) => <span key={`${value}-${index}`} className="rounded-md border border-border bg-muted/30 px-2 py-0.5 text-xs">{value}</span>)}
       </dd>
     </div>
   );

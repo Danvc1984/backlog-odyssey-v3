@@ -153,7 +153,7 @@ const wishlistEntrySchema = z.object({
   targetPriceMxn: z.string().nullable(),
   notes: z.string().nullable(),
   steamAppId: z.string().nullable(),
-  steamAppIdProvenance: z.enum(["STEAM_IMPORT", "USER", "RAWG_SUGGESTION"]).nullable(),
+  steamAppIdProvenance: z.enum(["STEAM_IMPORT", "USER", "RAWG_SUGGESTION", "IGDB_SUGGESTION"]).nullable(),
   createdAt: isoDateTime,
   updatedAt: isoDateTime,
 });

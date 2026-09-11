@@ -3,9 +3,9 @@ import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { queueCompatibilityForGame } from "@/lib/compat-queue";
-import { fetchIgdbGameTimeToBeats, matchIgdbGame } from "@/lib/igdb-api";
+import { fetchIgdbGameTimeToBeats, fetchIgdbSteamAppId, matchIgdbGame } from "@/lib/igdb-api";
 import { fetchSteamSpyMedian } from "@/lib/steamspy-api";
-import { persistIgdbIdentity, persistIgdbSnapshot, persistPlaytimeEvidence } from "@/lib/igdb-enrichment";
+import { persistDerivedSteamAppId, persistIgdbIdentity, persistIgdbSnapshot, persistPlaytimeEvidence } from "@/lib/igdb-enrichment";
 import {
   IGDB_JOB_MAX_ATTEMPTS,
   igdbJobProgress,
@@ -127,8 +127,7 @@ async function handleUnavailable(
   return updateFailedJob(job, error.category, message, job.progress);
 }
 
-async function persistDurationEvidence(job: RunnerJob, igdbId: number, slug: string | null): Promise<void> {
-  const steamAppId = job.game.externalIds[0]?.externalId ?? job.game.availability.find((entry) => entry.steamAppId)?.steamAppId ?? null;
+async function persistDurationEvidence(job: RunnerJob, igdbId: number, slug: string | null, steamAppId: string | null): Promise<void> {
   const igdbResult = await fetchIgdbGameTimeToBeats(igdbId);
   if (igdbResult.ok && igdbResult.data !== null && [igdbResult.data.hastilySeconds, igdbResult.data.normallySeconds, igdbResult.data.completelySeconds].some((value) => value !== null)) {
     await persistPlaytimeEvidence(job.game.id, "IGDB", igdbResult.data as unknown as Prisma.InputJsonValue, slug ? `https://www.igdb.com/games/${slug}` : null, new Date());
@@ -165,7 +164,7 @@ export async function runIgdbEnrichmentJob(
   const job = await readJob(jobId);
   if (!job) return null;
 
-  const steamAppId = job.game.availability.find((entry) => entry.steamAppId)?.steamAppId ?? null;
+  let steamAppId = job.game.externalIds[0]?.externalId ?? job.game.availability.find((entry) => entry.steamAppId)?.steamAppId ?? null;
   const category = job.game.type === "DLC" ? "DLC" : "MAIN_GAME";
   let result;
   try {
@@ -222,6 +221,18 @@ export async function runIgdbEnrichmentJob(
     return updateFailedJob(job, persistedIdentity.error.code, persistedIdentity.error.message, igdbJobProgress("PERSISTING"));
   }
 
+  if (!steamAppId && job.game.availability.length > 0) {
+    try {
+      const derived = await fetchIgdbSteamAppId(result.game.id);
+      if (derived.ok && derived.data) {
+        const persistedSteam = await persistDerivedSteamAppId(job.game.id, derived.data);
+        if (persistedSteam.applied) steamAppId = derived.data;
+      }
+    } catch {
+      // Derived Steam identity is best effort; the IGDB match remains valid.
+    }
+  }
+
   let persistedSnapshot;
   try {
     persistedSnapshot = await persistIgdbSnapshot(job.game.id, result.game, new Date());
@@ -233,7 +244,7 @@ export async function runIgdbEnrichmentJob(
   }
 
   try {
-    await persistDurationEvidence(job, result.game.id, result.game.slug ?? null);
+    await persistDurationEvidence(job, result.game.id, result.game.slug ?? null, steamAppId);
   } catch {
     // Duration evidence is supplementary and must not fail metadata enrichment.
   }

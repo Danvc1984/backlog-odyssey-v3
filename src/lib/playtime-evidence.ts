@@ -21,6 +21,20 @@ export interface DurationOption {
   estimate: DurationEstimate;
 }
 
+export function resolveWishlistDurationEstimate(
+  value: unknown,
+  profile: DurationProfile,
+): DurationEstimate | null {
+  if (!isRecord(value) || !isRecord(value.durationEvidence)) return null;
+  const evidence = value.durationEvidence;
+  if (evidence.provider !== "IGDB" && evidence.provider !== "STEAMSPY") return null;
+  if (!("payload" in evidence)) return null;
+  return resolveDurationEstimate(
+    { provider: evidence.provider, payload: evidence.payload },
+    profile,
+  );
+}
+
 interface IgdbPayload {
   count: number | null;
   hastilySeconds: number | null;

@@ -9,7 +9,7 @@ import {
 import { fuzzyMatch } from "./fuzzy-match";
 import { normalizeName } from "./duplicate-utils";
 import {
-  IGDB_STEAM_EXTERNAL_CATEGORY,
+  IGDB_STEAM_EXTERNAL_SOURCE,
   type IgdbCategoryClass,
   type IgdbGameResponse,
   type IgdbGameTimeToBeats,
@@ -271,7 +271,7 @@ export async function resolveIgdbGameBySteamAppId(
 ): Promise<IgdbLookupResult<IgdbGameResponse[]>> {
   if (!/^\d+$/.test(steamAppId)) return { ok: true, data: [] };
   const external = await requestIgdb(
-    `fields game; where uid = "${steamAppId}" & category = ${IGDB_STEAM_EXTERNAL_CATEGORY}; limit 20;`,
+    `fields game; where uid = "${steamAppId}" & external_game_source = ${IGDB_STEAM_EXTERNAL_SOURCE}; limit 20;`,
     { ...options, endpoint: "external_games" },
   );
   if (!external.ok) return external;
@@ -286,6 +286,30 @@ export async function resolveIgdbGameBySteamAppId(
     if (result.data) games.push(result.data);
   }
   return { ok: true, data: games };
+}
+
+export async function fetchIgdbSteamAppId(
+  igdbId: number,
+  options: IgdbRequestOptions = {},
+): Promise<IgdbLookupResult<string | null>> {
+  if (!Number.isSafeInteger(igdbId) || igdbId <= 0) return { ok: true, data: null };
+  const result = await requestIgdb(
+    `fields game,uid,external_game_source; where game = ${igdbId} & external_game_source = ${IGDB_STEAM_EXTERNAL_SOURCE}; limit 20;`,
+    { ...options, endpoint: "external_games" },
+  );
+  if (!result.ok) return result;
+  if (!Array.isArray(result.data)) {
+    return { ok: false, error: { category: "MALFORMED_RESPONSE", message: "IGDB returned invalid external game data" } };
+  }
+  const steamAppId = result.data
+    .filter(isRecord)
+    .map((item) => item.uid)
+    .map((uid) => {
+      if (typeof uid === "string" && /^\d+$/.test(uid)) return uid;
+      return typeof uid === "number" && Number.isSafeInteger(uid) && uid > 0 ? String(uid) : null;
+    })
+    .find((uid): uid is string => uid !== null) ?? null;
+  return { ok: true, data: steamAppId };
 }
 
 function positiveNumberOrNull(value: unknown): number | null {

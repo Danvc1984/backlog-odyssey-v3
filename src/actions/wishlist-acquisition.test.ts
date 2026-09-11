@@ -22,6 +22,37 @@ const mockAltFind = vi.fn();
 const mockAltCreate = vi.fn();
 const transaction = vi.fn();
 
+const igdbPayload = {
+  schemaVersion: 1,
+  igdbId: 42,
+  igdbSlug: "portal-2",
+  name: "Portal 2",
+  summary: null,
+  firstReleaseDate: null,
+  genres: [],
+  themes: [],
+  keywords: [],
+  developers: [],
+  publishers: [],
+  esrbRating: null,
+  officialWebsite: null,
+  alternativeNames: [],
+  ratings: { aggregated: { score: null, count: null }, community: { score: null, count: null }, total: { score: null, count: null } },
+  collection: null,
+  franchise: null,
+  relations: [],
+  gameModes: [],
+  multiplayerModes: [],
+  coverUrl: null,
+  artworkUrls: [],
+  screenshots: [],
+  igdbUpdatedAt: null,
+  attribution: { provider: "IGDB" as const, sourceUrl: "https://www.igdb.com/games/portal-2", fetchedAt: "2026-09-10T19:00:00.000Z" },
+  palette: { primary: "#111111", dark: "#222222", muted: "#333333" },
+  matchMethod: "INFERRED" as const,
+  durationEvidence: null,
+};
+
 beforeEach(() => {
   vi.clearAllMocks();
   (requireUser as ReturnType<typeof vi.fn>).mockResolvedValue({});
@@ -56,15 +87,16 @@ beforeEach(() => {
 });
 
 describe("acquireWishlistBaseGame", () => {
-  it("creates catalog records, transfers RAWG metadata, and deletes the wish", async () => {
+  it("creates catalog records, transfers IGDB metadata, and deletes the wish", async () => {
     mockFindUniqueWishlist.mockResolvedValue({
       id: "wish-1",
       name: "Portal 2",
       type: "BASE_GAME",
       steamAppId: "620",
       metadataSnapshot: {
-        payload: { rawgId: 123, title: "Portal 2" },
-        sourceUrl: "https://rawg.io/games/portal-2",
+        provider: "IGDB",
+        payload: igdbPayload,
+        sourceUrl: "https://www.igdb.com/games/portal-2",
         fetchedAt: new Date("2026-08-20T00:00:00Z"),
         expiresAt: null,
       },
@@ -95,10 +127,10 @@ describe("acquireWishlistBaseGame", () => {
       }),
     }));
     expect(mockMetadataCreate).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({ gameId: "game-new", provider: "RAWG" }),
+      data: expect.objectContaining({ gameId: "game-new", provider: "IGDB", payload: expect.objectContaining({ palette: igdbPayload.palette }) }),
     }));
     expect(mockExternalCreate).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({ namespace: "RAWG_GAME", externalId: "123" }),
+      data: expect.objectContaining({ namespace: "IGDB_GAME", externalId: "42", matchMethod: "INFERRED" }),
     }));
     expect(mockWishlistDelete).toHaveBeenCalledWith({ where: { id: "wish-1" } });
   });
@@ -132,19 +164,19 @@ describe("acquireWishlistBaseGame", () => {
     }));
   });
 
-  it("rejects acquisition when the RAWG identity is already in the catalog", async () => {
+  it("rejects acquisition when the IGDB identity is already in the catalog", async () => {
     mockFindUniqueWishlist.mockResolvedValue({
       id: "wish-1",
       name: "Portal 2",
       type: "BASE_GAME",
       steamAppId: null,
-      metadataSnapshot: { payload: { rawgId: 123 }, sourceUrl: null, fetchedAt: new Date(), expiresAt: null },
+      metadataSnapshot: { provider: "IGDB", payload: igdbPayload, sourceUrl: null, fetchedAt: new Date(), expiresAt: null },
     });
     mockFindUniqueExternalId.mockResolvedValue({ id: "existing" });
 
     const result = await acquireWishlistBaseGame({ wishlistEntryId: "wish-1", source: "ROM" });
 
-    expect(result.error).toBe("RAWG game identity is already attached to another catalog game");
+    expect(result.error).toBe("IGDB game identity is already attached to another catalog game");
     expect(mockGameCreate).not.toHaveBeenCalled();
     expect(mockWishlistDelete).not.toHaveBeenCalled();
   });

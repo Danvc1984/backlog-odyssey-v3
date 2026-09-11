@@ -41,8 +41,80 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function nullableString(value: unknown): value is string | null {
+  return value === null || typeof value === "string";
+}
+
+function stringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+
+function namedValue(value: unknown): boolean {
+  return isRecord(value) && positiveInteger(value.id) && typeof value.name === "string";
+}
+
+function namedValueArray(value: unknown): boolean {
+  return Array.isArray(value) && value.every(namedValue);
+}
+
+function ratingShape(value: unknown): boolean {
+  return isRecord(value) && nullableNumber(value.score) && nullableNumber(value.count);
+}
+
+function nullableNumber(value: unknown): value is number | null {
+  return value === null || (typeof value === "number" && Number.isFinite(value));
+}
+
+function screenshot(value: unknown): boolean {
+  return isRecord(value)
+    && typeof value.image === "string"
+    && nullableNumber(value.width)
+    && nullableNumber(value.height);
+}
+
+function screenshotArray(value: unknown): boolean {
+  return Array.isArray(value) && value.every(screenshot);
+}
+
+function relation(value: unknown): boolean {
+  return isRecord(value)
+    && typeof value.kind === "string"
+    && positiveInteger(value.igdbId)
+    && typeof value.name === "string";
+}
+
+function relationArray(value: unknown): boolean {
+  return Array.isArray(value) && value.every(relation);
+}
+
+function palette(value: unknown): boolean {
+  return value === null
+    || (isRecord(value)
+      && typeof value.primary === "string"
+      && typeof value.dark === "string"
+      && typeof value.muted === "string");
+}
+
 function positiveInteger(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value > 0;
+}
+
+export function parseIgdbMetadataPayload(value: unknown): IgdbMetadataPayload | null {
+  if (!isRecord(value) || value.schemaVersion !== IGDB_METADATA_SCHEMA_VERSION) return null;
+  if (!(value.igdbId === null || positiveInteger(value.igdbId))) return null;
+  if (!nullableString(value.igdbSlug) || !nullableString(value.name) || !nullableString(value.summary)) return null;
+  if (!nullableString(value.firstReleaseDate) || !namedValueArray(value.genres) || !namedValueArray(value.themes)) return null;
+  if (!namedValueArray(value.keywords) || !namedValueArray(value.developers) || !namedValueArray(value.publishers)) return null;
+  if (!nullableString(value.esrbRating) || !nullableString(value.officialWebsite) || !stringArray(value.alternativeNames)) return null;
+  if (!isRecord(value.ratings) || !ratingShape(value.ratings.aggregated) || !ratingShape(value.ratings.community) || !ratingShape(value.ratings.total)) return null;
+  if (!(value.collection === null || namedValue(value.collection)) || !(value.franchise === null || namedValue(value.franchise))) return null;
+  if (!relationArray(value.relations) || !stringArray(value.gameModes) || !stringArray(value.multiplayerModes)) return null;
+  if (!nullableString(value.coverUrl) || !stringArray(value.artworkUrls)) return null;
+  if (value.conceptArtUrls !== undefined && !stringArray(value.conceptArtUrls)) return null;
+  if (!screenshotArray(value.screenshots) || !nullableString(value.igdbUpdatedAt)) return null;
+  if (!isRecord(value.attribution) || value.attribution.provider !== "IGDB" || typeof value.attribution.sourceUrl !== "string" || typeof value.attribution.fetchedAt !== "string") return null;
+  if (!palette(value.palette)) return null;
+  return value as unknown as IgdbMetadataPayload;
 }
 
 function nullableDate(seconds: unknown): string | null {

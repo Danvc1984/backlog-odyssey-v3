@@ -5,23 +5,17 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { LinkSimpleIcon, XIcon } from "@phosphor-icons/react";
 import {
-  confirmRawgSuggestedIdentity,
-  dismissRawgIdentitySuggestion,
   removeWishlistIdentity,
   setWishlistIdentity,
 } from "@/actions/wishlist-identity";
 import { parseSteamAppIdInput } from "@/lib/steam-identity";
-import {
-  wishlistIdentitySuggestion,
-  type WishlistSnapshotInput,
-} from "@/lib/wishlist-identity-view";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 const PROVENANCE_LABELS: Record<string, string> = {
   STEAM_IMPORT: "from Steam import",
   USER: "added by you",
-  RAWG_SUGGESTION: "from RAWG",
+  IGDB_SUGGESTION: "from IGDB",
 };
 
 interface WishlistIdentityProps {
@@ -29,7 +23,6 @@ interface WishlistIdentityProps {
   entryName: string;
   steamAppId: string | null;
   provenance: string | null;
-  snapshot: WishlistSnapshotInput | null;
 }
 
 export function WishlistIdentity({
@@ -37,7 +30,6 @@ export function WishlistIdentity({
   entryName,
   steamAppId,
   provenance,
-  snapshot,
 }: WishlistIdentityProps) {
   const router = useRouter();
   const [adding, setAdding] = useState(false);
@@ -45,11 +37,6 @@ export function WishlistIdentity({
   const [saving, setSaving] = useState(false);
 
   const parsed = rawInput.trim() ? parseSteamAppIdInput(rawInput) : null;
-  const { suggestion, dismissed } = wishlistIdentitySuggestion(
-    { steamAppId, steamAppIdProvenance: provenance },
-    snapshot,
-  );
-
   const confirm = async () => {
     setSaving(true);
     const result = await setWishlistIdentity({
@@ -97,52 +84,6 @@ export function WishlistIdentity({
         >
           <XIcon />
         </Button>
-      </div>
-    );
-  }
-
-  const confirmSuggestion = async () => {
-    setSaving(true);
-    const result = await confirmRawgSuggestedIdentity({ wishlistEntryId: entryId });
-    setSaving(false);
-    if (!result.success) {
-      toast.error(result.error ?? "Failed to confirm the suggested identity");
-      return;
-    }
-    toast.success(`Steam App ${suggestion?.steamAppId} confirmed on "${entryName}"`);
-    router.refresh();
-  };
-
-  const dismissSuggestion = async () => {
-    setSaving(true);
-    const result = await dismissRawgIdentitySuggestion({ wishlistEntryId: entryId });
-    setSaving(false);
-    if (!result.success) {
-      toast.error(result.error ?? "Failed to dismiss the suggestion");
-      return;
-    }
-    toast.success("Suggestion dismissed. It will reappear after the next RAWG refresh.");
-    router.refresh();
-  };
-
-  if (suggestion && !dismissed) {
-    return (
-      <div className="space-y-2 rounded-md border border-border bg-muted/40 p-3">
-        <p className="text-xs text-muted-foreground">
-          RAWG suggests{" "}
-          <a href={suggestion.steamUrl} target="_blank" rel="noreferrer" className="underline underline-offset-4">
-            Steam App {suggestion.steamAppId}
-          </a>{" "}
-          for this entry.
-        </p>
-        <div className="flex items-center gap-2">
-          <Button type="button" size="sm" onClick={() => void confirmSuggestion()} disabled={saving}>
-            {saving ? "Saving..." : "Confirm"}
-          </Button>
-          <Button type="button" variant="outline" size="sm" onClick={() => void dismissSuggestion()} disabled={saving}>
-            Dismiss
-          </Button>
-        </div>
       </div>
     );
   }

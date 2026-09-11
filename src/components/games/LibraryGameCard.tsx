@@ -149,7 +149,7 @@ function CardDetails({
 
   return (
     <div className={listView ? "mt-2 flex flex-wrap items-center gap-x-2 gap-y-1" : "mt-4 space-y-3"}>
-      {descriptionPreview && !listView && (
+      {descriptionPreview && (
         <div className={listView ? "block" : "hidden sm:block"}>
           <p
             className="line-clamp-3 overflow-hidden leading-6 text-muted-foreground"
@@ -180,11 +180,11 @@ function CardDetails({
         </div>
       )}
       {listView && (developers.length > 0 || releaseYear || stats.length > 0) && (
-        <div className="contents text-xs text-muted-foreground">
-          {developers[0] && <span>{developers[0]}</span>}
-          {releaseYear && <span>{developers[0] ? "·" : ""} {releaseYear}</span>}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {developers[0] && <span className="rounded-md border border-border px-2 py-0.5 text-xs">{developers[0]}</span>}
+          {releaseYear && <span className="rounded-md border border-border px-2 py-0.5 text-xs">{releaseYear}</span>}
           {stats.map((stat) => (
-            <span key={stat}>· {stat}</span>
+            <span key={stat} className="rounded-md border border-border px-2 py-0.5 text-xs">{stat}</span>
           ))}
         </div>
       )}

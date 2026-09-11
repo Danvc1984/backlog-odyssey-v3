@@ -48,7 +48,7 @@ export function WishlistImportResultPanel({
         Steam import
       </p>
       <p className="mt-2 pr-7 font-medium">
-        {enrichmentProgress ? "Enriching imported games with RAWG" : "Steam wishlist import complete"}
+        {enrichmentProgress ? "Enriching imported games with IGDB" : "Steam wishlist import complete"}
       </p>
       <p className="mt-1 text-xs text-muted-foreground">
         {result.created} created, {result.queuedReviews} reviews, {result.ignored} ignored, {result.enrichment.enriched} enriched, {result.enrichment.skipped} skipped

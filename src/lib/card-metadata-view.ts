@@ -1,9 +1,16 @@
 import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
+import { parseIgdbMetadataPayload } from "@/lib/igdb-metadata-payload";
 import type { IgdbMetadataPayload } from "@/lib/igdb-types";
 
 export interface WishlistCardMetadataView {
   imageUrl: string | null;
+  wideImageUrl: string | null;
   description: string | null;
+  genres: string[];
+  developers: string[];
+  releaseDate: string | null;
+  rating: number | null;
+  durationHours: number | null;
 }
 
 export interface CoverArtMeta {
@@ -22,15 +29,22 @@ export interface LibraryCardMetadataView extends CoverArtMeta {
   wideImageUrl?: string | null;
 }
 
-export function wishlistCardMetadataView(
+export function igdbWishlistCardMetadataView(
   value: unknown,
+  durationHours: number | null = null,
 ): WishlistCardMetadataView | null {
-  const payload = parseRawgMetadataPayload(value);
+  const payload = parseIgdbMetadataPayload(value);
   if (!payload) return null;
 
   return {
-    imageUrl: payload.backgroundImageUrls[0] ?? null,
-    description: payload.description,
+    imageUrl: payload.coverUrl,
+    wideImageUrl: payload.artworkUrls[0] ?? payload.screenshots[0]?.image ?? payload.coverUrl,
+    description: payload.summary,
+    genres: payload.genres.map((genre) => genre.name),
+    developers: payload.developers.map((developer) => developer.name),
+    releaseDate: payload.firstReleaseDate,
+    rating: payload.ratings.total.score ?? payload.ratings.aggregated.score,
+    durationHours,
   };
 }
 

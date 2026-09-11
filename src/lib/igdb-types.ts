@@ -1,6 +1,6 @@
 export const IGDB_EXTERNAL_NAMESPACE = "IGDB_GAME" as const;
 export const IGDB_METADATA_SCHEMA_VERSION = 1 as const;
-export const IGDB_STEAM_EXTERNAL_CATEGORY = 1 as const;
+export const IGDB_STEAM_EXTERNAL_SOURCE = 1 as const;
 
 export type IgdbMatchMethod =
   | "EXACT_STEAM_APP_ID"

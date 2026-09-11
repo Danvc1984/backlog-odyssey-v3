@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseIgdbGameToPayload } from "./igdb-metadata-payload";
+import { parseIgdbGameToPayload, parseIgdbMetadataPayload } from "./igdb-metadata-payload";
 import type { IgdbGameResponse } from "./igdb-types";
 
 const fetchedAt = new Date("2026-09-10T18:00:00.000Z");
@@ -149,5 +149,12 @@ describe("IGDB metadata payload", () => {
     expect(payload.conceptArtUrls).toEqual([
       "https://images.igdb.com/igdb/image/upload/t_720p/concept.jpg",
     ]);
+  });
+
+  it("parses a valid stored payload and rejects malformed values", () => {
+    const payload = parseIgdbGameToPayload({ id: 42, name: "Portal 2" }, fetchedAt);
+    expect(parseIgdbMetadataPayload(payload)).toEqual(payload);
+    expect(parseIgdbMetadataPayload({ ...payload, ratings: null })).toBeNull();
+    expect(parseIgdbMetadataPayload("not-an-object")).toBeNull();
   });
 });

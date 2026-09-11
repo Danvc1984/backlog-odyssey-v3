@@ -18,6 +18,7 @@ vi.mock("./igdb-rate-limit", () => ({
 import {
   classifyIgdbCategory,
   fetchIgdbGameTimeToBeats,
+  fetchIgdbSteamAppId,
   matchIgdbGame,
   requestIgdb,
   searchIgdbCandidatePage,
@@ -223,6 +224,35 @@ describe("IGDB request boundary", () => {
     fetchMock.mockResolvedValue(new Response("[]", { status: 200 }));
 
     await expect(fetchIgdbGameTimeToBeats(42, { fetchFn: fetchMock })).resolves.toEqual({ ok: true, data: null });
+  });
+
+  it("returns the first numeric Steam App ID from an IGDB game", async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify([
+      { game: 42, uid: "not-a-number", external_game_source: 1 },
+      { game: 42, uid: "620", external_game_source: 1 },
+      { game: 42, uid: "730", external_game_source: 1 },
+    ]), { status: 200 }));
+
+    await expect(fetchIgdbSteamAppId(42, { fetchFn: fetchMock })).resolves.toEqual({ ok: true, data: "620" });
+    expect(fetchMock.mock.calls[0][1]).toEqual(expect.objectContaining({
+      body: "fields game,uid,external_game_source; where game = 42 & external_game_source = 1; limit 20;",
+    }));
+    expect(fetchMock.mock.calls[0][0]).toBe("https://api.igdb.com/v4/external_games");
+  });
+
+  it("returns null when an IGDB game has no numeric Steam App ID", async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify([
+      { game: 42, uid: "steam-620" },
+      { game: 42, uid: null },
+    ]), { status: 200 }));
+
+    await expect(fetchIgdbSteamAppId(42, { fetchFn: fetchMock })).resolves.toEqual({ ok: true, data: null });
+  });
+
+  it("normalizes a numeric Steam App ID when IGDB returns uid as a number", async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify([{ game: 42, uid: 620 }]), { status: 200 }));
+
+    await expect(fetchIgdbSteamAppId(42, { fetchFn: fetchMock })).resolves.toEqual({ ok: true, data: "620" });
   });
 
   it("ranks title-prefix candidates ahead of less-specific matches", async () => {

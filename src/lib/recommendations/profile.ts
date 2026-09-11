@@ -5,7 +5,7 @@ import type {
   RecommendationEventKind,
 } from "@/generated/prisma/client";
 import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
-import { resolveDurationEstimate, type DurationProfile, type PlaytimeEvidenceRow } from "@/lib/playtime-evidence";
+import { resolveDurationEstimate, resolveWishlistDurationEstimate, type DurationProfile, type PlaytimeEvidenceRow } from "@/lib/playtime-evidence";
 
 export const PROFILE_DECAY_HALF_LIFE_DAYS = 180;
 
@@ -147,7 +147,7 @@ function eventValues(
       configuredEnvironments,
       durationHours: event.game
         ? resolveDurationEstimate(event.game.playtimeEvidence, durationProfile)?.hours ?? null
-        : null,
+        : resolveWishlistDurationEstimate(event.wishlistEntry?.metadataSnapshot?.payload, durationProfile)?.hours ?? null,
     },
   );
 }

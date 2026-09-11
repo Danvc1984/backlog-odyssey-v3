@@ -11,8 +11,9 @@ import { matchWishlistEntries, sortWishlistEntries, wishlistWhere } from "@/lib/
 import { getWishlistCompatibilityEligibility } from "@/lib/wishlist-compatibility";
 import { deriveCompatTag } from "@/lib/protondb-tags";
 import { getCompatibilityGate } from "@/lib/compat-gate";
-import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
-import { wishlistCardMetadataView } from "@/lib/card-metadata-view";
+import { parseIgdbMetadataPayload } from "@/lib/igdb-metadata-payload";
+import { igdbWishlistCardMetadataView } from "@/lib/card-metadata-view";
+import { resolveDurationEstimate, type DurationProfile, type PlaytimeEvidenceRow } from "@/lib/playtime-evidence";
 import { ListPaginationControls } from "@/components/list/ListPaginationControls";
 import { parsePage, parsePageSize, resolveRange } from "@/lib/list-pagination";
 
@@ -27,6 +28,13 @@ interface WishlistSearchParams {
 }
 
 type WishlistView = "focus" | "list";
+
+function durationHoursFromSnapshot(value: unknown, profile: DurationProfile): number | null {
+  if (typeof value !== "object" || value === null) return null;
+  const evidence = (value as { durationEvidence?: unknown }).durationEvidence;
+  if (typeof evidence !== "object" || evidence === null) return null;
+  return resolveDurationEstimate(evidence as PlaytimeEvidenceRow, profile)?.hours ?? null;
+}
 
 function normalizeWishlistView(value: string | undefined): WishlistView {
   return value === "list" ? "list" : "focus";
@@ -52,7 +60,7 @@ export default async function WishlistPage({
   const query = params.q?.trim() || undefined;
   const compatibilityGate = await getCompatibilityGate();
 
-  const [entries, baseGames] = await Promise.all([
+  const [entries, baseGames, appSettings] = await Promise.all([
     prisma.wishlistEntry.findMany({
       where: wishlistWhere({ type, interest: interestFilter }),
       orderBy: [{ interest: "desc" }, { updatedAt: "desc" }],
@@ -79,9 +87,9 @@ export default async function WishlistPage({
           orderBy: [{ price: { sort: "asc", nulls: "last" } }],
         },
         baseGame: {
-          select: { id: true, name: true, metadataSnapshots: { where: { provider: "RAWG" }, orderBy: { fetchedAt: "desc" }, take: 1, select: { payload: true, sourceUrl: true, fetchedAt: true } } },
+          select: { id: true, name: true, metadataSnapshots: { where: { provider: "IGDB" }, orderBy: { fetchedAt: "desc" }, take: 1, select: { payload: true, sourceUrl: true, fetchedAt: true } } },
         },
-        metadataSnapshot: { select: { payload: true, sourceUrl: true, fetchedAt: true } },
+        metadataSnapshot: { select: { provider: true, payload: true, sourceUrl: true, fetchedAt: true } },
       },
     }),
     prisma.game.findMany({
@@ -89,7 +97,9 @@ export default async function WishlistPage({
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
+    prisma.appSettings.findUnique({ where: { id: 1 }, select: { durationProfile: true } }),
   ]);
+  const durationProfile = (appSettings?.durationProfile ?? "NORMALLY") as DurationProfile;
 
   const entriesWithOfferViews = entries.map(({
     offers,
@@ -99,10 +109,12 @@ export default async function WishlistPage({
     baseGame,
     ...entry
   }) => {
-    const ownPayload = parseRawgMetadataPayload(metadataSnapshot?.payload);
-    const inheritedPayload = parseRawgMetadataPayload(baseGame?.metadataSnapshots[0]?.payload);
-    const ownMetadata = wishlistCardMetadataView(metadataSnapshot?.payload);
-    const inheritedMetadata = wishlistCardMetadataView(baseGame?.metadataSnapshots[0]?.payload);
+    const ownPayload = metadataSnapshot?.provider === "IGDB" ? parseIgdbMetadataPayload(metadataSnapshot.payload) : null;
+    const inheritedPayload = parseIgdbMetadataPayload(baseGame?.metadataSnapshots[0]?.payload);
+    const ownDuration = metadataSnapshot?.provider === "IGDB" ? durationHoursFromSnapshot(metadataSnapshot.payload, durationProfile) : null;
+    const inheritedDuration = durationHoursFromSnapshot(baseGame?.metadataSnapshots[0]?.payload, durationProfile);
+    const ownMetadata = igdbWishlistCardMetadataView(metadataSnapshot?.payload, ownDuration);
+    const inheritedMetadata = igdbWishlistCardMetadataView(baseGame?.metadataSnapshots[0]?.payload, inheritedDuration);
     const metadata = ownMetadata ?? inheritedMetadata;
     const metadataPayload = ownPayload ?? inheritedPayload;
     const eligibility = getWishlistCompatibilityEligibility({
@@ -114,7 +126,10 @@ export default async function WishlistPage({
       ...entry,
       baseGameName: baseGame?.name ?? null,
       metadata,
-      metadataGenres: metadataPayload?.genres ?? [],
+      metadataGenres: metadataPayload?.genres.map((genre) => genre.name) ?? [],
+      metadataDevelopers: metadataPayload?.developers.map((developer) => developer.name) ?? [],
+      metadataReleaseDate: metadataPayload?.firstReleaseDate ?? null,
+      metadataRating: metadataPayload ? metadataPayload.ratings.total.score ?? metadataPayload.ratings.aggregated.score : null,
       hasOwnMetadata: ownMetadata !== null,
       hasInheritedMetadata: ownMetadata === null && inheritedMetadata !== null,
       compatTag: eligibility.eligible

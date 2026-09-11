@@ -8,6 +8,8 @@ import { requireUser } from "@/lib/auth-guard";
 import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
 import { resolveManualSteamAppId } from "@/actions/wishlist-identity";
 import { getOrCreateUnspecifiedSource } from "@/lib/sources/store";
+import { parseIgdbMetadataPayload } from "@/lib/igdb-metadata-payload";
+import type { WishlistIgdbSnapshotPayload } from "@/lib/wishlist-igdb-enrichment";
 
 const wishlistTypeSchema = z.enum(["BASE_GAME", "DLC"]);
 const interestSchema = z.number().int().min(1).max(5);
@@ -258,16 +260,6 @@ export async function getWishlistEntries(input: unknown = {}) {
   }
 }
 
-function rawgIdFromPayload(payload: unknown): number | null {
-  if (typeof payload !== "object" || payload === null || !("rawgId" in payload)) {
-    return null;
-  }
-  const rawgId = payload.rawgId;
-  return typeof rawgId === "number" && Number.isInteger(rawgId) && rawgId > 0
-    ? rawgId
-    : null;
-}
-
 export async function acquireWishlistBaseGame(input: unknown) {
   try {
     await requireUser();
@@ -286,21 +278,23 @@ export async function acquireWishlistBaseGame(input: unknown) {
         throw new ActionError("Only base-game wishes can be acquired as base games");
       }
 
-      const rawgId = wishlist.metadataSnapshot
-        ? rawgIdFromPayload(wishlist.metadataSnapshot.payload)
+      const metadataSnapshot = wishlist.metadataSnapshot;
+      const igdbPayload = metadataSnapshot?.provider === "IGDB"
+        ? parseIgdbMetadataPayload(metadataSnapshot.payload) as WishlistIgdbSnapshotPayload | null
         : null;
-      if (rawgId !== null) {
+      const igdbId = igdbPayload?.igdbId ?? null;
+      if (igdbId !== null) {
         const existingIdentity = await tx.externalGameId.findUnique({
           where: {
             namespace_externalId: {
-              namespace: "RAWG_GAME",
-              externalId: String(rawgId),
+              namespace: "IGDB_GAME",
+              externalId: String(igdbId),
             },
           },
           select: { id: true },
         });
         if (existingIdentity) {
-        throw new ActionError("RAWG game identity is already attached to another catalog game");
+          throw new ActionError("IGDB game identity is already attached to another catalog game");
         }
       }
 
@@ -326,24 +320,24 @@ export async function acquireWishlistBaseGame(input: unknown) {
         select: { id: true, name: true, type: true },
       });
 
-      if (wishlist.metadataSnapshot) {
+      if (igdbPayload && metadataSnapshot) {
         await tx.metadataSnapshot.create({
           data: {
             gameId: created.id,
-            provider: "RAWG",
-            payload: wishlist.metadataSnapshot.payload as Prisma.InputJsonValue,
-            sourceUrl: wishlist.metadataSnapshot.sourceUrl,
-            fetchedAt: wishlist.metadataSnapshot.fetchedAt,
-            expiresAt: wishlist.metadataSnapshot.expiresAt,
+            provider: "IGDB",
+            payload: igdbPayload as unknown as Prisma.InputJsonValue,
+            sourceUrl: metadataSnapshot.sourceUrl,
+            fetchedAt: metadataSnapshot.fetchedAt,
+            expiresAt: metadataSnapshot.expiresAt,
           },
         });
-        if (rawgId !== null) {
+        if (igdbId !== null) {
           await tx.externalGameId.create({
             data: {
-              namespaceId: String(rawgId),
-              namespace: "RAWG_GAME",
-              externalId: String(rawgId),
-              matchMethod: "MANUAL_RAWG_SEARCH",
+              namespaceId: String(igdbId),
+              namespace: "IGDB_GAME",
+              externalId: String(igdbId),
+              matchMethod: igdbPayload.matchMethod,
               gameId: created.id,
             },
           });

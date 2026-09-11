@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { parseSteamAppIdInput } from "@/lib/steam-identity";
 import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
-import { storeLinkFromSnapshotPayload, identityConflictMessage } from "@/lib/wishlist-identity-view";
+import { findConflictingEntry, identityConflictMessage } from "@/lib/wishlist-identity";
 
 type DbClient = typeof prisma | Prisma.TransactionClient;
 
@@ -40,20 +40,6 @@ const steamImportIdentitySchema = z
 
 export type SetWishlistIdentityInput = z.infer<typeof setWishlistIdentitySchema>;
 export type SteamImportIdentityInput = z.infer<typeof steamImportIdentitySchema>;
-
-async function findConflictingEntry(
-  client: DbClient,
-  appId: string,
-  excludeEntryId?: string,
-) {
-  return client.wishlistEntry.findFirst({
-    where: {
-      steamAppId: appId,
-      ...(excludeEntryId ? { id: { not: excludeEntryId } } : {}),
-    },
-    select: { id: true, name: true },
-  });
-}
 
 async function writeConfirmedIdentity(
   client: DbClient,
@@ -183,109 +169,4 @@ export async function resolveManualSteamAppId(
     };
   }
   return { ok: true, appId: parsedId.appId };
-}
-
-export async function confirmRawgSuggestedIdentity(input: unknown) {
-  try {
-    await requireUser();
-    const parsed = entryRefSchema.safeParse(input);
-    if (!parsed.success) {
-      return { success: false as const, data: null, error: "Invalid input" };
-    }
-
-    const entry = await prisma.wishlistEntry.findUnique({
-      where: { id: parsed.data.wishlistEntryId },
-      select: { id: true, steamAppId: true, metadataSnapshot: { select: { payload: true } } },
-    });
-    if (!entry) {
-      return { success: false as const, data: null, error: "Wishlist entry not found" };
-    }
-    if (entry.steamAppId) {
-      return {
-        success: false as const,
-        data: null,
-        error: "This entry already has a confirmed Steam identity",
-      };
-    }
-
-    const suggestion = storeLinkFromSnapshotPayload(entry.metadataSnapshot?.payload);
-    if (!suggestion) {
-      return {
-        success: false as const,
-        data: null,
-        error: "No RAWG store-link suggestion to confirm",
-      };
-    }
-
-    const conflict = await findConflictingEntry(prisma, suggestion.steamAppId, entry.id);
-    if (conflict) {
-      return {
-        success: false as const,
-        data: null,
-        error: identityConflictMessage(suggestion.steamAppId, conflict.name),
-      };
-    }
-
-    const updated = await prisma.wishlistEntry.update({
-      where: { id: entry.id },
-      data: {
-        steamAppId: suggestion.steamAppId,
-        steamAppIdProvenance: "RAWG_SUGGESTION",
-      },
-    });
-    await triggerCompatibilityIfEligible(updated);
-
-    return { success: true as const, data: updated, error: null };
-  } catch (err) {
-    return {
-      success: false as const,
-      data: null,
-      error:
-        friendlyActionError(err, "Failed to confirm the suggested identity"),
-    };
-  }
-}
-
-export async function dismissRawgIdentitySuggestion(input: unknown) {
-  try {
-    await requireUser();
-    const parsed = entryRefSchema.safeParse(input);
-    if (!parsed.success) {
-      return { success: false as const, data: null, error: "Invalid input" };
-    }
-
-    const entry = await prisma.wishlistEntry.findUnique({
-      where: { id: parsed.data.wishlistEntryId },
-      select: { id: true, metadataSnapshot: { select: { payload: true } } },
-    });
-    if (!entry) {
-      return { success: false as const, data: null, error: "Wishlist entry not found" };
-    }
-
-    const snapshot = entry.metadataSnapshot;
-    if (!snapshot || !storeLinkFromSnapshotPayload(snapshot.payload)) {
-      return { success: true as const, data: null, error: null };
-    }
-
-    const currentPayload =
-      typeof snapshot.payload === "object" && snapshot.payload !== null
-        ? (snapshot.payload as Record<string, unknown>)
-        : {};
-    const payload = {
-      ...currentPayload,
-      storeLinkDismissedAt: new Date().toISOString(),
-    };
-    await prisma.wishlistMetadataSnapshot.updateMany({
-      where: { wishlistEntryId: entry.id },
-      data: { payload: payload as Prisma.InputJsonValue },
-    });
-
-    return { success: true as const, data: null, error: null };
-  } catch (err) {
-    return {
-      success: false as const,
-      data: null,
-      error: friendlyActionError(err, "Failed to dismiss the suggestion"),
-    };
-  }
 }

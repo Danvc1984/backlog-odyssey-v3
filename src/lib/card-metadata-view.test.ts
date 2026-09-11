@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   igdbLibraryCardMetadataView,
+  igdbWishlistCardMetadataView,
   libraryCardMetadataView,
-  wishlistCardMetadataView,
 } from "./card-metadata-view";
 
 const payload = {
@@ -42,10 +42,30 @@ describe("card metadata views", () => {
     });
   });
 
-  it("projects the wishlist image and description", () => {
-    expect(wishlistCardMetadataView(payload)).toEqual({
-      imageUrl: "https://example.com/portal-2.jpg",
+  it("projects IGDB wishlist artwork, summary, and duration", () => {
+    expect(igdbWishlistCardMetadataView({
+      schemaVersion: 1,
+      name: "Portal 2",
+      summary: "A puzzle game",
+      coverUrl: "https://images.example/cover.jpg",
+      artworkUrls: ["https://images.example/artwork.jpg"],
+      screenshots: [{ image: "https://images.example/screenshot.jpg", width: null, height: null }],
+      genres: [{ id: 1, name: "Puzzle" }],
+      developers: [{ id: 2, name: "Valve" }],
+      ratings: { total: { score: 92, count: 10 }, aggregated: { score: null, count: null }, community: { score: null, count: null } },
+      themes: [], keywords: [], publishers: [], relations: [], gameModes: [], multiplayerModes: [],
+      firstReleaseDate: "2011-04-18", esrbRating: null, officialWebsite: null, alternativeNames: [],
+      collection: null, franchise: null, conceptArtUrls: [], igdbId: 1, igdbSlug: "portal-2",
+      igdbUpdatedAt: null, attribution: { provider: "IGDB", sourceUrl: "https://igdb.com/games/portal-2", fetchedAt: "2026-09-11" }, palette: null,
+    }, 9)).toEqual({
+      imageUrl: "https://images.example/cover.jpg",
+      wideImageUrl: "https://images.example/artwork.jpg",
       description: "A puzzle game",
+      genres: ["Puzzle"],
+      developers: ["Valve"],
+      releaseDate: "2011-04-18",
+      rating: 92,
+      durationHours: 9,
     });
   });
 
@@ -81,7 +101,6 @@ describe("card metadata views", () => {
   });
 
   it("returns null for invalid payloads", () => {
-    expect(wishlistCardMetadataView(null)).toBeNull();
     expect(libraryCardMetadataView({ title: "Missing genres" })).toBeNull();
   });
 });

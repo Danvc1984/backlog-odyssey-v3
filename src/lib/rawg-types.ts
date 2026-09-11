@@ -142,15 +142,6 @@ export interface RawgMetadataPayload {
   screenshots: RawgScreenshotEntry[];
 }
 
-export interface WishlistStoreLink {
-  steamUrl: string;
-  steamAppId: string;
-}
-
-export interface RawgWishlistMetadataPayload extends RawgMetadataPayload {
-  storeLink: WishlistStoreLink | null;
-}
-
 export type RawgPersistenceErrorCode =
   | "NOT_MATCHED"
   | "RAWG_ID_CONFLICT"

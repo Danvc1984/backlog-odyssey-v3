@@ -8,10 +8,12 @@ import { prisma } from "@/lib/prisma";
 import { extractPaletteFromImageBytes } from "./palette";
 import {
   persistIgdbIdentity,
+  persistDerivedSteamAppId,
   persistIgdbSnapshot,
   persistPlaytimeEvidence,
   selectIgdbPaletteSources,
 } from "./igdb-enrichment";
+import { persistWishlistIgdbSnapshot } from "./wishlist-igdb-enrichment";
 import type { IgdbGameResponse, IgdbMatchResult } from "./igdb-types";
 
 const findUnique = vi.fn();
@@ -25,6 +27,7 @@ const createPlaytimeEvidence = vi.fn();
   const tx = {
   externalGameId: { findUnique, deleteMany, create },
   metadataSnapshot: { deleteMany: deleteSnapshots, create: createSnapshot },
+  wishlistMetadataSnapshot: { deleteMany: deleteSnapshots, create: createSnapshot },
   playtimeEvidence: { deleteMany: deletePlaytimeEvidence, create: createPlaytimeEvidence },
   };
 
@@ -67,6 +70,33 @@ describe("IGDB identity persistence", () => {
     })).toEqual(["artwork-url", "screenshot-url", "cover-url"]);
   });
 
+  it("persists a derived Steam App ID as an exact catalog identity", async () => {
+    await expect(persistDerivedSteamAppId("game-1", "620")).resolves.toEqual({ applied: true, conflictName: null });
+
+    expect(findUnique).toHaveBeenCalledWith({
+      where: { namespace_externalId: { namespace: "STEAM_APP", externalId: "620" } },
+      select: { gameId: true, game: { select: { name: true } } },
+    });
+    expect(create).toHaveBeenCalledWith({
+      data: {
+        namespaceId: "620",
+        namespace: "STEAM_APP",
+        externalId: "620",
+        matchMethod: "EXACT_STEAM_APP_ID",
+        gameId: "game-1",
+      },
+    });
+  });
+
+  it("preserves the existing catalog identity and reports conflicts", async () => {
+    findUnique.mockResolvedValueOnce({ gameId: "game-1", game: { name: "Portal 2" } });
+    await expect(persistDerivedSteamAppId("game-1", "620")).resolves.toEqual({ applied: false, conflictName: null });
+
+    findUnique.mockResolvedValueOnce({ gameId: "other-game", game: { name: "Other game" } });
+    await expect(persistDerivedSteamAppId("game-2", "620")).resolves.toEqual({ applied: false, conflictName: "Other game" });
+    expect(create).not.toHaveBeenCalled();
+  });
+
   it("replaces the IGDB snapshot and maps attribution and captured palette", async () => {
     const fetchImage = vi.fn().mockResolvedValue({
       ok: true,
@@ -92,6 +122,36 @@ describe("IGDB identity persistence", () => {
         sourceUrl: "https://www.igdb.com/games/portal-2",
         fetchedAt,
         payload: expect.objectContaining({ name: "Portal 2", palette }),
+      }),
+    });
+  });
+
+  it("replaces a wishlist snapshot and preserves match and duration evidence", async () => {
+    const fetchedAt = new Date("2026-09-10T19:00:00.000Z");
+    const durationEvidence = {
+      provider: "IGDB" as const,
+      payload: { count: 4, hastilySeconds: 3_600, normallySeconds: 7_200, completelySeconds: null },
+      sourceUrl: "https://howlongtobeat.com/game/1",
+      fetchedAt: fetchedAt.toISOString(),
+    };
+
+    await expect(persistWishlistIgdbSnapshot(
+      "wish-1",
+      metadataGame,
+      "INFERRED",
+      durationEvidence,
+      fetchedAt,
+      { fetchImage: vi.fn().mockResolvedValue({ ok: false }) },
+    )).resolves.toEqual({ success: true, data: { wishlistEntryId: "wish-1", fetchedAt }, error: null });
+
+    expect(deleteSnapshots).toHaveBeenCalledWith({ where: { wishlistEntryId: "wish-1" } });
+    expect(createSnapshot).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        wishlistEntryId: "wish-1",
+        provider: "IGDB",
+        sourceUrl: "https://www.igdb.com/games/portal-2",
+        fetchedAt,
+        payload: expect.objectContaining({ matchMethod: "INFERRED", durationEvidence }),
       }),
     });
   });

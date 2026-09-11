@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import { resolveDurationEstimate } from "./playtime-evidence";
+import { resolveDurationEstimate, resolveWishlistDurationEstimate } from "./playtime-evidence";
 
 describe("duration resolution", () => {
   const igdb = (payload: Record<string, unknown>) => ({ provider: "IGDB" as const, payload });
@@ -34,5 +34,17 @@ describe("duration resolution", () => {
     expect(resolveDurationEstimate(igdb({ hastilySeconds: 6 * 3600 }), "HASTILY")?.band).toBe("MEDIUM");
     expect(resolveDurationEstimate(igdb({ hastilySeconds: 16 * 3600 }), "HASTILY")?.band).toBe("LONG");
     expect(resolveDurationEstimate(igdb({ hastilySeconds: 41 * 3600 }), "HASTILY")?.band).toBe("VERY_LONG");
+  });
+
+  it("resolves duration evidence embedded in an IGDB wishlist snapshot", () => {
+    expect(resolveWishlistDurationEstimate({ durationEvidence: { provider: "IGDB", payload: { normallySeconds: 9 * 3600 } } }, "NORMALLY"))
+      .toMatchObject({ hours: 9, band: "MEDIUM", source: "IGDB_TIME_TO_BEATS" });
+  });
+
+  it("resolves SteamSpy wishlist evidence and ignores malformed snapshots", () => {
+    expect(resolveWishlistDurationEstimate({ durationEvidence: { provider: "STEAMSPY", payload: { medianForeverMinutes: 2_400 } } }, "HASTILY"))
+      .toMatchObject({ hours: 40, band: "LONG", source: "STEAMSPY_MEDIAN" });
+    expect(resolveWishlistDurationEstimate({ durationEvidence: { provider: "RAWG", payload: {} } }, "NORMALLY")).toBeNull();
+    expect(resolveWishlistDurationEstimate(null, "NORMALLY")).toBeNull();
   });
 });

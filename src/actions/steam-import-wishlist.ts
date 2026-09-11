@@ -11,7 +11,7 @@ import {
   requireSteamFlowContext,
   upsertUnresolvedSteamDlc,
 } from "@/lib/steam-flow";
-import { autoEnrichWishlistEntries } from "@/lib/wishlist-rawg-queue";
+import { autoEnrichWishlistEntries } from "@/lib/wishlist-igdb-queue";
 import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
 
 const IMPORT_CHUNK_SIZE = 50;

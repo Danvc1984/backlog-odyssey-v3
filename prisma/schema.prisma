@@ -223,6 +223,7 @@ enum PriceIdentityProvenance {
   STEAM_IMPORT
   USER
   RAWG_SUGGESTION
+  IGDB_SUGGESTION
 }
 
 // ---------------------------------------------------------------------------

@@ -555,7 +555,7 @@
     in Settings, whose selected estimate appears in Library/Wishlist and feeds
     `durationBand`, Tune length matching, and the profile DURATION dimension;
     duration remains soft evidence
-  - [ ] 23d. **Wishlist IGDB flows and identity suggestions** - fill-only
+  - [x] 23d. **Wishlist IGDB flows and identity suggestions** - fill-only
     enrichment for base-game wishes, with explicit manual refresh/identity
     changes allowed to replace snapshots, and automatic application of a Steam
     App ID derived from any fixed high-confidence or manual IGDB match;

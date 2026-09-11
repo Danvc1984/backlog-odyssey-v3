@@ -120,4 +120,29 @@ describe("rebuildRecommendationProfile", () => {
     expect(result.dimensions.GENRE.RPG).toMatchObject({ weight: 2, support: 1 });
     expect(result.dimensions.EXPERIENCE.PC_GAMING).toMatchObject({ weight: 2, support: 1 });
   });
+
+  it("uses wishlist IGDB duration evidence for profile signals", async () => {
+    const now = new Date("2026-01-01T00:00:00.000Z");
+    const client = {
+      recommendationEvent: {
+        findMany: vi.fn().mockResolvedValue([{
+          kind: "COMPLETION",
+          gameId: null,
+          wishlistEntryId: "wish-1",
+          createdAt: now,
+          payload: null,
+          game: null,
+          wishlistEntry: {
+            gameExperience: null,
+            metadataSnapshot: { payload: { durationEvidence: { provider: "IGDB", payload: { normallySeconds: 9 * 3600 } } } },
+          },
+        }]),
+      },
+      recommendationProfile: { upsert: vi.fn().mockResolvedValue({}) },
+    };
+
+    const result = await rebuildRecommendationProfile(client as never, now, ["LINUX"], "NORMALLY");
+
+    expect(result.dimensions.DURATION.MEDIUM).toMatchObject({ weight: 2, support: 1 });
+  });
 });
