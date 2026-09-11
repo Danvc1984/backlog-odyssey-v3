@@ -17,15 +17,17 @@ import { logRecommendationEvent } from "@/lib/recommendations/events";
 import { rebuildRecommendationProfile } from "@/lib/recommendations/profile";
 import { updatePlayState } from "@/actions/game-detail";
 import { runRecommendationPipeline } from "@/lib/recommendations/run-pipeline";
+import {
+  loadKnownGenreTagValues,
+  loadRecommendationPresets,
+  resetKnownGenreTagValuesCache as resetKnownGenreTagValuesCacheLoader,
+} from "@/lib/recommendations/queries";
 
-const KNOWN_VALUES_CACHE_TTL_MS = 10 * 60 * 1000;
-type KnownGenreTagValues = { genres: string[]; tags: string[] };
 type BatchEntry = string | RotatableCandidate;
-let knownValuesCache: { data: KnownGenreTagValues; expiresAt: number } | null = null;
 
 export async function resetKnownGenreTagValuesCache() {
   await requireUser();
-  knownValuesCache = null;
+  resetKnownGenreTagValuesCacheLoader();
 }
 
 const dismissRecommendationSchema = z
@@ -519,7 +521,7 @@ export async function saveRecommendationPreset(input: unknown) {
 export async function listRecommendationPresets() {
   try {
     await requireUser();
-    const presets = await prisma.recommendationPreset.findMany({ orderBy: { name: "asc" } });
+    const presets = await loadRecommendationPresets();
     return { success: true as const, data: presets, error: null };
   } catch (err) {
     return { success: false as const, data: null, error: friendlyActionError(err, "Failed to list presets") };
@@ -562,25 +564,7 @@ export async function loadRecommendationPreset(input: unknown) {
 export async function listKnownGenreTagValues() {
   try {
     await requireUser();
-    if (knownValuesCache && knownValuesCache.expiresAt > Date.now()) {
-      return { success: true as const, data: knownValuesCache.data, error: null };
-    }
-
-    const [games, wishlistEntries] = await Promise.all([
-      prisma.game.findMany({
-        select: { metadataSnapshots: { where: { provider: "RAWG" }, orderBy: { fetchedAt: "desc" }, take: 1, select: { payload: true } } },
-      }),
-      prisma.wishlistEntry.findMany({ select: { metadataSnapshot: { select: { payload: true } } } }),
-    ]);
-    const genres = new Set<string>();
-    const tags = new Set<string>();
-    for (const payload of [...games.flatMap((game) => game.metadataSnapshots.map((snapshot) => snapshot.payload)), ...wishlistEntries.map((entry) => entry.metadataSnapshot?.payload)]) {
-      const parsed = parseRawgMetadataPayload(payload);
-      for (const genre of parsed?.genres ?? []) if (genre) genres.add(genre);
-      for (const tag of parsed?.tags ?? []) if (tag) tags.add(tag);
-    }
-    const data = { genres: [...genres].sort(), tags: [...tags].sort() };
-    knownValuesCache = { data, expiresAt: Date.now() + KNOWN_VALUES_CACHE_TTL_MS };
+    const data = await loadKnownGenreTagValues();
     return { success: true as const, data, error: null };
   } catch (err) {
     return { success: false as const, data: null, error: friendlyActionError(err, "Failed to list known values") };

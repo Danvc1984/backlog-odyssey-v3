@@ -7,9 +7,9 @@ import { RunExposureTracker } from "@/components/recommendations/RunExposureTrac
 import { TuneThisRunPanel } from "@/components/recommendations/TuneThisRunPanel";
 import { TasteSetupPanel } from "@/components/recommendations/TasteSetupPanel";
 import {
-  listKnownGenreTagValues,
-  listRecommendationPresets,
-} from "@/actions/recommendations";
+  loadKnownGenreTagValues,
+  loadRecommendationPresets,
+} from "@/lib/recommendations/queries";
 import {
   tuneContextSchema,
   type TuneContext,
@@ -62,8 +62,8 @@ export default async function TodayPage() {
     latestPlayNextRun,
     latestBuyRun,
     tuneState,
-    knownValuesResult,
-    presetsResult,
+    knownValues,
+    presets,
     alternativeSources,
     tasteGames,
     tasteEventCount,
@@ -129,8 +129,8 @@ export default async function TodayPage() {
       where: { id: 1 },
       select: { playTune: true, buyTune: true },
     }),
-    listKnownGenreTagValues(),
-    listRecommendationPresets(),
+    loadKnownGenreTagValues(),
+    loadRecommendationPresets(),
     prisma.alternativeSource.findMany({
       where: { archivedAt: null },
       orderBy: { name: "asc" },
@@ -179,12 +179,7 @@ export default async function TodayPage() {
       select: { primaryOs: true },
     }),
   ]);
-  const knownValues = knownValuesResult.success
-    ? knownValuesResult.data
-    : { genres: [], tags: [] };
-  const presets = presetsResult.success
-    ? presetsResult.data.map((preset) => ({ id: preset.id, name: preset.name }))
-    : [];
+  const presetOptions = presets.map((preset) => ({ id: preset.id, name: preset.name }));
   const initialTastePicks = selectInitialTasteSetupPicks(tasteGames);
   const showTasteSetup = shouldShowTasteSetup(
     tasteEventCount,
@@ -344,7 +339,7 @@ export default async function TodayPage() {
             initialTune={storedTune(tuneState?.playTune)}
             knownValues={knownValues}
             thinPool={playContext?.tune?.thinPool === true}
-            presets={presets}
+            presets={presetOptions}
             alternativeSources={alternativeSources.map((source) => ({
               ...source,
               ...resolveSourcePresentation(source.name),
@@ -454,7 +449,7 @@ export default async function TodayPage() {
           initialTune={storedTune(tuneState?.buyTune)}
           knownValues={knownValues}
           thinPool={buyContext?.tune?.thinPool === true}
-          presets={presets}
+          presets={presetOptions}
         />
         {!latestBuyRun ? (
           <p className="text-sm text-muted-foreground">
