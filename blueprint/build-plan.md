@@ -614,7 +614,7 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   acquired DLCs store no interest), falling back to 3/5; Steam wishlist
   import, unresolved-DLC wishes, and taste setup keep their current values
 
-- [ ] 26. **Add Game dialog with IGDB suggestion and interest** - manual
+- [x] 26. **Add Game dialog with IGDB suggestion and interest** - manual
   catalog creation asks interest (default 3) and offers the same IGDB
   suggest-and-confirm flow as the wishlist add dialog so games arrive
   enriched from the start

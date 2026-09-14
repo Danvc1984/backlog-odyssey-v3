@@ -5,12 +5,16 @@ import { ActionError, friendlyActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { getOrCreateUnspecifiedSource } from "@/lib/sources/store";
+import { IGDB_JOB_MAX_ATTEMPTS } from "@/lib/igdb-job";
+import { Prisma } from "@/generated/prisma/client";
 
 const createGameSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
   availabilitySource: z.enum(["STEAM", "OTHER_PLATFORM", "ROM"]),
   alternativeSourceId: z.string().trim().min(1).optional(),
   displayName: z.string().trim().optional(),
+  interest: z.number().int().min(1).max(5).optional(),
+  selectedIgdbId: z.number().int().positive().optional(),
 });
 
 export type CreateGameInput = z.infer<typeof createGameSchema>;
@@ -23,7 +27,13 @@ export async function createGame(input: CreateGameInput) {
       return { success: false as const, data: null, error: "Invalid input" };
     }
 
-    const { name, availabilitySource, displayName } = parsed.data;
+    const {
+      name,
+      availabilitySource,
+      displayName,
+      interest = 3,
+      selectedIgdbId,
+    } = parsed.data;
 
     const game = await prisma.$transaction(async (tx) => {
       const alternativeSourceId =
@@ -53,7 +63,7 @@ export async function createGame(input: CreateGameInput) {
             },
           },
           libraryEntry: {
-            create: { interest: 3 },
+            create: { interest },
           },
         },
         include: {
@@ -61,6 +71,21 @@ export async function createGame(input: CreateGameInput) {
           libraryEntry: true,
         },
       });
+      if (selectedIgdbId !== undefined) {
+        await tx.enrichmentJob.create({
+          data: {
+            gameId: created.id,
+            provider: "IGDB",
+            status: "QUEUED",
+            stage: "MATCHING",
+            attempt: 0,
+            maxAttempts: IGDB_JOB_MAX_ATTEMPTS,
+            progress: 0,
+            candidatePayload: Prisma.DbNull,
+            selectedIgdbId,
+          },
+        });
+      }
       return created;
     });
 

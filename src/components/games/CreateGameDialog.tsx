@@ -15,11 +15,20 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { createGame } from "@/actions/games";
 import { createAlternativeSource } from "@/actions/sources";
 import { SourceIcon } from "@/components/sources/SourceIcon";
 import { suggestSources } from "@/lib/sources/known-sources";
-import { PlusIcon } from "@phosphor-icons/react";
+import { MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react";
+import { searchWishlistIgdb } from "@/actions/wishlist-igdb";
+import type { IgdbSearchCandidate } from "@/lib/igdb-types";
 
 type SourceValue = "STEAM" | "ROM" | "CUSTOM" | `ALT:${string}`;
 
@@ -36,6 +45,12 @@ export function CreateGameDialog({
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [interest, setInterest] = useState("3");
+  const [candidates, setCandidates] = useState<IgdbSearchCandidate[]>([]);
+  const [selectedIgdbId, setSelectedIgdbId] = useState<number | null>(null);
+  const [igdbPage, setIgdbPage] = useState(1);
+  const [igdbSearched, setIgdbSearched] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [source, setSource] = useState<SourceValue>("STEAM");
   const [sourceQuery, setSourceQuery] = useState("Steam");
   const [sourceListOpen, setSourceListOpen] = useState(false);
@@ -46,10 +61,31 @@ export function CreateGameDialog({
   const reset = () => {
     setName("");
     setDisplayName("");
+    setInterest("3");
+    setCandidates([]);
+    setSelectedIgdbId(null);
+    setIgdbPage(1);
+    setIgdbSearched(false);
     setSource("STEAM");
     setSourceQuery("Steam");
     setSourceListOpen(false);
     setError(null);
+  };
+
+  const searchIgdb = async (page = 1) => {
+    setSearching(true);
+    setError(null);
+    const result = await searchWishlistIgdb({ title: name, page });
+    setSearching(false);
+    if (!result.success) {
+      setError(result.error ?? "IGDB search failed");
+      return;
+    }
+    const knownIds = new Set(candidates.map((candidate) => candidate.id));
+    setIgdbSearched(true);
+    setCandidates((current) => page === 1 ? result.data : [...current, ...result.data.filter((candidate) => !knownIds.has(candidate.id))]);
+    setSelectedIgdbId(page === 1 ? null : selectedIgdbId);
+    setIgdbPage(page);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -76,12 +112,15 @@ export function CreateGameDialog({
       availabilitySource,
       ...(alternativeSourceId && { alternativeSourceId }),
       displayName: displayName || undefined,
+      interest: Number(interest),
+      selectedIgdbId: selectedIgdbId ?? undefined,
     });
 
     setSubmitting(false);
 
     if (result.success) {
       toast.success(`Added "${name}" to the library`);
+      if (selectedIgdbId !== null) toast.success("IGDB enrichment queued");
       reset();
       setOpen(false);
       router.refresh();
@@ -128,14 +167,55 @@ export function CreateGameDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-5">
           <div className="grid gap-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Hollow Knight"
-              required
-            />
+            <Label htmlFor="interest">Interest</Label>
+            <Select value={interest} onValueChange={setInterest} disabled={submitting}>
+              <SelectTrigger id="interest" aria-label="Interest">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[5, 4, 3, 2, 1].map((value) => (
+                  <SelectItem key={value} value={String(value)}>
+                    {value} star{value === 1 ? "" : "s"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="igdb-name">Name and IGDB match</Label>
+            <div className="flex gap-2">
+              <Input id="igdb-name" value={name} onChange={(event) => setName(event.target.value)} required disabled={submitting} />
+              <Button type="button" variant="outline" onClick={() => void searchIgdb()} disabled={searching || submitting || !name.trim()}>
+                <MagnifyingGlassIcon />
+                {searching ? "Searching" : "Search"}
+              </Button>
+            </div>
+            {selectedIgdbId !== null && (
+              <div className="rounded-md border border-primary bg-primary/10 p-3 text-sm">
+                <p className="font-medium">Selected IGDB match</p>
+                <p>{candidates.find((candidate) => candidate.id === selectedIgdbId)?.name}</p>
+                <Button type="button" variant="link" size="sm" className="h-auto px-0" onClick={() => setSelectedIgdbId(null)} disabled={submitting}>
+                  Clear selection
+                </Button>
+              </div>
+            )}
+            {igdbSearched && candidates.length === 0 && (
+              <p className="rounded-md border border-border p-3 text-sm text-muted-foreground">No IGDB matches were found.</p>
+            )}
+            {candidates.length > 0 && (
+              <div className="grid max-h-48 gap-1 overflow-y-auto rounded-md border border-border p-2">
+                {candidates.map((candidate) => (
+                  <button key={candidate.id} type="button" disabled={submitting || searching} className={`flex gap-3 rounded-md px-2 py-2 text-left text-sm hover:bg-muted ${selectedIgdbId === candidate.id ? "bg-muted" : ""}`} onClick={() => { setSelectedIgdbId(candidate.id); setName(candidate.name); }}>
+                    <span className="size-16 shrink-0 rounded bg-muted bg-cover bg-center" style={candidate.coverUrl ? { backgroundImage: `url(${candidate.coverUrl})` } : undefined} aria-hidden="true" />
+                    <span className="min-w-0 self-center">
+                      <span className="block font-medium">{candidate.name}</span>
+                      <span className="block text-xs text-muted-foreground">{candidate.firstReleaseDate ? new Date(candidate.firstReleaseDate).toLocaleDateString("en-US", { year: "numeric" }) : "Release date unavailable"}</span>
+                    </span>
+                  </button>
+                ))}
+                {candidates.length >= igdbPage * 30 && <Button type="button" variant="ghost" size="sm" onClick={() => void searchIgdb(igdbPage + 1)} disabled={searching || submitting}>{searching ? "Loading..." : "Load more IGDB matches"}</Button>}
+              </div>
+            )}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="source">Availability</Label>

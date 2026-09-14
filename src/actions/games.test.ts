@@ -15,6 +15,9 @@ describe("createGame", () => {
     game: {
       create: vi.fn(),
     },
+    enrichmentJob: {
+      create: vi.fn(),
+    },
     alternativeSource: {
       findUnique: mockAltFind,
       create: mockAltCreate,
@@ -29,7 +32,8 @@ describe("createGame", () => {
     transaction.mockImplementation(async (fn: (client: unknown) => unknown) =>
       fn(tx),
     );
-    tx.game.create.mockResolvedValue({});
+    tx.game.create.mockResolvedValue({ id: "game-1" });
+    tx.enrichmentJob.create.mockResolvedValue({});
     mockAltFind.mockResolvedValue(null);
     mockAltCreate.mockResolvedValue({ id: "unsource-1" });
 
@@ -57,6 +61,43 @@ describe("createGame", () => {
         }),
       }),
     );
+  });
+
+  it("persists the requested interest and queues a selected IGDB match", async () => {
+    await createGame({
+      name: "Portal 2",
+      availabilitySource: "STEAM",
+      interest: 5,
+      selectedIgdbId: 42,
+    });
+
+    expect(tx.game.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ libraryEntry: { create: { interest: 5 } } }),
+      }),
+    );
+    expect(tx.enrichmentJob.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        gameId: "game-1",
+        provider: "IGDB",
+        status: "QUEUED",
+        stage: "MATCHING",
+        selectedIgdbId: 42,
+        candidatePayload: expect.anything(),
+      }),
+    });
+  });
+
+  it("does not create an IGDB job when no match is selected", async () => {
+    await createGame({ name: "Randomizer", availabilitySource: "STEAM" });
+
+    expect(tx.enrichmentJob.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid interest and IGDB IDs before the transaction", async () => {
+    await expect(createGame({ name: "Test", availabilitySource: "STEAM", interest: 0 })).resolves.toMatchObject({ success: false, error: "Invalid input" });
+    await expect(createGame({ name: "Test", availabilitySource: "STEAM", selectedIgdbId: 0 })).resolves.toMatchObject({ success: false, error: "Invalid input" });
+    expect(transaction).not.toHaveBeenCalled();
   });
 
   it("leaves the alternative source id null on a ROM row", async () => {
