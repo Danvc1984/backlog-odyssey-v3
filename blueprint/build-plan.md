@@ -563,15 +563,59 @@
     `storesearch` fallback are removed; wishlist metadata transfer on
     acquisition uses the IGDB snapshot
   - [ ] 23e. **Engine re-derivation and RAWG retirement** - recommendation
-    dimensions re-keyed to IGDB evidence (genres/themes/keywords, publisher,
-    era, maturity, total-rating quality with aggregated fallback and confidence,
-    collections-based series, duration), compatibility auto-queue moved behind
-    successful IGDB enrichment, attribution swap, RAWG client/env/code removal,
-    stale-snapshot retry presentation, and a documented clean-restart procedure
-    (personal export including all external IDs, wipe, empty-schema restore,
-    Steam re-import, IGDB enrichment)
+    dimensions re-keyed to IGDB evidence with a per-dimension signal-value
+    analysis (genres/themes/keywords, multiplayer modes, attributed ratings
+    with sample size, era, publishers, collections/franchise) so each
+    dimension earns its place by informing picks instead of mirroring RAWG
+    blindly; compatibility auto-queue moved behind successful IGDB
+    enrichment, attribution swap, RAWG client/env/code removal,
+    stale-snapshot retry presentation, and a documented clean-restart
+    procedure (personal export including all external IDs, wipe, empty-schema
+    restore, Steam re-import, IGDB enrichment); runs after features 24-27
 
-- [ ] 24. **Deployment and CI readiness** - Vercel/Supabase environment
+## Catalog renewal before engine re-derivation
+
+Features 24-27 land before 23e so the engine re-derivation consumes the new
+data; 28 completes the behavior renewal after 23e. Deployment remains last.
+
+- [ ] 24. **DLC metadata, pages, and browsing with IGDB** - IGDB snapshots for
+  catalog DLCs (Steam-imported and manual) and DLC wishes with description,
+  first release date, cover, and artwork; dedicated detail pages for catalog
+  DLCs with a visible base-game link (the base game stays required in the
+  catalog); identity resolved from the base game's IGDB relations plus exact
+  Steam App ID lookup through external_games, with exact relation matches
+  auto-applied and name variants routed to review; Steam post-import
+  enriches DLCs like base games; a Library type filter (All / Base games /
+  DLC) following the wishlist pattern with a DLC-aware list query; and the
+  base-game DLC section reworked into cover cards linking to DLC pages with
+  IGDB match status
+
+- [ ] 25. **Interest defaults across ingestion paths** - Steam library import
+  sets interest 2/5 matching wishlist import; manual creation defaults to
+  3/5 in catalog and wishlist forms, including the wishlist edit dialog's
+  null default; wishlist acquisition carries the wish's interest into the
+  catalog entry, falling back to 3/5; Steam wishlist import, unresolved-DLC
+  wishes, and taste setup keep their current values
+
+- [ ] 26. **Add Game dialog with IGDB suggestion and interest** - manual
+  catalog creation asks interest (default 3) and offers the same IGDB
+  suggest-and-confirm flow as the wishlist add dialog so games arrive
+  enriched from the start
+
+- [ ] 27. **Collections: default shelves and IGDB series** - new system
+  shelves for In progress, Completed, Backlog, and Handheld picks, and
+  calculated series/franchise shelves derived from the IGDB collection and
+  franchise snapshot evidence
+
+- [ ] 28. **Recommendation behavior renewal** - a dedicated handheld play
+  role replacing the second Best Fit when the setup has a handheld, built on
+  the handheld-suitability flag and the feature-22 environment fit;
+  Tune-this-run polish with a reviewed question set once the re-keyed engine
+  lands and a redesigned, more distinctive presentation replacing the plain
+  accordion; rotation, exposure, and calibration behavior stay unchanged
+  pending real usage data
+
+- [ ] 29. **Deployment and CI readiness** - Vercel/Supabase environment
   review, Vercel Cron daily run at 06:00 UTC-6 with `CRON_SECRET` enqueueing
   the price refresh plus a compatibility freshness sweep for catalog and
   wishlist evidence older than the 180-day window, queue overlap protection,

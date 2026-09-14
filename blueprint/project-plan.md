@@ -35,10 +35,17 @@ registration, and collaboration are outside the MVP.
   user-created alternative stores, source-aware Library filtering, and soft
   play-next source tuning.
 - Game detail, play state, personal fields, tags, collections, and availability.
+- Default system shelves (in progress, completed, backlog, handheld picks)
+  plus calculated IGDB series/franchise shelves alongside manual
+  collections.
 - Steam account linking, initial import, and independent manual synchronization.
 - Duplicate detection, review, dismiss, merge, delete, and short-lived Undo.
 - IGDB metadata, artwork, and playtime enrichment for catalog and wishlist entries.
-- DLC model with explicit base-game ownership.
+- DLC model with explicit base-game ownership, IGDB metadata and artwork for
+  catalog DLCs and DLC wishes, and dedicated DLC detail pages with a visible
+  base-game link.
+- A Library type filter (All / Base games / DLC) mirroring the wishlist
+  pattern.
 - Persistent manual-review queue for unresolved Steam DLC.
 - Independent wishlist for base games and DLC linked to owned catalog games.
 - Manual wishlist acquisition into the catalog with optional base-game play state update.
@@ -59,7 +66,11 @@ registration, and collaboration are outside the MVP.
   compatibility UI anywhere. Changing the OS setup in Settings asks for
   confirmation and then immediately re-derives compatibility synthesis
   and synchronously regenerates recommendation runs.
-- Deterministic explainable play-next and buy recommendations with DLC affinity weighting.
+- Ingestion-path interest defaults: Steam imports start at 2/5, manual
+  entries at 3/5, and wishlist acquisition carries the wish's interest into
+  the catalog.
+- Deterministic explainable play-next and buy recommendations with a
+  handheld play role when the setup has one, and DLC affinity weighting.
 - Recommendation runs with temporary dismissal and persistent calibration signals.
 - Today dashboard with active-backlog progress, data-coverage prompts, daily-cached
   recent Steam activity (including unimported titles), latest explicit recommendations,
@@ -103,7 +114,9 @@ store:
 - Target base game ID (required if type is DLC).
 - Notes, local interest, and an optional personal **Game experience / intention**.
 - Optional external identifiers.
-- Independent IGDB metadata snapshot (for base games).
+- Independent IGDB metadata snapshot (base games via their own identity;
+  DLC wishes via their own IGDB identity matched from the owned base game's
+  relations or their own Steam App ID).
 
 `Game experience / intention` is one user-selected value per catalog or
 wishlist game, initially one of: PC gaming, Multiplayer & co-op, Couch gaming,
@@ -182,6 +195,15 @@ Duplicate detection remains a fallback for cases without reliable identity.
 
 ROMs are excluded from wishlist and purchase recommendations.
 
+### Collections and shelves
+
+Manual collections stay user-owned groups. The calculated system shelves
+expand to in-progress, completed (PLAYED_BEFORE), backlog (NOT_STARTED),
+and handheld picks, alongside the existing play-soon, replay-candidates,
+favorites, hidden, and abandoned shelves. Calculated series/franchise
+shelves derive from the IGDB collection and franchise evidence captured in
+metadata snapshots, so games group by series without manual curation.
+
 ## 5. DLC and Unresolved Steam DLC
 
 DLC catalog entries:
@@ -205,6 +227,22 @@ Each queue entry supports manual review actions:
 
 Discarded entries remain stored and reappear as pending during the next Steam
 sync if they are still unresolved.
+
+### IGDB metadata for DLCs
+
+Catalog DLCs and DLC wishes carry their own replaceable IGDB snapshots
+(description, first release date, cover, artwork) instead of displaying only
+the base game's data. Identity resolves from the base game's captured IGDB
+relations (exact kind and normalized-name matches auto-apply; name variants
+go to review) and, for Steam-sourced DLCs, from the exact Steam App ID
+through IGDB external_games. Steam post-import enqueues owned DLCs for
+enrichment like base games.
+
+Each catalog DLC gets a dedicated detail page with its metadata and artwork
+and a visible link to its base game, which remains required in the catalog.
+The base game's DLC section presents cover cards linking to DLC pages with
+IGDB match status. Library gains a type filter following the wishlist
+pattern; the DLC listing query is a spec decision.
 
 ## 6. Merge, Delete, and Catalog Integrity
 
@@ -657,6 +695,9 @@ factors such as:
 
 - Manual fields remain authoritative. **Interest** (`0-5`) is durable personal
   desire or expected enjoyment and is the core taste signal for play and buy.
+  Interest defaults by ingestion path: Steam library and wishlist imports
+  start at 2/5, manual entries start at 3/5, and acquiring a wishlist entry
+  into the catalog carries its interest over, falling back to 3/5 when absent.
   **Priority** (`NONE`/`LOW`/`MEDIUM`/`HIGH`) is a catalog-only, short-term
   urgency signal for play-next; it never means the user likes a game more.
   Detail, quick-create, and bulk-edit surfaces explain these and other personal
@@ -701,6 +742,11 @@ factors such as:
 - No alphabetical tiebreak decides what a person sees. Near-equal qualified
   candidates use stable, weighted rotation and short exposure cooldowns.
 
+Tune this run is opt-in and presented as a distinctive, visually deliberate
+control rather than a plain accordion form; its question set is reviewed
+once the re-keyed engine lands so it asks only what the new evidence can
+honor.
+
 Recommendations are generated explicitly by the user. `Update recommendations`
 works immediately with no form. `Tune this run` is opt-in and may set soft
 preferences for game experience, desired length, genres/tags, sequel posture,
@@ -713,7 +759,11 @@ by excluding other sources.
 Each run retains its context, explanations, and qualified candidate batches.
 The dashboard initially displays four play-next roles: two best-fit picks, one
 qualified out-of-the-box pick that favors underrepresented genres, tags, or
-experiences, and one change-of-pace pick different from recent play. It displays
+experiences, and one change-of-pace pick different from recent play. When the
+configured setup includes a handheld, play-next replaces the second Best Fit
+with a handheld pick role that favors handheld-suitable games under the
+environment-fit rules; setups without a handheld keep the current four play
+roles. It displays
 three buy roles: two best-fit wishlist picks and one exceptional-deal pick. When
 deal-saturation applies - at least three fresh offers discounted 80% or more
 and at least 20% of eligible wishes qualify - Buy instead shows one best-fit and
@@ -787,6 +837,9 @@ catalog data.
 
 The `Update recommendations` action lives on the Today dashboard header and
 empty state, and is reachable from the Library and Wishlist headers.
+
+Rotation, exposure, and calibration behavior stay unchanged until real usage
+data justifies changes; this is an accepted deferral, not an oversight.
 
 ## 12. Today Dashboard
 
