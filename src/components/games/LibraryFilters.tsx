@@ -111,6 +111,7 @@ export function LibraryFilters({
   const handheld = handheldParam === "marked" || handheldParam === "unmarked"
     ? handheldParam
     : "ALL";
+  const hasDlc = searchParams.get("hasDlc") === "true";
 
   const systemCollections = collections.filter((c) => c.isSystem);
   const manualCollections = collections.filter((c) => !c.isSystem);
@@ -147,7 +148,8 @@ export function LibraryFilters({
     source !== "ALL" ||
     state === "ABANDONED" ||
     (collection !== null && collection !== "ALL") ||
-    handheld !== "ALL";
+    handheld !== "ALL" ||
+    hasDlc;
 
   return (
     <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
@@ -183,6 +185,12 @@ export function LibraryFilters({
             {option.label}
           </Chip>
         ))}
+        <Chip
+          active={hasDlc}
+          onClick={() => update("hasDlc", hasDlc ? "" : "true")}
+        >
+          Has DLC
+        </Chip>
       </div>
 
       <Popover.Root>

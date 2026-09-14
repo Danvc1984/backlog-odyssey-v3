@@ -7,7 +7,6 @@ import { prisma } from "@/lib/prisma";
 import { lastPlayedDate, stripTrademarkSymbols } from "@/lib/steam-utils";
 import {
   reconcileWishlistImportDlcs,
-  upsertUnresolvedSteamDlc,
   requireSteamFlowContext,
 } from "@/lib/steam-flow";
 import { queueIgdbForImportedGames } from "@/lib/igdb-import-queue";
@@ -31,6 +30,12 @@ async function importGame(
   game: OwnedGame,
 ): Promise<ImportGameResult> {
   const externalId = String(game.appid);
+  if (game.type === "DLC") {
+    // Owned sync is intentionally blind to DLCs. Wishlist DLC reconciliation
+    // remains handled when base games are imported below.
+    return { kind: "updated" };
+  }
+
   const availability = {
     source: "STEAM" as const,
     steamAppId: externalId,
@@ -55,38 +60,6 @@ async function importGame(
       }
     }
     return { kind: "updated" };
-  }
-
-  if (game.type === "DLC") {
-    const baseIdentity = game.steamBaseAppId
-      ? identities.get(game.steamBaseAppId)
-      : undefined;
-
-    if (!baseIdentity || baseIdentity.type !== "BASE_GAME") {
-      await upsertUnresolvedSteamDlc(tx, externalId, game);
-      return { kind: "updated" };
-    }
-
-    const createdDlc = await tx.game.create({
-      data: {
-        type: "DLC",
-        origin: "STEAM_IMPORT",
-        name: game.name,
-        baseGameId: baseIdentity.gameId,
-        externalIds: {
-          create: {
-            namespaceId: externalId,
-            namespace: "STEAM_APP",
-            externalId,
-            matchMethod: "EXACT_STEAM_APP_ID",
-          },
-        },
-        availability: { create: availability },
-      },
-      select: { id: true },
-    });
-    identities.set(externalId, { gameId: createdDlc.id, type: "DLC" });
-    return { kind: "imported", gameId: createdDlc.id };
   }
 
   const createdGame = await tx.game.create({

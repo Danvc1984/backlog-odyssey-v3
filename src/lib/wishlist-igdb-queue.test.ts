@@ -1,10 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
-vi.mock("./wishlist-igdb-enrichment", () => ({ enrichWishlistBaseGameFromIgdb: vi.fn() }));
+vi.mock("./wishlist-igdb-enrichment", () => ({
+  enrichWishlistBaseGameFromIgdb: vi.fn(),
+  enrichWishlistDlcFromIgdb: vi.fn(),
+}));
 
 import { prisma } from "@/lib/prisma";
-import { enrichWishlistBaseGameFromIgdb } from "./wishlist-igdb-enrichment";
+import { enrichWishlistBaseGameFromIgdb, enrichWishlistDlcFromIgdb } from "./wishlist-igdb-enrichment";
 import { autoEnrichWishlistEntries } from "./wishlist-igdb-queue";
 
 const findUnique = vi.fn();
@@ -41,6 +44,26 @@ describe("autoEnrichWishlistEntries", () => {
     vi.mocked(enrichWishlistBaseGameFromIgdb).mockRejectedValueOnce(new Error("provider unavailable"));
 
     await expect(autoEnrichWishlistEntries(["wish-1", "wish-2", "wish-3"])).resolves.toEqual({ enriched: 0, skipped: 3 });
+  });
+
+  it("enriches DLC wishes through their own IGDB path", async () => {
+    findUnique.mockResolvedValue({
+      id: "dlc-1",
+      name: "Expansion",
+      type: "DLC",
+      steamAppId: "70210",
+      steamAppIdProvenance: "STEAM_IMPORT",
+      metadataSnapshot: null,
+      baseGame: { metadataSnapshots: [{ payload: {} }] },
+    });
+    vi.mocked(enrichWishlistDlcFromIgdb).mockResolvedValue({
+      success: true,
+      data: { igdbId: 99, name: "Expansion", matchMethod: "EXACT_STEAM_APP_ID", steamAppIdApplied: null, steamAppIdConflict: null },
+      error: null,
+    });
+
+    await expect(autoEnrichWishlistEntries(["dlc-1"])).resolves.toEqual({ enriched: 1, skipped: 0 });
+    expect(enrichWishlistDlcFromIgdb).toHaveBeenCalledWith(expect.objectContaining({ entry: expect.objectContaining({ type: "DLC" }) }));
   });
 
   it("bounds queue work to six entries per batch", async () => {

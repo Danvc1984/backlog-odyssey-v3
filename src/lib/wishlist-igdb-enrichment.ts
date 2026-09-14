@@ -8,6 +8,8 @@ import { parseIgdbGameToPayload } from "./igdb-metadata-payload";
 import { captureIgdbPalette } from "./igdb-enrichment";
 import { fetchSteamSpyMedian } from "./steamspy-api";
 import { findConflictingEntry } from "@/lib/wishlist-identity";
+import { normalizeName } from "@/lib/duplicate-utils";
+import { parseIgdbMetadataPayload } from "@/lib/igdb-metadata-payload";
 import { silentlyRefreshWishlistCompatibility } from "./wishlist-compatibility-runner";
 
 type WishlistIgdbTransactionClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
@@ -164,6 +166,136 @@ export async function enrichWishlistBaseGameFromIgdb(input: {
       igdbId: match.game.id,
       name: match.game.name ?? input.entry.name,
       matchMethod: match.matchMethod,
+      steamAppIdApplied,
+      steamAppIdConflict,
+    },
+    error: null,
+  };
+}
+
+export async function enrichWishlistDlcFromIgdb(input: {
+  entry: {
+    id: string;
+    name: string;
+    type: string;
+    steamAppId: string | null;
+    steamAppIdProvenance: string | null;
+    baseGame?: {
+      metadataSnapshots: Array<{ payload: unknown }>;
+    } | null;
+  };
+  selectedIgdbId?: number | null;
+}): Promise<WishlistIgdbEnrichmentResult> {
+  if (input.entry.type !== "DLC") {
+    return { success: false, data: null, error: "IGDB metadata is only available for DLC wishes" };
+  }
+
+  const inheritedPayload = parseIgdbMetadataPayload(
+    input.entry.baseGame?.metadataSnapshots[0]?.payload,
+  );
+  const relationCandidates = inheritedPayload?.relations.filter((relation) =>
+    ["DLC", "EXPANSION"].includes(relation.kind.toUpperCase()),
+  ) ?? [];
+  const exactRelation = relationCandidates.find(
+    (relation) => normalizeName(relation.name) === normalizeName(input.entry.name),
+  );
+  if (!input.entry.steamAppId && input.selectedIgdbId === undefined && !exactRelation) {
+    return { success: false, data: null, error: "IGDB match outcome: AMBIGUOUS" };
+  }
+
+  const match = await matchIgdbGame({
+    title: input.entry.name,
+    category: "DLC",
+    steamAppId: input.entry.steamAppId,
+    selectedIgdbId: input.selectedIgdbId ?? exactRelation?.igdbId ?? null,
+  });
+  if (match.outcome !== "MATCHED" || match.classMismatch) {
+    return {
+      success: false,
+      data: null,
+      error: match.outcome === "UNAVAILABLE" ? match.error.message : `IGDB match outcome: ${match.outcome}`,
+    };
+  }
+
+  const matchMethod: IgdbMatchMethod = exactRelation && !input.entry.steamAppId
+    ? "INFERRED"
+    : match.matchMethod;
+  const confirmed = isConfirmedIdentity(input.entry);
+  let steamAppIdApplied: string | null = null;
+  let steamAppIdConflict: string | null = null;
+  let derivedSteamAppId: string | null = null;
+  const derivedIdentityPromise = confirmed
+    ? Promise.resolve(null)
+    : fetchIgdbSteamAppId(match.game.id).catch(() => null);
+  const durationPromise = fetchIgdbGameTimeToBeats(match.game.id).catch(() => null);
+  const [derivedIdentity, igdbDuration] = await Promise.all([derivedIdentityPromise, durationPromise]);
+  if (derivedIdentity?.ok) derivedSteamAppId = derivedIdentity.data;
+
+  if (!confirmed && derivedSteamAppId) {
+    try {
+      const conflict = await findConflictingEntry(prisma, derivedSteamAppId, input.entry.id);
+      if (conflict) {
+        steamAppIdConflict = `Steam App ID ${derivedSteamAppId} is already used by ${conflict.name}`;
+      } else {
+        try {
+          await prisma.wishlistEntry.update({
+            where: { id: input.entry.id },
+            data: { steamAppId: derivedSteamAppId, steamAppIdProvenance: "IGDB_SUGGESTION" },
+          });
+          steamAppIdApplied = derivedSteamAppId;
+          try {
+            await silentlyRefreshWishlistCompatibility(input.entry.id);
+          } catch {
+            // Compatibility refresh is best effort after identity application.
+          }
+        } catch {
+          // Identity persistence is best effort; the matched snapshot still persists.
+        }
+      }
+    } catch {
+      // Identity conflict lookup is best effort; the matched snapshot still persists.
+    }
+  }
+
+  let durationEvidence: WishlistDurationEvidence | null = null;
+  try {
+    if (igdbDuration?.ok && hasUsableIgdbDuration(igdbDuration.data)) {
+      durationEvidence = {
+        provider: "IGDB",
+        payload: igdbDuration.data,
+        sourceUrl: match.game.slug ? `https://www.igdb.com/games/${match.game.slug}` : null,
+        fetchedAt: new Date().toISOString(),
+      };
+    } else if (input.entry.steamAppId ?? derivedSteamAppId) {
+      const steamSpy = await fetchSteamSpyMedian(input.entry.steamAppId ?? derivedSteamAppId!);
+      if (steamSpy.ok && steamSpy.data) {
+        durationEvidence = {
+          provider: "STEAMSPY",
+          payload: { appId: input.entry.steamAppId ?? derivedSteamAppId!, medianForeverMinutes: steamSpy.data.medianForeverMinutes },
+          sourceUrl: `https://steamspy.com/app/${input.entry.steamAppId ?? derivedSteamAppId!}`,
+          fetchedAt: new Date().toISOString(),
+        };
+      }
+    }
+  } catch {
+    // Duration evidence is best effort and never blocks metadata persistence.
+  }
+
+  const persisted = await persistWishlistIgdbSnapshot(
+    input.entry.id,
+    match.game,
+    matchMethod,
+    durationEvidence,
+    new Date(),
+  );
+  if (!persisted.success) return { success: false, data: null, error: persisted.error.message };
+
+  return {
+    success: true,
+    data: {
+      igdbId: match.game.id,
+      name: match.game.name ?? input.entry.name,
+      matchMethod,
       steamAppIdApplied,
       steamAppIdConflict,
     },

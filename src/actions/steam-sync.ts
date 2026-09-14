@@ -4,8 +4,8 @@ import { requireUser } from "@/lib/auth-guard";
 import { friendlyActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
 import { fetchOwnedGames } from "@/lib/steam-api";
-import { lastPlayedDate, stripTrademarkSymbols } from "@/lib/steam-utils";
-import { upsertUnresolvedSteamDlc, requireSteamFlowContext } from "@/lib/steam-flow";
+import { lastPlayedDate } from "@/lib/steam-utils";
+import { requireSteamFlowContext } from "@/lib/steam-flow";
 
 interface SyncCounts {
   synced: number;
@@ -82,15 +82,13 @@ export async function syncSteamPlaytime() {
       const chunk = games.slice(index, index + SYNC_CHUNK_SIZE);
       await prisma.$transaction(async (tx) => {
         for (const game of chunk) {
+          if (game.type === "DLC") {
+            result.skipped += 1;
+            continue;
+          }
           const gameId = identities.get(String(game.appid));
 
           if (!gameId) {
-            if (game.type === "DLC") {
-              await upsertUnresolvedSteamDlc(tx, String(game.appid), {
-                ...game,
-                name: stripTrademarkSymbols(game.name),
-              });
-            }
             result.skipped += 1;
             continue;
           }

@@ -207,7 +207,7 @@ describe("importSteamWishlist", () => {
 
     const result = await importSteamWishlist();
 
-    expect(result).toMatchObject({ success: true, data: { created: 1 } });
+    expect(result).toMatchObject({ success: true, data: { created: 1, enrichmentEntryIds: ["wish-1"] } });
     expect(createWishlist).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ type: "DLC", baseGameId: "game-1", steamAppId: "200" }),
     }));
@@ -289,7 +289,7 @@ describe("importSteamWishlist", () => {
 
     await expect(importSteamWishlist()).resolves.toMatchObject({
       success: true,
-      data: { created: 0 },
+      data: { created: 0, enrichmentEntryIds: ["wish-200"] },
     });
     expect(updateWishlist).toHaveBeenCalledWith({
       where: { id: "wish-200" },

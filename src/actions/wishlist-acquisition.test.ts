@@ -6,6 +6,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/wishlist-compatibility-runner", () => ({
   silentlyRefreshWishlistCompatibility: vi.fn(),
 }));
+vi.mock("@/lib/igdb-import-queue", () => ({ queueIgdbForDlcGames: vi.fn() }));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
@@ -209,6 +210,7 @@ describe("acquireWishlistDlc", () => {
     expect(mockGameCreate).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ type: "DLC", baseGameId: "base-1" }),
     }));
+    expect(mockGameCreate.mock.calls[0][0].data).not.toHaveProperty("libraryEntry");
     expect(mockLibraryUpsert).toHaveBeenCalledWith({
       where: { gameId: "base-1" },
       create: { gameId: "base-1", playState: "IN_PROGRESS", replayCandidate: true },

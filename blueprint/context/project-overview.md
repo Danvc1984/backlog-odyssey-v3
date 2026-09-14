@@ -1,6 +1,6 @@
 # Backlog Odyssey - Project Overview
 
-<!-- blueprint:source-hash d11bbc066946dad1f2b3f967a06afa2064773fad55888866f6ff1e733c184b89 -->
+<!-- blueprint:source-hash af2fd9478b075d58b4fc18c7ddf653591b41e06e7e5972d515c7e0b7f89c0fd9 -->
 
 > Private, single-user gaming library and decision assistant for choosing what to play and buy in Mexico across a self-configured Linux or Windows setup.
 
@@ -36,10 +36,10 @@ The checked state is owned by `blueprint/build-plan.md`; the list below is the c
 16. **[x] 21: Pre-deployment polish** - Today, Library, Wishlist, Settings, onboarding, wallpaper, Steam activity, pagination, metadata guidance, and action-state fixes.
 17. **[x] 22: Handheld suitability** - Owner-marked handheld fit and the Windows-handheld rescue for no-fallback Play recommendations.
 18. **[ ] 23: IGDB as primary provider** - `23a-23d` shipped: IGDB client/identity, catalog enrichment, IGDB/SteamSpy duration, and wishlist flows. `23e` remains: engine re-derivation with per-dimension IGDB signal-value analysis and RAWG retirement; it runs after features 24-27.
-19. **[ ] 24: DLC metadata, pages, and browsing with IGDB** - Own IGDB snapshots for catalog DLCs and DLC wishes, dedicated DLC detail pages with visible base-game links, relation-based identity matching with Steam App ID confirmation, Steam post-import DLC enrichment, a Library type filter, and a reworked cover-card DLC section.
-20. **[ ] 25: Interest defaults across ingestion paths** - Steam library import starts at 2/5, manual creation at 3/5 (catalog and wishlist), and wishlist acquisition carries the wish's interest into the catalog with a 3/5 fallback.
+19. **[ ] 24: DLC metadata, pages, and browsing with IGDB** - Own IGDB snapshots for catalog DLCs and DLC wishes, dedicated DLC detail pages with visible base-game links, and the base-game DLC section as cover cards hosting a manual fetch-DLC-list flow (Steam appdetails IDs resolved through batched IGDB external_games) where checked items are acquired without library entry or play state; owned-sync DLC population retires, the unresolved-DLC queue becomes wishlist-only, and the library gains a Has-DLC filter chip while DLCs stay out of its grid/list.
+20. **[ ] 25: Interest defaults across ingestion paths** - Steam library import starts at 2/5, manual creation at 3/5 (catalog and wishlist), and wishlist acquisition carries the wish's interest into the catalog for base-game wishes only (DLCs hold no library entry), with a 3/5 fallback.
 21. **[ ] 26: Add Game dialog with IGDB suggestion and interest** - Manual catalog creation asks interest and offers the wishlist-style IGDB suggest-and-confirm flow so games arrive enriched.
-22. **[ ] 27: Collections: default shelves and IGDB series** - New In-progress, Completed, Backlog, and Handheld-picks system shelves plus calculated IGDB series/franchise shelves.
+22. **[ ] 27: Collections: default shelves and IGDB series** - New In-progress, Completed, Backlog, Handheld-picks, and Games-with-DLC system shelves plus calculated IGDB series/franchise shelves.
 23. **[ ] 28: Recommendation behavior renewal** - A dedicated handheld play role replacing the second Best Fit when the setup has a handheld, and Tune-this-run data/visual polish; rotation, exposure, and calibration stay frozen pending real usage data.
 24. **[ ] 29: Deployment and CI readiness** - Vercel/Supabase review, Cron, production/smoke verification, one Verify command, and automatic checks when configured.
 
@@ -52,7 +52,7 @@ The durable schema is in `prisma/schema.prisma`. Personal data, provider evidenc
 - `User`, `Account`, and `Session` provide the single Google-authenticated account.
 - `AppSettings` stores `primaryOs`, `hasWindowsFallback`, `handheldOs`, and `onboardingCompleted`; OS changes are confirmed, then synchronously re-derive compatibility and recommendation runs.
 - `SteamConnection`, `SyncRun`, `SteamRecentActivityCache`, `EnrichmentJob`, `PriceRefresh`, and compatibility sweep records persist provider operations, freshness, retry timing, counts, and safe diagnostics. Recent activity is a narrow cache and never imports games.
-- `Game` is catalog-only with base-game/DLC type and immutable origin. `LibraryEntry` stores play state, main-game flag, priority, interest, rating, environment, `GameExperience`, notes, replay candidate, hidden state, and nullable handheld suitability. Interest defaults by ingestion path: Steam imports 2/5, manual creation 3/5, and wishlist acquisition carries the wish's value with a 3/5 fallback (feature 25).
+- `Game` is catalog-only with base-game/DLC type and immutable origin. `LibraryEntry` stores play state, main-game flag, priority, interest, rating, environment, `GameExperience`, notes, replay candidate, hidden state, and nullable handheld suitability — and is never created for DLCs (feature 24 removes existing DLC entries and hides play-state UI on DLC pages). Interest defaults by ingestion path: Steam imports 2/5, manual creation 3/5, and wishlist acquisition carries the wish's value with a 3/5 fallback for base-game wishes only (feature 25).
 - `ExternalGameId` stores provider namespace, identifier, and provenance. `GameAvailability` answers where a catalog game can be played; Steam and ROM are built-ins, while other platforms reference reusable `AlternativeSource` records with normalized names, aliases/icon metadata, and archive state.
 - `MetadataSnapshot` is replaceable attributed JSON provider evidence. Features 23a-23d shipped the IGDB-shaped snapshot: summary, genres/themes/keywords, companies, release date, ESRB, separate rating fields with counts, websites, alternative names, collections/franchise, structural relations (kind, igdbId, name), game modes, artwork, screenshots, and derived palette. The captured relations are the identity source for DLC matching in feature 24.
 - `PossibleDuplicate` records review evidence. `CatalogOperation` stores a minimal exact merge/delete snapshot, affected games, pending/undone/expired/completed state, overlap protection, and an approximately 15-second Undo window.
@@ -60,7 +60,7 @@ The durable schema is in `prisma/schema.prisma`. Personal data, provider evidenc
 ### Wishlist, offers, and compatibility
 
 - `WishlistEntry` is independent until explicit acquisition: an unowned base game or DLC linked to an owned catalog base game. It carries name, personal notes/interest/experience, optional identity, and handheld suitability.
-- `WishlistMetadataSnapshot` holds base-game provider evidence today; feature 24 extends own-identity IGDB evidence to DLC wishes, matched from the owned base game's relations or their own Steam App ID. `WishlistImportReview`, `WishlistImportIgnore`, and unresolved DLC records preserve manual review across owned-library sync and wishlist import.
+- `WishlistMetadataSnapshot` holds base-game provider evidence today; feature 24 extends own-identity IGDB evidence to DLC wishes, matched from the owned base game's relations or their own Steam App ID. `WishlistImportReview`, `WishlistImportIgnore`, and `UnresolvedSteamDlc` (wishlist-import only after feature 24 retires the owned-sync source and removes existing OWNED_SYNC rows) preserve manual review.
 - `DealOffer` stores valid Mexican offer alternatives; `ItadIdentity` caches Steam-App-ID mapping. The selected offer is always the cheapest valid Mexican offer, with seller/source visible. `targetPriceMxn` is optional, opportunities require a fresh selected offer at or below target, and historical low is display-only. Offers go stale after 48 hours.
 - `CompatibilitySnapshot`/`EnvironmentCompatibility` store catalog evidence; parallel `WishlistCompatibilitySnapshot`/`WishlistEnvironmentCompatibility` store read-only wishlist evidence keyed by wishlist entry. ProtonDB and AWAY are separate attributable Linux evidence, with Windows derived only for an eligible fallback.
 - Feature 23 added replaceable attributed IGDB `game_time_to_beats` evidence (`hastily`, `normally`, `completely`) with a SteamSpy median fallback only when IGDB has no row and a confirmed Steam App ID exists. RAWG playtime is retired.
@@ -92,8 +92,8 @@ Not in v1. This is a private single-user decision assistant with no storefront, 
 - `/` - authentication landing.
 - `/welcome` - first-login OS, handheld, fallback, and optional taste-setup flow.
 - `/today` - local dashboard with Currently Playing and Featured Offers carousels, Play Next roles, Buy results, coverage, recent activity, offers, freshness, and operations. It never silently starts provider work or launches a game.
-- `/library` - searchable catalog, source filters, manual creation, duplicate review, enrichment, and grid/list browsing with 18/48/99 page sizes; feature 24 adds a type filter (All / Base games / DLC) following the wishlist pattern.
-- `/games/[id]` - personal fields, availability, metadata, screenshots, detail theme, compatibility, DLC, duplicate/recommendation context, and provider actions; feature 24 adds dedicated DLC detail pages with a visible base-game link and reworks the base game's DLC section into cover cards with IGDB match status.
+- `/library` - searchable catalog, source filters, manual creation, duplicate review, enrichment, and grid/list browsing with 18/48/99 page sizes; feature 24 adds a Has-DLC filter chip following the handheld-filter pattern while DLCs never appear in the grid or list.
+- `/games/[id]` - personal fields, availability, metadata, screenshots, detail theme, compatibility, DLC, duplicate/recommendation context, and provider actions; feature 24 reworks the base game's DLC section into cover cards with IGDB match status that host the fetch-DLC-list acquisition flow and link to dedicated DLC detail pages (no play-state UI there) with a visible base-game link.
 - `/wishlist` - independent wishes, identity, offers, target prices, opportunities, Steam import/review, acquisition, and grid/list browsing.
 - `/wishlist/[id]` - wish metadata, screenshots/theme, identity provenance, offers, personal fields, acquisition/edit/delete, compatibility, and fill-only enrichment.
 - `/collections` and `/collections/[id]` - collection browsing and forms; feature 27 adds the new system shelves and IGDB series shelves.
@@ -115,8 +115,8 @@ The visual system is Dawn and Sunset, each with light/dark modes, Cinzel display
 ## Open questions
 
 - Build order crosses sections: `23e` sits under feature 23 but runs after features 24-27; `/feature` should pick 24-28 in order before 23e, then 29.
-- Feature 24 spec decisions: how the Library lists DLCs (with or without `LibraryEntry`, and what the DLC card shows), and whether exact relation matches (kind + normalized name) may auto-apply IGDB identity or must always confirm.
+- Feature 24 spec decisions: exact fetch-dialog interaction details (copy, placement, batch size) and the data cleanup migration shape for existing DLC library entries and OWNED_SYNC rows.
 - Feature 27 spec decision: how IGDB series/franchise shelves are enumerated (dynamic from library evidence versus pinned).
 - Interest range conflict: `project-plan.md` says interest `0-5`, but shipped schemas validate `1-5`; reconcile before features 25/26 touch interest defaults.
 - `build-plan.md` has two checked items labeled `19c` (the parent and its Play-environment child); historical labeling only, but clarify before referencing it.
-- `project-plan.md` leaves duration queueing semantics as a specification decision for feature 23c to define; stale-snapshot retry presentation remains part of pending 23e.
+- Stale-snapshot retry presentation remains part of pending 23e.

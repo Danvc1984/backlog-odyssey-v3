@@ -17,7 +17,7 @@ import { findConflictingEntry } from "@/lib/wishlist-identity";
 import { silentlyRefreshWishlistCompatibility } from "./wishlist-compatibility-runner";
 import { fetchIgdbGameTimeToBeats, fetchIgdbSteamAppId, matchIgdbGame } from "./igdb-api";
 import { fetchSteamSpyMedian } from "./steamspy-api";
-import { enrichWishlistBaseGameFromIgdb } from "./wishlist-igdb-enrichment";
+import { enrichWishlistBaseGameFromIgdb, enrichWishlistDlcFromIgdb } from "./wishlist-igdb-enrichment";
 
 const findFirst = vi.mocked(findConflictingEntry);
 const match = vi.mocked(matchIgdbGame);
@@ -116,7 +116,106 @@ describe("wishlist IGDB enrichment", () => {
     await expect(pending).resolves.toMatchObject({ success: true });
   });
 
-  it("rejects DLC wishes before matching", async () => {
+  it("auto-applies an exact DLC relation from the base-game snapshot", async () => {
+    const relationPayload = {
+      schemaVersion: 1,
+      igdbId: 1,
+      igdbSlug: "base-game",
+      name: "Base Game",
+      summary: null,
+      firstReleaseDate: null,
+      genres: [],
+      themes: [],
+      keywords: [],
+      developers: [],
+      publishers: [],
+      esrbRating: null,
+      officialWebsite: null,
+      alternativeNames: [],
+      ratings: { aggregated: { score: null, count: null }, community: { score: null, count: null }, total: { score: null, count: null } },
+      collection: null,
+      franchise: null,
+      relations: [{ kind: "DLC", igdbId: 99, name: "Frozen Wilds" }],
+      gameModes: [],
+      multiplayerModes: [],
+      coverUrl: null,
+      artworkUrls: [],
+      screenshots: [],
+      igdbUpdatedAt: null,
+      attribution: { provider: "IGDB", sourceUrl: "https://igdb.test/base", fetchedAt: new Date().toISOString() },
+      palette: null,
+    };
+
+    await expect(enrichWishlistDlcFromIgdb({
+      entry: {
+        ...entry,
+        type: "DLC",
+        name: "Frozen Wilds",
+        baseGame: { metadataSnapshots: [{ payload: relationPayload }] },
+      },
+    })).resolves.toMatchObject({ success: true, data: { matchMethod: "INFERRED" } });
+    expect(match).toHaveBeenCalledWith({
+      title: "Frozen Wilds",
+      category: "DLC",
+      steamAppId: null,
+      selectedIgdbId: 99,
+    });
+  });
+
+  it("routes a DLC relation name variant to review", async () => {
+    const relationPayload = {
+      schemaVersion: 1,
+      igdbId: 1,
+      igdbSlug: "base-game",
+      name: "Base Game",
+      summary: null,
+      firstReleaseDate: null,
+      genres: [],
+      themes: [],
+      keywords: [],
+      developers: [],
+      publishers: [],
+      esrbRating: null,
+      officialWebsite: null,
+      alternativeNames: [],
+      ratings: { aggregated: { score: null, count: null }, community: { score: null, count: null }, total: { score: null, count: null } },
+      collection: null,
+      franchise: null,
+      relations: [{ kind: "DLC", igdbId: 99, name: "Frozen Wilds Deluxe" }],
+      gameModes: [],
+      multiplayerModes: [],
+      coverUrl: null,
+      artworkUrls: [],
+      screenshots: [],
+      igdbUpdatedAt: null,
+      attribution: { provider: "IGDB", sourceUrl: "https://igdb.test/base", fetchedAt: new Date().toISOString() },
+      palette: null,
+    };
+
+    await expect(enrichWishlistDlcFromIgdb({
+      entry: {
+        ...entry,
+        type: "DLC",
+        name: "Frozen Wilds",
+        baseGame: { metadataSnapshots: [{ payload: relationPayload }] },
+      },
+    })).resolves.toEqual({ success: false, data: null, error: "IGDB match outcome: AMBIGUOUS" });
+    expect(match).not.toHaveBeenCalled();
+  });
+
+  it("uses a DLC wish's own Steam App ID when available", async () => {
+    await expect(enrichWishlistDlcFromIgdb({
+      entry: { ...entry, type: "DLC", steamAppId: "70210", baseGame: null },
+    })).resolves.toMatchObject({ success: true });
+    expect(match).toHaveBeenCalledWith({
+      title: "Portal 2",
+      category: "DLC",
+      steamAppId: "70210",
+      selectedIgdbId: null,
+    });
+  });
+
+  it("rejects DLC wishes from the base-game-only helper", async () => {
     await expect(enrichWishlistBaseGameFromIgdb({ entry: { ...entry, type: "DLC" } })).resolves.toEqual({
       success: false,
       data: null,

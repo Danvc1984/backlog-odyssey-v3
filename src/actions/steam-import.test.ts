@@ -228,7 +228,7 @@ describe("importSteamGames", () => {
     expect(updateConnection).toHaveBeenCalled();
   });
 
-  it("queues an owned DLC when its Steam base game is not imported", async () => {
+  it("ignores an owned DLC when its Steam base game is not imported", async () => {
     vi.mocked(fetchOwnedGames).mockResolvedValue([
       {
         appid: 200,
@@ -246,15 +246,11 @@ describe("importSteamGames", () => {
       success: true,
       data: expect.objectContaining({ imported: 0, updated: 1 }),
     }));
-    expect(upsertUnresolvedDlc).toHaveBeenCalledWith(
-      tx,
-      "200",
-      expect.objectContaining({ name: "Expansion", steamBaseAppId: "100" }),
-    );
+    expect(upsertUnresolvedDlc).not.toHaveBeenCalled();
     expect(createGame).not.toHaveBeenCalled();
   });
 
-  it("creates an owned DLC under its imported base game", async () => {
+  it("ignores an owned DLC under its imported base game", async () => {
     findManyExternalId.mockResolvedValue([
       { externalId: "100", gameId: "game-base", game: { type: "BASE_GAME" } },
     ]);
@@ -273,38 +269,15 @@ describe("importSteamGames", () => {
 
     expect(result).toEqual(expect.objectContaining({
       success: true,
-      data: expect.objectContaining({ imported: 1, updated: 0 }),
+      data: expect.objectContaining({ imported: 0, updated: 1 }),
     }));
-    expect(createGame).toHaveBeenCalledWith({
-      data: {
-        type: "DLC",
-        origin: "STEAM_IMPORT",
-        name: "Expansion",
-        baseGameId: "game-base",
-        externalIds: {
-          create: {
-            namespaceId: "200",
-            namespace: "STEAM_APP",
-            externalId: "200",
-            matchMethod: "EXACT_STEAM_APP_ID",
-          },
-        },
-        availability: {
-          create: {
-            source: "STEAM",
-            steamAppId: "200",
-            steamPlaytimeTotal: BigInt(45),
-            steamLastPlayed: new Date(1700000000000),
-          },
-        },
-      },
-      select: { id: true },
-    });
+    expect(createGame).not.toHaveBeenCalled();
     expect(upsertUnresolvedDlc).not.toHaveBeenCalled();
+    expect(updateManyAvailability).not.toHaveBeenCalled();
     expect(upsertLibraryEntry).not.toHaveBeenCalled();
   });
 
-  it("updates a known DLC's availability without touching its library entry", async () => {
+  it("ignores a known DLC without touching its availability or library entry", async () => {
     findManyExternalId.mockResolvedValue([
       { externalId: "200", gameId: "game-dlc", game: { type: "DLC" } },
     ]);
@@ -325,15 +298,7 @@ describe("importSteamGames", () => {
       success: true,
       data: expect.objectContaining({ imported: 0, updated: 1 }),
     }));
-    expect(updateManyAvailability).toHaveBeenCalledWith({
-      where: { gameId: "game-dlc", source: "STEAM" },
-      data: {
-        source: "STEAM",
-        steamAppId: "200",
-        steamPlaytimeTotal: BigInt(90),
-        steamLastPlayed: new Date(1700000100000),
-      },
-    });
+    expect(updateManyAvailability).not.toHaveBeenCalled();
     expect(upsertLibraryEntry).not.toHaveBeenCalled();
     expect(createGame).not.toHaveBeenCalled();
   });

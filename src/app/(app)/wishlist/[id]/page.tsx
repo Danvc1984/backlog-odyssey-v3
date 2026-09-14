@@ -176,6 +176,14 @@ export default async function WishlistDetailPage({
         >
           Wishlist
         </Link>
+        {entry.type === "DLC" && entry.baseGame ? (
+          <>
+            <span aria-hidden="true"> / </span>
+            <Link href={`/games/${entry.baseGame.id}`} className="hover:text-foreground hover:underline">
+              {entry.baseGame.name}
+            </Link>
+          </>
+        ) : null}
         <span aria-hidden="true"> / </span>
         <span>{entry.name}</span>
       </p>
@@ -218,7 +226,7 @@ export default async function WishlistDetailPage({
         </p>
       )}
 
-      {entry.type === "BASE_GAME" && (
+      {(entry.type === "BASE_GAME" || entry.type === "DLC") && (
         <WishlistIgdbEnrichmentControl wishlistEntryId={entry.id} hasSnapshot={ownSnapshot !== null} />
       )}
 

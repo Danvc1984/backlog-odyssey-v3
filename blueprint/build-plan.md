@@ -578,24 +578,41 @@
 Features 24-27 land before 23e so the engine re-derivation consumes the new
 data; 28 completes the behavior renewal after 23e. Deployment remains last.
 
-- [ ] 24. **DLC metadata, pages, and browsing with IGDB** - IGDB snapshots for
-  catalog DLCs (Steam-imported and manual) and DLC wishes with description,
+- [x] 24. **DLC metadata, pages, and browsing with IGDB** - IGDB snapshots for
+  catalog DLCs (Steam-fetched and manual) and DLC wishes with description,
   first release date, cover, and artwork; dedicated detail pages for catalog
   DLCs with a visible base-game link (the base game stays required in the
-  catalog); identity resolved from the base game's IGDB relations plus exact
-  Steam App ID lookup through external_games, with exact relation matches
-  auto-applied and name variants routed to review; Steam post-import
-  enriches DLCs like base games; a Library type filter (All / Base games /
-  DLC) following the wishlist pattern with a DLC-aware list query; and the
-  base-game DLC section reworked into cover cards linking to DLC pages with
-  IGDB match status
+  catalog); DLC identity resolved from the base game's IGDB relations plus
+  exact Steam App ID lookup through external_games, with exact matches
+  auto-applied and name variants routed to review. DLC acquisition is a
+  manual per-game flow, not owned-sync derived: the reworked base-game DLC
+  section offers a fetch-DLC-list action for games with a Steam App ID
+  (Steam appdetails dlc IDs resolved to names through one batched IGDB
+  external_games query, falling back to appdetails or raw App IDs), shown
+  as an ephemeral unchecked dialog list where checked items are marked
+  acquired as catalog DLCs with IGDB enrichment queued from the exact Steam
+  App ID (no-match DLCs are still created unenriched), unchecked items are
+  never persisted, and already-owned or wishlisted DLCs appear disabled with
+  badges; manual games without a Steam App ID keep the existing Create DLC
+  dialog and IGDB name-match enrichment. DLCs carry no library entry and no
+  play state, ever (owned or wishlisted), so they cannot influence play
+  state; existing DLC library entries are cleaned up and play-state UI is
+  hidden on DLC pages, while the wishlist DLC acquisition parent play-state
+  offer stays unchanged. Owned-sync DLC population is retired: the
+  UnresolvedSteamDlc machinery becomes wishlist-DLC-only, with existing
+  OWNED_SYNC rows removed. The library keeps hiding DLCs from its grid and
+  list and adds a Has-DLC filter chip following the handheld-filter
+  pattern; backlog progress and play-state counting remain base-game only
+  and the plan keeps it that way; and the base-game DLC section becomes
+  cover cards linking to DLC pages with IGDB match status
 
 - [ ] 25. **Interest defaults across ingestion paths** - Steam library import
   sets interest 2/5 matching wishlist import; manual creation defaults to
   3/5 in catalog and wishlist forms, including the wishlist edit dialog's
   null default; wishlist acquisition carries the wish's interest into the
-  catalog entry, falling back to 3/5; Steam wishlist import, unresolved-DLC
-  wishes, and taste setup keep their current values
+  catalog entry for base-game wishes only (DLCs hold no library entry, so
+  acquired DLCs store no interest), falling back to 3/5; Steam wishlist
+  import, unresolved-DLC wishes, and taste setup keep their current values
 
 - [ ] 26. **Add Game dialog with IGDB suggestion and interest** - manual
   catalog creation asks interest (default 3) and offers the same IGDB
@@ -603,9 +620,10 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   enriched from the start
 
 - [ ] 27. **Collections: default shelves and IGDB series** - new system
-  shelves for In progress, Completed, Backlog, and Handheld picks, and
-  calculated series/franchise shelves derived from the IGDB collection and
-  franchise snapshot evidence
+  shelves for In progress, Completed, Backlog, Handheld picks, and Games
+  with DLC (base games owning acquired DLCs, complementing the feature-24
+  Has-DLC library filter), and calculated series/franchise shelves derived
+  from the IGDB collection and franchise snapshot evidence
 
 - [ ] 28. **Recommendation behavior renewal** - a dedicated handheld play
   role replacing the second Best Fit when the setup has a handheld, built on

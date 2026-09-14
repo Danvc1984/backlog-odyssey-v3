@@ -6,6 +6,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
+import { queueIgdbForDlcGames } from "@/lib/igdb-import-queue";
 import { resolveManualSteamAppId } from "@/actions/wishlist-identity";
 import { getOrCreateUnspecifiedSource } from "@/lib/sources/store";
 import { parseIgdbMetadataPayload } from "@/lib/igdb-metadata-payload";
@@ -366,7 +367,7 @@ export async function acquireWishlistDlc(input: unknown) {
       return { success: false as const, data: null, error: "Invalid input" };
     }
 
-    const game = await prisma.$transaction(async (tx) => {
+    const acquisition = await prisma.$transaction(async (tx) => {
       const wishlist = await tx.wishlistEntry.findUnique({
         where: { id: parsed.data.wishlistEntryId },
         include: { baseGame: { select: { id: true, type: true } } },
@@ -396,7 +397,6 @@ export async function acquireWishlistDlc(input: unknown) {
               steamAppId: wishlist.steamAppId,
             },
           },
-          libraryEntry: { create: { playState: "NOT_STARTED" } },
         },
         select: { id: true, name: true, type: true, baseGameId: true },
       });
@@ -425,10 +425,13 @@ export async function acquireWishlistDlc(input: unknown) {
       }
 
       await tx.wishlistEntry.delete({ where: { id: wishlist.id } });
-      return created;
+      return { game: created, steamAppId: wishlist.steamAppId };
     });
 
-    return { success: true as const, data: game, error: null };
+    if (acquisition.steamAppId) {
+      await queueIgdbForDlcGames([acquisition.game.id]);
+    }
+    return { success: true as const, data: acquisition.game, error: null };
   } catch (err) {
     return {
       success: false as const,

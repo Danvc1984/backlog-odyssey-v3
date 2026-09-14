@@ -5,7 +5,7 @@ import { friendlyActionError } from "@/lib/action-error";
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { searchIgdbCandidatePage } from "@/lib/igdb-api";
-import { enrichWishlistBaseGameFromIgdb } from "@/lib/wishlist-igdb-enrichment";
+import { enrichWishlistBaseGameFromIgdb, enrichWishlistDlcFromIgdb } from "@/lib/wishlist-igdb-enrichment";
 
 const searchSchema = z.object({ title: z.string().trim().min(1).max(200), page: z.number().int().min(1).default(1) }).strict();
 const entrySchema = z.object({ wishlistEntryId: z.string().trim().min(1) }).strict();
@@ -32,13 +32,32 @@ export async function fillWishlistIgdbMetadata(input: unknown) {
     if (!parsed.success) return { success: false as const, data: null, error: "Invalid input" };
     const entry = await prisma.wishlistEntry.findUnique({
       where: { id: parsed.data.wishlistEntryId },
-      select: { id: true, name: true, type: true, steamAppId: true, steamAppIdProvenance: true, metadataSnapshot: { select: { id: true } } },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        steamAppId: true,
+        steamAppIdProvenance: true,
+        metadataSnapshot: { select: { id: true } },
+        baseGame: {
+          select: {
+            metadataSnapshots: {
+              where: { provider: "IGDB" },
+              orderBy: { fetchedAt: "desc" },
+              take: 1,
+              select: { payload: true },
+            },
+          },
+        },
+      },
     });
     if (!entry) return { success: false as const, data: null, error: "Wishlist entry not found" };
-    if (entry.type !== "BASE_GAME") return { success: false as const, data: null, error: "IGDB metadata is only available for base-game wishes" };
+    if (!["BASE_GAME", "DLC"].includes(entry.type)) return { success: false as const, data: null, error: "IGDB metadata is only available for base-game or DLC wishes" };
     if (entry.metadataSnapshot) return { success: false as const, data: null, error: "This wish already has IGDB metadata" };
 
-    const result = await enrichWishlistBaseGameFromIgdb({ entry });
+    const result = entry.type === "DLC"
+      ? await enrichWishlistDlcFromIgdb({ entry })
+      : await enrichWishlistBaseGameFromIgdb({ entry });
     if (!result.success) {
       if (result.error === "IGDB match outcome: AMBIGUOUS") return { ...result, error: "Several IGDB games share this title. Use Edit to search and choose a match." };
       if (result.error === "IGDB match outcome: NOT_FOUND") return { ...result, error: "No IGDB match was found for this title. Use Edit to search and choose a match." };
@@ -55,10 +74,27 @@ async function replaceWishlistMetadata(input: unknown, selectedIgdbId: number | 
   if (!parsed.success) return { success: false as const, data: null, error: "Invalid input" };
   const entry = await prisma.wishlistEntry.findUnique({
     where: { id: parsed.data.wishlistEntryId },
-    select: { id: true, name: true, type: true, steamAppId: true, steamAppIdProvenance: true, metadataSnapshot: { select: { fetchedAt: true } } },
+    select: {
+      id: true,
+      name: true,
+      type: true,
+      steamAppId: true,
+      steamAppIdProvenance: true,
+      metadataSnapshot: { select: { fetchedAt: true } },
+      baseGame: {
+        select: {
+          metadataSnapshots: {
+            where: { provider: "IGDB" },
+            orderBy: { fetchedAt: "desc" },
+            take: 1,
+            select: { payload: true },
+          },
+        },
+      },
+    },
   });
   if (!entry) return { success: false as const, data: null, error: "Wishlist entry not found" };
-  if (entry.type !== "BASE_GAME") return { success: false as const, data: null, error: "IGDB metadata is only available for base-game wishes" };
+  if (!["BASE_GAME", "DLC"].includes(entry.type)) return { success: false as const, data: null, error: "IGDB metadata is only available for base-game or DLC wishes" };
   if (entry.metadataSnapshot && !parsed.data.confirmOverwrite) {
     return {
       success: true as const,
@@ -66,7 +102,9 @@ async function replaceWishlistMetadata(input: unknown, selectedIgdbId: number | 
       error: null,
     };
   }
-  const result = await enrichWishlistBaseGameFromIgdb({ entry, selectedIgdbId });
+  const result = entry.type === "DLC"
+    ? await enrichWishlistDlcFromIgdb({ entry, selectedIgdbId })
+    : await enrichWishlistBaseGameFromIgdb({ entry, selectedIgdbId });
   return result;
 }
 

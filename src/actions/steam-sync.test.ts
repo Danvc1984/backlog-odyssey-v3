@@ -89,7 +89,7 @@ describe("syncSteamPlaytime", () => {
     }));
   });
 
-  it("reactivates a discarded unresolved DLC when it remains absent", async () => {
+  it("ignores an owned DLC even when it is absent from the catalog", async () => {
     findManyExternalId.mockResolvedValue([]);
     const dlc = {
       appid: 200,
@@ -103,16 +103,7 @@ describe("syncSteamPlaytime", () => {
 
     await syncSteamPlaytime();
 
-    expect(upsertUnresolvedDlc).toHaveBeenCalledWith({
-      where: { steamAppId: "200" },
-      create: { steamAppId: "200", name: "Expansion", steamBaseAppId: "100" },
-      update: {
-        name: "Expansion",
-        steamBaseAppId: "100",
-        status: "PENDING",
-        discardedAt: null,
-      },
-    });
+    expect(upsertUnresolvedDlc).not.toHaveBeenCalled();
     expect(dlc.name).toBe("Expansion™");
   });
 

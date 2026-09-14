@@ -44,9 +44,9 @@ registration, and collaboration are outside the MVP.
 - DLC model with explicit base-game ownership, IGDB metadata and artwork for
   catalog DLCs and DLC wishes, and dedicated DLC detail pages with a visible
   base-game link.
-- A Library type filter (All / Base games / DLC) mirroring the wishlist
-  pattern.
-- Persistent manual-review queue for unresolved Steam DLC.
+- DLCs stay out of the library grid and list; the library gains a Has-DLC
+  filter chip and Collections later adds a Games-with-DLC system shelf.
+- Persistent manual-review queue for unresolved wishlist Steam DLC only.
 - Independent wishlist for base games and DLC linked to owned catalog games.
 - Manual wishlist acquisition into the catalog with optional base-game play state update.
 - ITAD/Steam price enrichment for wishlist entries.
@@ -209,24 +209,38 @@ metadata snapshots, so games group by series without manual curation.
 DLC catalog entries:
 
 - Must point to one existing base game.
-- Are created from a base-game detail flow, through a reviewed Steam-DLC flow,
-  or by acquiring a wishlist DLC.
+- Are created from the base-game detail fetch flow, the Create DLC dialog for
+  manual games, or by acquiring a wishlist DLC.
+- Carry no library entry and no play state, ever (owned or wishlisted), so
+  they never influence play-state counting; backlog progress stays
+  base-game only.
 - Do not enter play-next recommendations directly.
 - May be deleted individually.
 - Are deleted through an explicit cascade when their base game is deleted.
 
-If Steam reports an owned DLC whose base game is absent, the app creates a
-persistent unresolved-DLC queue entry. No automatic matching or creation occurs,
-even when the Steam App ID appears to be an exact match.
+DLC acquisition is manual and per game; Steam owned sync never creates or
+implies DLC ownership because the owned-games API cannot report DLC
+reliably. From a base game with a Steam App ID, the DLC section offers a
+fetch-DLC-list action: Steam appdetails dlc IDs resolve to names through one
+batched IGDB external_games query (falling back to appdetails or raw App
+IDs), and the user picks owned DLCs from an ephemeral unchecked list.
+Checked items are marked acquired as catalog DLCs with IGDB enrichment
+queued from the exact Steam App ID; DLCs without an IGDB match are still
+created unenriched with a visible no-match state. Unchecked items are never
+persisted, and re-fetching re-offers them. Already-owned or wishlisted DLCs
+appear disabled with badges. Manual games without a Steam App ID keep the
+Create DLC dialog and IGDB name-match enrichment.
 
-Each queue entry supports manual review actions:
+The unresolved-DLC queue becomes wishlist-import only (the owned-sync source
+is retired and existing OWNED_SYNC rows are removed), keeping its manual
+review actions:
 
 - Link the DLC to an existing base game.
 - Create the base game and DLC together from Steam in one confirmation.
 - Discard temporarily.
 
-Discarded entries remain stored and reappear as pending during the next Steam
-sync if they are still unresolved.
+Discarded wishlist entries remain stored and reappear as pending during the
+next wishlist import if they are still unresolved.
 
 ### IGDB metadata for DLCs
 
@@ -235,14 +249,17 @@ Catalog DLCs and DLC wishes carry their own replaceable IGDB snapshots
 the base game's data. Identity resolves from the base game's captured IGDB
 relations (exact kind and normalized-name matches auto-apply; name variants
 go to review) and, for Steam-sourced DLCs, from the exact Steam App ID
-through IGDB external_games. Steam post-import enqueues owned DLCs for
-enrichment like base games.
+through IGDB external_games. Acquired DLCs enqueue enrichment from their
+exact Steam App ID at acquisition; manual DLCs enrich through IGDB name
+matching.
 
 Each catalog DLC gets a dedicated detail page with its metadata and artwork
 and a visible link to its base game, which remains required in the catalog.
 The base game's DLC section presents cover cards linking to DLC pages with
-IGDB match status. Library gains a type filter following the wishlist
-pattern; the DLC listing query is a spec decision.
+IGDB match status and hosts the fetch-DLC-list action. DLCs never appear in
+the library grid or list; the library gains a Has-DLC filter chip following
+the handheld-filter pattern, and Collections adds a Games-with-DLC system
+shelf in a later feature.
 
 ## 6. Merge, Delete, and Catalog Integrity
 
@@ -410,7 +427,8 @@ The first wishlist feature is provider-independent:
 - Wishlist IGDB metadata transfers to the new catalog game when available.
 - The acquired base wishlist entry is removed.
 - Acquiring a wishlist DLC creates the catalog DLC under the base game and offers
-  an optional prompt to update the base game's play state (e.g. `PLAN_TO_PLAY` or `replay: true`).
+  an optional prompt to update the base game's play state (e.g. `PLAN_TO_PLAY` or `replay: true`);
+  the acquired DLC itself carries no library entry or play state.
 
 ### Price enrichment and opportunity signals
 
@@ -498,9 +516,8 @@ synchronization:
 - Ignored review entries stay suppressed across imports until manually
   restored.
 - An item already present in the owned catalog is omitted silently.
-- Unresolved Steam DLC from library sync and wishlist import share **one**
-  persistent queue, discriminated by source (`owned-sync` /
-  `wishlist-import`); each side keeps its own reappear rules. A Steam DLC
+- Unresolved Steam DLC is a wishlist-import-only persistent queue (the
+  owned-sync source is retired with existing rows removed). A Steam DLC
   whose base game is wished but not owned stays queued and resolves
   naturally on a later import after the base game is acquired.
 - Steam title changes and removals do not modify local data; they surface

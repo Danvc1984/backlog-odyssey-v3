@@ -130,6 +130,9 @@ async function importWishlistChunk(
             },
           });
           wishlistIdentities.set(steamAppId, repaired);
+          if (!repaired.metadataSnapshot) enrichmentEntryIds.add(repaired.id);
+        } else if (existingWishlistEntry.type === "DLC" && !existingWishlistEntry.metadataSnapshot) {
+          enrichmentEntryIds.add(existingWishlistEntry.id);
         }
         continue;
       }
@@ -184,6 +187,7 @@ async function importWishlistChunk(
       });
       wishlistIdentities.set(steamAppId, entry);
       counters.created += 1;
+      enrichmentEntryIds.add(entry.id);
       continue;
     }
 

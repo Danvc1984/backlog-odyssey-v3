@@ -67,12 +67,34 @@ export default async function GameDetailPage({
           include: { collection: true },
         },
         dlcs: {
-          select: { id: true, name: true },
+          select: {
+            id: true,
+            name: true,
+            metadataSnapshots: {
+              where: { provider: "IGDB" },
+              orderBy: { fetchedAt: "desc" },
+              take: 1,
+              select: { payload: true },
+            },
+            enrichmentJobs: {
+              where: { provider: "IGDB" },
+              orderBy: { createdAt: "desc" },
+              take: 1,
+              select: { status: true },
+            },
+          },
           orderBy: { name: "asc" },
         },
         wishlistDlcs: {
           where: { type: "DLC" },
-          select: { id: true, name: true, interest: true },
+          select: {
+            id: true,
+            name: true,
+            interest: true,
+            metadataSnapshot: {
+              select: { payload: true },
+            },
+          },
           orderBy: [{ interest: "desc" }, { name: "asc" }],
         },
         metadataSnapshots: {
@@ -125,10 +147,6 @@ export default async function GameDetailPage({
   if (!game) {
     redirect("/library");
   }
-  if (game.type === "DLC" && game.baseGameId) {
-    redirect(`/games/${game.baseGameId}`);
-  }
-
   const baseGames =
     game.type === "BASE_GAME"
       ? await prisma.game.findMany({
@@ -154,8 +172,35 @@ export default async function GameDetailPage({
   const compatJob = game.enrichmentJobs.find(
     (job) => job.provider === "PROTONDB",
   );
-  const hasSteamIdentity = game.externalIds.length > 0;
-  const steamAppId = game.externalIds[0]?.externalId ?? null;
+  const steamAppId =
+    game.externalIds[0]?.externalId ??
+    game.availability.find((availability) => availability.source === "STEAM")?.steamAppId ??
+    null;
+  const hasSteamIdentity = steamAppId !== null;
+  const dlcCards = game.dlcs.map((dlc) => {
+    const payload = dlc.metadataSnapshots[0]?.payload as { coverUrl?: unknown } | undefined;
+    const jobStatus = dlc.enrichmentJobs[0]?.status;
+    const matchStatus = typeof payload?.coverUrl === "string"
+      ? "enriched" as const
+      : jobStatus && ["QUEUED", "RUNNING", "RETRY_WAIT", "AWAITING_MATCH"].includes(jobStatus)
+        ? "pending" as const
+        : "no-match" as const;
+    return {
+      id: dlc.id,
+      name: dlc.name,
+      coverUrl: typeof payload?.coverUrl === "string" ? payload.coverUrl : null,
+      matchStatus,
+    };
+  });
+  const wishlistDlcCards = game.wishlistDlcs.map((dlc) => {
+    const payload = dlc.metadataSnapshot?.payload as { coverUrl?: unknown } | undefined;
+    return {
+      id: dlc.id,
+      name: dlc.name,
+      interest: dlc.interest,
+      coverUrl: typeof payload?.coverUrl === "string" ? payload.coverUrl : null,
+    };
+  });
   const isRomOnly =
     game.availability.some((a) => a.source === "ROM") &&
     !game.availability.some((a) => a.source === "STEAM");
@@ -194,6 +239,14 @@ export default async function GameDetailPage({
         <a href="/library" className="hover:text-foreground hover:underline">
           Owned Games Library
         </a>
+        {game.type === "DLC" && game.baseGame ? (
+          <>
+            <span aria-hidden="true"> / </span>
+            <a href={`/games/${game.baseGame.id}`} className="hover:text-foreground hover:underline">
+              {game.baseGame.name}
+            </a>
+          </>
+        ) : null}
         <span aria-hidden="true"> / </span>
         <span>{game.name}</span>
       </p>
@@ -233,6 +286,7 @@ export default async function GameDetailPage({
         igdbTitle={igdbPayload?.name ?? null}
       />
 
+      {game.type === "BASE_GAME" && (
       <SectionCard
         eyebrow="Play status"
         title="Play state"
@@ -263,6 +317,7 @@ export default async function GameDetailPage({
           }
         />
       </SectionCard>
+      )}
 
       <SectionCard
         eyebrow="Catalog identity"
@@ -283,6 +338,7 @@ export default async function GameDetailPage({
 
       {otherGameName && <DuplicateWarning otherGameName={otherGameName} />}
 
+      {game.type === "BASE_GAME" && (
       <SectionCard
         eyebrow="Personal"
         title="Profile"
@@ -317,6 +373,7 @@ export default async function GameDetailPage({
           dismissalCount={playDismissalCount}
         />
       </SectionCard>
+      )}
 
       {compatibilityGate.active && game.type === "BASE_GAME" && (
         <CompatibilitySection
@@ -436,8 +493,9 @@ export default async function GameDetailPage({
           baseGameId={game.id}
           baseGameName={game.name}
           baseGames={baseGames}
-          dlcs={game.dlcs}
-          wishlistDlcs={game.wishlistDlcs}
+          hasSteamAppId={hasSteamIdentity}
+          dlcs={dlcCards}
+          wishlistDlcs={wishlistDlcCards}
         />
       )}
 

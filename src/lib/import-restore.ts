@@ -214,15 +214,21 @@ export async function restoreExportDocument(db: TxDb, document: ExportDocument):
   }
   restored.collections = data.collections.length;
 
-  if (data.libraryEntries.length > 0) {
+  const dlcGameIds = new Set(
+    data.games
+      .filter((game) => game.type === "DLC" || game.baseGameId !== null)
+      .map((game) => game.id),
+  );
+  const libraryEntries = data.libraryEntries.filter((entry) => !dlcGameIds.has(entry.gameId));
+  if (libraryEntries.length > 0) {
     await db.libraryEntry.createMany({
-      data: reviveRows(data.libraryEntries, DATE_FIELDS.libraryEntries).map((entry) => ({
+      data: reviveRows(libraryEntries, DATE_FIELDS.libraryEntries).map((entry) => ({
         ...entry,
         handheldSuitable: entry.handheldSuitable ?? null,
       })),
     });
   }
-  restored.libraryEntries = data.libraryEntries.length;
+  restored.libraryEntries = libraryEntries.length;
   if (data.externalIds.length > 0) {
     await db.externalGameId.createMany({ data: reviveRows(data.externalIds, DATE_FIELDS.externalIds) });
   }

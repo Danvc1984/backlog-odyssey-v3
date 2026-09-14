@@ -8,11 +8,19 @@ import { initialIgdbJobState, isActiveIgdbJobStatus } from "@/lib/igdb-job";
 export interface IgdbImportQueueOutcome { batchId: string | null; queued: number; skipped: number; }
 type Game = { id: string; metadataSnapshots: { id: string }[]; enrichmentJobs: { status: "QUEUED" | "RUNNING" | "RETRY_WAIT" | "AWAITING_MATCH" | "SUCCEEDED" | "FAILED" }[] };
 
-export async function queueIgdbForImportedGames(gameIds: readonly string[]): Promise<IgdbImportQueueOutcome> {
+async function queueIgdbForGames(
+  gameIds: readonly string[],
+  type: "BASE_GAME" | "DLC",
+): Promise<IgdbImportQueueOutcome> {
   const ids = [...new Set(gameIds.filter(Boolean))];
   if (ids.length === 0) return { batchId: null, queued: 0, skipped: 0 };
   return prisma.$transaction(async (tx) => {
-    const games = await tx.game.findMany({ where: { id: { in: ids }, type: "BASE_GAME", libraryEntry: { is: { hidden: false } } }, select: { id: true, metadataSnapshots: { where: { provider: "IGDB" }, select: { id: true } }, enrichmentJobs: { where: { provider: "IGDB" }, select: { status: true } } } }) as Game[];
+    const where: Prisma.GameWhereInput = {
+      id: { in: ids },
+      type,
+      ...(type === "BASE_GAME" ? { libraryEntry: { is: { hidden: false } } } : {}),
+    };
+    const games = await tx.game.findMany({ where, select: { id: true, metadataSnapshots: { where: { provider: "IGDB" }, select: { id: true } }, enrichmentJobs: { where: { provider: "IGDB" }, select: { status: true } } } }) as Game[];
     const eligible = games.filter((game) => game.metadataSnapshots.length === 0 && !game.enrichmentJobs.some((job) => isActiveIgdbJobStatus(job.status)));
     if (eligible.length === 0) return { batchId: null, queued: 0, skipped: ids.length };
     const active = await tx.syncRun.findFirst({ where: { provider: "IGDB", status: "RUNNING" }, select: { id: true } });
@@ -23,4 +31,12 @@ export async function queueIgdbForImportedGames(gameIds: readonly string[]): Pro
     await tx.syncRun.update({ where: { id: batch.id }, data: { status: summary.status, counts: summary.counts as Prisma.InputJsonValue, finishedAt: null } });
     return { batchId: batch.id, queued: eligible.length, skipped: ids.length - eligible.length };
   });
+}
+
+export function queueIgdbForImportedGames(gameIds: readonly string[]): Promise<IgdbImportQueueOutcome> {
+  return queueIgdbForGames(gameIds, "BASE_GAME");
+}
+
+export function queueIgdbForDlcGames(gameIds: readonly string[]): Promise<IgdbImportQueueOutcome> {
+  return queueIgdbForGames(gameIds, "DLC");
 }

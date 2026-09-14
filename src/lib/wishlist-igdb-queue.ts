@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { enrichWishlistBaseGameFromIgdb } from "./wishlist-igdb-enrichment";
+import { enrichWishlistBaseGameFromIgdb, enrichWishlistDlcFromIgdb } from "./wishlist-igdb-enrichment";
 
 const IGDB_ENRICHMENT_CONCURRENCY = 6;
 
@@ -19,11 +19,23 @@ async function enrichWishlistEntry(entryId: string): Promise<WishlistIgdbEnrichm
         steamAppId: true,
         steamAppIdProvenance: true,
         metadataSnapshot: { select: { id: true } },
+        baseGame: {
+          select: {
+            metadataSnapshots: {
+              where: { provider: "IGDB" },
+              orderBy: { fetchedAt: "desc" },
+              take: 1,
+              select: { payload: true },
+            },
+          },
+        },
       },
     });
-    if (!entry || entry.type !== "BASE_GAME" || entry.metadataSnapshot) return { enriched: 0, skipped: 1 };
+    if (!entry || !["BASE_GAME", "DLC"].includes(entry.type) || entry.metadataSnapshot) return { enriched: 0, skipped: 1 };
 
-    const result = await enrichWishlistBaseGameFromIgdb({ entry });
+    const result = entry.type === "DLC"
+      ? await enrichWishlistDlcFromIgdb({ entry })
+      : await enrichWishlistBaseGameFromIgdb({ entry });
     return result.success ? { enriched: 1, skipped: 0 } : { enriched: 0, skipped: 1 };
   } catch {
     return { enriched: 0, skipped: 1 };
