@@ -94,6 +94,7 @@ describe("acquireWishlistBaseGame", () => {
       name: "Portal 2",
       type: "BASE_GAME",
       steamAppId: "620",
+      interest: 4,
       metadataSnapshot: {
         provider: "IGDB",
         payload: igdbPayload,
@@ -117,6 +118,7 @@ describe("acquireWishlistBaseGame", () => {
       data: expect.objectContaining({
         type: "BASE_GAME",
         origin: "MANUAL",
+        libraryEntry: { create: { playState: "NOT_STARTED", interest: 4 } },
         availability: expect.objectContaining({
           create: expect.objectContaining({
             source: "OTHER_PLATFORM",
@@ -142,6 +144,7 @@ describe("acquireWishlistBaseGame", () => {
       name: "Hades",
       type: "BASE_GAME",
       steamAppId: "1145360",
+      interest: null,
       metadataSnapshot: null,
     });
 
@@ -154,6 +157,7 @@ describe("acquireWishlistBaseGame", () => {
     expect(mockAltFind).not.toHaveBeenCalled();
     expect(mockGameCreate).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
+        libraryEntry: { create: { playState: "NOT_STARTED", interest: 3 } },
         availability: expect.objectContaining({
           create: expect.objectContaining({
             source: "STEAM",

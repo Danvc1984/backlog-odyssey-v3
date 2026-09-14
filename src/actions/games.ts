@@ -53,7 +53,7 @@ export async function createGame(input: CreateGameInput) {
             },
           },
           libraryEntry: {
-            create: {},
+            create: { interest: 3 },
           },
         },
         include: {

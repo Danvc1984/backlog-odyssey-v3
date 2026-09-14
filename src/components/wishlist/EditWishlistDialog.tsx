@@ -31,7 +31,7 @@ export function EditWishlistDialog({ entry, baseGames }: EditWishlistDialogProps
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(entry.name);
-  const [interest, setInterest] = useState(String(entry.interest ?? 5));
+  const [interest, setInterest] = useState(String(entry.interest ?? 3));
   const [baseGameId, setBaseGameId] = useState(entry.baseGameId ?? "");
   const [gameExperience, setGameExperience] = useState(entry.gameExperience ?? "");
   const [handheldSuitable, setHandheldSuitable] = useState(entry.handheldSuitable === true);

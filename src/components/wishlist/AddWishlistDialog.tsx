@@ -46,7 +46,7 @@ export function AddWishlistDialog({
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<"BASE_GAME" | "DLC">(initialType);
   const [name, setName] = useState("");
-  const [interest, setInterest] = useState("5");
+  const [interest, setInterest] = useState("3");
   const [baseGameId, setBaseGameId] = useState(initialBaseGameId);
   const [candidates, setCandidates] = useState<IgdbSearchCandidate[]>([]);
   const [selectedIgdbId, setSelectedIgdbId] = useState<number | null>(null);
@@ -58,7 +58,7 @@ export function AddWishlistDialog({
   const reset = () => {
     setType(initialType);
     setName("");
-    setInterest("5");
+    setInterest("3");
     setBaseGameId(initialBaseGameId);
     setCandidates([]);
     setSelectedIgdbId(null);

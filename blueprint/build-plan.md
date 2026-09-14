@@ -606,7 +606,7 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   and the plan keeps it that way; and the base-game DLC section becomes
   cover cards linking to DLC pages with IGDB match status
 
-- [ ] 25. **Interest defaults across ingestion paths** - Steam library import
+- [x] 25. **Interest defaults across ingestion paths** - Steam library import
   sets interest 2/5 matching wishlist import; manual creation defaults to
   3/5 in catalog and wishlist forms, including the wishlist edit dialog's
   null default; wishlist acquisition carries the wish's interest into the

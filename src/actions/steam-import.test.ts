@@ -107,7 +107,7 @@ describe("importSteamGames", () => {
         type: "BASE_GAME",
         origin: "STEAM_IMPORT",
         name: "Portal",
-        libraryEntry: { create: {} },
+        libraryEntry: { create: { interest: 2 } },
         externalIds: {
           create: {
             namespaceId: "10",

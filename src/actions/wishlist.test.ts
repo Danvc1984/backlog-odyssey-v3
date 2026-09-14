@@ -82,6 +82,18 @@ describe("createWishlistEntry", () => {
     expect(mockFindUnique).not.toHaveBeenCalled();
   });
 
+  it("defaults a manually created wish to three interest stars", async () => {
+    const result = await createWishlistEntry({
+      name: "Hades II",
+      type: "BASE_GAME",
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ interest: 3 }),
+    }));
+  });
+
   it("creates a DLC wish only for an existing base game", async () => {
     mockFindUnique.mockResolvedValue({ id: "game-1", type: "BASE_GAME" });
 

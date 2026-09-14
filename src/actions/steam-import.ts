@@ -67,7 +67,7 @@ async function importGame(
       type: "BASE_GAME",
       origin: "STEAM_IMPORT",
       name: game.name,
-      libraryEntry: { create: {} },
+      libraryEntry: { create: { interest: 2 } },
       externalIds: {
         create: {
           namespaceId: externalId,

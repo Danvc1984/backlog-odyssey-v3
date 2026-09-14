@@ -130,7 +130,7 @@ export async function createWishlistEntry(input: unknown) {
           name,
           type,
           baseGameId: baseGameId ?? null,
-          interest: interest ?? null,
+          interest: interest ?? 3,
           notes: notes ?? null,
           steamAppId: identity?.appId ?? null,
           steamAppIdProvenance: identity?.provenance ?? null,
@@ -324,7 +324,7 @@ export async function acquireWishlistBaseGame(input: unknown) {
               steamAppId: wishlist.steamAppId,
             },
           },
-          libraryEntry: { create: { playState: "NOT_STARTED" } },
+          libraryEntry: { create: { playState: "NOT_STARTED", interest: wishlist.interest ?? 3 } },
         },
         select: { id: true, name: true, type: true },
       });

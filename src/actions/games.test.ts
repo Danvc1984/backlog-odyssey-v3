@@ -53,7 +53,7 @@ describe("createGame", () => {
           availability: {
             create: { source: "STEAM", displayName: null, alternativeSourceId: null },
           },
-          libraryEntry: { create: {} },
+          libraryEntry: { create: { interest: 3 } },
         }),
       }),
     );
