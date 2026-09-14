@@ -51,6 +51,17 @@ describe("wishlist IGDB actions", () => {
     await expect(fillWishlistIgdbMetadata({ wishlistEntryId: "wish-1" })).resolves.toMatchObject({ error: "No IGDB match was found for this title. Use Edit to search and choose a match." });
   });
 
+  it("returns the candidate-search message for an ambiguous refresh", async () => {
+    findUnique.mockResolvedValue({ id: "wish-1", name: "Portal 2", type: "BASE_GAME", steamAppId: null, steamAppIdProvenance: null, metadataSnapshot: null });
+    vi.mocked(enrichWishlistBaseGameFromIgdb).mockResolvedValue({ success: false, data: null, error: "IGDB match outcome: AMBIGUOUS" });
+
+    await expect(refreshWishlistIgdbMetadata({ wishlistEntryId: "wish-1" })).resolves.toEqual({
+      success: false,
+      data: null,
+      error: "Several IGDB games share this title.",
+    });
+  });
+
   it("requires overwrite confirmation for refresh and manual replacement", async () => {
     const fetchedAt = new Date("2026-09-10T19:00:00.000Z");
     findUnique.mockResolvedValue({ id: "wish-1", name: "Portal 2", type: "BASE_GAME", steamAppId: null, steamAppIdProvenance: null, metadataSnapshot: { fetchedAt } });

@@ -419,6 +419,8 @@ export default async function GameDetailPage({
         />
       )}
 
+      {game.type === "BASE_GAME" && (
+      <>
       <SectionCard
         eyebrow="Where it lives"
         title="Availability"
@@ -487,6 +489,8 @@ export default async function GameDetailPage({
           availableCollections={manualCollections}
         />
       </SectionCard>
+      </>
+      )}
 
       {game.type === "BASE_GAME" && (
         <DlcSection

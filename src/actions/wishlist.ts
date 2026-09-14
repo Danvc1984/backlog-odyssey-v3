@@ -6,6 +6,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
+import { autoEnrichWishlistEntries } from "@/lib/wishlist-igdb-queue";
 import { queueIgdbForDlcGames } from "@/lib/igdb-import-queue";
 import { resolveManualSteamAppId } from "@/actions/wishlist-identity";
 import { getOrCreateUnspecifiedSource } from "@/lib/sources/store";
@@ -140,6 +141,13 @@ export async function createWishlistEntry(input: unknown) {
 
     if (type === "BASE_GAME" && identity) {
       await silentlyRefreshWishlistCompatibility(entry.id);
+    }
+    if (type === "DLC" && identity) {
+      try {
+        await autoEnrichWishlistEntries([entry.id]);
+      } catch {
+        // Metadata enrichment is best effort after the wishlist entry is saved.
+      }
     }
 
     return { success: true as const, data: entry, error: null };

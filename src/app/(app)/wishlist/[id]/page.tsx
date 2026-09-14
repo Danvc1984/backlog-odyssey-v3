@@ -227,7 +227,11 @@ export default async function WishlistDetailPage({
       )}
 
       {(entry.type === "BASE_GAME" || entry.type === "DLC") && (
-        <WishlistIgdbEnrichmentControl wishlistEntryId={entry.id} hasSnapshot={ownSnapshot !== null} />
+        <WishlistIgdbEnrichmentControl
+          wishlistEntryId={entry.id}
+          entryName={entry.name}
+          hasSnapshot={ownSnapshot !== null}
+        />
       )}
 
       <SectionCard

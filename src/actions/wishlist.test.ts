@@ -6,10 +6,14 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/wishlist-compatibility-runner", () => ({
   silentlyRefreshWishlistCompatibility: vi.fn(),
 }));
+vi.mock("@/lib/wishlist-igdb-queue", () => ({
+  autoEnrichWishlistEntries: vi.fn(),
+}));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
+import { autoEnrichWishlistEntries } from "@/lib/wishlist-igdb-queue";
 import {
   createWishlistEntry,
   deleteWishlistEntry,
@@ -252,8 +256,10 @@ describe("compatibility auto-trigger on identity writes", () => {
     expect(silentlyRefreshWishlistCompatibility).not.toHaveBeenCalled();
   });
 
-  it("never triggers for a DLC creation even when it carries an identity", async () => {
+  it("enriches a manually created DLC with a Steam identity", async () => {
     mockFindUnique.mockResolvedValue({ id: "game-1", type: "BASE_GAME" });
+    mockCreate.mockResolvedValue({ id: "wish-dlc", name: "The Frozen Wilds", type: "DLC" });
+    vi.mocked(autoEnrichWishlistEntries).mockResolvedValue({ enriched: 1, skipped: 0 });
 
     const result = await createWishlistEntry({
       name: "The Frozen Wilds",
@@ -263,7 +269,36 @@ describe("compatibility auto-trigger on identity writes", () => {
     });
 
     expect(result.success).toBe(true);
+    expect(autoEnrichWishlistEntries).toHaveBeenCalledWith(["wish-dlc"]);
     expect(silentlyRefreshWishlistCompatibility).not.toHaveBeenCalled();
+  });
+
+  it("does not enrich a manually created DLC without a Steam identity", async () => {
+    mockFindUnique.mockResolvedValue({ id: "game-1", type: "BASE_GAME" });
+
+    const result = await createWishlistEntry({
+      name: "The Frozen Wilds",
+      type: "DLC",
+      baseGameId: "game-1",
+    });
+
+    expect(result.success).toBe(true);
+    expect(autoEnrichWishlistEntries).not.toHaveBeenCalled();
+  });
+
+  it("keeps a manually created DLC when enrichment fails", async () => {
+    mockFindUnique.mockResolvedValue({ id: "game-1", type: "BASE_GAME" });
+    mockCreate.mockResolvedValue({ id: "wish-dlc", name: "The Frozen Wilds", type: "DLC" });
+    vi.mocked(autoEnrichWishlistEntries).mockRejectedValue(new Error("IGDB unavailable"));
+
+    const result = await createWishlistEntry({
+      name: "The Frozen Wilds",
+      type: "DLC",
+      baseGameId: "game-1",
+      steamAppId: "123",
+    });
+
+    expect(result).toMatchObject({ success: true, data: { id: "wish-dlc" } });
   });
 
   it("triggers one silent refresh when updating a base-game wish's identity", async () => {

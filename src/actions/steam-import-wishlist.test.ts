@@ -211,6 +211,12 @@ describe("importSteamWishlist", () => {
     expect(createWishlist).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ type: "DLC", baseGameId: "game-1", steamAppId: "200" }),
     }));
+
+    await expect(enrichImportedWishlist(result.success ? result.data.enrichmentEntryIds : [])).resolves.toMatchObject({
+      success: true,
+      data: { enriched: 0, skipped: 0 },
+    });
+    expect(autoEnrichWishlistEntries).toHaveBeenCalledWith(["wish-1"]);
   });
 
   it("skips a DLC when its base game is created in the same wishlist import", async () => {

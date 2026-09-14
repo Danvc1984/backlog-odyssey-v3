@@ -111,7 +111,11 @@ async function replaceWishlistMetadata(input: unknown, selectedIgdbId: number | 
 export async function refreshWishlistIgdbMetadata(input: unknown) {
   try {
     await requireUser();
-    return await replaceWishlistMetadata(input, null);
+    const result = await replaceWishlistMetadata(input, null);
+    if (!result.success && result.error === "IGDB match outcome: AMBIGUOUS") {
+      return { ...result, error: "Several IGDB games share this title." };
+    }
+    return result;
   } catch (error) {
     return { success: false as const, data: null, error: friendlyActionError(error, "Failed to refresh IGDB metadata for this wish") };
   }
