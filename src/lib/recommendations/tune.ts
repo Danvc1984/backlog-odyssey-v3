@@ -1,8 +1,10 @@
 import { durationBand, eraBucket } from "@/lib/recommendations/profile";
 import type {
+  ExplanationCaveat,
   ExplanationFactor,
   SourceTune,
   TuneContext,
+  TunePlayStyle,
 } from "@/lib/recommendations/types";
 import {
   SOURCE_TUNE_MATCH_POINTS,
@@ -19,11 +21,32 @@ export interface TuneCandidateInput {
   esrbRating?: { name: string } | null;
   seriesGames?: Array<{ name: string; releaseDate?: string | null }>;
   durationHours?: number | null;
+  gameModes?: string[];
+  multiplayerModes?: string[];
+  handheldSuitable?: boolean | null;
 }
 
 export interface TuneMatch {
   points: number;
   criteria: string[];
+}
+
+export type PlayStyleMatch = "MATCH" | "CONFLICT" | "UNKNOWN";
+
+export function matchPlayStyle(
+  style: TunePlayStyle | null | undefined,
+  candidate: TuneCandidateInput,
+): PlayStyleMatch {
+  if (!style) return "MATCH";
+  const gameModes = new Set(candidate.gameModes ?? []);
+  const multiplayerModes = new Set(candidate.multiplayerModes ?? []);
+  const hasSolo = gameModes.has("Single-player");
+  const hasOnline = multiplayerModes.has("Online co-op") || multiplayerModes.has("Split-screen online");
+  const hasCouch = ["Campaign co-op", "Offline co-op", "Split-screen"].some((mode) => multiplayerModes.has(mode));
+  const hasKnownMode = hasSolo || hasOnline || hasCouch;
+  if (style === "SOLO") return hasSolo ? "MATCH" : hasOnline || hasCouch ? "CONFLICT" : hasKnownMode ? "UNKNOWN" : "UNKNOWN";
+  if (style === "ONLINE") return hasOnline ? "MATCH" : hasSolo || hasCouch ? "CONFLICT" : "UNKNOWN";
+  return hasCouch ? "MATCH" : hasSolo || hasOnline ? "CONFLICT" : "UNKNOWN";
 }
 
 export interface CandidateSource {
@@ -123,13 +146,50 @@ export function matchTuneCriteria(tune: TuneContext, candidate: TuneCandidateInp
   if (tune.tags.some((tag) => candidate.tags?.includes(tag))) criteria.push("tag");
   if (tune.sequelPosture && matchesSequelPosture(tune.sequelPosture, candidate)) criteria.push("sequelPosture");
   if (tune.era && tune.era === eraBucket(candidate.releaseDate ?? null)) criteria.push("era");
-  if (tune.length && tune.length === durationBand(candidate.durationHours ?? null)) criteria.push("length");
+  const legacyLength = tune.length && tune.length === durationBand(candidate.durationHours ?? null);
+  const time = tune.time === "UNDER_6" ? candidate.durationHours !== null && (candidate.durationHours ?? 0) < 6
+    : tune.time === "6_20" ? candidate.durationHours !== null && (candidate.durationHours ?? 0) >= 6 && (candidate.durationHours ?? 0) <= 20
+      : tune.time === "20_50" ? candidate.durationHours !== null && (candidate.durationHours ?? 0) > 20 && (candidate.durationHours ?? 0) <= 50
+        : tune.time === "OVER_50" ? candidate.durationHours !== null && (candidate.durationHours ?? 0) > 50
+          : false;
+  if (tune.time && time) criteria.push("time");
+  else if (legacyLength) criteria.push("length");
+  if (tune.playStyle && matchPlayStyle(tune.playStyle, candidate) === "MATCH") criteria.push("playStyle");
   if (matchesMaturity(tune.maturity, candidate.esrbRating?.name ?? null)) criteria.push("maturity");
 
   return {
     points: Math.min(criteria.length * TUNE_MATCH_POINTS, TUNE_TOTAL_CAP),
     criteria,
   };
+}
+
+export function filterPlayTune<T extends { id: string; caveats?: ExplanationCaveat[] }>(
+  pool: readonly T[],
+  tune: TuneContext | null,
+  inputs: ReadonlyMap<string, TuneCandidateInput>,
+): T[] {
+  if (!tune) return [...pool];
+  return pool.flatMap((item) => {
+    const input = inputs.get(item.id) ?? {};
+    if (tune.handheld && (input.handheldSuitable !== true)) return [];
+    const styleMatch = matchPlayStyle(tune.playStyle, input);
+    if (styleMatch === "CONFLICT") return [];
+    const caveats = styleMatch === "UNKNOWN"
+      ? [...(item.caveats ?? []), { factor: "tune_unknown" as const, label: "Play style metadata is unavailable" }]
+      : item.caveats;
+    return [{ ...item, ...(caveats ? { caveats } : {}) }];
+  });
+}
+
+export function applyFamiliarity<T extends { tastePoints: number; caveats: ExplanationCaveat[] }>(
+  pool: readonly T[],
+  familiarity: TuneContext["familiarity"],
+): T[] {
+  if (familiarity === "DIFFERENT") return pool.filter((item) => item.tastePoints <= 0);
+  if (familiarity !== "FAMILIAR") return [...pool];
+  return pool.map((item) => item.tastePoints === 0
+    ? { ...item, caveats: [...item.caveats, { factor: "tune_unknown", label: "No familiarity signal yet, using normal ranking" }] }
+    : item);
 }
 
 export function countTuneMatches(tune: TuneContext, candidates: TuneCandidateInput[], displayCount: number): {

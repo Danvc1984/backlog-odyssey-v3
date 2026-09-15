@@ -215,7 +215,7 @@ const recommendationItemSchema = z.object({
   positive: z.unknown().nullable(),
   negative: z.unknown().nullable(),
   caveats: z.unknown().nullable(),
-  role: z.enum(["BEST_FIT_1", "BEST_FIT_2", "OUT_OF_THE_BOX", "CHANGE_OF_PACE", "DEAL"]).nullable(),
+  role: z.enum(["BEST_FIT_1", "BEST_FIT_2", "HANDHELD_PICK", "OUT_OF_THE_BOX", "CHANGE_OF_PACE", "DEAL"]).nullable(),
   createdAt: isoDateTime,
 });
 

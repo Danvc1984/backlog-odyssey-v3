@@ -78,8 +78,6 @@ import {
   updateRecommendations,
   rotateRecommendationRole,
   startPlayingFromRecommendation,
-  saveTuneState,
-  clearTuneState,
   saveRecommendationPreset,
   listRecommendationPresets,
   deleteRecommendationPreset,
@@ -245,8 +243,11 @@ describe("recommendation preferences", () => {
 
 describe("recommendation tune and preset actions", () => {
   const tune = {
+    time: null,
+    playStyle: null,
+    familiarity: "BALANCED" as const,
+    handheld: false,
     experience: "COUCH_GAMING" as const,
-    length: null,
     genres: ["Puzzle"],
     tags: ["Co-op"],
     sequelPosture: null,
@@ -254,17 +255,11 @@ describe("recommendation tune and preset actions", () => {
     maturity: null,
   };
 
-  it("saves and clears tune state per engine", async () => {
-    await saveTuneState({ engine: "PLAY_NEXT", tune });
-    expect(tuneStateUpsert).toHaveBeenCalledWith(expect.objectContaining({
-      where: { id: 1 },
-      update: { playTune: tune },
-    }));
-    await clearTuneState({ engine: "BUY" });
-    expect(tuneStateUpsert).toHaveBeenLastCalledWith(expect.objectContaining({
-      where: { id: 1 },
-      update: { buyTune: null },
-    }));
+  it("accepts tab-supplied tunes for a recommendation update", async () => {
+    const result = await updateRecommendations({ playTune: tune, buyTune: null });
+    expect(result.success).toBe(true);
+    expect(tuneStateFindUnique).not.toHaveBeenCalled();
+    expect(tuneStateUpsert).not.toHaveBeenCalled();
   });
 
   it("upserts, lists, and deletes presets and rejects invalid inputs", async () => {
@@ -275,14 +270,14 @@ describe("recommendation tune and preset actions", () => {
     }));
     expect(await listRecommendationPresets()).toMatchObject({ success: true, data: [] });
     expect(await deleteRecommendationPreset({ id: "preset-1" })).toMatchObject({ success: true });
-    expect((await saveTuneState({ engine: "PLAY_NEXT", tune: { ...tune, unknown: true } })).success).toBe(false);
+    expect((await updateRecommendations({ playTune: { ...tune, unknown: true }, buyTune: null })).success).toBe(false);
     expect((await saveRecommendationPreset({ name: "", tune })).success).toBe(false);
   });
 
   it("loads a valid preset into the selected engine", async () => {
     presetFindUnique.mockResolvedValue({ id: "preset-1", tune });
-    await expect(loadRecommendationPreset({ id: "preset-1", engine: "BUY" })).resolves.toMatchObject({ success: true });
-    expect(tuneStateUpsert).toHaveBeenCalledWith(expect.objectContaining({ update: { buyTune: tune } }));
+    await expect(loadRecommendationPreset({ id: "preset-1" })).resolves.toMatchObject({ success: true, data: { tune } });
+    expect(tuneStateUpsert).not.toHaveBeenCalled();
   });
 
   it("returns distinct sorted IGDB genre and tag values from catalog and wishlist", async () => {
@@ -570,8 +565,11 @@ function buyRow(overrides: Partial<BuyRowShape> = {}): BuyRowShape {
 
 function emptyTuneForAction() {
   return {
+    time: null,
+    playStyle: null,
+    familiarity: "BALANCED" as const,
+    handheld: false,
     experience: null,
-    length: null,
     genres: [],
     tags: [],
     sequelPosture: null,
@@ -660,16 +658,15 @@ describe("updateRecommendations", () => {
   });
 
   it("applies tune points before cold-start selection and records the tune context", async () => {
-    tuneStateFindUnique.mockResolvedValue({
-      playTune: { experience: null, length: null, genres: ["RPG"], tags: [], sequelPosture: null, era: null, maturity: null },
-      buyTune: null,
-    });
     gameFindMany.mockResolvedValue([
       { ...baseRow(), id: "game-aaa", name: "Aaa", metadataSnapshots: [{ payload: igdbPayload({ name: "Aaa", genres: ["Puzzle"] }) }] },
       { ...baseRow(), id: "game-zzz", name: "Zzz", metadataSnapshots: [{ payload: igdbPayload({ name: "Zzz", genres: ["RPG"] }) }] },
     ]);
 
-    const result = await updateRecommendations();
+    const result = await updateRecommendations({
+      playTune: { ...emptyTuneForAction(), genres: ["RPG"] },
+      buyTune: null,
+    });
 
     expect(result.success).toBe(true);
     const playCall = runCreate.mock.calls.find(
@@ -694,7 +691,7 @@ describe("updateRecommendations", () => {
       label: "Only 1 candidates match your tune",
     });
     expect((playCall[0] as { data: { context: { tune: unknown } } }).data.context.tune).toEqual({
-      play: { experience: null, length: null, genres: ["RPG"], tags: [], sequelPosture: null, era: null, maturity: null },
+      play: { ...emptyTuneForAction(), genres: ["RPG"] },
       buy: null,
       thinPool: true,
     });
@@ -707,14 +704,13 @@ describe("updateRecommendations", () => {
       allAlternatives: false,
       alternativeSourceIds: [],
     };
-    tuneStateFindUnique.mockResolvedValue({
-      playTune: { ...emptyTuneForAction(), sourceTune },
-      buyTune: { ...emptyTuneForAction(), sourceTune },
-    });
     gameFindMany.mockResolvedValue([baseRow()]);
     wishlistFindMany.mockResolvedValue([buyRow()]);
 
-    const result = await updateRecommendations();
+    const result = await updateRecommendations({
+      playTune: { ...emptyTuneForAction(), sourceTune },
+      buyTune: { ...emptyTuneForAction(), sourceTune },
+    });
 
     expect(result.success).toBe(true);
     const playCall = runCreate.mock.calls.find((call) => (call[0] as { data: { kind: string } }).data.kind === "PLAY_NEXT")!;

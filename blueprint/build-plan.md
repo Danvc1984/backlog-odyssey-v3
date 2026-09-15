@@ -625,7 +625,7 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   Has-DLC library filter), and calculated series/franchise shelves derived
   from the IGDB collection and franchise snapshot evidence
 
-- [ ] 28. **Recommendation behavior renewal** - after the re-keyed engine lands,
+- [x] 28. **Recommendation behavior renewal** - after the re-keyed engine lands,
   replace the second Best Fit with a dedicated Handheld pick whenever the setup
   includes a handheld. It selects the highest-ranked play-eligible,
   handheld-suitable game under the existing environment-fit rules; when none

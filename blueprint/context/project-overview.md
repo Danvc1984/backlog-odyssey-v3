@@ -1,6 +1,6 @@
 # Backlog Odyssey - Project Overview
 
-<!-- blueprint:source-hash bbc636cc6f2c28f6ebbfd500c4d144149d7bc48007e467e6e780f3e55b0bfd7d -->
+<!-- blueprint:source-hash 781bc6142cb2916a14bc09087ce66b3900b88e5ea970f06da67475f9e415536b -->
 
 > A private, single-user gaming library and decision assistant for choosing what to play and buy in Mexico across a configured PC and handheld setup.
 

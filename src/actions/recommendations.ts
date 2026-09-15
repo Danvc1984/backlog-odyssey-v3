@@ -72,18 +72,16 @@ const recommendationPreferenceSchema = z.object({
 
 const recommendationPreferenceIdSchema = z.object({ id: z.string().trim().min(1) }).strict();
 
-const tuneEngineSchema = z.enum(["PLAY_NEXT", "BUY"]);
-const tuneStateInputSchema = z.object({
-  engine: tuneEngineSchema,
-  tune: tuneContextSchema,
+const recommendationUpdateSchema = z.object({
+  playTune: tuneContextSchema.nullable().default(null),
+  buyTune: tuneContextSchema.nullable().default(null),
 }).strict();
-const tuneEngineInputSchema = z.object({ engine: tuneEngineSchema }).strict();
 const recommendationPresetInputSchema = z.object({
   name: z.string().trim().min(1).max(100),
   tune: tuneContextSchema,
 }).strict();
 const recommendationPresetIdSchema = z.object({ id: z.string().trim().min(1) }).strict();
-const recommendationPresetLoadSchema = z.object({ id: z.string().trim().min(1), engine: tuneEngineSchema }).strict();
+const recommendationPresetLoadSchema = z.object({ id: z.string().trim().min(1) }).strict();
 
 const tasteSetupPickSchema = z.object({
   gameId: z.string().trim().min(1),
@@ -122,10 +120,12 @@ function toRotatableCandidate(entry: BatchEntry): RotatableCandidate {
   return { id: entry, score: 0, positive: [], negative: [], caveats: [] };
 }
 
-export async function updateRecommendations() {
+export async function updateRecommendations(input: unknown = {}) {
   try {
     await requireUser();
-    const result = await prisma.$transaction((tx) => runRecommendationPipeline(tx));
+    const parsed = recommendationUpdateSchema.safeParse(input);
+    if (!parsed.success) return { success: false as const, data: null, error: "Invalid input" };
+    const result = await prisma.$transaction((tx) => runRecommendationPipeline(tx, parsed.data));
     return { success: true as const, data: result, error: null };
   } catch (err) {
     return {
@@ -466,45 +466,6 @@ export async function setRecommendationPreference(input: unknown) {
   }
 }
 
-function tuneStateField(engine: "PLAY_NEXT" | "BUY"): "playTune" | "buyTune" {
-  return engine === "PLAY_NEXT" ? "playTune" : "buyTune";
-}
-
-export async function saveTuneState(input: unknown) {
-  try {
-    await requireUser();
-    const parsed = tuneStateInputSchema.safeParse(input);
-    if (!parsed.success) return { success: false as const, data: null, error: "Invalid input" };
-    const field = tuneStateField(parsed.data.engine);
-    const tune = parsed.data.tune as unknown as Prisma.InputJsonValue;
-    const state = await prisma.recommendationTuneState.upsert({
-      where: { id: 1 },
-      create: { id: 1, [field]: tune },
-      update: { [field]: tune },
-    });
-    return { success: true as const, data: state, error: null };
-  } catch (err) {
-    return { success: false as const, data: null, error: friendlyActionError(err, "Failed to save tune") };
-  }
-}
-
-export async function clearTuneState(input: unknown) {
-  try {
-    await requireUser();
-    const parsed = tuneEngineInputSchema.safeParse(input);
-    if (!parsed.success) return { success: false as const, data: null, error: "Invalid input" };
-    const field = tuneStateField(parsed.data.engine);
-    const state = await prisma.recommendationTuneState.upsert({
-      where: { id: 1 },
-      create: { id: 1, [field]: null },
-      update: { [field]: null },
-    });
-    return { success: true as const, data: state, error: null };
-  } catch (err) {
-    return { success: false as const, data: null, error: friendlyActionError(err, "Failed to clear tune") };
-  }
-}
-
 export async function saveRecommendationPreset(input: unknown) {
   try {
     await requireUser();
@@ -552,13 +513,7 @@ export async function loadRecommendationPreset(input: unknown) {
     if (!preset) return { success: false as const, data: null, error: "Preset not found" };
     const tune = tuneContextSchema.safeParse(preset.tune);
     if (!tune.success) return { success: false as const, data: null, error: "Preset contains an invalid tune" };
-    const field = tuneStateField(parsed.data.engine);
-    const state = await prisma.recommendationTuneState.upsert({
-      where: { id: 1 },
-      create: { id: 1, [field]: tune.data as unknown as Prisma.InputJsonValue },
-      update: { [field]: tune.data as unknown as Prisma.InputJsonValue },
-    });
-    return { success: true as const, data: state, error: null };
+    return { success: true as const, data: { tune: tune.data }, error: null };
   } catch (err) {
     return { success: false as const, data: null, error: friendlyActionError(err, "Failed to load preset") };
   }

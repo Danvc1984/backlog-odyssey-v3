@@ -3,6 +3,7 @@ import type { RecommendationKind, RecommendationRole } from "@/generated/prisma/
 const ROLE_LABELS: Record<RecommendationRole, string> = {
   BEST_FIT_1: "Best fit",
   BEST_FIT_2: "Best fit",
+  HANDHELD_PICK: "Handheld pick",
   OUT_OF_THE_BOX: "Out of the box",
   CHANGE_OF_PACE: "Change of pace",
   DEAL: "Deal",

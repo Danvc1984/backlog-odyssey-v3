@@ -3,7 +3,7 @@ import "server-only";
 import { RecommendationRole, type CompatibilityStatus, type Environment, type GameExperience, type PlayState, type Prisma } from "@/generated/prisma/client";
 import { pruneRecommendationEvents } from "@/lib/recommendations/events";
 import { rebuildRecommendationProfile } from "@/lib/recommendations/profile";
-import { RUN_RETENTION_DAYS, tuneContextSchema, type TuneContext } from "@/lib/recommendations/types";
+import { RUN_RETENTION_DAYS, type TuneContext } from "@/lib/recommendations/types";
 import { parseRecommendationMetadata } from "@/lib/recommendations/metadata";
 import { resolveCandidateDimensionValues } from "@/lib/recommendations/profile";
 import { resolveDurationEstimate, type DurationProfile } from "@/lib/playtime-evidence";
@@ -12,7 +12,7 @@ import { rerankBuyCandidates, type RerankBuyInput } from "@/lib/recommendations/
 import { assignPlayRoles } from "@/lib/recommendations/roles";
 import { assignBuyRoles } from "@/lib/recommendations/roles";
 import { getBuyDealInputs, type BuyCandidate, type RankedBuyItem } from "@/lib/recommendations/buy";
-import { countTuneMatches, type TuneCandidateInput } from "@/lib/recommendations/tune";
+import { applyFamiliarity, countTuneMatches, filterPlayTune, type TuneCandidateInput } from "@/lib/recommendations/tune";
 import type { CandidateSource } from "@/lib/recommendations/tune";
 import type { CompatEvidenceInput, ExplanationCaveat, ExplanationFactor, PlayNextCandidate } from "@/lib/recommendations/types";
 import { buildCompatContext } from "@/lib/recommendations/compat-context";
@@ -81,6 +81,7 @@ export function buildPlayPipeline(
   secondChanceIds: string[],
   rescueCaveats: ReadonlyMap<string, ExplanationCaveat>,
   durationProfile: DurationProfile,
+  playTune: TuneContext | null,
 ) {
   const rerankInputs: RerankPlayInput[] = pool.map((item) => {
     const row = rows.get(item.id);
@@ -122,19 +123,22 @@ export function buildPlayPipeline(
     };
   });
   const playRerank = rerankPlayCandidates(rerankInputs, profile, preferences, now);
+  const familiarityPool = applyFamiliarity(playRerank.pool, playTune?.familiarity);
   const playRoles = assignPlayRoles(
-    playRerank.pool.map((item) => ({
+    familiarityPool.map((item) => ({
       id: item.id,
       tastePoints: item.tastePoints,
       envStatus: item.envStatus,
       genres: item.genres,
+      handheldSuitable: rows.get(item.id)?.libraryEntry?.handheldSuitable === true,
     })),
     playRerank.context.mode,
     secondChanceIds,
     setup.primaryOs === "LINUX" && !setup.hasWindowsFallback,
+    setup.handheldOs !== "NONE",
   );
   const playPoolById = new Map<string, (typeof playRerank.pool)[number]>();
-  for (const item of playRerank.pool) {
+  for (const item of familiarityPool) {
     if (!playPoolById.has(item.id)) playPoolById.set(item.id, item);
   }
   const playItems = playRoles.assigned.flatMap((assignment) => {
@@ -278,7 +282,7 @@ export function buildRecommendationContexts({
   buyStaleExcluded: number;
   playRerankContext: object;
   buyRerankContext: object;
-  playRoles: { batches: Record<RecommendationRole, string[]> };
+  playRoles: { batches: Record<RecommendationRole, string[]>; omissions?: unknown[] };
   buyRoles: { batches: Record<RecommendationRole, string[]>; saturation: unknown };
   playPoolById: ReadonlyMap<string, SnapshotSource>;
   buyPoolById: ReadonlyMap<string, SnapshotSource>;
@@ -293,7 +297,10 @@ export function buildRecommendationContexts({
     play: { exclusions: playExclusions ?? [] },
     staleExcluded: playStaleExcluded,
     rerank: playRerankContext,
-    roles: { batches: snapshotBatches(playRoles.batches, playPoolById) },
+    roles: {
+      batches: snapshotBatches(playRoles.batches, playPoolById),
+      omissions: playRoles.omissions ?? [],
+    },
   } as unknown as Prisma.InputJsonValue;
   const buyContext = {
     ...baseContext,
@@ -369,11 +376,6 @@ export async function persistRecommendationRuns(
 }
 
 
-function parseStoredTune(value: unknown): TuneContext | null {
-  const parsed = tuneContextSchema.safeParse(value);
-  return parsed.success ? parsed.data : null;
-}
-
 export async function pruneAndRebuild(
   client: Prisma.TransactionClient,
   now: Date,
@@ -386,22 +388,18 @@ export async function pruneAndRebuild(
   });
   const prunedEvents = await pruneRecommendationEvents(client, now);
   const profile = await rebuildRecommendationProfile(client, now, configuredEnvironments, durationProfile);
-  const tuneState = await client.recommendationTuneState.findUnique({
-    where: { id: 1 },
-    select: { playTune: true, buyTune: true },
-  });
-
   return {
     pruned,
     prunedEvents,
     profile,
-    playTune: parseStoredTune(tuneState?.playTune),
-    buyTune: parseStoredTune(tuneState?.buyTune),
   };
 }
 
 
-export async function runRecommendationPipeline(tx: Prisma.TransactionClient) {
+export async function runRecommendationPipeline(
+  tx: Prisma.TransactionClient,
+  tunes: { playTune: TuneContext | null; buyTune: TuneContext | null } = { playTune: null, buyTune: null },
+) {
       const now = new Date();
       const settings = tx.appSettings
         ? await tx.appSettings.findUnique({
@@ -416,12 +414,13 @@ export async function runRecommendationPipeline(tx: Prisma.TransactionClient) {
         onboardingCompleted: false,
       };
       const durationProfile = settings?.durationProfile ?? "NORMALLY";
-      const { pruned, prunedEvents, profile, playTune, buyTune } = await pruneAndRebuild(
+      const { pruned, prunedEvents, profile } = await pruneAndRebuild(
         tx,
         now,
         availableEnvironments(setup),
         durationProfile,
       );
+      const { playTune, buyTune } = tunes;
 
       const rows = await loadCandidates(tx);
       const candidates: PlayNextCandidate[] = rows.map((row) => ({
@@ -503,10 +502,15 @@ export async function runRecommendationPipeline(tx: Prisma.TransactionClient) {
           row.metadataSnapshots[0]?.payload,
           row.libraryEntry?.gameExperience ?? null,
           resolveDurationEstimate(row.playtimeEvidence, durationProfile)?.hours ?? null,
+          row.libraryEntry?.handheldSuitable ?? null,
         ),
       ]));
       const playPool = baselinePool.map((item) => ({ ...item, caveats: [] as ExplanationCaveat[] }));
-      const tunedPlayPool = applyTune(playPool, playTune, playTuneInputs, 4);
+      const tunedPlayPool = filterPlayTune(
+        applyTune(playPool, playTune, playTuneInputs, 4),
+        playTune,
+        playTuneInputs,
+      );
       const sourceNamesById = new Map(
         rows.flatMap((row) =>
           row.availability.flatMap((availability) =>
@@ -538,6 +542,7 @@ export async function runRecommendationPipeline(tx: Prisma.TransactionClient) {
         secondChanceIds,
         rescueCaveats,
         durationProfile,
+        playTune,
       );
 
       const enteredBuyInterest = new Map(buyCandidates.map((candidate) => [candidate.id, candidate.interest]));

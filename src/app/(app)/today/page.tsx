@@ -11,10 +11,6 @@ import {
   loadRecommendationPresets,
 } from "@/lib/recommendations/queries";
 import {
-  tuneContextSchema,
-  type TuneContext,
-} from "@/lib/recommendations/types";
-import {
   loadPickableTasteSetupGames,
   selectInitialTasteSetupPicks,
   shouldShowTasteSetup,
@@ -37,6 +33,12 @@ import { SectionCard } from "@/components/ui/detail-card";
 import { buildEntryOfferView } from "@/lib/offer-selection";
 import { formatPlayExclusionReasons } from "@/lib/recommendations/environment-fit";
 
+const PLAY_ROLE_GROUPS_WITH_HANDHELD = [
+  { label: "Best fit", roles: ["BEST_FIT_1"] },
+  { label: "Handheld pick", roles: ["HANDHELD_PICK"] },
+  { label: "Out of the box", roles: ["OUT_OF_THE_BOX"] },
+  { label: "Change of pace", roles: ["CHANGE_OF_PACE"] },
+] as const;
 const PLAY_ROLE_GROUPS = [
   { label: "Best fit", roles: ["BEST_FIT_1", "BEST_FIT_2"] },
   { label: "Out of the box", roles: ["OUT_OF_THE_BOX"] },
@@ -52,16 +54,10 @@ function hasRole(roles: readonly string[], role: string | null): boolean {
   return role !== null && roles.includes(role);
 }
 
-function storedTune(value: unknown): TuneContext | null {
-  const parsed = tuneContextSchema.safeParse(value);
-  return parsed.success ? parsed.data : null;
-}
-
 export default async function TodayPage() {
   const [
     latestPlayNextRun,
     latestBuyRun,
-    tuneState,
     knownValues,
     presets,
     alternativeSources,
@@ -125,10 +121,6 @@ export default async function TodayPage() {
         },
       },
     }),
-    prisma.recommendationTuneState.findUnique({
-      where: { id: 1 },
-      select: { playTune: true, buyTune: true },
-    }),
     loadKnownGenreTagValues(),
     loadRecommendationPresets(),
     prisma.alternativeSource.findMany({
@@ -176,7 +168,7 @@ export default async function TodayPage() {
     refreshSteamActivityCacheIfStale(),
     prisma.appSettings.findUnique({
       where: { id: 1 },
-      select: { primaryOs: true },
+      select: { primaryOs: true, handheldOs: true },
     }),
   ]);
   const presetOptions = presets.map((preset) => ({ id: preset.id, name: preset.name }));
@@ -212,6 +204,7 @@ export default async function TodayPage() {
         rerank?: { mode?: string };
         tune?: { thinPool?: boolean };
         play?: { exclusions?: Array<{ id: string; reason?: { label?: string } | null }> };
+        roles?: { omissions?: Array<{ role?: string; label?: string }> };
       }
     | null
     | undefined;
@@ -232,12 +225,14 @@ export default async function TodayPage() {
     })();
   const coldStart = playContext?.rerank?.mode === "COLD_START";
   const playExclusions = playContext?.play?.exclusions ?? [];
+  const playRoleOmissions = playContext?.roles?.omissions ?? [];
   const showPlayExclusions = todaySettings?.primaryOs === "LINUX";
   const excludedPlayCount = showPlayExclusions ? playExclusions.length : 0;
   const exclusionReasons = showPlayExclusions
     ? formatPlayExclusionReasons(playExclusions)
     : null;
   const hasPlayRoles = items.some((item) => item.role !== null);
+  const playRoleGroups = todaySettings?.handheldOs !== "NONE" ? PLAY_ROLE_GROUPS_WITH_HANDHELD : PLAY_ROLE_GROUPS;
   const hasBuyRoles = buyItems.some((item) => item.role !== null);
   const activityAppIds = [
     ...steamActivityView.imported,
@@ -335,7 +330,6 @@ export default async function TodayPage() {
         <div id="tune-play-next" className="scroll-mt-6">
           <TuneThisRunPanel
             engine="PLAY_NEXT"
-            initialTune={storedTune(tuneState?.playTune)}
             knownValues={knownValues}
             thinPool={playContext?.tune?.thinPool === true}
             presets={presetOptions}
@@ -352,6 +346,11 @@ export default async function TodayPage() {
             {exclusionReasons ? `: ${exclusionReasons}` : "."}
           </p>
         )}
+        {playRoleOmissions.map((omission) => (
+          <p key={omission.role ?? omission.label} className="mt-2 text-sm text-muted-foreground">
+            {omission.label}
+          </p>
+        ))}
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No eligible games are ready for this leg.
@@ -379,7 +378,7 @@ export default async function TodayPage() {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:items-start">
             {(() => {
-              const roleItems = PLAY_ROLE_GROUPS.flatMap((group) =>
+              const roleItems = playRoleGroups.flatMap((group) =>
                 group.roles
                   .map((role) =>
                     items.find((item) => item.role === role && item.gameId),
@@ -445,7 +444,6 @@ export default async function TodayPage() {
         </div>
         <TuneThisRunPanel
           engine="BUY"
-          initialTune={storedTune(tuneState?.buyTune)}
           knownValues={knownValues}
           thinPool={buyContext?.tune?.thinPool === true}
           presets={presetOptions}

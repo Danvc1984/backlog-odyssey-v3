@@ -123,6 +123,7 @@ enum RecommendationKind {
 enum RecommendationRole {
   BEST_FIT_1
   BEST_FIT_2
+  HANDHELD_PICK
   OUT_OF_THE_BOX
   CHANGE_OF_PACE
   DEAL

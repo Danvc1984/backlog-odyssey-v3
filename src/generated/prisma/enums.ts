@@ -166,6 +166,7 @@ export type RecommendationKind = (typeof RecommendationKind)[keyof typeof Recomm
 export const RecommendationRole = {
   BEST_FIT_1: 'BEST_FIT_1',
   BEST_FIT_2: 'BEST_FIT_2',
+  HANDHELD_PICK: 'HANDHELD_PICK',
   OUT_OF_THE_BOX: 'OUT_OF_THE_BOX',
   CHANGE_OF_PACE: 'CHANGE_OF_PACE',
   DEAL: 'DEAL'

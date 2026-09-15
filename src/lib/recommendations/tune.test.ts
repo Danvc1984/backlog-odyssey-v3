@@ -2,8 +2,11 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 import {
+  applyFamiliarity,
   applySourceTune,
   countTuneMatches,
+  filterPlayTune,
+  matchPlayStyle,
   matchSourceTune,
   matchTuneCriteria,
   type TuneCandidateInput,
@@ -33,6 +36,20 @@ const candidate = (overrides: Partial<TuneCandidateInput> = {}): TuneCandidateIn
   esrbRating: { name: "Everyone 10+" },
   seriesGames: [],
   ...overrides,
+});
+
+describe("matchPlayStyle", () => {
+  it("matches known solo, online, and couch signals", () => {
+    expect(matchPlayStyle("SOLO", candidate({ gameModes: ["Single-player"] }))).toBe("MATCH");
+    expect(matchPlayStyle("ONLINE", candidate({ multiplayerModes: ["Online co-op"] }))).toBe("MATCH");
+    expect(matchPlayStyle("COUCH", candidate({ multiplayerModes: ["Offline co-op"] }))).toBe("MATCH");
+  });
+
+  it("excludes known conflicting signals and preserves unknown metadata as unknown", () => {
+    expect(matchPlayStyle("SOLO", candidate({ multiplayerModes: ["Online co-op"] }))).toBe("CONFLICT");
+    expect(matchPlayStyle("ONLINE", candidate({ gameModes: ["Single-player"] }))).toBe("CONFLICT");
+    expect(matchPlayStyle("COUCH", candidate())).toBe("UNKNOWN");
+  });
 });
 
 describe("matchTuneCriteria", () => {
@@ -74,6 +91,58 @@ describe("matchTuneCriteria", () => {
     const match = matchTuneCriteria({ ...emptyTune, length: "SHORT" }, candidate({ durationHours: 4 }));
     expect(match).toEqual({ points: 5, criteria: ["length"] });
     expect(matchTuneCriteria({ ...emptyTune, length: "LONG" }, candidate({ durationHours: 4 })).criteria).toEqual([]);
+  });
+
+  it.each([
+    ["UNDER_6", 5, true],
+    ["6_20", 6, true],
+    ["6_20", 20, true],
+    ["20_50", 21, true],
+    ["20_50", 50, true],
+    ["OVER_50", 51, true],
+    ["UNDER_6", 6, false],
+  ] as const)("matches time range %s at %sh", (time, hours, matches) => {
+    expect(matchTuneCriteria({ ...emptyTune, time }, candidate({ durationHours: hours })).criteria.includes("time")).toBe(matches);
+  });
+
+  it("matches a selected play style without treating generic modes as known", () => {
+    expect(matchTuneCriteria({ ...emptyTune, playStyle: "ONLINE" }, candidate({ multiplayerModes: ["Online co-op"] })).criteria).toContain("playStyle");
+    expect(matchTuneCriteria({ ...emptyTune, playStyle: "ONLINE" }, candidate({ gameModes: ["Multiplayer"] })).criteria).not.toContain("playStyle");
+  });
+});
+
+describe("filterPlayTune", () => {
+  it("strictly filters handheld and conflicting play-style candidates", () => {
+    const tune = { ...emptyTune, handheld: true, playStyle: "SOLO" as const };
+    const inputs = new Map([
+      ["handheld", candidate({ gameModes: ["Single-player"], handheldSuitable: true })],
+      ["desktop", candidate({ gameModes: ["Single-player"], handheldSuitable: false })],
+      ["online", candidate({ multiplayerModes: ["Online co-op"], handheldSuitable: true })],
+      ["unknown", candidate({ handheldSuitable: true })],
+    ]);
+    const result = filterPlayTune(
+      [...inputs.keys()].map((id) => ({ id, caveats: [] as never[] })),
+      tune,
+      inputs,
+    );
+    expect(result.map((item) => item.id)).toEqual(["handheld", "unknown"]);
+    expect(result[1]?.caveats).toContainEqual({ factor: "tune_unknown", label: "Play style metadata is unavailable" });
+  });
+});
+
+describe("applyFamiliarity", () => {
+  const pool = [
+    { id: "familiar", tastePoints: 3, caveats: [] as never[] },
+    { id: "different", tastePoints: 0, caveats: [] as never[] },
+  ];
+
+  it("keeps normal ranking for Balanced and filters strictly for Different", () => {
+    expect(applyFamiliarity(pool, "BALANCED").map((item) => item.id)).toEqual(["familiar", "different"]);
+    expect(applyFamiliarity(pool, "DIFFERENT").map((item) => item.id)).toEqual(["different"]);
+  });
+
+  it("marks a missing familiarity signal while retaining the candidate", () => {
+    expect(applyFamiliarity(pool, "FAMILIAR")[1]?.caveats).toContainEqual({ factor: "tune_unknown", label: "No familiarity signal yet, using normal ranking" });
   });
 });
 

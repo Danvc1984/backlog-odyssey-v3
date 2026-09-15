@@ -223,7 +223,12 @@ export async function loadBuyCandidates(
   };
 }
 
-export function tuneInput(payload: unknown, experience: string | null, durationHours: number | null = null): TuneCandidateInput {
+export function tuneInput(
+  payload: unknown,
+  experience: string | null,
+  durationHours: number | null = null,
+  handheldSuitable: boolean | null = null,
+): TuneCandidateInput {
   const parsed = parseRecommendationMetadata(payload);
   return parsed
     ? {
@@ -233,9 +238,12 @@ export function tuneInput(payload: unknown, experience: string | null, durationH
         tags: parsed.tags,
         esrbRating: parsed.esrbRating,
         seriesGames: parsed.seriesGames,
+        gameModes: parsed.gameModes,
+        multiplayerModes: parsed.multiplayerModes,
         durationHours,
+        handheldSuitable,
       }
-    : { experience, durationHours };
+    : { experience, durationHours, handheldSuitable };
 }
 
 type CalibrationKind = "PLAY_NEXT" | "BUY";

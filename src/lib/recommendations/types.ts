@@ -39,7 +39,8 @@ export type ExplanationFactorKey =
   | "source_tune"
   | "second_chance"
   | "handheld_fit"
-  | "handheld_rescue";
+  | "handheld_rescue"
+  | "tune_unknown";
 
 export const RERANK_TASTE_CLAMP = 3;
 export const RERANK_TASTE_TOTAL_CAP = 12;
@@ -69,9 +70,18 @@ export interface SourceTune {
   alternativeSourceIds: string[];
 }
 
+export type TuneTime = "UNDER_6" | "6_20" | "20_50" | "OVER_50";
+export type TunePlayStyle = "SOLO" | "ONLINE" | "COUCH";
+export type TuneFamiliarity = "FAMILIAR" | "BALANCED" | "DIFFERENT";
+
 export interface TuneContext {
+  time?: TuneTime | null;
+  playStyle?: TunePlayStyle | null;
+  familiarity?: TuneFamiliarity;
+  handheld?: boolean;
   experience: GameExperience | null;
-  length: "SHORT" | "MEDIUM" | "LONG" | "VERY_LONG" | null;
+  /** @deprecated Legacy persisted field, normalized into time. */
+  length?: "SHORT" | "MEDIUM" | "LONG" | "VERY_LONG" | null;
   genres: string[];
   tags: string[];
   sequelPosture: "SEQUEL" | "STANDALONE" | null;
@@ -80,9 +90,12 @@ export interface TuneContext {
   sourceTune?: SourceTune | null;
 }
 
-export const tuneContextSchema = z.object({
+const tuneContextShape = z.object({
+  time: z.enum(["UNDER_6", "6_20", "20_50", "OVER_50"]).nullable(),
+  playStyle: z.enum(["SOLO", "ONLINE", "COUCH"]).nullable(),
+  familiarity: z.enum(["FAMILIAR", "BALANCED", "DIFFERENT"]),
+  handheld: z.boolean(),
   experience: z.enum(["PC_GAMING", "MULTIPLAYER_COOP", "COUCH_GAMING", "ON_THE_GO"]).nullable(),
-  length: z.enum(["SHORT", "MEDIUM", "LONG", "VERY_LONG"]).nullable(),
   genres: z.array(z.string().trim().min(1)).max(100),
   tags: z.array(z.string().trim().min(1)).max(100),
   sequelPosture: z.enum(["SEQUEL", "STANDALONE"]).nullable(),
@@ -95,6 +108,29 @@ export const tuneContextSchema = z.object({
     alternativeSourceIds: z.array(z.string().trim().min(1)).max(100),
   }).strict().nullable().optional(),
 }).strict();
+
+function legacyTime(length: unknown): TuneTime | null {
+  if (length === "SHORT") return "UNDER_6";
+  if (length === "MEDIUM") return "6_20";
+  if (length === "LONG") return "20_50";
+  if (length === "VERY_LONG") return "OVER_50";
+  return null;
+}
+
+export function normalizeTuneContext(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const source = value as Record<string, unknown>;
+  const { length, ...rest } = source;
+  return {
+    ...rest,
+    time: source.time ?? legacyTime(length),
+    playStyle: source.playStyle ?? null,
+    familiarity: source.familiarity ?? "BALANCED",
+    handheld: source.handheld ?? false,
+  };
+}
+
+export const tuneContextSchema = z.preprocess(normalizeTuneContext, tuneContextShape);
 
 export const RERANK_ENVIRONMENT_POINTS: Record<string, number> = {
   READY: 2,

@@ -6,6 +6,7 @@ export interface PlayRoleCandidate {
   tastePoints: number;
   envStatus: CompatibilityStatus | null;
   genres?: string[];
+  handheldSuitable?: boolean;
 }
 
 export interface BuyRoleCandidate {
@@ -29,9 +30,15 @@ export interface AssignedRole {
   caveats: ExplanationCaveat[];
 }
 
+export interface RoleOmission {
+  role: RecommendationRole;
+  label: string;
+}
+
 export interface RoleAssignment {
   assigned: AssignedRole[];
   batches: Record<RecommendationRole, string[]>;
+  omissions?: RoleOmission[];
 }
 
 const ROLE_FALLBACK_LABELS = {
@@ -85,11 +92,14 @@ export function assignPlayRoles(
   mode: RerankMode,
   secondChances: readonly string[] = [],
   requireReadyForOutOfTheBox = false,
+  hasHandheld = false,
 ): RoleAssignment {
   const assigned: AssignedRole[] = [];
+  const omissions: RoleOmission[] = [];
   const batches: Record<RecommendationRole, string[]> = {
     BEST_FIT_1: [],
     BEST_FIT_2: [],
+    HANDHELD_PICK: [],
     OUT_OF_THE_BOX: [],
     CHANGE_OF_PACE: [],
     DEAL: [],
@@ -115,8 +125,19 @@ export function assignPlayRoles(
   if (mode === "COLD_START") {
     const displayPool = selectColdStartOrder(hasPrimary ? primaryPool : secondChancePool);
     assignPlayRole(displayPool[0], "BEST_FIT_1");
-    assignPlayRole(displayPool[1], "BEST_FIT_2");
-    const remaining = displayPool.slice(2);
+    const handheldCandidate = hasHandheld
+      ? (hasPrimary ? primaryPool : secondChancePool).find(
+          (candidate) => candidate.id !== displayPool[0]?.id && candidate.handheldSuitable === true,
+        )
+      : undefined;
+    if (hasHandheld) {
+      assignPlayRole(handheldCandidate, "HANDHELD_PICK");
+      if (!handheldCandidate) omissions.push({ role: "HANDHELD_PICK", label: "No eligible handheld-suitable game qualifies" });
+    } else {
+      assignPlayRole(displayPool[1], "BEST_FIT_2");
+    }
+    const displayIds = new Set(assigned.map((item) => item.id));
+    const remaining = displayPool.filter((candidate) => !displayIds.has(candidate.id));
     const ready = remaining.find((candidate) => candidate.envStatus === "READY");
     const outOfTheBox = ready ?? (requireReadyForOutOfTheBox ? undefined : remaining[0]);
     assignPlayRole(
@@ -130,10 +151,15 @@ export function assignPlayRoles(
       "CHANGE_OF_PACE",
       [fallbackCaveat(ROLE_FALLBACK_LABELS.noTaste)],
     );
-    const displayIds = new Set(displayPool.map((candidate) => candidate.id));
+    for (const candidate of displayPool) displayIds.add(candidate.id);
     if (!outOfTheBox && hasPrimary && secondChancePool[0]) displayIds.add(secondChancePool[0].id);
     batches.BEST_FIT_1 = primaryPool.filter((candidate) => !displayIds.has(candidate.id)).map((candidate) => candidate.id);
     batches.BEST_FIT_2 = batches.BEST_FIT_1.slice();
+    batches.HANDHELD_PICK = hasHandheld
+      ? primaryPool
+          .filter((candidate) => candidate.handheldSuitable === true && !displayIds.has(candidate.id))
+          .map((candidate) => candidate.id)
+      : [];
     batches.OUT_OF_THE_BOX = primaryPool
       .filter((candidate) => candidate.envStatus === "READY" && !displayIds.has(candidate.id))
       .map((candidate) => candidate.id)
@@ -143,14 +169,22 @@ export function assignPlayRoles(
       .slice()
       .sort((left, right) => left.tastePoints - right.tastePoints)
       .map((candidate) => candidate.id);
-    return { assigned, batches };
+    return omissions.length > 0 ? { assigned, batches, omissions } : { assigned, batches };
   }
 
   const displayIds = new Set<string>();
   const workingPool = hasPrimary ? primaryPool : secondChancePool;
   assignPlayRole(workingPool[0], "BEST_FIT_1");
-  assignPlayRole(workingPool[1], "BEST_FIT_2");
-  for (const candidate of workingPool.slice(0, 2)) displayIds.add(candidate.id);
+  const handheldCandidate = hasHandheld
+    ? workingPool.find((candidate) => candidate.id !== workingPool[0]?.id && candidate.handheldSuitable === true)
+    : undefined;
+  if (hasHandheld) {
+    assignPlayRole(handheldCandidate, "HANDHELD_PICK");
+    if (!handheldCandidate) omissions.push({ role: "HANDHELD_PICK", label: "No eligible handheld-suitable game qualifies" });
+  } else {
+    assignPlayRole(workingPool[1], "BEST_FIT_2");
+  }
+  for (const candidate of assigned) displayIds.add(candidate.id);
 
   const remaining = workingPool.filter((candidate) => !displayIds.has(candidate.id));
   const ready = remaining.find((candidate) => candidate.envStatus === "READY");
@@ -179,6 +213,11 @@ export function assignPlayRoles(
 
   batches.BEST_FIT_1 = primaryPool.filter((candidate) => !displayIds.has(candidate.id)).map((candidate) => candidate.id);
   batches.BEST_FIT_2 = batches.BEST_FIT_1.slice();
+  batches.HANDHELD_PICK = hasHandheld
+    ? primaryPool
+        .filter((candidate) => candidate.handheldSuitable === true && !displayIds.has(candidate.id))
+        .map((candidate) => candidate.id)
+    : [];
   batches.OUT_OF_THE_BOX = primaryPool
     .filter((candidate) => candidate.envStatus === "READY" && !displayIds.has(candidate.id))
     .map((candidate) => candidate.id)
@@ -189,7 +228,7 @@ export function assignPlayRoles(
     .sort((left, right) => left.tastePoints - right.tastePoints)
     .map((candidate) => candidate.id);
 
-  return { assigned, batches };
+  return omissions.length > 0 ? { assigned, batches, omissions } : { assigned, batches };
 }
 
 export function resolveBuySaturation(
@@ -218,9 +257,11 @@ export function assignBuyRoles(
   pool: readonly BuyRoleCandidate[],
 ): RoleAssignment & { saturation: BuySaturation } {
   const assigned: AssignedRole[] = [];
+  const omissions: RoleOmission[] = [];
   const batches: Record<RecommendationRole, string[]> = {
     BEST_FIT_1: [],
     BEST_FIT_2: [],
+    HANDHELD_PICK: [],
     OUT_OF_THE_BOX: [],
     CHANGE_OF_PACE: [],
     DEAL: [],
@@ -250,6 +291,7 @@ export function assignBuyRoles(
 
   batches.BEST_FIT_1 = pool.filter((candidate) => !displayIds.has(candidate.id)).map((candidate) => candidate.id);
   batches.BEST_FIT_2 = batches.BEST_FIT_1.slice();
+  batches.HANDHELD_PICK = [];
   batches.DEAL = pool
     .slice()
     .sort(compareDeals)
