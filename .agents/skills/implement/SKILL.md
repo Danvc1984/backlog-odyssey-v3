@@ -23,7 +23,7 @@ In one preflight batch, read:
 - the current branch, status, and recent relevant log
 - the Commands section already loaded from `AGENTS.md`
 
-Stop for `/doctor` on invalid config. Stop for `/feature`, `/fix`, or `/rollback`
+Stop for `/feature`, `/fix`, or `/rollback`
 when the active spec is empty. Preserve unrelated worktree changes.
 
 Do not reread the full project overview, coding standards, interaction guide,

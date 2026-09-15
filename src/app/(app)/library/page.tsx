@@ -11,8 +11,10 @@ import { DuplicatesList } from "@/components/games/DuplicatesList";
 import { loadTodayDataHealth } from "@/lib/today-data-health";
 import { fuzzyMatch } from "@/lib/fuzzy-match";
 import {
+  getDynamicSystemCollectionGameIds,
   getSystemCollectionDefinition,
   getSystemCollections,
+  parseDynamicCollectionId,
 } from "@/lib/system-collections";
 import { availabilitySourcePresentation } from "@/lib/sources/known-sources";
 import { deriveCompatTag } from "@/lib/protondb-tags";
@@ -145,17 +147,18 @@ export default async function LibraryPage({
     collection && collection !== "ALL"
       ? manualCollections.some((c) => c.id === collection)
       : false;
-
-  const collectionWhere = systemDef
-    ? systemDef.where
-    : isManualCollection
-      ? {
-          game: {
-            collections: {
-              some: { collectionId: collection as string },
-            },
-          },
-        }
+  const dynamicCollectionGameIds =
+    collection && collection !== "ALL" && !systemDef && !isManualCollection && parseDynamicCollectionId(collection)
+      ? await getDynamicSystemCollectionGameIds(collection)
+      : null;
+  const collectionGameWhere = isManualCollection
+    ? {
+        collections: {
+          some: { collectionId: collection as string },
+        },
+      }
+    : collection && collection !== "ALL" && !systemDef
+      ? { id: { in: dynamicCollectionGameIds ?? [] } }
       : undefined;
 
   const trimmedQuery = q.trim();
@@ -188,16 +191,25 @@ export default async function LibraryPage({
         })
     : null;
 
+  const systemCollectionGameWhere = systemDef?.id === "games-with-dlc"
+    ? { dlcs: { some: {} } }
+    : undefined;
+  const systemCollectionEntryWhere = systemDef?.id === "games-with-dlc"
+    ? {}
+    : systemDef?.where;
+
   const libraryWhere = {
     game: {
       type: "BASE_GAME" as const,
       id: fuzzyIds ? { in: fuzzyIds } : undefined,
       availability: availabilityFilter,
       dlcs: hasDlcFilter ? { some: {} } : undefined,
+      ...(systemCollectionGameWhere ?? {}),
+      ...(collectionGameWhere ?? {}),
     },
     playState: stateFilter ?? undefined,
     ...(handheldFilter !== undefined && { handheldSuitable: handheldFilter }),
-    ...collectionWhere,
+    ...(systemCollectionEntryWhere ?? {}),
   };
   const orderBy = (() => {
     switch (sort) {

@@ -619,7 +619,7 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   suggest-and-confirm flow as the wishlist add dialog so games arrive
   enriched from the start
 
-- [ ] 27. **Collections: default shelves and IGDB series** - new system
+- [x] 27. **Collections: default shelves and IGDB series** - new system
   shelves for In progress, Completed, Backlog, Handheld picks, and Games
   with DLC (base games owning acquired DLCs, complementing the feature-24
   Has-DLC library filter), and calculated series/franchise shelves derived

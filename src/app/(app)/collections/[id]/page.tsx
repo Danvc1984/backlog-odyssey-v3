@@ -3,8 +3,9 @@ import { redirect } from "next/navigation";
 import { CalculatorIcon, FolderIcon } from "@phosphor-icons/react/ssr";
 import { prisma } from "@/lib/prisma";
 import {
+  getDynamicSystemCollectionGameIds,
+  getDynamicSystemCollections,
   getSystemCollectionDefinition,
-  isSystemCollectionId,
 } from "@/lib/system-collections";
 import { CollectionDetailActions } from "@/components/games/CollectionDetailActions";
 import { CollectionListControls } from "@/components/games/CollectionListControls";
@@ -122,13 +123,15 @@ export default async function CollectionDetailPage({
   searchParams: Promise<CollectionSearchParams>;
 }) {
   const [{ id }, { q = "", sort = "newest" }] = await Promise.all([params, searchParams]);
-  const [compatibilityGate, appSettings] = await Promise.all([
+  const [compatibilityGate, appSettings, dynamicCollections] = await Promise.all([
     getCompatibilityGate(),
     prisma.appSettings.findUnique({ where: { id: 1 }, select: { durationProfile: true } }),
+    getDynamicSystemCollections(),
   ]);
   const durationProfile = (appSettings?.durationProfile ?? "NORMALLY") as DurationProfile;
-  const isSystem = isSystemCollectionId(id);
-  const systemDef = isSystem ? getSystemCollectionDefinition(id) : undefined;
+  const systemDef = getSystemCollectionDefinition(id);
+  const dynamicCollection = dynamicCollections.find((collection) => collection.id === id);
+  const isCalculated = Boolean(systemDef || dynamicCollection);
   let name = "";
   let color: string | null = null;
   let rows: LibraryGameCardEntry[] = [];
@@ -138,6 +141,16 @@ export default async function CollectionDetailPage({
     color = systemDef.color;
     const entries = await prisma.libraryEntry.findMany({
       where: systemDef.where,
+      include: { game: { include: collectionGameInclude() } },
+    });
+    rows = entries.map((entry) => toLibraryEntry(entry, compatibilityGate.active, durationProfile));
+  } else if (dynamicCollection) {
+    const gameIds = await getDynamicSystemCollectionGameIds(id);
+    if (!gameIds || gameIds.length === 0) redirect("/collections");
+    name = dynamicCollection.name;
+    color = dynamicCollection.color;
+    const entries = await prisma.libraryEntry.findMany({
+      where: { gameId: { in: gameIds } },
       include: { game: { include: collectionGameInclude() } },
     });
     rows = entries.map((entry) => toLibraryEntry(entry, compatibilityGate.active, durationProfile));
@@ -172,7 +185,7 @@ export default async function CollectionDetailPage({
     sort,
   );
   const emptyMessage = rows.length === 0
-    ? isSystem ? "No games answer this collection's call." : "This collection has no games yet."
+    ? isCalculated ? "No games answer this collection's call." : "This collection has no games yet."
     : "No games match this search.";
 
   return (
@@ -189,7 +202,7 @@ export default async function CollectionDetailPage({
           <div className="mt-2 flex flex-wrap items-center gap-3">
             <span className="size-3 rounded-full" style={{ backgroundColor: color ?? "#9ca3af" }} aria-hidden />
             <h1>{name}</h1>
-            {isSystem && (
+            {isCalculated && (
               <StatusPill>
                 <CalculatorIcon className="size-3" aria-hidden />
                 Calculated
@@ -200,7 +213,7 @@ export default async function CollectionDetailPage({
             {rows.length} catalog {rows.length === 1 ? "game" : "games"} in this collection.
           </p>
         </div>
-        {!isSystem && (
+        {!isCalculated && (
           <CollectionDetailActions collectionId={id} initialName={name} initialColor={color} />
         )}
       </div>
