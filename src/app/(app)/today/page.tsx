@@ -32,7 +32,7 @@ import { loadTodayOperations } from "@/lib/today-operations";
 import { TodayOperations } from "@/components/today/TodayOperations";
 import { formatMexicoTimestamp } from "@/lib/format-times";
 import { igdbLibraryCardMetadataView } from "@/lib/card-metadata-view";
-import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
+import { parseIgdbMetadataPayload } from "@/lib/igdb-metadata-payload";
 import { SectionCard } from "@/components/ui/detail-card";
 import { buildEntryOfferView } from "@/lib/offer-selection";
 import { formatPlayExclusionReasons } from "@/lib/recommendations/environment-fit";
@@ -225,12 +225,11 @@ export default async function TodayPage() {
   const playItemCover = (item: (typeof items)[number]) =>
     igdbLibraryCardMetadataView(item.game?.metadataSnapshots[0]?.payload)?.wideImageUrl ?? null;
   const buyItemCover = (item: (typeof buyItems)[number]) =>
-    parseRawgMetadataPayload(item.wishlistEntry?.metadataSnapshot?.payload)
-      ?.backgroundImageUrls[0] ??
-    parseRawgMetadataPayload(
-      item.wishlistEntry?.baseGame?.metadataSnapshots[0]?.payload,
-    )?.backgroundImageUrls[0] ??
-    null;
+    (() => {
+      const wish = parseIgdbMetadataPayload(item.wishlistEntry?.metadataSnapshot?.payload);
+      const base = parseIgdbMetadataPayload(item.wishlistEntry?.baseGame?.metadataSnapshots[0]?.payload);
+      return wish?.artworkUrls[0] ?? wish?.coverUrl ?? base?.artworkUrls[0] ?? base?.coverUrl ?? null;
+    })();
   const coldStart = playContext?.rerank?.mode === "COLD_START";
   const playExclusions = playContext?.play?.exclusions ?? [];
   const showPlayExclusions = todaySettings?.primaryOs === "LINUX";

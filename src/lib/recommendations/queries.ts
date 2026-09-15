@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
+import { parseRecommendationMetadata } from "@/lib/recommendations/metadata";
 
 const KNOWN_VALUES_CACHE_TTL_MS = 10 * 60 * 1000;
 export type KnownGenreTagValues = { genres: string[]; tags: string[] };
@@ -19,7 +19,7 @@ export async function loadKnownGenreTagValues(): Promise<KnownGenreTagValues> {
     prisma.game.findMany({
       select: {
         metadataSnapshots: {
-          where: { provider: "RAWG" },
+          where: { provider: "IGDB" },
           orderBy: { fetchedAt: "desc" },
           take: 1,
           select: { payload: true },
@@ -36,7 +36,7 @@ export async function loadKnownGenreTagValues(): Promise<KnownGenreTagValues> {
     ...games.flatMap((game) => game.metadataSnapshots.map((snapshot) => snapshot.payload)),
     ...wishlistEntries.map((entry) => entry.metadataSnapshot?.payload),
   ]) {
-    const parsed = parseRawgMetadataPayload(payload);
+    const parsed = parseRecommendationMetadata(payload);
     for (const genre of parsed?.genres ?? []) if (genre) genres.add(genre);
     for (const tag of parsed?.tags ?? []) if (tag) tags.add(tag);
   }

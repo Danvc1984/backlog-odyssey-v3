@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Script from "next/script";
 import { Cinzel, Geist_Mono, Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
     "Your private gaming library, wishlist, and decision assistant for the voyage across Linux, Steam Deck, and Windows.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"

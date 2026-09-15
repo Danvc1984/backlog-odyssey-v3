@@ -44,7 +44,7 @@ describe("duration resolution", () => {
   it("resolves SteamSpy wishlist evidence and ignores malformed snapshots", () => {
     expect(resolveWishlistDurationEstimate({ durationEvidence: { provider: "STEAMSPY", payload: { medianForeverMinutes: 2_400 } } }, "HASTILY"))
       .toMatchObject({ hours: 40, band: "LONG", source: "STEAMSPY_MEDIAN" });
-    expect(resolveWishlistDurationEstimate({ durationEvidence: { provider: "RAWG", payload: {} } }, "NORMALLY")).toBeNull();
+    expect(resolveWishlistDurationEstimate({ durationEvidence: { provider: "IGDB", payload: {} } }, "NORMALLY")).toBeNull();
     expect(resolveWishlistDurationEstimate(null, "NORMALLY")).toBeNull();
   });
 });

@@ -26,7 +26,6 @@ const source = (source: "STEAM" | "ROM" | "OTHER_PLATFORM", alternativeSourceId:
 });
 
 const candidate = (overrides: Partial<TuneCandidateInput> = {}): TuneCandidateInput => ({
-  rawgId: 10,
   experience: "COUCH_GAMING",
   releaseDate: "2020-01-01",
   genres: ["Puzzle"],
@@ -54,7 +53,7 @@ describe("matchTuneCriteria", () => {
 
   it("matches a sequel only when a later series entry exists", () => {
     const tune = { ...emptyTune, sequelPosture: "SEQUEL" as const };
-    const seriesGames = [{ rawgId: 11, name: "Later", slug: "later", released: "2021-01-01" }];
+    const seriesGames = [{ name: "Later", releaseDate: "2021-01-01" }];
     expect(matchTuneCriteria(tune, candidate({ seriesGames })).criteria).toContain("sequelPosture");
     expect(matchTuneCriteria(tune, candidate({ releaseDate: null, seriesGames })).criteria).toEqual([]);
   });
@@ -62,7 +61,7 @@ describe("matchTuneCriteria", () => {
   it("treats missing v1 series data as standalone", () => {
     const tune = { ...emptyTune, sequelPosture: "STANDALONE" as const };
     expect(matchTuneCriteria(tune, candidate({ seriesGames: undefined })).criteria).toContain("sequelPosture");
-    expect(matchTuneCriteria(tune, candidate({ seriesGames: [{ rawgId: 11, name: "Later", slug: "later", released: "2021-01-01" }] })).criteria).toEqual([]);
+    expect(matchTuneCriteria(tune, candidate({ seriesGames: [{ name: "Later", releaseDate: "2021-01-01" }] })).criteria).toEqual([]);
   });
 
   it("caps the bonus at ten points and gives zero to a zero-criteria tune", () => {

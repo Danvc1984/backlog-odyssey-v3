@@ -1,5 +1,4 @@
 import type { CompatibilityStatus, RecommendationDimension } from "@/generated/prisma/client";
-import { QUALITY_METACRITIC_HIGH, QUALITY_METACRITIC_LOW } from "./types";
 
 function readableValue(value: string): string {
   const labels: Record<string, string> = {
@@ -56,18 +55,6 @@ export function playEnvironmentLabel(status: CompatibilityStatus): string {
   return labels[status];
 }
 
-export function playQualityLabel(
-  metacriticScore: number | null,
-  rating: number | null,
-): string[] {
-  const labels: string[] = [];
-  if (metacriticScore !== null && (metacriticScore >= QUALITY_METACRITIC_HIGH || metacriticScore < QUALITY_METACRITIC_LOW)) {
-    labels.push(
-      metacriticScore >= QUALITY_METACRITIC_HIGH
-        ? `Critics rate it highly (Metacritic ${metacriticScore})`
-        : `Critics rate it poorly (Metacritic ${metacriticScore})`,
-    );
-  }
-  if (rating !== null) labels.push(`Players rate it highly (RAWG ${rating})`);
-  return labels;
+export function playQualityLabel(rating: number): string[] {
+  return [`Players rate it highly (IGDB ${Math.round(rating * 20)})`];
 }

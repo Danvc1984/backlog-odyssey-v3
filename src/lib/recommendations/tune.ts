@@ -1,5 +1,3 @@
-import { deriveSequelRelationship } from "@/lib/rawg-enrichment";
-import type { RawgSeriesEntry } from "@/lib/rawg-types";
 import { durationBand, eraBucket } from "@/lib/recommendations/profile";
 import type {
   ExplanationFactor,
@@ -14,13 +12,12 @@ import {
 import type { AvailabilitySource } from "@/lib/sources/known-sources";
 
 export interface TuneCandidateInput {
-  rawgId?: number;
   experience?: string | null;
   releaseDate?: string | null;
   genres?: string[];
   tags?: string[];
   esrbRating?: { name: string } | null;
-  seriesGames?: RawgSeriesEntry[];
+  seriesGames?: Array<{ name: string; releaseDate?: string | null }>;
   durationHours?: number | null;
 }
 
@@ -112,11 +109,11 @@ function matchesSequelPosture(
   const seriesGames = candidate.seriesGames;
   if (!seriesGames || seriesGames.length === 0) return posture === "STANDALONE";
   if (posture === "STANDALONE") return false;
-  if (candidate.rawgId === undefined) return false;
-  return deriveSequelRelationship(
-    { rawgId: candidate.rawgId, releaseDate: candidate.releaseDate ?? null },
-    seriesGames,
-  ).length > 0;
+  const releaseDate = candidate.releaseDate ? new Date(candidate.releaseDate).getTime() : NaN;
+  return Number.isFinite(releaseDate) && seriesGames.some((entry) => {
+    const relatedRelease = entry.releaseDate ? new Date(entry.releaseDate).getTime() : NaN;
+    return entry.name.trim().length > 0 && Number.isFinite(relatedRelease) && relatedRelease > releaseDate;
+  });
 }
 
 export function matchTuneCriteria(tune: TuneContext, candidate: TuneCandidateInput): TuneMatch {

@@ -53,17 +53,33 @@ describe("recommendation profile math", () => {
 
 describe("candidate dimension resolution", () => {
   const v2Payload = {
-    title: "Portal 2",
-    genres: ["Puzzle", ""],
-    tags: ["Singleplayer"],
-    publishers: ["Valve", "Aperture"],
-    releaseDate: "2011-04-18",
-    playtimeHours: 9,
-    esrbRating: { name: "Everyone 10+", slug: "everyone-10-plus" },
-    seriesGames: [
-      { rawgId: 1, name: "Portal", slug: "portal", released: "2007-10-09" },
-      { rawgId: 2, name: "", slug: null, released: null },
-    ],
+    schemaVersion: 1,
+    igdbId: 1,
+    igdbSlug: "portal-2",
+    name: "Portal 2",
+    summary: null,
+    firstReleaseDate: "2011-04-18T00:00:00.000Z",
+    genres: [{ id: 1, name: "Puzzle" }],
+    themes: [],
+    keywords: [{ id: 2, name: "Singleplayer" }],
+    developers: [],
+    publishers: [{ id: 3, name: "Valve" }],
+    esrbRating: "Everyone 10+",
+    officialWebsite: null,
+    alternativeNames: [],
+    ratings: { aggregated: { score: null, count: null }, community: { score: null, count: null }, total: { score: null, count: null } },
+    collection: { id: 4, name: "Portal" },
+    franchise: null,
+    relations: [],
+    gameModes: [],
+    multiplayerModes: [],
+    coverUrl: null,
+    artworkUrls: [],
+    conceptArtUrls: [],
+    screenshots: [],
+    igdbUpdatedAt: null,
+    attribution: { provider: "IGDB", sourceUrl: "https://www.igdb.com/games/portal-2", fetchedAt: "2026-01-01T00:00:00.000Z" },
+    palette: null,
   };
 
   it("resolves metadata, maturity, series, and personal fields from a v2 payload", () => {
@@ -86,12 +102,12 @@ describe("candidate dimension resolution", () => {
 
   it("contributes no maturity or series values from a v1 payload", () => {
     const v1Payload = {
-      title: "Portal 2",
-      genres: ["Puzzle"],
-      tags: [],
-      publishers: ["Valve"],
-      releaseDate: "2011-04-18",
-      playtimeHours: 9,
+      ...v2Payload,
+      genres: [{ id: 1, name: "Puzzle" }],
+      keywords: [],
+      publishers: [{ id: 3, name: "Valve" }],
+      esrbRating: null,
+      collection: null,
     };
 
     expect(

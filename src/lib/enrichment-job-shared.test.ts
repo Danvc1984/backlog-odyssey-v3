@@ -29,9 +29,9 @@ describe("enrichment job shared helpers", () => {
   it("builds the guarded claim filter for queued and due retries", () => {
     const now = new Date("2026-09-03T12:00:00.000Z");
 
-    expect(jobClaimWhere({ jobId: "job-1", provider: "RAWG", maxAttempts: 3, now })).toEqual({
+    expect(jobClaimWhere({ jobId: "job-1", provider: "IGDB", maxAttempts: 3, now })).toEqual({
       id: "job-1",
-      provider: "RAWG",
+      provider: "IGDB",
       game: {
         OR: [
           { libraryEntry: { is: null } },

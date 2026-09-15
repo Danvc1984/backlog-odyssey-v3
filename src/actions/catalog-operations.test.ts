@@ -609,12 +609,12 @@ describe("planMergeMutations", () => {
     const older = new Date("2025-01-01T00:00:00.000Z");
     const gameA = makeGraphGame({
       id: "game-a",
-      metadataSnapshots: [{ id: "m-a", gameId: "game-a", provider: "RAWG", fetchedAt: newer }],
+      metadataSnapshots: [{ id: "m-a", gameId: "game-a", provider: "IGDB", fetchedAt: newer }],
     });
     const gameB = makeGraphGame({
       id: "game-b",
       origin: "STEAM_IMPORT",
-      metadataSnapshots: [{ id: "m-b", gameId: "game-b", provider: "RAWG", fetchedAt: older }],
+      metadataSnapshots: [{ id: "m-b", gameId: "game-b", provider: "IGDB", fetchedAt: older }],
     });
 
     const mutations = run(gameA, gameB);
@@ -946,7 +946,7 @@ describe("buildDeleteSnapshotPlan", () => {
       ],
       collections: [{ collectionId: "col-1", gameId: "game-a" }],
       tags: [{ tagId: "tag-1", gameId: "game-a" }],
-      metadataSnapshots: [{ id: "m1", gameId: "game-a", provider: "RAWG", fetchedAt: new Date("2026-01-01") }],
+      metadataSnapshots: [{ id: "m1", gameId: "game-a", provider: "IGDB", fetchedAt: new Date("2026-01-01") }],
       wishlistDlcs: [{ id: "w1", baseGameId: "game-a" }],
       compatSnapshots: [{ id: "c1", gameId: "game-a", provider: "PROTONDB" }],
       envCompat: [{ id: "v1", gameId: "game-a", environment: "LINUX" }],

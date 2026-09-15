@@ -760,28 +760,42 @@ factors such as:
   candidates use stable, weighted rotation and short exposure cooldowns.
 
 Tune this run is opt-in and presented as a distinctive, visually deliberate
-control rather than a plain accordion form; its question set is reviewed
-once the re-keyed engine lands so it asks only what the new evidence can
-honor.
+control rather than a plain accordion. Its default questions are:
 
-Recommendations are generated explicitly by the user. `Update recommendations`
-works immediately with no form. `Tune this run` is opt-in and may set soft
-preferences for game experience, desired length, genres/tags, sequel posture,
-classic-to-newer era, casual-to-mature context, and play-next availability
-sources. Named presets store these optional contexts for reuse. Hard
-constraints may relax with a visible explanation when the qualified pool is
-thin; source tuning is already soft and inclusive, so it never needs to relax
-by excluding other sources.
+- **How much time?** Any, Under 6 hours, 6-20 hours, 20-50 hours, or 50+ hours.
+- **How do you want to play?** Any, Solo, Online with others, or Couch co-op.
+- **What feels right?** Familiar, Balanced, or Different.
+- **Handheld** is a separate combinable toggle for Play Next only.
+
+Genres, tags, sequel posture, era, maturity, and play-next source preference
+remain available under More filters. They retain their current soft, capped,
+any-match behavior. A selected known conflicting play mode is excluded. Missing
+play-mode metadata may remain only as a lower-confidence fallback with a visible
+"Play style unknown" caveat.
+
+Familiar boosts games matching both learned history and manually preferred
+genres/tags. If no familiar match exists, a normally ranked eligible game may
+appear with a "No familiar match" caveat. Balanced leaves existing scoring
+unchanged. Different strictly favors eligible games outside those familiar
+signals; if none exists, the affected role is absent rather than falling back.
+
+Tune choices remain local to a single browser tab, survive reloads in that tab,
+and clear when that tab closes. They take effect only when the user explicitly
+selects Update recommendations. Named presets persist as reusable shortcuts but
+load only into the tab-local Tune state. Each generated run still retains its
+applied context and explanations.
 
 Each run retains its context, explanations, and qualified candidate batches.
 The dashboard initially displays four play-next roles: two best-fit picks, one
 qualified out-of-the-box pick that favors underrepresented genres, tags, or
 experiences, and one change-of-pace pick different from recent play. When the
 configured setup includes a handheld, play-next replaces the second Best Fit
-with a handheld pick role that favors handheld-suitable games under the
-environment-fit rules; setups without a handheld keep the current four play
-roles. It displays
-three buy roles: two best-fit wishlist picks and one exceptional-deal pick. When
+with a Handheld pick. It is the highest-ranked candidate that is both
+play-eligible and marked handheld-suitable under the existing environment-fit
+rules. If none qualifies, the role is absent with a clear explanation. When the
+Handheld Tune toggle is selected, every Play Next role is strictly limited to
+handheld-suitable games. Setups without a handheld keep the current four play
+roles. It displays three buy roles: two best-fit wishlist picks and one exceptional-deal pick. When
 deal-saturation applies - at least three fresh offers discounted 80% or more
 and at least 20% of eligible wishes qualify - Buy instead shows one best-fit and
 two exceptional-deal picks. Deal picks must still clear fit and quality floors;

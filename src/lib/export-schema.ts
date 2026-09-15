@@ -92,7 +92,7 @@ const externalIdSchema = z.object({
   namespaceId: z.string(),
   namespace: z.string(),
   externalId: z.string(),
-  matchMethod: z.enum(["EXACT_STEAM_APP_ID", "MANUAL_RAWG_SEARCH", "MANUAL_ITAD_LOOKUP", "INFERRED"]),
+  matchMethod: z.enum(["EXACT_STEAM_APP_ID", "MANUAL_IGDB_SEARCH", "MANUAL_ITAD_LOOKUP", "INFERRED"]),
   gameId: z.string(),
 });
 
@@ -153,7 +153,7 @@ const wishlistEntrySchema = z.object({
   targetPriceMxn: z.string().nullable(),
   notes: z.string().nullable(),
   steamAppId: z.string().nullable(),
-  steamAppIdProvenance: z.enum(["STEAM_IMPORT", "USER", "RAWG_SUGGESTION", "IGDB_SUGGESTION"]).nullable(),
+  steamAppIdProvenance: z.enum(["STEAM_IMPORT", "USER", "IGDB_SUGGESTION"]).nullable(),
   createdAt: isoDateTime,
   updatedAt: isoDateTime,
 });

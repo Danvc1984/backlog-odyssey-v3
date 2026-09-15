@@ -1,8 +1,12 @@
-import type { RawgPalette } from "./rawg-types";
+export interface GamePalette {
+  primary: string;
+  dark: string;
+  muted: string;
+}
 
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
 
-function isRawgPalette(value: unknown): value is RawgPalette {
+function isGamePalette(value: unknown): value is GamePalette {
   if (typeof value !== "object" || value === null) {
     return false;
   }
@@ -13,16 +17,16 @@ function isRawgPalette(value: unknown): value is RawgPalette {
   );
 }
 
-export function resolvePagePalette(payload: unknown): RawgPalette | null {
+export function resolvePagePalette(payload: unknown): GamePalette | null {
   if (typeof payload !== "object" || payload === null) {
     return null;
   }
 
   const palette = (payload as Record<string, unknown>).palette;
-  return isRawgPalette(palette) ? palette : null;
+  return isGamePalette(palette) ? palette : null;
 }
 
-export function paletteToCssVars(palette: RawgPalette): Record<string, string> {
+export function paletteToCssVars(palette: GamePalette): Record<string, string> {
   return {
     "--game-accent": palette.primary,
     "--game-accent-dark": palette.dark,

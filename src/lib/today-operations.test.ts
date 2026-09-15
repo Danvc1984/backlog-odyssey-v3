@@ -9,7 +9,7 @@ describe("aggregateTodayOperations", () => {
       steamLastSyncAt: fetchedAt,
       steamActivityRefreshedAt: null,
       steamActivityLastError: null,
-      rawgLastFetchedAt: null,
+      igdbLastFetchedAt: null,
       itadLastFinishedAt: fetchedAt,
       compatibilityLastFetchedAt: fetchedAt,
       hasLinuxTargets: true,
@@ -18,7 +18,7 @@ describe("aggregateTodayOperations", () => {
     })).toEqual({
       providers: [
         { name: "Steam", lastSuccessAt: fetchedAt.toISOString() },
-        { name: "RAWG", lastSuccessAt: null },
+        { name: "IGDB", lastSuccessAt: null },
         { name: "ITAD", lastSuccessAt: fetchedAt.toISOString() },
         { name: "Compatibility", lastSuccessAt: fetchedAt.toISOString() },
       ],
@@ -32,7 +32,7 @@ describe("aggregateTodayOperations", () => {
       steamLastSyncAt: null,
       steamActivityRefreshedAt: null,
       steamActivityLastError: null,
-      rawgLastFetchedAt: null,
+      igdbLastFetchedAt: null,
       itadLastFinishedAt: null,
       compatibilityLastFetchedAt: null,
       hasLinuxTargets: true,
@@ -41,7 +41,7 @@ describe("aggregateTodayOperations", () => {
     })).toEqual({
       providers: [
         { name: "Steam", lastSuccessAt: null },
-        { name: "RAWG", lastSuccessAt: null },
+        { name: "IGDB", lastSuccessAt: null },
         { name: "ITAD", lastSuccessAt: null },
         { name: "Compatibility", lastSuccessAt: null },
       ],
@@ -57,7 +57,7 @@ describe("aggregateTodayOperations", () => {
       steamLastSyncAt: syncAt,
       steamActivityRefreshedAt: activityRefreshedAt,
       steamActivityLastError: null,
-      rawgLastFetchedAt: null,
+      igdbLastFetchedAt: null,
       itadLastFinishedAt: null,
       compatibilityLastFetchedAt: new Date("2026-08-29T12:00:00.000Z"),
       hasLinuxTargets: false,
@@ -66,7 +66,7 @@ describe("aggregateTodayOperations", () => {
     })).toMatchObject({
       providers: [
         { name: "Steam", lastSuccessAt: activityRefreshedAt.toISOString() },
-        { name: "RAWG", lastSuccessAt: null },
+        { name: "IGDB", lastSuccessAt: null },
         { name: "ITAD", lastSuccessAt: null },
       ],
     });

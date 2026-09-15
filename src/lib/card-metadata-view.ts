@@ -1,4 +1,3 @@
-import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
 import { parseIgdbMetadataPayload } from "@/lib/igdb-metadata-payload";
 import type { IgdbMetadataPayload } from "@/lib/igdb-types";
 
@@ -80,21 +79,3 @@ export function igdbLibraryCardMetadataView(
   };
 }
 
-export function libraryCardMetadataView(
-  value: unknown,
-): LibraryCardMetadataView | null {
-  const payload = parseRawgMetadataPayload(value);
-  if (!payload) return null;
-
-  return {
-    imageUrl: payload.backgroundImageUrls[0] ?? null,
-    genres: payload.genres,
-    description: payload.description,
-    developers: payload.developers,
-    releaseDate: payload.releaseDate,
-    rating: payload.rating,
-    metacriticScore: payload.metacriticScore,
-    playtimeHours: payload.playtimeHours,
-    esrbName: payload.esrbRating?.name ?? null,
-  };
-}

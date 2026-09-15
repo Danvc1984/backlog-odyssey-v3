@@ -3,7 +3,7 @@ import "server-only";
 import { Prisma, type CompatibilityStatus, type Environment } from "@/generated/prisma/client";
 import { parseAntiCheatEvidence } from "@/lib/compat-evidence";
 import { parseProtonDbSummary } from "@/lib/protondb-api";
-import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
+import { parseRecommendationMetadata } from "@/lib/recommendations/metadata";
 import { resolveWishlistDurationEstimate, type DurationProfile } from "@/lib/playtime-evidence";
 import { type BuyCandidate, type BuyOffer } from "@/lib/recommendations/buy";
 import { buildCalibrationFactor } from "@/lib/recommendations/calibration";
@@ -47,7 +47,7 @@ export async function loadCandidates(client: Prisma.TransactionClient) {
         select: { provider: true, result: true, fetchedAt: true },
       },
       metadataSnapshots: {
-        where: { provider: "RAWG" },
+        where: { provider: "IGDB" },
         orderBy: { fetchedAt: "desc" },
         take: 1,
         select: { payload: true },
@@ -224,10 +224,9 @@ export async function loadBuyCandidates(
 }
 
 export function tuneInput(payload: unknown, experience: string | null, durationHours: number | null = null): TuneCandidateInput {
-  const parsed = parseRawgMetadataPayload(payload);
+  const parsed = parseRecommendationMetadata(payload);
   return parsed
     ? {
-        rawgId: parsed.rawgId,
         experience,
         releaseDate: parsed.releaseDate,
         genres: parsed.genres,

@@ -11,7 +11,7 @@ interface TodayOperationsRows {
   steamLastSyncAt: Date | null;
   steamActivityRefreshedAt: Date | null;
   steamActivityLastError: string | null;
-  rawgLastFetchedAt: Date | null;
+  igdbLastFetchedAt: Date | null;
   itadLastFinishedAt: Date | null;
   compatibilityLastFetchedAt: Date | null;
   hasLinuxTargets: boolean;
@@ -26,7 +26,7 @@ export function aggregateTodayOperations(rows: TodayOperationsRows): TodayOperat
       : rows.steamLastSyncAt;
   const providers = [
     { name: "Steam", lastSuccessAt: steamLastSuccessAt?.toISOString() ?? null },
-    { name: "RAWG", lastSuccessAt: rows.rawgLastFetchedAt?.toISOString() ?? null },
+    { name: "IGDB", lastSuccessAt: rows.igdbLastFetchedAt?.toISOString() ?? null },
     { name: "ITAD", lastSuccessAt: rows.itadLastFinishedAt?.toISOString() ?? null },
   ];
   if (rows.hasLinuxTargets) {
@@ -50,11 +50,11 @@ export function aggregateTodayOperations(rows: TodayOperationsRows): TodayOperat
 export async function loadTodayOperations(
   client: Pick<Prisma.TransactionClient, "appSettings" | "steamConnection" | "steamRecentActivityCache" | "metadataSnapshot" | "priceRefresh" | "compatibilitySnapshot" | "enrichmentJob" | "syncRun" | "wishlistCompatSweep"> = prisma,
 ): Promise<TodayOperationsView> {
-  const [settings, steam, activity, rawg, itad, compatibility, jobs, syncRuns, priceRuns, compatibilityRuns] = await Promise.all([
+  const [settings, steam, activity, igdb, itad, compatibility, jobs, syncRuns, priceRuns, compatibilityRuns] = await Promise.all([
     client.appSettings.findUnique({ where: { id: 1 }, select: { primaryOs: true, handheldOs: true } }),
     client.steamConnection.findUnique({ where: { id: 1 }, select: { lastSyncAt: true } }),
     client.steamRecentActivityCache.findUnique({ where: { id: 1 }, select: { refreshedAt: true, lastError: true } }),
-    client.metadataSnapshot.findFirst({ where: { provider: "RAWG" }, orderBy: { fetchedAt: "desc" }, select: { fetchedAt: true } }),
+    client.metadataSnapshot.findFirst({ where: { provider: "IGDB" }, orderBy: { fetchedAt: "desc" }, select: { fetchedAt: true } }),
     client.priceRefresh.findFirst({ where: { status: { in: ["SUCCESS", "PARTIAL"] } }, orderBy: { finishedAt: "desc" }, select: { finishedAt: true } }),
     client.compatibilitySnapshot.findFirst({ orderBy: { fetchedAt: "desc" }, select: { fetchedAt: true } }),
     client.enrichmentJob.findMany({
@@ -76,7 +76,7 @@ export async function loadTodayOperations(
     steamLastSyncAt: steam?.lastSyncAt ?? null,
     steamActivityRefreshedAt: activity?.refreshedAt ?? null,
     steamActivityLastError: activity?.lastError ?? null,
-    rawgLastFetchedAt: rawg?.fetchedAt ?? null,
+    igdbLastFetchedAt: igdb?.fetchedAt ?? null,
     itadLastFinishedAt: itad?.finishedAt ?? null,
     compatibilityLastFetchedAt: compatibility?.fetchedAt ?? null,
     hasLinuxTargets: settings?.primaryOs === "LINUX" || settings?.handheldOs === "LINUX",

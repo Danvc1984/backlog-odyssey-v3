@@ -5,7 +5,7 @@ import { ActionError, friendlyActionError } from "@/lib/action-error";
 import { Prisma, RecommendationRole } from "@/generated/prisma/client";
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
-import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
+import { parseIgdbMetadataPayload } from "@/lib/igdb-metadata-payload";
 import type {
   ExplanationCaveat,
   ExplanationFactor,
@@ -264,7 +264,7 @@ export async function rotateRecommendationRole(input: unknown) {
           select: {
             name: true,
             metadataSnapshots: {
-              where: { provider: "RAWG" },
+              where: { provider: "IGDB" },
               orderBy: { fetchedAt: "desc" },
               take: 1,
               select: { payload: true },
@@ -279,7 +279,7 @@ export async function rotateRecommendationRole(input: unknown) {
             baseGame: {
               select: {
                 metadataSnapshots: {
-                  where: { provider: "RAWG" },
+                  where: { provider: "IGDB" },
                   orderBy: { fetchedAt: "desc" },
                   take: 1,
                   select: { payload: true },
@@ -288,23 +288,26 @@ export async function rotateRecommendationRole(input: unknown) {
             },
           },
         });
+    const imageFromPayload = (payload: unknown) => {
+      const parsed = parseIgdbMetadataPayload(payload);
+      return parsed?.artworkUrls[0] ?? parsed?.coverUrl ?? null;
+    };
     const imageUrl = isPlay
-      ? parseRawgMetadataPayload(
+      ? imageFromPayload(
           rotatedTarget && "metadataSnapshots" in rotatedTarget
             ? rotatedTarget.metadataSnapshots[0]?.payload
             : undefined,
-        )?.backgroundImageUrls[0] ?? null
-      : parseRawgMetadataPayload(
+        )
+      : imageFromPayload(
           rotatedTarget && "metadataSnapshot" in rotatedTarget
             ? rotatedTarget.metadataSnapshot?.payload
             : undefined,
-        )?.backgroundImageUrls[0] ??
-        parseRawgMetadataPayload(
+        ) ??
+        imageFromPayload(
           rotatedTarget && "baseGame" in rotatedTarget
             ? rotatedTarget.baseGame?.metadataSnapshots[0]?.payload
             : undefined,
-        )?.backgroundImageUrls[0] ??
-        null;
+        );
 
     const rotatedItem: RotatedRecommendationItem = {
       itemId,

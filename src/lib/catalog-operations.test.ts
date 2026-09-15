@@ -157,10 +157,10 @@ describe("planExternalIdUnion", () => {
         { id: "e1", namespace: "steam", externalId: "111", gameId: "game-a" },
         { id: "e2", namespace: "itad", externalId: "aaa", gameId: "game-a" },
       ],
-      [{ id: "e3", namespace: "rawg", externalId: "777", gameId: "game-b" }],
+      [{ id: "e3", namespace: "igdb", externalId: "777", gameId: "game-b" }],
     );
 
-    expect(result.union.map((row) => row.namespace).sort()).toEqual(["itad", "rawg", "steam"]);
+    expect(result.union.map((row) => row.namespace).sort()).toEqual(["igdb", "itad", "steam"]);
     expect(result.conflicts).toEqual([]);
   });
 
@@ -211,7 +211,7 @@ describe("planOneToOneConflicts", () => {
         gameId: "game-a",
         compatSnapshots: [
           { id: "c1", provider: "PROTONDB" },
-          { id: "c2", provider: "RAWG" },
+          { id: "c2", provider: "IGDB" },
         ],
         envCompat: [],
       },
@@ -287,7 +287,7 @@ describe("buildMergeProposal", () => {
       ],
       collections: [{ collectionId: "col-1" }],
       tags: [{ tagId: "tag-1" }],
-      metadataSnapshots: [{ id: "m1", provider: "RAWG" }],
+      metadataSnapshots: [{ id: "m1", provider: "IGDB" }],
     });
     const gameB = makeSourceGame({
       id: "game-b",
@@ -298,7 +298,7 @@ describe("buildMergeProposal", () => {
         { id: "a3", source: "STEAM", steamAppId: "1145360", alternativeSourceId: null },
       ],
       collections: [{ collectionId: "col-2" }],
-      metadataSnapshots: [{ id: "m2", provider: "RAWG" }],
+      metadataSnapshots: [{ id: "m2", provider: "IGDB" }],
       externalIds: [{ id: "e1", namespace: "steam", externalId: "1145360", gameId: "game-b" }],
     });
 

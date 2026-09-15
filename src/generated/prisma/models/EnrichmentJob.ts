@@ -30,7 +30,6 @@ export type EnrichmentJobAvgAggregateOutputType = {
   attempt: number | null
   maxAttempts: number | null
   progress: number | null
-  selectedRawgId: number | null
   selectedIgdbId: number | null
 }
 
@@ -38,7 +37,6 @@ export type EnrichmentJobSumAggregateOutputType = {
   attempt: number | null
   maxAttempts: number | null
   progress: number | null
-  selectedRawgId: number | null
   selectedIgdbId: number | null
 }
 
@@ -53,7 +51,6 @@ export type EnrichmentJobMinAggregateOutputType = {
   maxAttempts: number | null
   progress: number | null
   nextAttemptAt: Date | null
-  selectedRawgId: number | null
   selectedIgdbId: number | null
   lastErrorCode: string | null
   lastErrorMessage: string | null
@@ -74,7 +71,6 @@ export type EnrichmentJobMaxAggregateOutputType = {
   maxAttempts: number | null
   progress: number | null
   nextAttemptAt: Date | null
-  selectedRawgId: number | null
   selectedIgdbId: number | null
   lastErrorCode: string | null
   lastErrorMessage: string | null
@@ -96,7 +92,6 @@ export type EnrichmentJobCountAggregateOutputType = {
   progress: number
   nextAttemptAt: number
   candidatePayload: number
-  selectedRawgId: number
   selectedIgdbId: number
   lastErrorCode: number
   lastErrorMessage: number
@@ -112,7 +107,6 @@ export type EnrichmentJobAvgAggregateInputType = {
   attempt?: true
   maxAttempts?: true
   progress?: true
-  selectedRawgId?: true
   selectedIgdbId?: true
 }
 
@@ -120,7 +114,6 @@ export type EnrichmentJobSumAggregateInputType = {
   attempt?: true
   maxAttempts?: true
   progress?: true
-  selectedRawgId?: true
   selectedIgdbId?: true
 }
 
@@ -135,7 +128,6 @@ export type EnrichmentJobMinAggregateInputType = {
   maxAttempts?: true
   progress?: true
   nextAttemptAt?: true
-  selectedRawgId?: true
   selectedIgdbId?: true
   lastErrorCode?: true
   lastErrorMessage?: true
@@ -156,7 +148,6 @@ export type EnrichmentJobMaxAggregateInputType = {
   maxAttempts?: true
   progress?: true
   nextAttemptAt?: true
-  selectedRawgId?: true
   selectedIgdbId?: true
   lastErrorCode?: true
   lastErrorMessage?: true
@@ -178,7 +169,6 @@ export type EnrichmentJobCountAggregateInputType = {
   progress?: true
   nextAttemptAt?: true
   candidatePayload?: true
-  selectedRawgId?: true
   selectedIgdbId?: true
   lastErrorCode?: true
   lastErrorMessage?: true
@@ -287,7 +277,6 @@ export type EnrichmentJobGroupByOutputType = {
   progress: number
   nextAttemptAt: Date | null
   candidatePayload: runtime.JsonValue | null
-  selectedRawgId: number | null
   selectedIgdbId: number | null
   lastErrorCode: string | null
   lastErrorMessage: string | null
@@ -332,7 +321,6 @@ export type EnrichmentJobWhereInput = {
   progress?: Prisma.IntFilter<"EnrichmentJob"> | number
   nextAttemptAt?: Prisma.DateTimeNullableFilter<"EnrichmentJob"> | Date | string | null
   candidatePayload?: Prisma.JsonNullableFilter<"EnrichmentJob">
-  selectedRawgId?: Prisma.IntNullableFilter<"EnrichmentJob"> | number | null
   selectedIgdbId?: Prisma.IntNullableFilter<"EnrichmentJob"> | number | null
   lastErrorCode?: Prisma.StringNullableFilter<"EnrichmentJob"> | string | null
   lastErrorMessage?: Prisma.StringNullableFilter<"EnrichmentJob"> | string | null
@@ -356,7 +344,6 @@ export type EnrichmentJobOrderByWithRelationInput = {
   progress?: Prisma.SortOrder
   nextAttemptAt?: Prisma.SortOrderInput | Prisma.SortOrder
   candidatePayload?: Prisma.SortOrderInput | Prisma.SortOrder
-  selectedRawgId?: Prisma.SortOrderInput | Prisma.SortOrder
   selectedIgdbId?: Prisma.SortOrderInput | Prisma.SortOrder
   lastErrorCode?: Prisma.SortOrderInput | Prisma.SortOrder
   lastErrorMessage?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -384,7 +371,6 @@ export type EnrichmentJobWhereUniqueInput = Prisma.AtLeast<{
   progress?: Prisma.IntFilter<"EnrichmentJob"> | number
   nextAttemptAt?: Prisma.DateTimeNullableFilter<"EnrichmentJob"> | Date | string | null
   candidatePayload?: Prisma.JsonNullableFilter<"EnrichmentJob">
-  selectedRawgId?: Prisma.IntNullableFilter<"EnrichmentJob"> | number | null
   selectedIgdbId?: Prisma.IntNullableFilter<"EnrichmentJob"> | number | null
   lastErrorCode?: Prisma.StringNullableFilter<"EnrichmentJob"> | string | null
   lastErrorMessage?: Prisma.StringNullableFilter<"EnrichmentJob"> | string | null
@@ -408,7 +394,6 @@ export type EnrichmentJobOrderByWithAggregationInput = {
   progress?: Prisma.SortOrder
   nextAttemptAt?: Prisma.SortOrderInput | Prisma.SortOrder
   candidatePayload?: Prisma.SortOrderInput | Prisma.SortOrder
-  selectedRawgId?: Prisma.SortOrderInput | Prisma.SortOrder
   selectedIgdbId?: Prisma.SortOrderInput | Prisma.SortOrder
   lastErrorCode?: Prisma.SortOrderInput | Prisma.SortOrder
   lastErrorMessage?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -438,7 +423,6 @@ export type EnrichmentJobScalarWhereWithAggregatesInput = {
   progress?: Prisma.IntWithAggregatesFilter<"EnrichmentJob"> | number
   nextAttemptAt?: Prisma.DateTimeNullableWithAggregatesFilter<"EnrichmentJob"> | Date | string | null
   candidatePayload?: Prisma.JsonNullableWithAggregatesFilter<"EnrichmentJob">
-  selectedRawgId?: Prisma.IntNullableWithAggregatesFilter<"EnrichmentJob"> | number | null
   selectedIgdbId?: Prisma.IntNullableWithAggregatesFilter<"EnrichmentJob"> | number | null
   lastErrorCode?: Prisma.StringNullableWithAggregatesFilter<"EnrichmentJob"> | string | null
   lastErrorMessage?: Prisma.StringNullableWithAggregatesFilter<"EnrichmentJob"> | string | null
@@ -458,7 +442,6 @@ export type EnrichmentJobCreateInput = {
   progress?: number
   nextAttemptAt?: Date | string | null
   candidatePayload?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  selectedRawgId?: number | null
   selectedIgdbId?: number | null
   lastErrorCode?: string | null
   lastErrorMessage?: string | null
@@ -482,7 +465,6 @@ export type EnrichmentJobUncheckedCreateInput = {
   progress?: number
   nextAttemptAt?: Date | string | null
   candidatePayload?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  selectedRawgId?: number | null
   selectedIgdbId?: number | null
   lastErrorCode?: string | null
   lastErrorMessage?: string | null
@@ -502,7 +484,6 @@ export type EnrichmentJobUpdateInput = {
   progress?: Prisma.IntFieldUpdateOperationsInput | number
   nextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   candidatePayload?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  selectedRawgId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   selectedIgdbId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastErrorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -526,7 +507,6 @@ export type EnrichmentJobUncheckedUpdateInput = {
   progress?: Prisma.IntFieldUpdateOperationsInput | number
   nextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   candidatePayload?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  selectedRawgId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   selectedIgdbId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastErrorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -548,7 +528,6 @@ export type EnrichmentJobCreateManyInput = {
   progress?: number
   nextAttemptAt?: Date | string | null
   candidatePayload?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  selectedRawgId?: number | null
   selectedIgdbId?: number | null
   lastErrorCode?: string | null
   lastErrorMessage?: string | null
@@ -568,7 +547,6 @@ export type EnrichmentJobUpdateManyMutationInput = {
   progress?: Prisma.IntFieldUpdateOperationsInput | number
   nextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   candidatePayload?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  selectedRawgId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   selectedIgdbId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastErrorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -590,7 +568,6 @@ export type EnrichmentJobUncheckedUpdateManyInput = {
   progress?: Prisma.IntFieldUpdateOperationsInput | number
   nextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   candidatePayload?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  selectedRawgId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   selectedIgdbId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastErrorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -627,7 +604,6 @@ export type EnrichmentJobCountOrderByAggregateInput = {
   progress?: Prisma.SortOrder
   nextAttemptAt?: Prisma.SortOrder
   candidatePayload?: Prisma.SortOrder
-  selectedRawgId?: Prisma.SortOrder
   selectedIgdbId?: Prisma.SortOrder
   lastErrorCode?: Prisma.SortOrder
   lastErrorMessage?: Prisma.SortOrder
@@ -641,7 +617,6 @@ export type EnrichmentJobAvgOrderByAggregateInput = {
   attempt?: Prisma.SortOrder
   maxAttempts?: Prisma.SortOrder
   progress?: Prisma.SortOrder
-  selectedRawgId?: Prisma.SortOrder
   selectedIgdbId?: Prisma.SortOrder
 }
 
@@ -656,7 +631,6 @@ export type EnrichmentJobMaxOrderByAggregateInput = {
   maxAttempts?: Prisma.SortOrder
   progress?: Prisma.SortOrder
   nextAttemptAt?: Prisma.SortOrder
-  selectedRawgId?: Prisma.SortOrder
   selectedIgdbId?: Prisma.SortOrder
   lastErrorCode?: Prisma.SortOrder
   lastErrorMessage?: Prisma.SortOrder
@@ -677,7 +651,6 @@ export type EnrichmentJobMinOrderByAggregateInput = {
   maxAttempts?: Prisma.SortOrder
   progress?: Prisma.SortOrder
   nextAttemptAt?: Prisma.SortOrder
-  selectedRawgId?: Prisma.SortOrder
   selectedIgdbId?: Prisma.SortOrder
   lastErrorCode?: Prisma.SortOrder
   lastErrorMessage?: Prisma.SortOrder
@@ -691,7 +664,6 @@ export type EnrichmentJobSumOrderByAggregateInput = {
   attempt?: Prisma.SortOrder
   maxAttempts?: Prisma.SortOrder
   progress?: Prisma.SortOrder
-  selectedRawgId?: Prisma.SortOrder
   selectedIgdbId?: Prisma.SortOrder
 }
 
@@ -797,7 +769,6 @@ export type EnrichmentJobCreateWithoutGameInput = {
   progress?: number
   nextAttemptAt?: Date | string | null
   candidatePayload?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  selectedRawgId?: number | null
   selectedIgdbId?: number | null
   lastErrorCode?: string | null
   lastErrorMessage?: string | null
@@ -819,7 +790,6 @@ export type EnrichmentJobUncheckedCreateWithoutGameInput = {
   progress?: number
   nextAttemptAt?: Date | string | null
   candidatePayload?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  selectedRawgId?: number | null
   selectedIgdbId?: number | null
   lastErrorCode?: string | null
   lastErrorMessage?: string | null
@@ -870,7 +840,6 @@ export type EnrichmentJobScalarWhereInput = {
   progress?: Prisma.IntFilter<"EnrichmentJob"> | number
   nextAttemptAt?: Prisma.DateTimeNullableFilter<"EnrichmentJob"> | Date | string | null
   candidatePayload?: Prisma.JsonNullableFilter<"EnrichmentJob">
-  selectedRawgId?: Prisma.IntNullableFilter<"EnrichmentJob"> | number | null
   selectedIgdbId?: Prisma.IntNullableFilter<"EnrichmentJob"> | number | null
   lastErrorCode?: Prisma.StringNullableFilter<"EnrichmentJob"> | string | null
   lastErrorMessage?: Prisma.StringNullableFilter<"EnrichmentJob"> | string | null
@@ -890,7 +859,6 @@ export type EnrichmentJobCreateWithoutSyncRunInput = {
   progress?: number
   nextAttemptAt?: Date | string | null
   candidatePayload?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  selectedRawgId?: number | null
   selectedIgdbId?: number | null
   lastErrorCode?: string | null
   lastErrorMessage?: string | null
@@ -912,7 +880,6 @@ export type EnrichmentJobUncheckedCreateWithoutSyncRunInput = {
   progress?: number
   nextAttemptAt?: Date | string | null
   candidatePayload?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  selectedRawgId?: number | null
   selectedIgdbId?: number | null
   lastErrorCode?: string | null
   lastErrorMessage?: string | null
@@ -959,7 +926,6 @@ export type EnrichmentJobCreateManyGameInput = {
   progress?: number
   nextAttemptAt?: Date | string | null
   candidatePayload?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  selectedRawgId?: number | null
   selectedIgdbId?: number | null
   lastErrorCode?: string | null
   lastErrorMessage?: string | null
@@ -979,7 +945,6 @@ export type EnrichmentJobUpdateWithoutGameInput = {
   progress?: Prisma.IntFieldUpdateOperationsInput | number
   nextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   candidatePayload?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  selectedRawgId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   selectedIgdbId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastErrorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1001,7 +966,6 @@ export type EnrichmentJobUncheckedUpdateWithoutGameInput = {
   progress?: Prisma.IntFieldUpdateOperationsInput | number
   nextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   candidatePayload?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  selectedRawgId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   selectedIgdbId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastErrorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1022,7 +986,6 @@ export type EnrichmentJobUncheckedUpdateManyWithoutGameInput = {
   progress?: Prisma.IntFieldUpdateOperationsInput | number
   nextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   candidatePayload?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  selectedRawgId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   selectedIgdbId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastErrorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1043,7 +1006,6 @@ export type EnrichmentJobCreateManySyncRunInput = {
   progress?: number
   nextAttemptAt?: Date | string | null
   candidatePayload?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  selectedRawgId?: number | null
   selectedIgdbId?: number | null
   lastErrorCode?: string | null
   lastErrorMessage?: string | null
@@ -1063,7 +1025,6 @@ export type EnrichmentJobUpdateWithoutSyncRunInput = {
   progress?: Prisma.IntFieldUpdateOperationsInput | number
   nextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   candidatePayload?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  selectedRawgId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   selectedIgdbId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastErrorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1085,7 +1046,6 @@ export type EnrichmentJobUncheckedUpdateWithoutSyncRunInput = {
   progress?: Prisma.IntFieldUpdateOperationsInput | number
   nextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   candidatePayload?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  selectedRawgId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   selectedIgdbId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastErrorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1106,7 +1066,6 @@ export type EnrichmentJobUncheckedUpdateManyWithoutSyncRunInput = {
   progress?: Prisma.IntFieldUpdateOperationsInput | number
   nextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   candidatePayload?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  selectedRawgId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   selectedIgdbId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastErrorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1130,7 +1089,6 @@ export type EnrichmentJobSelect<ExtArgs extends runtime.Types.Extensions.Interna
   progress?: boolean
   nextAttemptAt?: boolean
   candidatePayload?: boolean
-  selectedRawgId?: boolean
   selectedIgdbId?: boolean
   lastErrorCode?: boolean
   lastErrorMessage?: boolean
@@ -1154,7 +1112,6 @@ export type EnrichmentJobSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   progress?: boolean
   nextAttemptAt?: boolean
   candidatePayload?: boolean
-  selectedRawgId?: boolean
   selectedIgdbId?: boolean
   lastErrorCode?: boolean
   lastErrorMessage?: boolean
@@ -1178,7 +1135,6 @@ export type EnrichmentJobSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   progress?: boolean
   nextAttemptAt?: boolean
   candidatePayload?: boolean
-  selectedRawgId?: boolean
   selectedIgdbId?: boolean
   lastErrorCode?: boolean
   lastErrorMessage?: boolean
@@ -1202,7 +1158,6 @@ export type EnrichmentJobSelectScalar = {
   progress?: boolean
   nextAttemptAt?: boolean
   candidatePayload?: boolean
-  selectedRawgId?: boolean
   selectedIgdbId?: boolean
   lastErrorCode?: boolean
   lastErrorMessage?: boolean
@@ -1212,7 +1167,7 @@ export type EnrichmentJobSelectScalar = {
   updatedAt?: boolean
 }
 
-export type EnrichmentJobOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "gameId" | "syncRunId" | "provider" | "status" | "stage" | "attempt" | "maxAttempts" | "progress" | "nextAttemptAt" | "candidatePayload" | "selectedRawgId" | "selectedIgdbId" | "lastErrorCode" | "lastErrorMessage" | "startedAt" | "finishedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["enrichmentJob"]>
+export type EnrichmentJobOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "gameId" | "syncRunId" | "provider" | "status" | "stage" | "attempt" | "maxAttempts" | "progress" | "nextAttemptAt" | "candidatePayload" | "selectedIgdbId" | "lastErrorCode" | "lastErrorMessage" | "startedAt" | "finishedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["enrichmentJob"]>
 export type EnrichmentJobInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   game?: boolean | Prisma.GameDefaultArgs<ExtArgs>
   syncRun?: boolean | Prisma.EnrichmentJob$syncRunArgs<ExtArgs>
@@ -1244,7 +1199,6 @@ export type $EnrichmentJobPayload<ExtArgs extends runtime.Types.Extensions.Inter
     progress: number
     nextAttemptAt: Date | null
     candidatePayload: runtime.JsonValue | null
-    selectedRawgId: number | null
     selectedIgdbId: number | null
     lastErrorCode: string | null
     lastErrorMessage: string | null
@@ -1688,7 +1642,6 @@ export interface EnrichmentJobFieldRefs {
   readonly progress: Prisma.FieldRef<"EnrichmentJob", 'Int'>
   readonly nextAttemptAt: Prisma.FieldRef<"EnrichmentJob", 'DateTime'>
   readonly candidatePayload: Prisma.FieldRef<"EnrichmentJob", 'Json'>
-  readonly selectedRawgId: Prisma.FieldRef<"EnrichmentJob", 'Int'>
   readonly selectedIgdbId: Prisma.FieldRef<"EnrichmentJob", 'Int'>
   readonly lastErrorCode: Prisma.FieldRef<"EnrichmentJob", 'String'>
   readonly lastErrorMessage: Prisma.FieldRef<"EnrichmentJob", 'String'>

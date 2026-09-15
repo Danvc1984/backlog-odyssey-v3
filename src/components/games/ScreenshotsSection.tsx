@@ -7,9 +7,7 @@ import { Carousel } from "@/components/ui/Carousel";
 import { gradientFor } from "@/lib/cover-gradient";
 import { externalUrl } from "@/lib/external-url";
 import type { IgdbScreenshot } from "@/lib/igdb-types";
-import type { RawgScreenshotEntry } from "@/lib/rawg-types";
-
-function CreditLine({ sourceUrl, provider }: { sourceUrl: string | null; provider: "RAWG" | "IGDB" }) {
+function CreditLine({ sourceUrl }: { sourceUrl: string | null }) {
   const href = externalUrl(sourceUrl);
   if (href) {
     return (
@@ -19,11 +17,11 @@ function CreditLine({ sourceUrl, provider }: { sourceUrl: string | null; provide
         rel="noreferrer"
         className="text-xs text-muted-foreground underline-offset-4 hover:underline"
       >
-        Artwork and screenshots via {provider}
+        Artwork and screenshots via IGDB
       </a>
     );
   }
-  return <span className="text-xs text-muted-foreground">Artwork and screenshots via {provider}</span>;
+  return <span className="text-xs text-muted-foreground">Artwork and screenshots via IGDB</span>;
 }
 
 export function ScreenshotsSection({
@@ -34,16 +32,15 @@ export function ScreenshotsSection({
   conceptArtUrls = [],
   coverUrl = null,
   sourceUrl,
-  provider,
 }: {
   id: string;
   title: string;
-  screenshots: readonly (IgdbScreenshot | RawgScreenshotEntry)[];
+  screenshots: readonly IgdbScreenshot[];
   artworkUrls?: readonly string[];
   conceptArtUrls?: readonly string[];
   coverUrl?: string | null;
   sourceUrl: string | null;
-  provider?: "RAWG" | "IGDB";
+  provider?: "IGDB";
 }) {
   const { resolvedData } = useVisualPreferences();
   const reducedData = resolvedData === "on";
@@ -87,7 +84,7 @@ export function ScreenshotsSection({
   return (
     <SectionCard eyebrow="Media" title="Artwork and screenshots">
       <Carousel label="Artwork and screenshots" slides={slides} />
-      <CreditLine sourceUrl={sourceUrl} provider={provider ?? "RAWG"} />
+      <CreditLine sourceUrl={sourceUrl} />
     </SectionCard>
   );
 }

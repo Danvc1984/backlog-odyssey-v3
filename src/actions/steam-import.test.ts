@@ -18,7 +18,7 @@ import {
   requireSteamFlowContext,
   upsertUnresolvedSteamDlc,
 } from "@/lib/steam-flow";
-import { queueIgdbForImportedGames as queueRawgForImportedGames } from "@/lib/igdb-import-queue";
+import { queueIgdbForImportedGames as queueIgdbForImportedGames } from "@/lib/igdb-import-queue";
 import { importSteamGames } from "./steam-import";
 
 describe("importSteamGames", () => {
@@ -70,7 +70,7 @@ describe("importSteamGames", () => {
     createGame.mockResolvedValue({ id: "game-new" });
     updateConnection.mockResolvedValue({});
     upsertUnresolvedDlc.mockResolvedValue(undefined);
-    vi.mocked(queueRawgForImportedGames).mockResolvedValue({
+    vi.mocked(queueIgdbForImportedGames).mockResolvedValue({
       batchId: "batch-1",
       queued: 1,
       skipped: 0,
@@ -127,7 +127,7 @@ describe("importSteamGames", () => {
       },
       select: { id: true },
     });
-    expect(queueRawgForImportedGames).toHaveBeenCalledWith(["game-new"]);
+    expect(queueIgdbForImportedGames).toHaveBeenCalledWith(["game-new"]);
     expect(reconcileWishlistImportDlcs).toHaveBeenCalledWith(tx, "10", "game-new");
     expect(updateConnection).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -172,7 +172,7 @@ describe("importSteamGames", () => {
       create: { gameId: "game-1" },
       update: {},
     });
-    expect(queueRawgForImportedGames).not.toHaveBeenCalled();
+    expect(queueIgdbForImportedGames).not.toHaveBeenCalled();
   });
 
   it("does not schedule the same newly imported game twice for duplicate Steam input", async () => {
@@ -185,7 +185,7 @@ describe("importSteamGames", () => {
       success: true,
       data: expect.objectContaining({ imported: 1, updated: 1 }),
     }));
-    expect(queueRawgForImportedGames).toHaveBeenCalledWith(["game-new"]);
+    expect(queueIgdbForImportedGames).toHaveBeenCalledWith(["game-new"]);
   });
 
   it("strips trademark symbols from imported names", async () => {
@@ -210,11 +210,11 @@ describe("importSteamGames", () => {
     });
   });
 
-  it("keeps a committed Steam import successful when RAWG scheduling fails", async () => {
+  it("keeps a committed Steam import successful when IGDB scheduling fails", async () => {
     vi.mocked(fetchOwnedGames).mockResolvedValue([
       { appid: 10, name: "Portal", playtimeForever: 120, rtimeLastPlayed: 1700000000 },
     ]);
-    vi.mocked(queueRawgForImportedGames).mockRejectedValue(new Error("Queue unavailable"));
+    vi.mocked(queueIgdbForImportedGames).mockRejectedValue(new Error("Queue unavailable"));
 
     await expect(importSteamGames()).resolves.toEqual({
       success: true,
@@ -329,8 +329,8 @@ describe("importSteamGames", () => {
     });
     expect(createCalls).toBe(51);
     expect(updateConnection).not.toHaveBeenCalled();
-    expect(queueRawgForImportedGames).toHaveBeenCalledTimes(1);
-    expect(queueRawgForImportedGames).toHaveBeenCalledWith(
+    expect(queueIgdbForImportedGames).toHaveBeenCalledTimes(1);
+    expect(queueIgdbForImportedGames).toHaveBeenCalledWith(
       Array.from({ length: 50 }, (_, index) => `game-${index + 1}`),
     );
   });

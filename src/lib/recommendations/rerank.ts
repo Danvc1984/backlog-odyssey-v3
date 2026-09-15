@@ -9,8 +9,6 @@ import {
   BUY_PRACTICAL_FIT_PENALTY,
   COLD_START_MIN_EVENTS,
   QUALITY_CLAMP,
-  QUALITY_METACRITIC_HIGH,
-  QUALITY_METACRITIC_LOW,
   QUALITY_RATING_HIGH,
   RERANK_AVOID_POINTS,
   RERANK_ENVIRONMENT_POINTS,
@@ -220,25 +218,16 @@ export function scoreEnvironmentFit(
 }
 
 export interface QualityInput {
-  metacriticScore: number | null;
   rating: number | null;
+  metacriticScore?: number | null;
 }
 
 export function scoreQuality(input: QualityInput): ExplanationFactor | null {
   let points = 0;
   const parts: string[] = [];
-  if (input.metacriticScore !== null) {
-    if (input.metacriticScore >= QUALITY_METACRITIC_HIGH) {
-      points += 2;
-      parts.push(playQualityLabel(input.metacriticScore, null)[0]);
-    } else if (input.metacriticScore < QUALITY_METACRITIC_LOW) {
-      points -= 1;
-      parts.push(playQualityLabel(input.metacriticScore, null)[0]);
-    }
-  }
   if (input.rating !== null && input.rating >= QUALITY_RATING_HIGH) {
     points += 1;
-    parts.push(playQualityLabel(null, input.rating)[0]);
+    parts.push(playQualityLabel(input.rating)[0]);
   }
   if (points === 0) return null;
   const clamped = Math.max(-QUALITY_CLAMP, Math.min(QUALITY_CLAMP, points));

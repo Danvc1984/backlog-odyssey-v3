@@ -4,7 +4,7 @@ import type {
   RecommendationDimension,
   RecommendationEventKind,
 } from "@/generated/prisma/client";
-import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
+import { parseRecommendationMetadata } from "@/lib/recommendations/metadata";
 import { resolveDurationEstimate, resolveWishlistDurationEstimate, type DurationProfile, type PlaytimeEvidenceRow } from "@/lib/playtime-evidence";
 
 export const PROFILE_DECAY_HALF_LIFE_DAYS = 180;
@@ -108,7 +108,7 @@ export function resolveCandidateDimensionValues(
   personal: CandidatePersonalFields,
 ): CandidateDimensionValues {
   const values: CandidateDimensionValues = {};
-  const parsed = parseRawgMetadataPayload(payload);
+  const parsed = parseRecommendationMetadata(payload);
   if (parsed) {
     values.GENRE = (parsed.genres ?? []).filter(Boolean);
     values.TAG = (parsed.tags ?? []).filter(Boolean);

@@ -3,10 +3,10 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useVisualPreferences } from "@/components/preferences/VisualPreferencesProvider";
 import { paletteToCssVars } from "@/lib/game-theme";
-import type { RawgPalette } from "@/lib/rawg-types";
+import type { GamePalette } from "@/lib/game-theme";
 
 interface GameThemeScopeProps {
-  palette: RawgPalette | null;
+  palette: GamePalette | null;
   children: ReactNode;
 }
 

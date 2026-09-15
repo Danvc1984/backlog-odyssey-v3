@@ -178,6 +178,20 @@ describe("IGDB job runner", () => {
     expect(result).toMatchObject({ success: true, data: { status: "FAILED", lastErrorCode: "IGDB_ID_CONFLICT" } });
   });
 
+  it("does not queue compatibility when IGDB snapshot persistence fails", async () => {
+    vi.mocked(matchIgdbGame).mockResolvedValue({ outcome: "MATCHED", matchMethod: "INFERRED", game });
+    vi.mocked(persistIgdbSnapshot).mockResolvedValue({
+      success: false,
+      data: null,
+      error: { code: "PERSISTENCE_FAILED", message: "snapshot failed" },
+    });
+
+    const result = await runIgdbEnrichmentJob("job-1");
+
+    expect(queueCompatibilityForGame).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ success: true, data: { status: "FAILED", lastErrorCode: "PERSISTENCE_FAILED" } });
+  });
+
   it("keeps IGDB success when compatibility queue fails", async () => {
     vi.mocked(matchIgdbGame).mockResolvedValue({ outcome: "MATCHED", matchMethod: "INFERRED", game });
     vi.mocked(queueCompatibilityForGame).mockRejectedValueOnce(new Error("compat unavailable"));

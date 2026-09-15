@@ -254,32 +254,21 @@ describe("scoreEnvironmentFit", () => {
 
 describe("scoreQuality", () => {
   it.each([
-    [54, -1],
-    [55, 0],
-    [84, 0],
-    [85, 2],
-  ])("metacritic %i -> %p", (metacritic, expected) => {
-    const factor = scoreQuality({ metacriticScore: metacritic, rating: null });
-    expect(factor === null ? 0 : factor.points).toBe(expected);
-  });
-
-  it.each([
     [4.4, 0],
     [4.5, 1],
-  ])("rating %p -> %p", (rating, expected) => {
-    const factor = scoreQuality({ metacriticScore: null, rating });
+  ])("IGDB rating %p -> %p", (rating, expected) => {
+    const factor = scoreQuality({ rating });
     expect(factor === null ? 0 : factor.points).toBe(expected);
   });
 
-  it("combines and clamps at +3 when both quality signals are high", () => {
-    const factor = scoreQuality({ metacriticScore: 95, rating: 4.8 });
-    expect(factor?.points).toBe(3);
-    expect(factor?.label).toBe("Critics rate it highly (Metacritic 95), Players rate it highly (RAWG 4.8)");
+  it("labels the IGDB rating evidence", () => {
+    const factor = scoreQuality({ rating: 4.8 });
+    expect(factor?.points).toBe(1);
+    expect(factor?.label).toBe("Players rate it highly (IGDB 96)");
   });
 
-  it("yields no factor when signals cancel or are absent", () => {
-    expect(scoreQuality({ metacriticScore: 40, rating: 4.9 })).toBeNull();
-    expect(scoreQuality({ metacriticScore: null, rating: null })).toBeNull();
+  it("yields no factor when the quality evidence is absent", () => {
+    expect(scoreQuality({ rating: null })).toBeNull();
   });
 });
 

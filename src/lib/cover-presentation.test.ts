@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { formatDescriptionPreview, formatFetchedAgo, resolveCoverPresentation } from "./cover-presentation";
 
 describe("resolveCoverPresentation", () => {
-  it("uses RAWG art when data is available", () => {
+  it("uses IGDB art when data is available", () => {
     expect(resolveCoverPresentation({ title: "Dark Souls", imageUrl: "https://img.test/ds.jpg", resolvedData: "off" })).toEqual({
       kind: "image",
       imageUrl: "https://img.test/ds.jpg",

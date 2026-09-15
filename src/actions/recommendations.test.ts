@@ -41,6 +41,33 @@ import { updatePlayState } from "@/actions/game-detail";
 import { EXPOSURE_COOLDOWN_DAYS, RUN_RETENTION_DAYS } from "@/lib/recommendations/types";
 import { logRecommendationEvent } from "@/lib/recommendations/events";
 import { rebuildRecommendationProfile } from "@/lib/recommendations/profile";
+
+function igdbPayload({
+  name = "Game",
+  genres = [],
+  themes = [],
+  keywords = [],
+  artworkUrls = [],
+  totalRating = null,
+}: {
+  name?: string;
+  genres?: string[];
+  themes?: string[];
+  keywords?: string[];
+  artworkUrls?: string[];
+  totalRating?: number | null;
+} = {}) {
+  const named = (values: string[]) => values.map((name, id) => ({ id: id + 1, name }));
+  return {
+    schemaVersion: 1, igdbId: 1, igdbSlug: name.toLowerCase().replaceAll(" ", "-"), name,
+    summary: null, firstReleaseDate: "2020-01-01T00:00:00.000Z", genres: named(genres), themes: named(themes),
+    keywords: named(keywords), developers: [], publishers: [], esrbRating: null, officialWebsite: null,
+    alternativeNames: [], ratings: { aggregated: { score: null, count: null }, community: { score: null, count: null }, total: { score: totalRating, count: totalRating === null ? null : 10 } },
+    collection: null, franchise: null, relations: [], gameModes: [], multiplayerModes: [], coverUrl: null,
+    artworkUrls, conceptArtUrls: [], screenshots: [], igdbUpdatedAt: null,
+    attribution: { provider: "IGDB", sourceUrl: "https://www.igdb.com", fetchedAt: "2026-01-01T00:00:00.000Z" }, palette: null,
+  };
+}
 import {
   dismissRecommendation,
   recordRunExposure,
@@ -258,13 +285,13 @@ describe("recommendation tune and preset actions", () => {
     expect(tuneStateUpsert).toHaveBeenCalledWith(expect.objectContaining({ update: { buyTune: tune } }));
   });
 
-  it("returns distinct sorted RAWG genre and tag values from catalog and wishlist", async () => {
+  it("returns distinct sorted IGDB genre and tag values from catalog and wishlist", async () => {
     gameFindMany.mockResolvedValue([
-      { metadataSnapshots: [{ payload: { title: "A", genres: ["RPG", "Puzzle"], tags: ["Story"] } }] },
-      { metadataSnapshots: [{ payload: { title: "B", genres: ["RPG"], tags: ["Co-op"] } }] },
+      { metadataSnapshots: [{ payload: igdbPayload({ genres: ["RPG", "Puzzle"], keywords: ["Story"] }) }] },
+      { metadataSnapshots: [{ payload: igdbPayload({ genres: ["RPG"], keywords: ["Co-op"] }) }] },
     ]);
     wishlistFindMany.mockResolvedValue([
-      { metadataSnapshot: { payload: { title: "C", genres: ["Action"], tags: ["Story"] } } },
+      { metadataSnapshot: { payload: igdbPayload({ genres: ["Action"], keywords: ["Story"] }) } },
     ]);
 
     await expect(listKnownGenreTagValues()).resolves.toEqual({
@@ -638,8 +665,8 @@ describe("updateRecommendations", () => {
       buyTune: null,
     });
     gameFindMany.mockResolvedValue([
-      { ...baseRow(), id: "game-aaa", name: "Aaa", metadataSnapshots: [{ payload: { title: "Aaa", genres: ["Puzzle"] } }] },
-      { ...baseRow(), id: "game-zzz", name: "Zzz", metadataSnapshots: [{ payload: { title: "Zzz", genres: ["RPG"] } }] },
+      { ...baseRow(), id: "game-aaa", name: "Aaa", metadataSnapshots: [{ payload: igdbPayload({ name: "Aaa", genres: ["Puzzle"] }) }] },
+      { ...baseRow(), id: "game-zzz", name: "Zzz", metadataSnapshots: [{ payload: igdbPayload({ name: "Zzz", genres: ["RPG"] }) }] },
     ]);
 
     const result = await updateRecommendations();
@@ -1239,7 +1266,7 @@ describe("updateRecommendations re-ranking", () => {
         id: "game-zzz",
         name: "Zzz",
         libraryEntry: libraryEntry({ interest: 4 }),
-        metadataSnapshots: [{ payload: { title: "Zzz", genres: ["RPG"], metacriticScore: 95 } }],
+        metadataSnapshots: [{ payload: igdbPayload({ name: "Zzz", genres: ["RPG"], totalRating: 95 }) }],
       },
     ]);
 
@@ -1251,10 +1278,10 @@ describe("updateRecommendations re-ranking", () => {
     )!;
     const items = playNextCall[0].data.items.create;
     expect(items.map((item: { game: { connect: { id: string } } }) => item.game.connect.id)).toEqual(["game-zzz", "game-aaa"]);
-    expect(items[0].score).toBe(45);
+    expect(items[0].score).toBe(44);
     expect(items[0].positive).toEqual(expect.arrayContaining([
       { factor: "taste_profile", label: "Matches your taste for rpg games", points: 3 },
-      { factor: "quality", label: "Critics rate it highly (Metacritic 95)", points: 2 },
+      { factor: "quality", label: "Players rate it highly (IGDB 95)", points: 1 },
     ]));
     expect(playNextCall[0].data.context).toMatchObject({
       rerank: { mode: "RERANKED", applied: { taste: 1, steam: 0, environment: 0, quality: 1 } },
@@ -1267,7 +1294,7 @@ describe("updateRecommendations re-ranking", () => {
         ...baseRow(),
         libraryEntry: libraryEntry({ interest: 2, playState: "ABANDONED", replayCandidate: true, preferredEnvironment: "LINUX" }),
         availability: [{ source: "STEAM", steamLastPlayed: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }],
-        metadataSnapshots: [{ payload: { title: "Portal 2", genres: ["Puzzle"], metacriticScore: 95 } }],
+        metadataSnapshots: [{ payload: igdbPayload({ name: "Portal 2", genres: ["Puzzle"], totalRating: 95 }) }],
         envCompat: [{ environment: "LINUX", status: "READY" }],
       },
     ]);
@@ -1378,7 +1405,7 @@ describe("updateRecommendations buy re-ranking", () => {
         id: "wish-rpg",
         name: "RPG Wish",
         interest: 4,
-        metadataSnapshot: { payload: { title: "RPG Wish", genres: ["RPG"], metacriticScore: 95 } },
+        metadataSnapshot: { payload: igdbPayload({ name: "RPG Wish", genres: ["RPG"], totalRating: 95 }) },
       },
       {
         ...buyRow(),
@@ -1386,7 +1413,7 @@ describe("updateRecommendations buy re-ranking", () => {
         name: "Plain Wish",
         interest: 4,
         updatedAt: new Date("2026-08-25T00:00:00.000Z"),
-        metadataSnapshot: { payload: { title: "Plain Wish", genres: ["Puzzle"] } },
+        metadataSnapshot: { payload: igdbPayload({ name: "Plain Wish", genres: ["Puzzle"] }) },
       },
     ]);
     gameFindMany
@@ -1401,10 +1428,10 @@ describe("updateRecommendations buy re-ranking", () => {
     )!;
     const items = buyCall[0].data.items.create;
     expect(items.map((item: { wishlistEntry: { connect: { id: string } } }) => item.wishlistEntry.connect.id)).toEqual(["wish-rpg", "wish-plain"]);
-    expect(items[0].score).toBe(45);
+    expect(items[0].score).toBe(44);
     expect(items[0].positive).toEqual(expect.arrayContaining([
       { factor: "taste_profile", label: "Matches your taste for rpg games", points: 3 },
-      { factor: "quality", label: "Critics rate it highly (Metacritic 95)", points: 2 },
+      { factor: "quality", label: "Players rate it highly (IGDB 95)", points: 1 },
     ]));
     expect(buyCall[0].data.context).toMatchObject({
       rerank: { mode: "RERANKED", applied: { taste: 1, steam: 0, environment: 0, quality: 1 } },
@@ -1466,7 +1493,7 @@ describe("updateRecommendations buy re-ranking", () => {
         interest: null,
         targetPriceMxn: "350.00",
         updatedAt: new Date("2026-08-21T00:00:00.000Z"),
-        metadataSnapshot: { payload: { title: "Expansion", genres: ["RPG"] } },
+        metadataSnapshot: { payload: igdbPayload({ name: "Expansion", genres: ["RPG"] }) },
         offers: [buyOffer()],
       },
     ]);
@@ -1489,7 +1516,7 @@ describe("updateRecommendations buy re-ranking", () => {
       (call) => (call[0] as { data: { kind: string } }).data.kind === "BUY",
     )!;
     const items = buyCall[0].data.items.create;
-    expect(items[0].score).toBe(8 + 6 + 3);
+    expect(items[0].score).toBe(17);
     expect(items[0].positive).toContainEqual({ factor: "taste_profile", label: "Matches your taste for rpg games", points: 3 });
   });
 });
@@ -1523,7 +1550,7 @@ describe("rotateRecommendationRole", () => {
     itemFindFirst.mockResolvedValue({ id: "item-1", gameId: "game-1", wishlistEntryId: null });
     gameFindUnique.mockResolvedValue({
       name: "Game B",
-      metadataSnapshots: [{ payload: { title: "Game B", genres: [], backgroundImageUrls: ["https://art.test/game-b.jpg"] } }],
+      metadataSnapshots: [{ payload: igdbPayload({ name: "Game B", artworkUrls: ["https://art.test/game-b.jpg"] }) }],
     });
 
     const result = await rotateRecommendationRole({ runId: "run-play", role: "BEST_FIT_1", itemId: "item-1" });

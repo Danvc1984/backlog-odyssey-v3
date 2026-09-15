@@ -3,8 +3,8 @@ import { externalUrl } from "@/lib/external-url";
 
 describe("externalUrl", () => {
   it("returns the normalized URL for http and https", () => {
-    expect(externalUrl("https://rawg.io/games/elden-ring")).toBe(
-      "https://rawg.io/games/elden-ring",
+    expect(externalUrl("https://igdb.io/games/elden-ring")).toBe(
+      "https://igdb.io/games/elden-ring",
     );
     expect(externalUrl("http://example.com/path")).toBe(
       "http://example.com/path",

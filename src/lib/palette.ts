@@ -1,6 +1,5 @@
 import { Vibrant } from "node-vibrant/node";
-
-import type { RawgPalette } from "./rawg-types";
+import type { GamePalette } from "./game-theme";
 
 type PaletteSwatchName =
   | "Vibrant"
@@ -14,9 +13,7 @@ interface PaletteSwatch {
   hex: string;
 }
 
-export type RawgPaletteSwatches = Partial<
-  Record<PaletteSwatchName, PaletteSwatch | null>
->;
+export type PaletteSwatches = Partial<Record<PaletteSwatchName, PaletteSwatch | null>>;
 
 const SWATCH_NAMES: PaletteSwatchName[] = [
   "Vibrant",
@@ -27,27 +24,17 @@ const SWATCH_NAMES: PaletteSwatchName[] = [
   "LightMuted",
 ];
 
-function firstHex(
-  swatches: RawgPaletteSwatches,
-  names: PaletteSwatchName[],
-): string | null {
+function firstHex(swatches: PaletteSwatches, names: PaletteSwatchName[]): string | null {
   for (const name of names) {
     const hex = swatches[name]?.hex;
-    if (hex) {
-      return hex;
-    }
+    if (hex) return hex;
   }
   return null;
 }
 
-export function selectPaletteFromSwatches(
-  swatches: RawgPaletteSwatches,
-): RawgPalette | null {
+export function selectPaletteFromSwatches(swatches: PaletteSwatches): GamePalette | null {
   const primary = firstHex(swatches, ["Vibrant", "DarkVibrant", ...SWATCH_NAMES]);
-  if (!primary) {
-    return null;
-  }
-
+  if (!primary) return null;
   return {
     primary,
     dark: firstHex(swatches, ["DarkVibrant", "DarkMuted"]) ?? primary,
@@ -55,9 +42,7 @@ export function selectPaletteFromSwatches(
   };
 }
 
-export async function extractPaletteFromImageBytes(
-  imageBytes: Buffer,
-): Promise<RawgPalette | null> {
+export async function extractPaletteFromImageBytes(imageBytes: Buffer): Promise<GamePalette | null> {
   const swatches = await Vibrant.from(imageBytes).getPalette();
   return selectPaletteFromSwatches(swatches);
 }

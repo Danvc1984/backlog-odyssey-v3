@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["@phosphor-icons/react"],
   },
   images: {
-    remotePatterns: [{ protocol: "https", hostname: "media.rawg.io" }],
+    remotePatterns: [{ protocol: "https", hostname: "images.igdb.com" }],
   },
 };
 

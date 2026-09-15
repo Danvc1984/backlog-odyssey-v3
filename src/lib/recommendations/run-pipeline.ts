@@ -4,7 +4,7 @@ import { RecommendationRole, type CompatibilityStatus, type Environment, type Ga
 import { pruneRecommendationEvents } from "@/lib/recommendations/events";
 import { rebuildRecommendationProfile } from "@/lib/recommendations/profile";
 import { RUN_RETENTION_DAYS, tuneContextSchema, type TuneContext } from "@/lib/recommendations/types";
-import { parseRawgMetadataPayload } from "@/lib/rawg-metadata-payload";
+import { parseRecommendationMetadata } from "@/lib/recommendations/metadata";
 import { resolveCandidateDimensionValues } from "@/lib/recommendations/profile";
 import { resolveDurationEstimate, type DurationProfile } from "@/lib/playtime-evidence";
 import { rerankPlayCandidates, type RerankPlayInput, type TastePreference } from "@/lib/recommendations/rerank";
@@ -86,7 +86,7 @@ export function buildPlayPipeline(
     const row = rows.get(item.id);
     if (!row) throw new Error(`Missing recommendation row for ${item.id}`);
     const payload = row.metadataSnapshots[0]?.payload;
-    const parsedPayload = parseRawgMetadataPayload(payload);
+    const parsedPayload = parseRecommendationMetadata(payload);
     const durationHours = resolveDurationEstimate(row.playtimeEvidence, durationProfile)?.hours ?? null;
     const dimensionValues = resolveCandidateDimensionValues(payload, {
       gameExperience: row.libraryEntry?.gameExperience ?? null,
@@ -117,7 +117,6 @@ export function buildPlayPipeline(
       primaryOs: setup.primaryOs,
       handheldFit: setup.handheldOs === "LINUX" && row.libraryEntry?.handheldSuitable === true,
       quality: {
-        metacriticScore: parsedPayload?.metacriticScore ?? null,
         rating: parsedPayload?.rating ?? null,
       },
     };
@@ -166,7 +165,7 @@ export function buildBuyPipeline(
   const buyRerankInputs: RerankBuyInput[] = tunedBuyPool.map((item) => {
     const view = wishViews.get(item.id);
     const payload = view?.payload ?? null;
-    const parsedPayload = parseRawgMetadataPayload(payload);
+    const parsedPayload = parseRecommendationMetadata(payload);
     const practicality = view?.compatEvidence
       ? classifyPlayPracticality(setup, view.compatEvidence, view.handheldSuitable ?? undefined)
       : null;
@@ -185,7 +184,6 @@ export function buildBuyPipeline(
         durationHours: view?.durationHours ?? null,
       }),
       quality: {
-        metacriticScore: parsedPayload?.metacriticScore ?? null,
         rating: parsedPayload?.rating ?? null,
       },
       tiebreak: {

@@ -28,7 +28,7 @@ enum Origin {
 
 enum MatchMethod {
   EXACT_STEAM_APP_ID
-  MANUAL_RAWG_SEARCH
+
   MANUAL_IGDB_SEARCH
   MANUAL_ITAD_LOOKUP
   INFERRED
@@ -200,7 +200,6 @@ enum Provider {
   PROTONDB
   ARE_WE_ANTICHEAT_YET
   STEAM_DECK_VERIFIED
-  RAWG
   IGDB
   ITAD
   STEAM
@@ -222,7 +221,6 @@ model IgdbTokenCache {
 enum PriceIdentityProvenance {
   STEAM_IMPORT
   USER
-  RAWG_SUGGESTION
   IGDB_SUGGESTION
 }
 
@@ -438,7 +436,7 @@ model EnrichmentJob {
   progress         Int                 @default(0)
   nextAttemptAt    DateTime?
   candidatePayload Json?
-  selectedRawgId   Int?
+
   selectedIgdbId   Int?
   lastErrorCode    String?
   lastErrorMessage String?
@@ -583,7 +581,7 @@ model WishlistEntry {
 model WishlistMetadataSnapshot {
   id              String    @id @default(cuid())
   wishlistEntryId String    @unique
-  provider        Provider  @default(RAWG)
+  provider        Provider  @default(IGDB)
   payload         Json
   sourceUrl       String?
   fetchedAt       DateTime  @default(now())

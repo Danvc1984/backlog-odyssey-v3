@@ -524,7 +524,7 @@
     practical-fit penalty; setup changes re-derive affected runs per the
     existing rules
 
-- [ ] 23. **IGDB as primary metadata, artwork, and playtime provider** -
+- [x] 23. **IGDB as primary metadata, artwork, and playtime provider** -
   replace RAWG completely with IGDB for catalog and wishlist evidence, keeping
   SteamSpy as the duration-only fallback; provider data rebuilds from a clean
   database restart that doubles as the new-provider workflow test
@@ -562,7 +562,7 @@
     identity remains editable, and the retired RAWG store-links and
     `storesearch` fallback are removed; wishlist metadata transfer on
     acquisition uses the IGDB snapshot
-  - [ ] 23e. **Engine re-derivation and RAWG retirement** - recommendation
+  - [x] 23e. **Engine re-derivation and RAWG retirement** - recommendation
     dimensions re-keyed to IGDB evidence with a per-dimension signal-value
     analysis (genres/themes/keywords, multiplayer modes, attributed ratings
     with sample size, era, publishers, collections/franchise) so each
@@ -625,13 +625,29 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   Has-DLC library filter), and calculated series/franchise shelves derived
   from the IGDB collection and franchise snapshot evidence
 
-- [ ] 28. **Recommendation behavior renewal** - a dedicated handheld play
-  role replacing the second Best Fit when the setup has a handheld, built on
-  the handheld-suitability flag and the feature-22 environment fit;
-  Tune-this-run polish with a reviewed question set once the re-keyed engine
-  lands and a redesigned, more distinctive presentation replacing the plain
-  accordion; rotation, exposure, and calibration behavior stay unchanged
-  pending real usage data
+- [ ] 28. **Recommendation behavior renewal** - after the re-keyed engine lands,
+  replace the second Best Fit with a dedicated Handheld pick whenever the setup
+  includes a handheld. It selects the highest-ranked play-eligible,
+  handheld-suitable game under the existing environment-fit rules; when none
+  qualifies, omit the role with an explanation. A Handheld Tune toggle strictly
+  limits every Play Next role to handheld-suitable games.
+
+  Replace the plain Tune accordion with a distinctive default question flow:
+  time (Any, Under 6h, 6-20h, 20-50h, 50+h), play style (Any, Solo, Online
+  with others, Couch co-op), and familiarity (Familiar, Balanced, Different).
+  Handheld is a separate combinable toggle. Known conflicting play modes are
+  excluded; unknown play-mode metadata remains a caveated fallback. Familiar
+  boosts learned history and manual genre/tag preferences, with a caveated
+  normal-ranking fallback. Balanced keeps current scoring. Different strictly
+  selects outside those signals, leaving a role empty when no such candidate
+  exists. Existing genres, tags, sequel posture, era, maturity, and source
+  controls move under More filters with their current soft, capped, any-match
+  behavior.
+
+  Active Tune state is local to one browser tab, survives reloads in that tab,
+  clears when it closes, and applies only through Update recommendations.
+  Named presets persist but load only into the tab-local state. Rotation,
+  exposure, and calibration behavior stay unchanged pending real usage data
 
 - [ ] 29. **Deployment and CI readiness** - Vercel/Supabase environment
   review, Vercel Cron daily run at 06:00 UTC-6 with `CRON_SECRET` enqueueing
