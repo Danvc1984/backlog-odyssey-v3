@@ -125,7 +125,7 @@ export function WishlistIgdbEnrichmentControl({
       eyebrow="Maintenance"
       title="Enrichment"
       id="wishlist-igdb-enrichment-heading"
-      description="Refresh matched game information without changing your catalog name automatically."
+      description="Refresh matched game information."
       status={<StatusPill tone={loading || confirmOverwrite || showCandidates ? "warning" : "neutral"}>{confirmOverwrite ? "Confirm refresh" : status}</StatusPill>}
     >
       {confirmOverwrite ? (

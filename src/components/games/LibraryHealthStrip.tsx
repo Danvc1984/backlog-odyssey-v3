@@ -162,7 +162,7 @@ export function LibraryHealthStrip({
         kind="signal"
         eyebrow="Backlog progress"
         value={`${health.activeBacklog.playedBefore} / ${health.activeBacklog.total}`}
-        detail={`played through · ${health.abandoned} abandoned`}
+        detail="played through"
       />
       <Tile
         kind="warning"
@@ -172,9 +172,9 @@ export function LibraryHealthStrip({
       />
       <Tile
         kind="opportunity"
-        eyebrow="Personal profile"
+        eyebrow="Personalization"
         value={health.recommendationProfile.incomplete.length}
-        detail="games need one more signal"
+        detail="games in need of personalization"
       />
       <article className="rounded-lg border border-signal/60 bg-signal/10 p-4">
         <div className="technical-label text-muted-foreground">Main game</div>
@@ -186,7 +186,7 @@ export function LibraryHealthStrip({
               onPick={(id) => setMainGame(id)}
               onClear={(id) => clearMainGame(id)}
             />
-            <p className="mt-1 text-xs text-muted-foreground">In the spotlight on Today</p>
+            <p className="mt-1 text-xs text-muted-foreground">In the spotlight</p>
           </>
         ) : (
           <p className="mt-1.5 text-xs text-muted-foreground">

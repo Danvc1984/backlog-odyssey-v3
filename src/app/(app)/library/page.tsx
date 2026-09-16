@@ -324,9 +324,9 @@ export default async function LibraryPage({
     <div data-view={view}>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="technical-label text-muted-foreground">Owned Games Library</p>
+          <p className="technical-label text-muted-foreground">Library</p>
           <h1 className="mt-2">
-            Your voyage, <span className="text-signal-strong">charted</span>
+            Your voyage, <span className="text-signal-strong">charted</span>hlist
           </h1>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground">
             Keep your catalog shipshape, track your progress, and choose which games deserve the next leg of your voyage.

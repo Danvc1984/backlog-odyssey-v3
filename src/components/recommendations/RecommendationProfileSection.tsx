@@ -99,7 +99,7 @@ export function RecommendationProfileSection({
   return (
     <SectionCard
       eyebrow="Recommendations"
-      title="Profile"
+      title="Recommendation Profile"
       id="recommendation-profile-heading"
       description="Remove recommendation runs, dismissals, event history, learned profile, preferences, tune state, and presets. Your games, wishlist, offers, and provider data stay unchanged."
       aside={

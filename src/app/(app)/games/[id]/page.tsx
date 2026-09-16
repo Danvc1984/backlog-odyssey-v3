@@ -237,7 +237,7 @@ export default async function GameDetailPage({
         <HashScrollTarget />
       <p className="technical-label text-muted-foreground">
         <a href="/library" className="hover:text-foreground hover:underline">
-          Owned Games Library
+          Library
         </a>
         {game.type === "DLC" && game.baseGame ? (
           <>
@@ -270,6 +270,8 @@ export default async function GameDetailPage({
         }
       />
 
+      
+
       <MetadataSection
         payload={igdbPayload}
         sourceUrl={igdbSnapshot?.sourceUrl ?? null}
@@ -277,6 +279,22 @@ export default async function GameDetailPage({
         durationEvidence={durationEvidence}
         durationProfile={durationProfile}
       />
+
+      <SectionCard
+        eyebrow="Catalog identity"
+        title="Update Game Title"
+      >
+        {game.type === "DLC" && (
+          <div className="mb-4">
+            <ParentBaseGameBanner baseGame={game.baseGame} />
+          </div>
+        )}
+        <GameNameForm
+          key={game.name}
+          gameId={game.id}
+          initialName={game.name}
+        />
+      </SectionCard>
 
       <IgdbEnrichmentPanel
         gameId={game.id}
@@ -293,7 +311,7 @@ export default async function GameDetailPage({
         id="play-state"
         sectionId="play-state"
         className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
-        description="Set the course for where this game stands in your voyage."
+        description="Set the status of your journey with this game."
         status={
           <StatusPill>
             {game.libraryEntry?.playState?.replaceAll("_", " ") ??
@@ -319,29 +337,12 @@ export default async function GameDetailPage({
       </SectionCard>
       )}
 
-      <SectionCard
-        eyebrow="Catalog identity"
-        title="Name"
-        description="Keep the catalog name true to the way you know this game."
-      >
-        {game.type === "DLC" && (
-          <div className="mb-4">
-            <ParentBaseGameBanner baseGame={game.baseGame} />
-          </div>
-        )}
-        <GameNameForm
-          key={game.name}
-          gameId={game.id}
-          initialName={game.name}
-        />
-      </SectionCard>
-
       {otherGameName && <DuplicateWarning otherGameName={otherGameName} />}
 
       {game.type === "BASE_GAME" && (
       <SectionCard
         eyebrow="Personal"
-        title="Profile"
+        title="Personal Profile"
         id="personal-fields"
         sectionId="personal-fields"
         className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
@@ -425,7 +426,7 @@ export default async function GameDetailPage({
         eyebrow="Where it lives"
         title="Availability"
         id="availability"
-        description="Sources and identity stay explicit and editable."
+        description="Platforms where you can find this game. You can pick and choose them *here*"
         status={
           <StatusPill>
             {game.availability.length} source
@@ -452,7 +453,7 @@ export default async function GameDetailPage({
       <SectionCard
         eyebrow="Organization"
         title="Tags"
-        description="Personal markers for finding your way back."
+        description="Personal markers for finding your way back to this game."
         status={
           <StatusPill>
             {game.tags.length} tag{game.tags.length === 1 ? "" : "s"}
@@ -517,7 +518,7 @@ export default async function GameDetailPage({
       <SectionCard
         eyebrow="Danger zone"
         title={`Delete ${game.name}`}
-        description="Removes this game and its attached records. You can undo it shortly after."
+        description="Removes this game and its attached records."
         tone="danger"
       >
         <div className="flex justify-end">

@@ -279,11 +279,6 @@ export default async function TodayPage() {
             Odyssey
             <span className="text-signal-strong"> dashboard</span>
           </h1>
-          <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-            The road ahead is clear enough: keep your current campaign moving,
-            then use the signals below to choose what deserves your time or
-            coin.
-          </p>
         </div>
       </header>
 
@@ -353,7 +348,7 @@ export default async function TodayPage() {
         ))}
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No eligible games are ready for this leg.
+            No eligible games.
           </p>
         ) : !hasPlayRoles ? (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -449,13 +444,12 @@ export default async function TodayPage() {
           presets={presetOptions}
         />
         {!latestBuyRun ? (
-          <p className="text-sm text-muted-foreground">
-            The buying trail has not begun. Update recommendations to score
+          <p className="text-sm text-muted-foreground">Update recommendations to see eligible games from
             your wishlist.
           </p>
         ) : buyItems.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No eligible wishlist purchases are ready for this leg.
+            No eligible wishlist purchasese.
           </p>
         ) : !hasBuyRoles ? (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -519,8 +513,8 @@ export default async function TodayPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <SectionCard
           eyebrow="Steam / last 24 hours"
-          title="Recent activity"
-          description="Small signals from what you actually touched."
+          title="Recent activity on Steam"
+          description="Games that have been played or purchased on Steam in the last 24 hours with your Steam account."
           aside={<SteamActivityRefreshButton />}
         >
           <RecentSteamActivity
@@ -532,7 +526,6 @@ export default async function TodayPage() {
         <SectionCard
           eyebrow="Coverage / attention"
           title="Data health"
-          description="Visible counts summarize backlog progress and current campaigns."
         >
           <TodayDataHealth
             activeBacklog={dataHealth.activeBacklog}

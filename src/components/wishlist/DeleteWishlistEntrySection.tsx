@@ -81,9 +81,6 @@ export function DeleteWishlistEntrySection({
         </Dialog>
       }
     >
-      <p className="text-sm text-muted-foreground">
-        This only affects the wishlist entry. Your catalog games and provider records stay unchanged.
-      </p>
     </SectionCard>
   );
 }

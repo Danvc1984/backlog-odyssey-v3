@@ -87,21 +87,26 @@ export function CompatibilitySweepPanel({
   const [igdbBatchId, setIgdbBatchId] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dismissedGameIds, setDismissedGameIds] = useState<Set<string>>(new Set());
+  const [dismissedGameIds, setDismissedGameIds] = useState<Set<string>>(
+    new Set(),
+  );
   const reportedTerminalBatchId = useRef<string | null>(null);
   const lastKnownStatus = useRef<CompatBatchView["status"] | null>(null);
 
-  const requestBatch = useCallback(async (batchId: string, method: "GET" | "POST") => {
-    const response = await fetch(
-      `/api/enrichment/compat/batches/${encodeURIComponent(batchId)}`,
-      { method, cache: "no-store" },
-    );
-    const result = (await response.json()) as BatchEndpointResult;
-    if (!response.ok || !result.success || !result.data) {
-      throw new Error(result.error ?? "Failed to load compatibility sweep");
-    }
-    return result.data;
-  }, []);
+  const requestBatch = useCallback(
+    async (batchId: string, method: "GET" | "POST") => {
+      const response = await fetch(
+        `/api/enrichment/compat/batches/${encodeURIComponent(batchId)}`,
+        { method, cache: "no-store" },
+      );
+      const result = (await response.json()) as BatchEndpointResult;
+      if (!response.ok || !result.success || !result.data) {
+        throw new Error(result.error ?? "Failed to load compatibility sweep");
+      }
+      return result.data;
+    },
+    [],
+  );
 
   const showBatch = useCallback((latest: CompatBatchView) => {
     lastKnownStatus.current = latest.status;
@@ -119,18 +124,24 @@ export function CompatibilitySweepPanel({
     }
   }, []);
 
-  const refreshBatch = useCallback(async (batchId: string) => {
-    const latest = await requestBatch(batchId, "GET");
-    showBatch(latest);
-    return latest;
-  }, [requestBatch, showBatch]);
+  const refreshBatch = useCallback(
+    async (batchId: string) => {
+      const latest = await requestBatch(batchId, "GET");
+      showBatch(latest);
+      return latest;
+    },
+    [requestBatch, showBatch],
+  );
 
-  const runBatch = useCallback(async (batchId: string) => {
-    const latest = await requestBatch(batchId, "POST");
-    showBatch(latest);
-    if (latest.isTerminal) router.refresh();
-    return latest;
-  }, [requestBatch, router, showBatch]);
+  const runBatch = useCallback(
+    async (batchId: string) => {
+      const latest = await requestBatch(batchId, "POST");
+      showBatch(latest);
+      if (latest.isTerminal) router.refresh();
+      return latest;
+    },
+    [requestBatch, router, showBatch],
+  );
 
   const activeBatchId = batch?.status === "RUNNING" ? batch.id : null;
 
@@ -152,7 +163,11 @@ export function CompatibilitySweepPanel({
         }
       } catch (caught) {
         if (!cancelled) {
-          setError(caught instanceof Error ? caught.message : "Failed to update compatibility sweep");
+          setError(
+            caught instanceof Error
+              ? caught.message
+              : "Failed to update compatibility sweep",
+          );
         }
       } finally {
         inFlight = false;
@@ -173,35 +188,45 @@ export function CompatibilitySweepPanel({
     setDismissedGameIds(new Set());
     try {
       const result = await startCompatibilitySweep({});
-      if (!result.success) throw new Error(result.error ?? "Failed to queue compatibility sweep");
+      if (!result.success)
+        throw new Error(result.error ?? "Failed to queue compatibility sweep");
 
       if (result.data.kind === "NO_ELIGIBLE") {
         setBatch(null);
-        toast.info("Compatibility sweep is not available until you add games to your library.");
+        toast.info(
+          "Compatibility sweep is not available until you add games to your library.",
+        );
         return;
       }
 
       const latest = await refreshBatch(result.data.batchId);
       if (latest.status === "RUNNING") await runBatch(latest.id);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Failed to queue compatibility sweep");
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Failed to queue compatibility sweep",
+      );
     } finally {
       setRunning(false);
     }
   };
 
-  const visibleFailedGames = batch?.failedGames.filter(
-    (game) => !dismissedGameIds.has(game.id),
-  ) ?? [];
+  const visibleFailedGames =
+    batch?.failedGames.filter((game) => !dismissedGameIds.has(game.id)) ?? [];
 
   return (
     <SectionCard
       eyebrow="Provider maintenance"
-      title={compatibilityActive ? "Enrichment and compatibility" : "IGDB enrichment"}
+      title={
+        compatibilityActive ? "Enrichment and compatibility" : "IGDB enrichment"
+      }
       id="compatibility-sweep-heading"
-      description={compatibilityActive
-        ? "Enrich IGDB metadata and refresh ProtonDB and AWAY evidence by library domain."
-        : "Enrich IGDB metadata for eligible catalog games."}
+      description={
+        compatibilityActive
+          ? "Enrich IGDB metadata and refresh ProtonDB and AWAY evidence by library domain."
+          : "Enrich IGDB metadata for eligible catalog games."
+      }
     >
       <div>
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -213,19 +238,29 @@ export function CompatibilitySweepPanel({
           </div>
           <div className="flex flex-wrap justify-end gap-2">
             <IgdbBatchEnrichmentButton onStarted={setIgdbBatchId} />
-            {compatibilityActive && <Button
+            {compatibilityActive && (
+              <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 disabled={running || activeBatchId !== null}
                 onClick={() => void startSweep()}
               >
-                {running ? "Starting..." : activeBatchId ? "Sweep running..." : "Sweep compatibility"}
-              </Button>}
+                {running
+                  ? "Starting..."
+                  : activeBatchId
+                    ? "Sweep running..."
+                    : "Sweep compatibility"}
+              </Button>
+            )}
           </div>
         </div>
 
-        <IgdbBatchEnrichmentPanel initialBatch={initialIgdbBatch} refreshBatchId={igdbBatchId} embedded />
+        <IgdbBatchEnrichmentPanel
+          initialBatch={initialIgdbBatch}
+          refreshBatchId={igdbBatchId}
+          embedded
+        />
 
         {compatibilityActive && batch && (
           <div className="mt-4 space-y-3 text-sm">
@@ -242,7 +277,9 @@ export function CompatibilitySweepPanel({
               max={100}
               aria-label="Compatibility sweep progress"
             />
-            <p className="text-xs text-muted-foreground">{batch.progress}% complete</p>
+            <p className="text-xs text-muted-foreground">
+              {batch.progress}% complete
+            </p>
             <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground sm:grid-cols-5">
               <span>Total: {batch.counts.total}</span>
               <span>Queued: {batch.counts.queued}</span>
@@ -254,11 +291,19 @@ export function CompatibilitySweepPanel({
 
             {visibleFailedGames.length > 0 && (
               <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3">
-                <p className="font-medium">Compatibility refresh failed for these games</p>
+                <p className="font-medium">
+                  Compatibility refresh failed for these games
+                </p>
                 <ul className="mt-2 space-y-1">
                   {visibleFailedGames.map((game) => (
-                    <li key={game.id} className="flex items-center justify-between gap-2">
-                      <Link href={`/games/${game.id}`} className="text-primary hover:underline">
+                    <li
+                      key={game.id}
+                      className="flex items-center justify-between gap-2"
+                    >
+                      <Link
+                        href={`/games/${game.id}`}
+                        className="text-primary hover:underline"
+                      >
                         {game.name}
                       </Link>
                       <Button
@@ -267,7 +312,11 @@ export function CompatibilitySweepPanel({
                         size="icon"
                         className="h-7 w-7"
                         aria-label={`Dismiss ${game.name} from failed games`}
-                        onClick={() => setDismissedGameIds((current) => new Set(current).add(game.id))}
+                        onClick={() =>
+                          setDismissedGameIds((current) =>
+                            new Set(current).add(game.id),
+                          )
+                        }
                       >
                         <XIcon aria-hidden />
                       </Button>
@@ -281,40 +330,9 @@ export function CompatibilitySweepPanel({
 
         {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
       </div>
-
-      {failedJobs.length > 0 && (
-        <div className="mt-4 border-t border-border pt-4">
-          <h4 className="text-sm font-medium">Failed enrichment jobs</h4>
-          <ul className="mt-2 space-y-2 text-sm">
-            {failedJobs.map((job) => (
-              <li
-                key={job.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border px-3 py-2"
-              >
-                <div className="min-w-0">
-                  <Link
-                    href={`/games/${job.gameId}`}
-                    className="block font-medium text-foreground hover:underline"
-                  >
-                    {job.gameName}
-                  </Link>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {job.provider.replaceAll("_", " ").toLowerCase()}
-                    {job.error ? ` - ${job.error}` : ""}
-                  </p>
-                </div>
-                <div className="shrink-0">
-                  {RETRYABLE_PROVIDERS.includes(job.provider) && (
-                    <EnrichmentRetryButton jobId={job.id} />
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
+      {compatibilityActive && (
+        <WishlistCompatSweepPanel initialRun={initialWishlistRun} />
       )}
-
-      {compatibilityActive && <WishlistCompatSweepPanel initialRun={initialWishlistRun} />}
     </SectionCard>
   );
 }

@@ -40,7 +40,7 @@ export function DlcSection({
     <SectionCard
       eyebrow="Related content"
       title="DLC & expansions"
-      description="Acquired and wishlist DLC stay in separate, paginated shelves. DLCs do not add play states."
+      description="Acquired and wishlisted DLC."
       status={<StatusPill>{dlcs.length + wishlistDlcs.length} linked</StatusPill>}
     >
       <div className="mb-4 flex flex-wrap justify-end gap-2">

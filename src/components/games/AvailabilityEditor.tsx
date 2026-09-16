@@ -211,46 +211,6 @@ export function AvailabilityEditor({ gameId, rows, savedSources }: AvailabilityE
           )
         })}
       </div>
-      <div className="grid gap-2">
-        <label htmlFor="add-availability-source" className="text-sm font-medium">
-          Add a source not listed
-        </label>
-        <div className="relative">
-          <Input
-            id="add-availability-source"
-            value={sourceQuery}
-            placeholder="Type a store or alias..."
-            disabled={busyKey !== null}
-            onFocus={() => setSourceListOpen(true)}
-            onChange={(event) => {
-              setSourceQuery(event.target.value)
-              setActiveSuggestion(0)
-              setSourceListOpen(true)
-            }}
-            onKeyDown={handleSourceKeyDown}
-          />
-          {sourceListOpen && sourceSuggestions.known.length > 0 && (
-            <ul role="listbox" className="absolute z-10 mt-1 w-full rounded-md border border-border bg-popover p-1 shadow-md">
-              {sourceSuggestions.known.map((suggestion, index) => (
-                <li key={suggestion.key} role="option" aria-selected={index === activeSuggestion}>
-                  <button
-                    type="button"
-                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted"
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => void addSource(suggestion.label)}
-                  >
-                    <SourceIcon iconName={suggestion.iconName} brandIcon={suggestion.brandIcon} />
-                    {suggestion.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        {sourceSuggestions.matchesSaved && (
-          <p className="text-xs text-muted-foreground">This source is already saved.</p>
-        )}
-      </div>
     </div>
   )
 }

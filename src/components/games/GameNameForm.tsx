@@ -39,7 +39,6 @@ export function GameNameForm({
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-3 sm:max-w-xl">
-      <Label htmlFor="game-name">Game name</Label>
       <div className="flex flex-col gap-2 sm:flex-row">
         <Input
           id="game-name"
@@ -49,7 +48,7 @@ export function GameNameForm({
           required
         />
         <Button type="submit" disabled={saving} className="sm:shrink-0">
-          {saving ? "Saving..." : "Save name"}
+          {saving ? "Saving..." : "Update name"}
         </Button>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}

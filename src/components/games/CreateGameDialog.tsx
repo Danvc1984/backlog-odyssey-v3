@@ -162,25 +162,11 @@ export function CreateGameDialog({
         <DialogHeader>
           <DialogTitle>Add a game to your catalog</DialogTitle>
           <DialogDescription>
-            Bring a manually owned game aboard your catalog.
+            Fill out the form below to add a game to your library. You can optionally search for an IGDB match and select a source.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-5">
-          <div className="grid gap-2">
-            <Label htmlFor="interest">Interest</Label>
-            <Select value={interest} onValueChange={setInterest} disabled={submitting}>
-              <SelectTrigger id="interest" aria-label="Interest">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[5, 4, 3, 2, 1].map((value) => (
-                  <SelectItem key={value} value={String(value)}>
-                    {value} star{value === 1 ? "" : "s"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          
           <div className="grid gap-2">
             <Label htmlFor="igdb-name">Name and IGDB match</Label>
             <div className="flex gap-2">
@@ -218,6 +204,19 @@ export function CreateGameDialog({
             )}
           </div>
           <div className="grid gap-2">
+            <Label htmlFor="interest">Interest</Label>
+            <Select value={interest} onValueChange={setInterest} disabled={submitting}>
+              <SelectTrigger id="interest" aria-label="Interest">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[5, 4, 3, 2, 1].map((value) => (
+                  <SelectItem key={value} value={String(value)}>
+                    {value} star{value === 1 ? "" : "s"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Label htmlFor="source">Availability</Label>
             <div className="relative">
               <Input

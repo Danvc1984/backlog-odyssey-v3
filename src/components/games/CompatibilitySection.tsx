@@ -171,7 +171,6 @@ export function CompatibilitySection({
       eyebrow="Playability"
       title="Compatibility"
       id="compatibility-heading"
-      description="Linux first, Windows fallback when needed."
       aside={
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           {hasSteamIdentity && <span className={age !== null && age > 150 ? "text-warning-text" : undefined}>

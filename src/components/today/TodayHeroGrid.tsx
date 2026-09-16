@@ -26,10 +26,18 @@ const PLAY_STATE_LABELS: Record<string, string> = {
 };
 
 function playStateLabel(playState: string): string {
-  return PLAY_STATE_LABELS[playState] ?? playState.replaceAll("_", " ").toLowerCase();
+  return (
+    PLAY_STATE_LABELS[playState] ?? playState.replaceAll("_", " ").toLowerCase()
+  );
 }
 
-function Chip({ children, className }: { children: React.ReactNode; className?: string }) {
+function Chip({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <span
       className={cn(
@@ -61,7 +69,6 @@ function Spotlight({ game }: { game: TodayHeroGame }) {
         />
         <div className="flex flex-col justify-between gap-6 p-6">
           <div>
-            <p className="technical-label text-muted-foreground">Current focus</p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               {isMainGame && (
                 <Chip className="border-signal/40 bg-signal/10 text-signal-strong">
@@ -80,14 +87,12 @@ function Spotlight({ game }: { game: TodayHeroGame }) {
             >
               {game.name}
             </h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {isMainGame
-                ? "Your main game holds the center of the voyage. Keep its thread warm or choose the next move below."
-                : "One of your active campaigns is calling. Keep its thread warm or choose the next move below."}
-            </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
-            <Link href={`/games/${game.id}`} className={buttonVariants({ variant: "ghost", size: "sm" })}>
+            <Link
+              href={`/games/${game.id}`}
+              className={buttonVariants({ variant: "ghost", size: "sm" })}
+            >
               View details
             </Link>
             {!isMainGame && <MakeMainGameButton gameId={game.id} />}
@@ -102,9 +107,12 @@ function SpotlightEmpty() {
   return (
     <section className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card p-8 text-center">
       <p className="technical-label text-muted-foreground">Current focus</p>
-      <h2 className="mt-3 text-xl font-bold tracking-[-0.03em]">No game holds the helm yet</h2>
+      <h2 className="mt-3 text-xl font-bold tracking-[-0.03em]">
+        No game holds the helm yet
+      </h2>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-        Choose a main game or mark a title in progress from its detail page to keep it close at hand here.
+        Choose a main game or mark a title in progress from its detail page to
+        keep it close at hand here.
       </p>
       <Link
         href="/library"
@@ -126,24 +134,26 @@ function BuySignal({ offer }: { offer: TodayOfferView }) {
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <p className="technical-label text-opportunity-text">Buy signal</p>
         <span className="rounded-full bg-opportunity/15 px-2.5 py-1 text-xs font-medium text-opportunity-text">
-          #1 best deal
+          A worthy bargain has surfaced!
         </span>
       </div>
       <h2
         id="today-buy-heading"
         className="mt-4 text-lg font-bold tracking-[-0.03em]"
       >
-        A worthy bargain has surfaced.
+        {offer.gameName}
       </h2>
-      <p className="mt-2 font-medium">{offer.gameName}</p>
+      <p className="mt-2 font-medium"></p>
       <p className="mt-1 text-3xl font-bold tracking-tight">
         {offer.price.toFixed(2)} {offer.currency}
       </p>
       <p className="mt-1 text-xs text-muted-foreground">
-        {offer.store} · {offer.discountPercent === null ? "no discount" : `${offer.discountPercent}% off`} · fetched{" "}
-        {formatFetchedAgo(offer.fetchedAt, new Date())}
+        {offer.store} ·{" "}
+        {offer.discountPercent === null
+          ? "no discount"
+          : `${offer.discountPercent}% off`}{" "}
+        · fetched {formatFetchedAgo(offer.fetchedAt, new Date())}
       </p>
       <div className="mt-4 border-t border-border pt-4">
         <Link
@@ -161,9 +171,12 @@ function BuySignalEmpty() {
   return (
     <aside className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card p-8 text-center">
       <p className="technical-label text-muted-foreground">Buy signal</p>
-      <h2 className="mt-3 text-xl font-bold tracking-[-0.03em]">The buying tide is quiet</h2>
+      <h2 className="mt-3 text-xl font-bold tracking-[-0.03em]">
+        The buying tide is quiet
+      </h2>
       <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
-        Nothing fresh and under target has surfaced this cycle. Check the wishlist for current prices and targets.
+        Nothing fresh and under target has surfaced this cycle. Check the
+        wishlist for current prices and targets.
       </p>
       <Link
         href="/wishlist"
@@ -182,17 +195,28 @@ export function TodayHeroGrid({
   games: readonly TodayHeroGame[];
   offers: readonly TodayOfferView[];
 }) {
-  const mainGame = games.find((game) => game.libraryEntry?.isMainGame === true) ?? null;
+  const mainGame =
+    games.find((game) => game.libraryEntry?.isMainGame === true) ?? null;
   const inProgressGames = games.filter(
-    (game) => game.libraryEntry?.playState === "IN_PROGRESS" && game.id !== mainGame?.id,
+    (game) =>
+      game.libraryEntry?.playState === "IN_PROGRESS" &&
+      game.id !== mainGame?.id,
   );
-  const focusGames = mainGame ? [mainGame, ...inProgressGames] : inProgressGames;
+  const focusGames = mainGame
+    ? [mainGame, ...inProgressGames]
+    : inProgressGames;
   const bestOffer = offers[0] ?? null;
-  const focusSlides = focusGames.map((game) => <Spotlight key={game.id} game={game} />);
+  const focusSlides = focusGames.map((game) => (
+    <Spotlight key={game.id} game={game} />
+  ));
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(300px,0.6fr)]">
-      {focusSlides.length > 0 ? <Carousel label="Today focus" slides={focusSlides} /> : <SpotlightEmpty />}
+      {focusSlides.length > 0 ? (
+        <Carousel label="Today focus" slides={focusSlides} />
+      ) : (
+        <SpotlightEmpty />
+      )}
       {bestOffer ? <BuySignal offer={bestOffer} /> : <BuySignalEmpty />}
     </div>
   );
