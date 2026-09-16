@@ -649,10 +649,46 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   Named presets persist but load only into the tab-local state. Rotation,
   exposure, and calibration behavior stay unchanged pending real usage data
 
-- [ ] 29. **Deployment and CI readiness** - Vercel/Supabase environment
+- [ ] 29. **Personal-data and availability simplification** - remove the
+  redundant per-game availability display label and remove catalog/wishlist
+  notes from the Prisma model, migrations, validation, actions, forms, detail
+  pages, acquisition transfer, recommendation inputs, and export/import. Use
+  each reusable source's canonical name everywhere. Keep reusable-source
+  creation, rename, and archive exclusively in Settings; game forms and detail
+  pages may only assign saved active sources and link to that Settings section.
+  Add compact Library-card overflow actions for Edit availability and Delete,
+  reusing the existing destructive confirmation and Undo behavior. Compact the
+  retained personal fields, replace permanent helper paragraphs with accessible
+  information controls, align related fields where space permits, and version
+  export/import so legacy removed fields are discarded rather than restored.
+
+- [ ] 30. **Unified personal tags and collection shelves** - make personal tags
+  the sole manual grouping model: every tag automatically creates a browsable
+  collection shelf, games may belong to multiple tags, and existing manual
+  collections migrate to same-named tags with memberships unioned on normalized
+  collisions before the separate manual Collection model is removed. Keep
+  calculated system shelves and IGDB series/franchise shelves read-only and
+  distinct. Rework Collections browsing and tag management around the unified
+  model, remove the separate Collection editor from game details, and preserve
+  Library filtering. Add explicit personal-tag targets to Tune under More
+  filters as a soft, capped, any-match boost, visually distinct from IGDB
+  genres/themes/keywords and inactive by default; include presets, run context,
+  explanations, reset, and export/import coverage.
+
+- [ ] 31. **Current play state and prior-completion history** - retire
+  `PLAYED_BEFORE` as a play state, add an independent `playedBefore` checkbox,
+  and use current states `NOT_STARTED`, `IN_PROGRESS`, `COMPLETED`, and
+  `ABANDONED`. A replay can be `IN_PROGRESS` while `playedBefore` remains true;
+  the separate replay flag continues to mean recommendation intent. Migrate
+  legacy `PLAYED_BEFORE` rows to `COMPLETED` plus prior completion, then update
+  every state control, bulk/taste-setup flow, system shelf, backlog count,
+  recommendation eligibility/profile/event rule, acquisition prompt, export,
+  import, and test. Preserve completion evidence without double-counting an
+  active replay.
+
+- [ ] 32. **Deployment and CI readiness** - Vercel/Supabase environment
   review, Vercel Cron daily run at 06:00 UTC-6 with `CRON_SECRET` enqueueing
   the price refresh plus a compatibility freshness sweep for catalog and
   wishlist evidence older than the 180-day window, queue overlap protection,
-  production build,
-  smoke test, one reproducible Verify command, and automatic checks when
-  configured; final planned step but not an inflexible feature gate
+  production build, smoke test, one reproducible Verify command, and automatic
+  checks when configured; final planned step but not an inflexible feature gate

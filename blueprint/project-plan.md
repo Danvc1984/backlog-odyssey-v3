@@ -3,7 +3,7 @@
 ## 1. Problem
 
 Gaming information is fragmented across Steam, price comparison services,
-compatibility communities, metadata catalogs, and personal notes. The owner
+compatibility communities, metadata catalogs, and personal decisions. The owner
 needs one private assistant to decide what to play, what to buy in Mexico, and
 which environment is most practical.
 
@@ -34,10 +34,12 @@ registration, and collaboration are outside the MVP.
 - Reusable multi-source availability: built-in Steam and ROM sources plus
   user-created alternative stores, source-aware Library filtering, and soft
   play-next source tuning.
-- Game detail, play state, personal fields, tags, collections, and availability.
-- Default system shelves (in progress, completed, backlog, handheld picks)
-  plus calculated IGDB series/franchise shelves alongside manual
-  collections.
+- Game detail, current play state, prior-completion history, compact personal
+  fields, tags, and availability.
+- One manual grouping model: personal tags automatically produce collection
+  shelves and support multi-tag membership. Default system shelves (in progress,
+  completed, backlog, handheld picks) and calculated IGDB series/franchise
+  shelves remain distinct calculated views.
 - Steam account linking, initial import, and independent manual synchronization.
 - Duplicate detection, review, dismiss, merge, delete, and short-lived Undo.
 - IGDB metadata, artwork, and playtime enrichment for catalog and wishlist entries.
@@ -81,6 +83,10 @@ registration, and collaboration are outside the MVP.
 - Dawn and Sunset palette families, Cinzel/Inter typography, official brand
   icons, and an Odyssey voice pass over expressive copy.
 - Settings and manual JSON export with empty-schema restore.
+- Simplified personal data and editing boundaries: no per-game availability
+  display label or catalog/wishlist notes; reusable alternative-source
+  definitions are managed only in Settings, while games select from saved
+  sources.
 - Deployment and CI readiness as the final planned milestone, without making it
   an inflexible MVP gate.
 
@@ -112,7 +118,7 @@ store:
 - Name.
 - Base game or DLC type.
 - Target base game ID (required if type is DLC).
-- Notes, local interest, and an optional personal **Game experience / intention**.
+- Local interest and an optional personal **Game experience / intention**.
 - Optional external identifiers.
 - Independent IGDB metadata snapshot (base games via their own identity;
   DLC wishes via their own IGDB identity matched from the owned base game's
@@ -124,6 +130,16 @@ or On the go. It describes the session the game best suits, not its provider
 platform or compatibility. It is optional, editable, and deliberately
 single-value for the MVP; unclassified games remain eligible with less
 experience-fit evidence.
+
+A library entry separates current status from prior completion. Current
+`playState` uses `NOT_STARTED`, `IN_PROGRESS`, `COMPLETED`, or `ABANDONED`.
+The independent `playedBefore` checkbox records that the owner completed the
+game before the current playthrough. A replay can therefore be `IN_PROGRESS`
+while `playedBefore` remains true. The existing `replay` flag continues to mean
+"recommend this for another playthrough," not completion history. Legacy
+`PLAYED_BEFORE` rows migrate to `COMPLETED` with `playedBefore: true`; shelves,
+counts, taste setup, recommendation events, import/export, and forms use the new
+separation.
 
 Price target and provider offers belong to the later pricing feature, not the
 initial local wishlist feature. Store preference remains intentionally excluded
@@ -141,16 +157,16 @@ Steam and Epic Games Store.
 
 Steam and ROM remain built-in availability kinds. An `OTHER_PLATFORM`
 availability must reference one reusable, single-user alternative-source
-record. That record has a user-facing name, normalized unique name, optional
-known-source key, and archive state. It is never a free-text source repeated
-on individual games. Per-game display names remain separate availability
-labels, not source identity.
+record. That record has a user-facing canonical name, normalized unique name,
+optional known-source key, and archive state. It is never a free-text source
+repeated on individual games, and availability has no per-game display-label
+field.
 
-When creating or editing a game, availability uses checkboxes for Steam, ROM,
-and saved alternative sources. Choosing an alternative source opens a
-type-ahead create/select control. It suggests known sources by canonical name
-and aliases, then creates or reuses the selected source; custom names remain
-allowed.
+Reusable alternative sources are created, renamed, and archived only in
+Settings. When creating or editing a game, availability uses checkboxes for
+Steam, ROM, and saved active alternative sources. Detail surfaces may assign or
+remove saved sources but never modify the source definitions; they link to the
+relevant Settings section when source administration is needed.
 
 The built-in known-source catalog is code-owned rather than a database enum so
 custom sources remain possible. Its initial suggestions are Epic Games Store,
@@ -165,10 +181,10 @@ availability, presets, recommendation-run explanations, and historical data.
 A referenced source is not permanently deleted; a later destructive flow would
 first require explicit reassignment.
 
-Existing `OTHER_PLATFORM` rows are migrated conservatively to one reusable
-`Unspecified other source` with the fallback icon. The existing per-game
-display name is retained verbatim, and no store is inferred from it. The owner
-can reclassify each row later.
+Existing `OTHER_PLATFORM` rows are migrated conservatively to reusable sources.
+Legacy per-game display labels are removed after source relationships are
+resolved; no duplicate second label remains and no store is inferred from an
+arbitrary label.
 
 Game-detail availability values display accessible icon-decorated source chips.
 Library source filtering includes Steam, ROM, all alternative sources, and each
@@ -195,14 +211,21 @@ Duplicate detection remains a fallback for cases without reliable identity.
 
 ROMs are excluded from wishlist and purchase recommendations.
 
-### Collections and shelves
+### Tags, collections, and shelves
 
-Manual collections stay user-owned groups. The calculated system shelves
-expand to in-progress, completed (PLAYED_BEFORE), backlog (NOT_STARTED),
-and handheld picks, alongside the existing play-soon, replay-candidates,
-favorites, hidden, and abandoned shelves. Calculated series/franchise
-shelves derive from the IGDB collection and franchise evidence captured in
-metadata snapshots, so games group by series without manual curation.
+Personal tags are the sole manual grouping primitive. A game may have multiple
+tags, and every tag automatically appears as a collection shelf. Existing
+manual collections migrate to same-named tags, unioning memberships on a
+normalized-name collision; the separate manual `Collection` model and detail
+editor are then removed. Tag assignment remains available from compact game
+editing, while the Collections page becomes the unified place to browse and
+manage tag-generated shelves.
+
+Calculated system shelves expand to in-progress, completed, backlog, handheld
+picks, and Games with DLC, alongside play-soon, replay-candidates, favorites,
+hidden, and abandoned shelves. Calculated series/franchise shelves continue to
+derive from IGDB collection and franchise evidence. System and IGDB shelves are
+read-only calculated views and never become personal tags.
 
 ## 5. DLC and Unresolved Steam DLC
 
@@ -421,7 +444,7 @@ The first wishlist feature is provider-independent:
 
 - Base-game wishes are independent; DLC wishes link to owned catalog games.
 - Provider and external identifier are optional.
-- Notes and local interest are stored locally.
+- Local interest is stored locally; wishlist notes are not part of the model.
 - Wishlist forms and a global wishlist action suggest/load IGDB metadata for base games.
 - A base game can be acquired manually into the catalog.
 - Wishlist IGDB metadata transfers to the new catalog game when available.
@@ -506,8 +529,8 @@ synchronization:
 - A visible Wishlist action starts the import; Settings may link to status
   later. It never runs automatically.
 - A newly imported base-game entry with a reliable, previously unknown Steam
-  App ID creates a wishlist entry automatically with interest `2`/`5` and
-  empty notes, then queues the existing wishlist IGDB enrichment flow.
+  App ID creates a wishlist entry automatically with interest `2`/`5`, then
+  queues the existing wishlist IGDB enrichment flow.
   Existing local snapshots are never overwritten by import.
 - Local matching reuses the feature 7a normalized-name matcher. Any
   candidate - exact names included - goes to persistent review; linking is
@@ -545,8 +568,9 @@ wishlist data in one place:
   the automatically applied IGDB-derived identity.
 - Offer block: selected offer, alternatives, target price, opportunity
   badge, and freshness.
-- Notes and local interest.
-- Edit, acquire into the catalog, and delete actions.
+- Local interest and the other retained personal fields.
+- Edit, acquire into the catalog, and delete actions, composed as a focused
+  action area and repeated selectively in the hero when useful.
 - A read-only compatibility section (see Compatibility Synthesis) for base
   games with a confirmed Steam App ID.
 
@@ -698,11 +722,11 @@ factors such as:
 **Eligibility**
 
 - `play-next`: base games that are not hidden, are not the main game, and are
-  either `NOT_STARTED` or replay-flagged `PLAYED_BEFORE`/`ABANDONED`.
-  `IN_PROGRESS` games appear separately on the dashboard. DLC never enters
-  play-next. Hidden is an eligibility rule only: it prevents the game from
-  becoming a displayed candidate, but does not erase explicit played or
-  abandoned history from the recommendation profile.
+  either `NOT_STARTED` or explicitly replay-flagged after a prior completion or
+  abandonment. `IN_PROGRESS` games appear separately on the dashboard. DLC
+  never enters play-next. Hidden is an eligibility rule only: it prevents the
+  game from becoming a displayed candidate, but does not erase explicit
+  completion or abandonment history from the recommendation profile.
 - `buy`: all wishlist base games and DLC wishes whose base game is owned.
   Entries without confirmed identity or offers stay eligible on interest
   alone, carrying an explicit "no pricing yet" warning. ROMs are excluded
@@ -717,8 +741,9 @@ factors such as:
   into the catalog carries its interest over, falling back to 3/5 when absent.
   **Priority** (`NONE`/`LOW`/`MEDIUM`/`HIGH`) is a catalog-only, short-term
   urgency signal for play-next; it never means the user likes a game more.
-  Detail, quick-create, and bulk-edit surfaces explain these and other personal
-  fields with concise visible helper text.
+  Detail, quick-create, and bulk-edit surfaces explain retained personal fields
+  with accessible information controls instead of permanent descriptions, and
+  group compact controls on the same row where they remain readable.
 - Play-next source tuning is a modest, inclusive boost—not a filter or a
   launch requirement. It can prefer Steam, ROMs, any alternative source, or
   selected alternative sources. A multi-source game matches every selected
@@ -760,18 +785,22 @@ factors such as:
   candidates use stable, weighted rotation and short exposure cooldowns.
 
 Tune this run is opt-in and presented as a distinctive, visually deliberate
-control rather than a plain accordion. Its default questions are:
+control rather than a plain accordion. It starts collapsed with no active
+filters, selected checkboxes, or implicit non-neutral choices. Its questions
+are:
 
 - **How much time?** Any, Under 6 hours, 6-20 hours, 20-50 hours, or 50+ hours.
 - **How do you want to play?** Any, Solo, Online with others, or Couch co-op.
 - **What feels right?** Familiar, Balanced, or Different.
 - **Handheld** is a separate combinable toggle for Play Next only.
 
-Genres, tags, sequel posture, era, maturity, and play-next source preference
-remain available under More filters. They retain their current soft, capped,
-any-match behavior. A selected known conflicting play mode is excluded. Missing
-play-mode metadata may remain only as a lower-confidence fallback with a visible
-"Play style unknown" caveat.
+Genres, IGDB metadata tags, personal tags, sequel posture, era, maturity, and
+play-next source preference remain available under More filters. Personal tags
+are identified separately from provider metadata and may be selected as target
+tags for a soft, capped, any-match boost. All of these controls default to no
+selection. A selected known conflicting play mode is excluded. Missing play-mode
+metadata may remain only as a lower-confidence fallback with a visible "Play
+style unknown" caveat.
 
 Familiar boosts games matching both learned history and manually preferred
 genres/tags. If no familiar match exists, a normally ranked eligible game may
@@ -831,9 +860,10 @@ filled. Cold-start recommendations diversify metadata-complete owned games by
 genre, experience, length, era, platform fit, and broad quality signals, and
 say explicitly that they are based on imported-library metadata. After import,
 an optional taste setup presents five or six varied owned games. For each, the
-user may mark `I've played this` (also setting `PLAYED_BEFORE`), `I like this`
-(setting Interest to `5/5` unless a personal value already exists), skip it, or
-swap it for another catalog game. Progressive one-tap prompts after viewing,
+user may mark `I've played this` (setting the independent prior-completion
+checkbox without forcing the current play state), `I like this` (setting
+Interest to `5/5` unless a personal value already exists), skip it, or swap it
+for another catalog game. Progressive one-tap prompts after viewing,
 starting, dismissing, or completing games invite useful personalization without
 requiring a bulk data chore.
 
@@ -845,8 +875,9 @@ from authoritative catalog fields and replaceable provider snapshots:
 - Append-only recommendation events record meaningful exposure, rotation,
   taste-setup answers, starts, completions, abandonment, dismissals, and
   optional dismissal reasons.
-- Explicit state transitions remain profile evidence even when the game is
-  hidden: `PLAYED_BEFORE` records completion evidence and `ABANDONED` records
+- Explicit current-state transitions and the independent prior-completion flag
+  remain profile evidence even when the game is hidden. `COMPLETED` and the
+  prior-completion flag record completion evidence; `ABANDONED` records
   abandonment evidence. Existing event weights and recency decay remain
   unchanged. Thus a normal recorded start followed by abandonment may balance
   to neutral overall, while direct abandonment remains negative; neither state
@@ -882,9 +913,10 @@ It displays:
 
 - Main game.
 - Games in progress.
-- Active-backlog progress as
-  `PLAYED_BEFORE / (NOT_STARTED + IN_PROGRESS + PLAYED_BEFORE)`. `ABANDONED`
-  games appear separately and are excluded from the denominator.
+- Active-backlog progress derived from current backlog/in-progress status and
+  independent completion history. A replay may be both `IN_PROGRESS` and marked
+  previously completed without being double-counted; `ABANDONED` games appear
+  separately and are excluded from the denominator.
 - Two independent, actionable coverage counts:
   - catalog base games without an IGDB metadata snapshot;
   - visible catalog games with an incomplete recommendation profile.
@@ -1166,9 +1198,12 @@ Settings includes:
 - Manual import of that export into an empty schema only.
 
 Manual export includes catalog and wishlist records, availability and
-alternative sources, all external IDs regardless of provenance, play states,
-notes, interest, ratings, tags, collections, settings (including duration
-profile), manual overrides, and recommendation-related personal decisions.
+alternative sources, all external IDs regardless of provenance, current play
+states, prior-completion history, interest, ratings, personal tags, settings
+(including duration profile), manual overrides, and recommendation-related
+personal decisions. Removed notes and per-game availability display labels are
+not exported or restored; legacy export normalization may discard those fields
+but must not recreate them.
 Rebuildable IGDB/SteamSpy, price, compatibility, provider-operation, and
 recent-activity snapshots are excluded; Steam connections and credentials are
 never exported.
