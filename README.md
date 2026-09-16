@@ -14,7 +14,7 @@ play-next / buy recommendations.
 - [Auth.js](https://authjs.dev) with Google (single allowed email)
 - Vitest for tests
 
-See `blueprint/README.md` for the development workflow.
+See `AGENTS.md` for the development workflow and coding-agent guidance.
 
 ## Commands
 
