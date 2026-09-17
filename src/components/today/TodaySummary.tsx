@@ -1,4 +1,6 @@
 import { CurrentlyPlayingCarousel } from "@/components/today/CurrentlyPlayingCarousel";
+import { TodayOperations } from "@/components/today/TodayOperations";
+import type { TodayOperationsView } from "@/lib/today-operations";
 import type { TodayDataHealth } from "@/lib/today-data-health";
 
 interface TodaySummaryGame {
@@ -30,8 +32,10 @@ export function TodaySummary({ games }: TodaySummaryProps) {
 
 export function TodayDataHealth({
   activeBacklog,
+  operations,
 }: {
   activeBacklog: TodayDataHealth["activeBacklog"];
+  operations: TodayOperationsView;
 }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
@@ -46,6 +50,9 @@ export function TodayDataHealth({
         <p className="technical-label text-muted-foreground">In progress</p>
         <p className="mt-2 text-3xl font-bold tracking-tight">{activeBacklog.inProgress}</p>
         <p className="mt-1 text-xs text-muted-foreground">active campaigns</p>
+      </div>
+      <div className="col-span-full mt-2 border-t border-border pt-5">
+        <TodayOperations view={operations} />
       </div>
     </div>
   );

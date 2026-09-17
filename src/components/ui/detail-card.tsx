@@ -51,7 +51,6 @@ export function StatusPill({
 }
 
 export function SectionCard({
-  eyebrow,
   title,
   id,
   sectionId,
@@ -63,7 +62,7 @@ export function SectionCard({
   className,
   children,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: ReactNode;
   id?: string;
   sectionId?: string;
@@ -73,7 +72,7 @@ export function SectionCard({
   footer?: ReactNode;
   tone?: CardTone;
   className?: string;
-  children: ReactNode;
+  children?: ReactNode;
 }) {
   const headingId = id ? (sectionId ? `${id}-title` : id) : undefined;
 
@@ -90,8 +89,7 @@ export function SectionCard({
       <div className="p-5">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="technical-label text-muted-foreground">{eyebrow}</p>
-            <h2 id={headingId} className="mt-1 text-xl font-semibold tracking-[0.01em]">
+            <h2 id={headingId} className="text-xl font-semibold tracking-[0.01em]">
               {title}
             </h2>
             {description && (

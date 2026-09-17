@@ -3,15 +3,18 @@ import { Carousel } from "@/components/ui/Carousel";
 import { DetailHeroArt } from "@/components/ui/detail-hero-art";
 import { buttonVariants } from "@/components/ui/button";
 import { MakeMainGameButton } from "@/components/today/MakeMainGameButton";
-import { formatFetchedAgo } from "@/lib/cover-presentation";
+import { LibraryInterestRating } from "@/components/games/LibraryInterestRating";
+import { formatDescriptionPreview, formatFetchedAgo } from "@/lib/cover-presentation";
 import type { TodayOfferView } from "@/lib/today-offers";
 import { shouldGlowBuyHeading } from "@/lib/deal-glow";
 import { cn } from "@/lib/utils";
+import type { LibraryCardMetadataView } from "@/lib/card-metadata-view";
 
 export interface TodayHeroGame {
   id: string;
   name: string;
-  imageUrl: string | null;
+  interest: number | null;
+  metadata: LibraryCardMetadataView | null;
   libraryEntry: {
     isMainGame: boolean;
     playState: string;
@@ -22,6 +25,7 @@ const PLAY_STATE_LABELS: Record<string, string> = {
   NOT_STARTED: "Not started",
   IN_PROGRESS: "In progress",
   PLAYED_BEFORE: "Played before",
+  COMPLETED: "Completed",
   ABANDONED: "Abandoned",
 };
 
@@ -62,14 +66,19 @@ function Spotlight({ game }: { game: TodayHeroGame }) {
         <DetailHeroArt
           id={game.id}
           title={game.name}
-          imageUrl={game.imageUrl}
+          imageUrl={game.metadata?.wideImageUrl ?? null}
           code={isMainGame ? "MAIN / 001" : "PLAY / 001"}
           fit="cover"
           className="min-h-48 lg:h-full"
         />
         <div className="flex flex-col justify-between gap-6 p-6">
           <div>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <LibraryInterestRating
+                gameId={game.id}
+                gameName={game.name}
+                interest={game.interest}
+              />
               {isMainGame && (
                 <Chip className="border-signal/40 bg-signal/10 text-signal-strong">
                   main game
@@ -85,8 +94,24 @@ function Spotlight({ game }: { game: TodayHeroGame }) {
               id="today-focus-heading"
               className="mt-3 text-2xl font-bold leading-snug tracking-[-0.04em]"
             >
-              {game.name}
+              <Link href={`/games/${game.id}`} className="hover:underline">
+                {game.name}
+              </Link>
             </h2>
+            {game.metadata?.description && (
+              <p className="mt-3 max-w-2xl leading-6 text-muted-foreground">
+                {formatDescriptionPreview(game.metadata.description)}
+              </p>
+            )}
+            {game.metadata?.genres.length ? (
+              <div className="mt-4 flex flex-wrap gap-1.5">
+                {game.metadata.genres.slice(0, 3).map((genre) => (
+                  <span key={genre} className="rounded-md border border-border px-2 py-0.5 text-xs">
+                    {genre}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
           <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
             <Link

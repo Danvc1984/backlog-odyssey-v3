@@ -27,10 +27,8 @@ function OperationBlock({
 export function TodayOperations({ view }: { view: TodayOperationsView }) {
   const activeJobCount = view.jobs.queued + view.jobs.running + view.jobs.retryWait + view.jobs.failed;
   const operationsBusy = activeJobCount > 0 || view.runningRuns.length > 0;
-  const allProvidersFresh = view.providers.every((provider) => provider.lastSuccessAt !== null);
 
   return (
-    <div className="grid gap-4 md:grid-cols-3" aria-label="Operations status">
       <OperationBlock
         eyebrow="Background operations"
         label={operationsBusy ? "Busy" : "Quiet"}
@@ -50,35 +48,5 @@ export function TodayOperations({ view }: { view: TodayOperationsView }) {
           </ul>
         }
       />
-      <OperationBlock
-        eyebrow="Provider freshness"
-        label={allProvidersFresh ? "All systems fresh" : "Check providers"}
-        tone={allProvidersFresh ? "ok" : "warning"}
-        detail={
-          <ul className="space-y-1 text-xs text-muted-foreground">
-            {view.providers.map((provider) => (
-              <li key={provider.name} className="flex flex-wrap items-center justify-between gap-2">
-                <span>{provider.name}</span>
-                <span>{formatMexicoTimestamp(provider.lastSuccessAt) ?? "never"}</span>
-              </li>
-            ))}
-          </ul>
-        }
-      />
-      <OperationBlock
-        eyebrow="Manage services"
-        label="Settings"
-        tone="neutral"
-        detail={
-          <p className="text-xs text-muted-foreground">
-            Refreshes, compatibility sweeps, and provider queues are managed in{" "}
-            <a href="/settings" className="underline underline-offset-4 hover:text-foreground">
-              Settings
-            </a>
-            .
-          </p>
-        }
-      />
-    </div>
   );
 }

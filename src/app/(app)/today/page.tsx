@@ -25,7 +25,6 @@ import { CoverageDialog } from "@/components/today/CoverageDialog";
 import { TodayHeroGrid } from "@/components/today/TodayHeroGrid";
 import { rankTodayOffers } from "@/lib/today-offers";
 import { loadTodayOperations } from "@/lib/today-operations";
-import { TodayOperations } from "@/components/today/TodayOperations";
 import { formatMexicoTimestamp } from "@/lib/format-times";
 import { igdbLibraryCardMetadataView } from "@/lib/card-metadata-view";
 import { parseIgdbMetadataPayload } from "@/lib/igdb-metadata-payload";
@@ -146,7 +145,7 @@ export default async function TodayPage() {
       select: {
         id: true,
         name: true,
-        libraryEntry: { select: { isMainGame: true, playState: true } },
+        libraryEntry: { select: { isMainGame: true, playState: true, interest: true } },
         metadataSnapshots: {
           where: { provider: "IGDB" },
           orderBy: { fetchedAt: "desc" },
@@ -181,8 +180,8 @@ export default async function TodayPage() {
     id: game.id,
     name: game.name,
     libraryEntry: game.libraryEntry,
-    imageUrl:
-      igdbLibraryCardMetadataView(game.metadataSnapshots[0]?.payload)?.wideImageUrl ?? null,
+    interest: game.libraryEntry?.interest ?? null,
+    metadata: igdbLibraryCardMetadataView(game.metadataSnapshots[0]?.payload),
   }));
   const todayOffers = rankTodayOffers(
     wishlistEntries.map(({ id, name, targetPriceMxn, offers }) => ({
@@ -273,13 +272,10 @@ export default async function TodayPage() {
   return (
     <div className="space-y-8">
       <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="technical-label text-muted-foreground">Today</p>
-          <h1 className="mt-2">
-            Odyssey
-            <span className="text-signal-strong"> dashboard</span>
-          </h1>
-        </div>
+        <h1>
+          Odyssey
+          <span className="text-signal-strong"> dashboard</span>
+        </h1>
       </header>
 
       <TodayHeroGrid games={heroGames} offers={todayOffers} />
@@ -294,11 +290,11 @@ export default async function TodayPage() {
         />
       )}
 
-      {!latestPlayNextRun && (
+      {(!latestPlayNextRun || !latestBuyRun) && (
         <div className="rounded-lg border border-border p-8 text-center">
           <p className="text-sm text-muted-foreground">
-            Your next chapter is still unwritten. Update recommendations to
-            build your play next list.
+            Your recommendation lists are still unwritten. Update recommendations
+            to build a fresh play and purchase list.
           </p>
           <div className="mt-4 flex justify-center">
             <UpdateRecommendationsButton />
@@ -306,7 +302,7 @@ export default async function TodayPage() {
         </div>
       )}
 
-      <section>
+      {latestPlayNextRun && <section>
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <h2 className="mt-2 text-3xl font-bold leading-tight tracking-[-0.05em]">
             Play these
@@ -402,7 +398,7 @@ export default async function TodayPage() {
             })()}
           </div>
         )}
-      </section>
+      </section>}
 
       {latestPlayNextRun && (
         <RunExposureTracker
@@ -430,7 +426,7 @@ export default async function TodayPage() {
         />
       )}
 
-      <section>
+      {latestBuyRun && <section>
         <div className="mb-4">
           <h2 className="mt-2 text-3xl font-bold leading-tight tracking-[-0.05em]">
             Recommended
@@ -443,11 +439,7 @@ export default async function TodayPage() {
           thinPool={buyContext?.tune?.thinPool === true}
           presets={presetOptions}
         />
-        {!latestBuyRun ? (
-          <p className="text-sm text-muted-foreground">Update recommendations to see eligible games from
-            your wishlist.
-          </p>
-        ) : buyItems.length === 0 ? (
+        {buyItems.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No eligible wishlist purchasese.
           </p>
@@ -503,16 +495,10 @@ export default async function TodayPage() {
             )}
           </div>
         )}
-      </section>
-
-      <h2 className="mt-2 text-3xl font-bold leading-tight tracking-[-0.05em]">
-            App
-            <span className="text-signal-strong"> metrics</span>
-          </h2>
+      </section>}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <SectionCard
-          eyebrow="Steam / last 24 hours"
           title="Recent activity on Steam"
           description="Games that have been played or purchased on Steam in the last 24 hours with your Steam account."
           aside={<SteamActivityRefreshButton />}
@@ -523,12 +509,10 @@ export default async function TodayPage() {
           />
         </SectionCard>
 
-        <SectionCard
-          eyebrow="Coverage / attention"
-          title="Data health"
-        >
+        <SectionCard title="Data health">
           <TodayDataHealth
             activeBacklog={dataHealth.activeBacklog}
+            operations={todayOperations}
           />
           <div className="mt-4 grid gap-2">
             <CoverageDialog
@@ -544,8 +528,6 @@ export default async function TodayPage() {
           </div>
         </SectionCard>
       </div>
-
-      <TodayOperations view={todayOperations} />
     </div>
   );
 }

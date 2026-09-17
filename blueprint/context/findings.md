@@ -55,37 +55,37 @@
 **Suggested fix:** Remove structural explanations, deduplicate equivalent empty-state copy, and keep only consequences or next actions meaningful to the owner.
 **Resolution:**
 
-### F-07 [P3] open - Decorative technical labels and eyebrows remain redundant
+### F-07 [P3] fixed - Decorative technical labels and eyebrows remain redundant
 
 **Area:** Today, Collections, and detail section cards
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** Repeated eyebrows and technical labels add visual noise without adding hierarchy.
 **Suggested fix:** Remove section-card eyebrows and redundant root-page technical labels while retaining labels that communicate real evidence or status.
-**Resolution:**
+**Resolution:** Fixed on `fix/today-dashboard-hierarchy-and-empty-states`: all shared SectionCard eyebrows and the redundant Today root label were removed.
 
-### F-08 [P3] open - Today hero does not use the library card information hierarchy
+### F-08 [P3] fixed - Today hero does not use the library card information hierarchy
 
 **Area:** Today hero
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** Plain text and non-linked titles make the dashboard's primary game surface less useful than Library cards.
 **Suggested fix:** Make titles link to details and present the most useful game data with the established Library-card hierarchy.
-**Resolution:**
+**Resolution:** Fixed on `fix/today-dashboard-hierarchy-and-empty-states`: Today hero titles now link to game details and show interest, description, and genre hierarchy.
 
-### F-09 [P2] open - Empty recommendation sections render without a run
+### F-09 [P2] fixed - Empty recommendation sections render without a run
 
 **Area:** Today Play These Next and Recommended Purchases
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** Rendering result sections before a recommendation run suggests missing content or a failed calculation.
 **Suggested fix:** Hide each result section when its corresponding run does not exist and keep the explicit update action in the surrounding dashboard state.
-**Resolution:**
+**Resolution:** Fixed on `fix/today-dashboard-hierarchy-and-empty-states`: recommendation result sections are rendered only when their corresponding run exists.
 
-### F-10 [P3] open - Operations status is separated from Data Health
+### F-10 [P3] fixed - Operations status is separated from Data Health
 
 **Area:** Today supporting sections
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** Two operational surfaces fragment related health and recovery information.
 **Suggested fix:** Remove the standalone Operations Status section and compose actionable background status into Data Health.
-**Resolution:**
+**Resolution:** Fixed on `fix/today-dashboard-hierarchy-and-empty-states`: operation and provider status now appears inside Data health, with no standalone Today operations block.
 
 ### F-11 [P2] open - Tune initializes with active-looking state and expanded controls
 
