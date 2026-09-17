@@ -39,9 +39,16 @@ export function linuxTargetsExist(setup: Pick<OsSetup, "primaryOs" | "handheldOs
 }
 
 export function linuxDevicePhrase(setup: Pick<OsSetup, "primaryOs" | "handheldOs">): string {
-  return setup.primaryOs === "WINDOWS" && setup.handheldOs === "LINUX"
-    ? "your Linux handheld"
-    : "Linux";
+  if (setup.primaryOs === "WINDOWS" && setup.handheldOs === "LINUX") {
+    return "Linux handheld";
+  }
+  if (setup.primaryOs === "LINUX" && setup.handheldOs === "LINUX") {
+    return "Linux PC and handheld";
+  }
+  if (setup.primaryOs === "LINUX") {
+    return "Linux PC";
+  }
+  return "Linux";
 }
 
 export function isCompatibilityActive(setup: Pick<OsSetup, "primaryOs" | "handheldOs">): boolean {

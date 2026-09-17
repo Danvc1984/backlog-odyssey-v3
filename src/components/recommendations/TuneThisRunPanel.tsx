@@ -64,11 +64,11 @@ export function TuneThisRunPanel({ engine, knownValues, thinPool, presets, alter
     try {
       const stored = sessionStorage.getItem(storageKey(engine));
       const parsed = stored ? tuneContextSchema.safeParse(JSON.parse(stored)) : null;
-      if (parsed?.success) setTune(parsed.data);
+      if (parsed?.success) queueMicrotask(() => setTune(parsed.data));
     } catch {
       sessionStorage.removeItem(storageKey(engine));
     }
-    setHydrated(true);
+    queueMicrotask(() => setHydrated(true));
   }, [engine]);
 
   useEffect(() => {

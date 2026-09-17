@@ -155,22 +155,39 @@ export function AddWishlistDialog({
           <DialogDescription>Keep a base game or DLC in view for a future voyage.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-5">
-          <div className="grid gap-2">
-            <Label htmlFor="wishlist-type">Type</Label>
-            <Select value={type} onValueChange={(value) => setType(value as typeof type)}>
-              <SelectTrigger id="wishlist-type" aria-label="Wishlist type">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="BASE_GAME">Base game</SelectItem>
-                <SelectItem value="DLC">DLC</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label htmlFor="wishlist-type">Type</Label>
+              <Select value={type} onValueChange={(value) => setType(value as typeof type)}>
+                <SelectTrigger id="wishlist-type" aria-label="Wishlist type" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="BASE_GAME">Base game</SelectItem>
+                  <SelectItem value="DLC">DLC</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="wishlist-interest">Interest</Label>
+              <Select value={interest} onValueChange={setInterest}>
+                <SelectTrigger id="wishlist-interest" aria-label="Wishlist interest" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[5, 4, 3, 2, 1].map((value) => (
+                    <SelectItem key={value} value={String(value)}>
+                      {value} star{value === 1 ? "" : "s"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="wishlist-name">Name and IGDB match</Label>
             <div className="flex gap-2">
-              <Input id="wishlist-name" value={name} onChange={(event) => setName(event.target.value)} required />
+              <Input className="min-w-0 flex-1" id="wishlist-name" value={name} onChange={(event) => setName(event.target.value)} required />
               {type === "BASE_GAME" && (
                 <Button type="button" variant="outline" onClick={() => void searchIgdb()} disabled={searching || !name.trim()}>
                   <MagnifyingGlassIcon />
@@ -183,7 +200,7 @@ export function AddWishlistDialog({
             <div className="grid gap-2">
               <Label htmlFor="wishlist-parent">Base game</Label>
               <Select value={baseGameId} onValueChange={setBaseGameId}>
-                <SelectTrigger id="wishlist-parent" aria-label="Wishlist base game">
+                <SelectTrigger id="wishlist-parent" aria-label="Wishlist base game" className="w-full">
                   <SelectValue placeholder="Choose a base game" />
                 </SelectTrigger>
                 <SelectContent>
@@ -242,21 +259,6 @@ export function AddWishlistDialog({
               )}
             </div>
           )}
-          <div className="grid gap-2">
-            <Label htmlFor="wishlist-interest">Interest</Label>
-            <Select value={interest} onValueChange={setInterest}>
-              <SelectTrigger id="wishlist-interest" aria-label="Wishlist interest">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[5, 4, 3, 2, 1].map((value) => (
-                  <SelectItem key={value} value={String(value)}>
-                    {value} star{value === 1 ? "" : "s"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
             <Button type="submit" disabled={submitting || (type === "DLC" && !baseGameId)}>

@@ -105,7 +105,7 @@ describe("assignPlayRoles", () => {
     expect(result.assigned).toEqual([{ id: "only", role: "BEST_FIT_1", caveats: [] }]);
   });
 
-  it("replaces the second best fit with the highest-ranked handheld pick", () => {
+  it("keeps two best fits and replaces change of pace with the handheld pick", () => {
     const result = assignPlayRoles(
       [
         candidate("best", 8),
@@ -122,22 +122,52 @@ describe("assignPlayRoles", () => {
 
     expect(result.assigned.map((item) => [item.id, item.role])).toEqual([
       ["best", "BEST_FIT_1"],
-      ["handheld", "HANDHELD_PICK"],
-      ["later-handheld", "OUT_OF_THE_BOX"],
-      ["reserve-handheld", "CHANGE_OF_PACE"],
+      ["handheld", "BEST_FIT_2"],
+      ["later-handheld", "HANDHELD_PICK"],
+      ["other", "OUT_OF_THE_BOX"],
     ]);
-    expect(result.batches.HANDHELD_PICK).toEqual([]);
+    expect(result.batches.HANDHELD_PICK).toEqual(["reserve-handheld"]);
     expect(result.omissions).toBeUndefined();
   });
 
-  it("records a handheld-role omission when no marked candidate qualifies", () => {
-    const result = assignPlayRoles([candidate("best", 8), candidate("other", 7)], "RERANKED", [], false, true);
+  it("keeps two diversified best fits before the handheld pick in cold start", () => {
+    const result = assignPlayRoles(
+      [
+        candidate("best", 8, "UNKNOWN", ["RPG"]),
+        candidate("second-best", 7, "UNKNOWN", ["Strategy"]),
+        { ...candidate("handheld", 6, "UNKNOWN", ["Puzzle"]), handheldSuitable: true },
+        candidate("ready", 5, "READY", ["Racing"]),
+      ],
+      "COLD_START",
+      [],
+      false,
+      true,
+    );
 
-    expect(result.assigned.map((item) => item.role)).toEqual(["BEST_FIT_1", "OUT_OF_THE_BOX"]);
-    expect(result.omissions).toEqual([
-      { role: "HANDHELD_PICK", label: "No eligible handheld-suitable game qualifies" },
+    expect(result.assigned.map((item) => [item.id, item.role])).toEqual([
+      ["best", "BEST_FIT_1"],
+      ["second-best", "BEST_FIT_2"],
+      ["handheld", "HANDHELD_PICK"],
+      ["ready", "OUT_OF_THE_BOX"],
     ]);
-    expect(result.batches.HANDHELD_PICK).toEqual([]);
+  });
+
+  it("falls back to change of pace when no marked handheld candidate qualifies", () => {
+    const result = assignPlayRoles(
+      [candidate("best", 8), candidate("second-best", 7), candidate("out", 6), candidate("pace", -2)],
+      "RERANKED",
+      [],
+      false,
+      true,
+    );
+
+    expect(result.assigned.map((item) => [item.id, item.role])).toEqual([
+      ["best", "BEST_FIT_1"],
+      ["second-best", "BEST_FIT_2"],
+      ["out", "OUT_OF_THE_BOX"],
+      ["pace", "CHANGE_OF_PACE"],
+    ]);
+    expect(result.omissions).toBeUndefined();
   });
 
   it("keeps second chances out of primary roles and rotates them through out-of-the-box", () => {

@@ -31,7 +31,7 @@ export function RecentSteamActivity({
         <a href="/settings#steam-connection-card" className="underline underline-offset-4 hover:text-foreground">
           Connect Steam
         </a>{" "}
-        and let the latest trail find its way here.
+        to see games played in the last two weeks.
       </p>
     );
   }
@@ -39,7 +39,7 @@ export function RecentSteamActivity({
   if (view.state === "FRESH_EMPTY") {
     return (
       <p className="text-sm text-muted-foreground">
-        The latest trail is quiet. Games you played in the last two weeks will appear here.
+        No games were played on Steam in the last two weeks.
       </p>
     );
   }
@@ -50,15 +50,16 @@ export function RecentSteamActivity({
     <div>
       {view.state === "STALE_ERROR" && (
         <p className="mb-3 max-w-2xl text-sm text-amber-300">
-          {view.errorMessage}
-          {view.checkedAt && formatMexicoTimestamp(view.checkedAt)
-            ? ` Showing results from ${formatMexicoTimestamp(view.checkedAt)}.`
-            : null}
+          {view.errorMessage ?? "Steam activity is temporarily unavailable."} {view.checkedAt && formatMexicoTimestamp(view.checkedAt)
+            ? `Showing results from ${formatMexicoTimestamp(view.checkedAt)}. Refresh to try again.`
+            : "Refresh to try again."}
         </p>
       )}
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          The latest trail is quiet. Games you played in the last two weeks will appear here.
+          {view.state === "STALE_ERROR"
+            ? "No previous activity is available yet. Refresh to try again."
+            : "No games were played on Steam in the last two weeks."}
         </p>
       ) : (
         <ul className="grid gap-2">

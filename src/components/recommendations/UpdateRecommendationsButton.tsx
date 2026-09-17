@@ -30,7 +30,9 @@ export function UpdateRecommendationsButton() {
     const result = await updateRecommendations({ playTune: storedTune("PLAY_NEXT"), buyTune: storedTune("BUY") });
     setRunning(false);
     if (!result.success) {
-      toast.error(result.error ?? "Failed to update recommendations");
+      toast.error(result.error ?? "Failed to update recommendations", {
+        description: "Your previous recommendation lists are still available. Try again when ready.",
+      });
       return;
     }
     const counts = result.data ? `${result.data.playNextItems} play next · ${result.data.prunedRuns} runs pruned` : undefined;

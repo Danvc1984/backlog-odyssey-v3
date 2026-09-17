@@ -64,10 +64,10 @@ describe("buildCompatContext", () => {
       hasWindowsFallback: false,
       handheldOs: "LINUX",
     }).caveats).toEqual([
-      { factor: "compat_tinkering", label: "Needs tinkering on your Linux handheld" },
+      { factor: "compat_tinkering", label: "Needs tinkering on Linux handheld" },
     ]);
     expect(buildCompatContext(input({ protonDbStatus: "READY_WITH_TINKERING" }), now, linuxOnly).caveats).toEqual([
-      { factor: "compat_tinkering", label: "Needs tinkering on Linux" },
+      { factor: "compat_tinkering", label: "Needs tinkering on Linux PC" },
     ]);
   });
 

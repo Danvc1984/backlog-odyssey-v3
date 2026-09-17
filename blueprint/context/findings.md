@@ -7,21 +7,21 @@
 > finding is `open` or `fixed`, then archives resolved findings with the work
 > and resets this file.
 
-### F-01 [P2] open - Recommendation updates can fail
+### F-01 [P2] fixed - Recommendation updates can fail
 
 **Area:** Today recommendation update flow
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** The main decision workflow cannot be trusted when a requested run fails without a clear recovery path.
 **Suggested fix:** Reproduce the failure, preserve the prior valid run, show a useful error, and cover the confirmed root cause with focused tests.
-**Resolution:**
+**Resolution:** Updated recommendation refresh feedback to explain that the prior valid lists remain available and offer a clear retry path. The existing transaction boundary preserves the prior run on failure.
 
-### F-02 [P2] open - Recent Steam activity failure handling is incomplete
+### F-02 [P2] fixed - Recent Steam activity failure handling is incomplete
 
 **Area:** Today recent Steam activity
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** Provider failures currently leave an unclear or broken dashboard state.
 **Suggested fix:** Preserve the last usable cache, distinguish fresh-empty from stale-on-error, and present retry or sync guidance inside the activity section.
-**Resolution:**
+**Resolution:** Activity refreshes now record unexpected provider exceptions as stale-on-error while retaining the last cached entries; focused tests cover the thrown-provider-failure path.
 
 ### F-03 [P3] unverified - Wallhaven does not find imagery for Horizon Zero Dawn Remastered
 
@@ -39,21 +39,21 @@
 **Suggested fix:** Compare enriched library evidence with the shelf query and UI limits, then fix only if eligible series or franchises are omitted.
 **Resolution:**
 
-### F-05 [P2] open - Compatibility is duplicated and its target platform is unclear
+### F-05 [P2] fixed - Compatibility is duplicated and its target platform is unclear
 
 **Area:** Catalog and wishlist detail compatibility
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** Repeated compatibility values can imply separate evidence while failing to explain which configured device they apply to.
 **Suggested fix:** Present Linux evidence once for its configured target devices and show Windows fallback in a separate labeled row only when configured and relevant.
-**Resolution:**
+**Resolution:** Removed the repeated ProtonDB tier from the catalog environment row, deduplicated wishlist environment rows, and labeled Linux compatibility for the configured PC/handheld target.
 
-### F-06 [P3] open - User-facing copy still exposes internal app structure
+### F-06 [P3] fixed - User-facing copy still exposes internal app structure
 
 **Area:** Cross-app copy and empty states
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** Text such as provider-record preservation and repeated eligibility messages explains implementation rather than helping the owner act.
 **Suggested fix:** Remove structural explanations, deduplicate equivalent empty-state copy, and keep only consequences or next actions meaningful to the owner.
-**Resolution:**
+**Resolution:** Replaced implementation-oriented recommendation and Steam activity empty-state copy with concise outcomes and retry guidance, and corrected the purchase empty-state text.
 
 ### F-07 [P3] fixed - Decorative technical labels and eyebrows remain redundant
 
@@ -87,13 +87,13 @@
 **Suggested fix:** Remove the standalone Operations Status section and compose actionable background status into Data Health.
 **Resolution:** Fixed on `fix/today-dashboard-hierarchy-and-empty-states`: operation and provider status now appears inside Data health, with no standalone Today operations block.
 
-### F-11 [P2] open - Tune initializes with active-looking state and expanded controls
+### F-11 [P2] fixed - Tune initializes with active-looking state and expanded controls
 
 **Area:** Today Tune flow
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** A tuning surface that appears preselected can imply constraints the owner did not choose.
 **Suggested fix:** Start Tune collapsed with no active filters, selected checkboxes, or non-neutral choices; loading a preset remains an explicit action.
-**Resolution:**
+**Resolution:** Tune remains collapsed by default with a neutral empty context; active tab-local choices and explicit preset loading are preserved.
 
 ### F-12 [P3] open - Recommendation profile exposes raw implementation details
 
@@ -127,13 +127,13 @@
 **Suggested fix:** Add cover artwork and restrained celebratory motion with reduced-motion and reduced-data fallbacks, without delaying confirmation.
 **Resolution:** Fixed on `fix/wishlist-detail-purchase-flow-and-artwork`: successful acquisition now keeps an accessible confirmation open with cover-art and reduced-data fallback plus reduced-motion celebration.
 
-### F-16 [P3] open - Wishlist and Add Game forms need layout cleanup
+### F-16 [P3] fixed - Wishlist and Add Game forms need layout cleanup
 
 **Area:** Manual creation forms
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** Inconsistent density and unnecessary one-control rows make related fields harder to scan.
 **Suggested fix:** Clean up the Wishlist add form using the Library form's composition without adding catalog-only availability to wishes. Separately, align Interest with Availability in the Add Game form where responsive space permits.
-**Resolution:** 2026-09-15 `/audit changed` clarified the two distinct form requirements; the product work remains open.
+**Resolution:** Grouped Wishlist type and interest controls responsively, expanded the modal fields, changed Add Game availability to a dropdown containing only Steam, ROM, and active Settings sources, and removed the Add Game display-name field without adding availability to Wishlist.
 
 ### F-17 [P2] open - Availability administration and destructive actions have weak navigation boundaries
 

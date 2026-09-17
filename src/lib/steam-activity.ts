@@ -193,10 +193,18 @@ async function refreshSteamActivityCache(
     const cached = await prisma.steamRecentActivityCache
       .findUnique({ where: { id: 1 } })
       .catch(() => null);
-    const imported = await loadImportedSteamAppIds(cached?.entries ?? null).catch(
+    const recorded = await prisma.steamRecentActivityCache
+      .upsert({
+        where: { id: 1 },
+        create: { id: 1, lastAttemptAt: now, lastError: ACTIVITY_UNAVAILABLE_MESSAGE },
+        update: { lastError: ACTIVITY_UNAVAILABLE_MESSAGE },
+      })
+      .catch(() => null);
+    const failedCache = recorded ?? cached;
+    const imported = await loadImportedSteamAppIds(failedCache?.entries ?? null).catch(
       () => new Set<string>(),
     );
-    return buildSteamActivityView(cached, imported);
+    return buildSteamActivityView(failedCache, imported);
   }
 }
 

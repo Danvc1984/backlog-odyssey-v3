@@ -33,10 +33,9 @@ import { buildEntryOfferView } from "@/lib/offer-selection";
 import { formatPlayExclusionReasons } from "@/lib/recommendations/environment-fit";
 
 const PLAY_ROLE_GROUPS_WITH_HANDHELD = [
-  { label: "Best fit", roles: ["BEST_FIT_1"] },
+  { label: "Best fit", roles: ["BEST_FIT_1", "BEST_FIT_2"] },
   { label: "Handheld pick", roles: ["HANDHELD_PICK"] },
   { label: "Out of the box", roles: ["OUT_OF_THE_BOX"] },
-  { label: "Change of pace", roles: ["CHANGE_OF_PACE"] },
 ] as const;
 const PLAY_ROLE_GROUPS = [
   { label: "Best fit", roles: ["BEST_FIT_1", "BEST_FIT_2"] },
@@ -231,7 +230,10 @@ export default async function TodayPage() {
     ? formatPlayExclusionReasons(playExclusions)
     : null;
   const hasPlayRoles = items.some((item) => item.role !== null);
-  const playRoleGroups = todaySettings?.handheldOs !== "NONE" ? PLAY_ROLE_GROUPS_WITH_HANDHELD : PLAY_ROLE_GROUPS;
+  const hasHandheldPick = items.some((item) => item.role === "HANDHELD_PICK");
+  const playRoleGroups = todaySettings?.handheldOs !== "NONE" && hasHandheldPick
+    ? PLAY_ROLE_GROUPS_WITH_HANDHELD
+    : PLAY_ROLE_GROUPS;
   const hasBuyRoles = buyItems.some((item) => item.role !== null);
   const activityAppIds = [
     ...steamActivityView.imported,
@@ -293,8 +295,7 @@ export default async function TodayPage() {
       {(!latestPlayNextRun || !latestBuyRun) && (
         <div className="rounded-lg border border-border p-8 text-center">
           <p className="text-sm text-muted-foreground">
-            Your recommendation lists are still unwritten. Update recommendations
-            to build a fresh play and purchase list.
+            Update recommendations to build fresh play and purchase lists.
           </p>
           <div className="mt-4 flex justify-center">
             <UpdateRecommendationsButton />
@@ -344,7 +345,7 @@ export default async function TodayPage() {
         ))}
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No eligible games.
+            No games match your current setup.
           </p>
         ) : !hasPlayRoles ? (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -441,7 +442,7 @@ export default async function TodayPage() {
         />
         {buyItems.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No eligible wishlist purchasese.
+            No wishlist items match your current setup.
           </p>
         ) : !hasBuyRoles ? (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -500,7 +501,7 @@ export default async function TodayPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <SectionCard
           title="Recent activity on Steam"
-          description="Games that have been played or purchased on Steam in the last 24 hours with your Steam account."
+          description="Games played on Steam in the last two weeks."
           aside={<SteamActivityRefreshButton />}
         >
           <RecentSteamActivity

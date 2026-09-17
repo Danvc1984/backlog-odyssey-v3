@@ -217,7 +217,7 @@ export function CompatibilitySection({
           <div className="grid gap-2">
           <div className="flex flex-col gap-3 rounded-lg border border-border p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
-              <p className="text-sm font-medium">{linuxDevicePhrase === "your Linux handheld" ? "Linux handheld" : "Linux"}</p>
+              <p className="text-sm font-medium">{linuxDevicePhrase}</p>
               <p className="text-xs text-muted-foreground">{override ? "Primary: Linux personal override" : "Primary: ProtonDB"}</p>
               {antiCheat ? (
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -228,7 +228,6 @@ export function CompatibilitySection({
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:flex-col sm:items-end">
               <Badge label={STATUS_LABELS[linuxStatus]} className={STATUS_CLASSES[linuxStatus]} />
-              <ProtonDbTier protonDb={protonDb} />
             </div>
           </div>
 

@@ -39,11 +39,11 @@ describe("os setup contract", () => {
   });
 
   it("describes the Linux device used by the setup", () => {
-    expect(linuxDevicePhrase(setup())).toBe("Linux");
-    expect(linuxDevicePhrase(setup({ primaryOs: "LINUX", handheldOs: "LINUX" }))).toBe("Linux");
-    expect(linuxDevicePhrase(setup({ primaryOs: "LINUX", handheldOs: "WINDOWS" }))).toBe("Linux");
+    expect(linuxDevicePhrase(setup())).toBe("Linux PC");
+    expect(linuxDevicePhrase(setup({ primaryOs: "LINUX", handheldOs: "LINUX" }))).toBe("Linux PC and handheld");
+    expect(linuxDevicePhrase(setup({ primaryOs: "LINUX", handheldOs: "WINDOWS" }))).toBe("Linux PC");
     expect(linuxDevicePhrase(setup({ primaryOs: "WINDOWS", handheldOs: "NONE" }))).toBe("Linux");
-    expect(linuxDevicePhrase(setup({ primaryOs: "WINDOWS", handheldOs: "LINUX" }))).toBe("your Linux handheld");
+    expect(linuxDevicePhrase(setup({ primaryOs: "WINDOWS", handheldOs: "LINUX" }))).toBe("Linux handheld");
   });
 
   it("rejects a fallback on a Windows primary", () => {

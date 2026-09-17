@@ -331,6 +331,31 @@ describe("refreshSteamActivityCacheIfStale", () => {
     expect(view.checkedAt).toBe(oldRefreshed);
   });
 
+  it("records a thrown provider failure while retaining the previous cache", async () => {
+    const oldRefreshed = new Date("2025-01-01T00:00:00.000Z");
+    const previous = entry("620", "Portal 2", "2024-12-31T00:00:00.000Z");
+    cacheRowValue = {
+      entries: [previous],
+      refreshedAt: oldRefreshed,
+      lastAttemptAt: new Date(now.getTime() - ACTIVITY_REFRESH_INTERVAL_MS - 1000),
+      lastError: null,
+    };
+    vi.mocked(fetchRecentlyPlayedGames).mockRejectedValue(new Error("network down"));
+
+    const view = await refreshSteamActivityCacheIfStale(now);
+
+    expect(cacheUpsert).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        where: { id: 1 },
+        update: { lastError: ACTIVITY_UNAVAILABLE_MESSAGE },
+      }),
+    );
+    expect(view.state).toBe("STALE_ERROR");
+    expect(view.errorMessage).toBe(ACTIVITY_UNAVAILABLE_MESSAGE);
+    expect(view.unimported.map((item) => item.steamAppId)).toEqual(["620"]);
+    expect(view.checkedAt).toBe(oldRefreshed);
+  });
+
   it("skips the refresh when not due and serves the cached view", async () => {
     const refreshedAt = new Date("2025-01-09T00:00:00.000Z");
     cacheRowValue = {

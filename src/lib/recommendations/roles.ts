@@ -125,17 +125,13 @@ export function assignPlayRoles(
   if (mode === "COLD_START") {
     const displayPool = selectColdStartOrder(hasPrimary ? primaryPool : secondChancePool);
     assignPlayRole(displayPool[0], "BEST_FIT_1");
+    assignPlayRole(displayPool[1], "BEST_FIT_2");
     const handheldCandidate = hasHandheld
-      ? (hasPrimary ? primaryPool : secondChancePool).find(
-          (candidate) => candidate.id !== displayPool[0]?.id && candidate.handheldSuitable === true,
+      ? displayPool.find(
+          (candidate, index) => index > 1 && candidate.handheldSuitable === true,
         )
       : undefined;
-    if (hasHandheld) {
-      assignPlayRole(handheldCandidate, "HANDHELD_PICK");
-      if (!handheldCandidate) omissions.push({ role: "HANDHELD_PICK", label: "No eligible handheld-suitable game qualifies" });
-    } else {
-      assignPlayRole(displayPool[1], "BEST_FIT_2");
-    }
+    if (hasHandheld) assignPlayRole(handheldCandidate, "HANDHELD_PICK");
     const displayIds = new Set(assigned.map((item) => item.id));
     const remaining = displayPool.filter((candidate) => !displayIds.has(candidate.id));
     const ready = remaining.find((candidate) => candidate.envStatus === "READY");
@@ -146,11 +142,14 @@ export function assignPlayRoles(
       ready || requireReadyForOutOfTheBox ? [] : [fallbackCaveat(ROLE_FALLBACK_LABELS.noReady)],
     );
     if (!outOfTheBox && hasPrimary && !requireReadyForOutOfTheBox) assignPlayRole(secondChancePool[0], "OUT_OF_THE_BOX");
-    assignPlayRole(
-      remaining.find((candidate) => candidate.id !== outOfTheBox?.id),
-      "CHANGE_OF_PACE",
-      [fallbackCaveat(ROLE_FALLBACK_LABELS.noTaste)],
-    );
+    if (!hasHandheld || !handheldCandidate) {
+      const paceCandidate = remaining.find((candidate) => candidate.id !== outOfTheBox?.id);
+      assignPlayRole(
+        paceCandidate,
+        "CHANGE_OF_PACE",
+        [fallbackCaveat(ROLE_FALLBACK_LABELS.noTaste)],
+      );
+    }
     for (const candidate of displayPool) displayIds.add(candidate.id);
     if (!outOfTheBox && hasPrimary && secondChancePool[0]) displayIds.add(secondChancePool[0].id);
     batches.BEST_FIT_1 = primaryPool.filter((candidate) => !displayIds.has(candidate.id)).map((candidate) => candidate.id);
@@ -175,15 +174,13 @@ export function assignPlayRoles(
   const displayIds = new Set<string>();
   const workingPool = hasPrimary ? primaryPool : secondChancePool;
   assignPlayRole(workingPool[0], "BEST_FIT_1");
+  assignPlayRole(workingPool[1], "BEST_FIT_2");
   const handheldCandidate = hasHandheld
-    ? workingPool.find((candidate) => candidate.id !== workingPool[0]?.id && candidate.handheldSuitable === true)
+    ? workingPool.find(
+        (candidate, index) => index > 1 && candidate.handheldSuitable === true,
+      )
     : undefined;
-  if (hasHandheld) {
-    assignPlayRole(handheldCandidate, "HANDHELD_PICK");
-    if (!handheldCandidate) omissions.push({ role: "HANDHELD_PICK", label: "No eligible handheld-suitable game qualifies" });
-  } else {
-    assignPlayRole(workingPool[1], "BEST_FIT_2");
-  }
+  if (hasHandheld) assignPlayRole(handheldCandidate, "HANDHELD_PICK");
   for (const candidate of assigned) displayIds.add(candidate.id);
 
   const remaining = workingPool.filter((candidate) => !displayIds.has(candidate.id));
@@ -198,18 +195,20 @@ export function assignPlayRoles(
   if (outOfTheBox) displayIds.add(outOfTheBox.id);
   if (!outOfTheBox && secondChancePool[0]) displayIds.add(secondChancePool[0].id);
 
-  const paceCandidates = remaining.filter((candidate) => !displayIds.has(candidate.id));
-  const changeOfPace = paceCandidates
-    .filter((candidate) => candidate.tastePoints !== 0)
-    .slice()
-    .sort((left, right) => left.tastePoints - right.tastePoints)[0];
-  const pace = changeOfPace ?? paceCandidates[0];
-  assignPlayRole(
-    pace,
-    "CHANGE_OF_PACE",
-    changeOfPace ? [] : [fallbackCaveat(ROLE_FALLBACK_LABELS.noTaste)],
-  );
-  if (pace) displayIds.add(pace.id);
+  if (!hasHandheld || !handheldCandidate) {
+    const paceCandidates = remaining.filter((candidate) => !displayIds.has(candidate.id));
+    const changeOfPace = paceCandidates
+      .filter((candidate) => candidate.tastePoints !== 0)
+      .slice()
+      .sort((left, right) => left.tastePoints - right.tastePoints)[0];
+    const pace = changeOfPace ?? paceCandidates[0];
+    assignPlayRole(
+      pace,
+      "CHANGE_OF_PACE",
+      changeOfPace ? [] : [fallbackCaveat(ROLE_FALLBACK_LABELS.noTaste)],
+    );
+    if (pace) displayIds.add(pace.id);
+  }
 
   batches.BEST_FIT_1 = primaryPool.filter((candidate) => !displayIds.has(candidate.id)).map((candidate) => candidate.id);
   batches.BEST_FIT_2 = batches.BEST_FIT_1.slice();
@@ -257,7 +256,6 @@ export function assignBuyRoles(
   pool: readonly BuyRoleCandidate[],
 ): RoleAssignment & { saturation: BuySaturation } {
   const assigned: AssignedRole[] = [];
-  const omissions: RoleOmission[] = [];
   const batches: Record<RecommendationRole, string[]> = {
     BEST_FIT_1: [],
     BEST_FIT_2: [],

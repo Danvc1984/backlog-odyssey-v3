@@ -103,9 +103,11 @@ function statusBadge(status: string): React.ReactNode {
 }
 
 function orderedEnvironments(rows: EnvironmentRow[]): EnvironmentRow[] {
-  return ENVIRONMENT_ORDER.flatMap((environment) =>
-    rows.filter((row) => row.environment === environment),
-  );
+  const byEnvironment = new Map(rows.map((row) => [row.environment, row]));
+  return ENVIRONMENT_ORDER.flatMap((environment) => {
+    const row = byEnvironment.get(environment);
+    return row ? [row] : [];
+  });
 }
 
 export function WishlistCompatibilityBlock({
@@ -147,7 +149,7 @@ export function WishlistCompatibilityBlock({
       }
     >
       {!hasEvidence ? (
-        <p className="text-sm text-muted-foreground">Compatibility details not found.</p>
+        <p className="text-sm text-muted-foreground">No compatibility details yet. Refresh to look for them.</p>
       ) : (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -200,8 +202,8 @@ export function WishlistCompatibilityBlock({
               <div key={row.environment} className="rounded-md border border-border p-3">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm font-medium">
-                    {row.environment === "LINUX" && linuxDevicePhrase === "your Linux handheld"
-                      ? "Linux handheld"
+                    {row.environment === "LINUX"
+                      ? linuxDevicePhrase
                       : ENVIRONMENT_LABELS[row.environment] ?? row.environment}
                   </span>
                   {statusBadge(row.status)}
@@ -214,7 +216,7 @@ export function WishlistCompatibilityBlock({
             {!hasWindowsFallback && (
               <div className="rounded-md border border-border p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium">Windows</span>
+                  <span className="text-sm font-medium">Windows fallback</span>
                   <Badge label="Not configured" className={STATUS_CLASSES.UNKNOWN} />
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
