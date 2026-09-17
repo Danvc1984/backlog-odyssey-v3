@@ -111,7 +111,7 @@ export function TuneThisRunPanel({ engine, knownValues, thinPool, presets, alter
   return (
     <section className="group/tune mb-4 rounded-lg border border-border bg-muted/20">
       <button type="button" onClick={() => setOpen((current) => !current)} aria-expanded={open} aria-controls={`${engine.toLowerCase()}-tune-controls`} className="flex w-full items-center justify-between gap-3 p-4 text-left">
-        <div><p className="technical-label text-muted-foreground">Tune this run</p>{open && <h3 id={`${engine.toLowerCase()}-tune-heading`} className="mt-1 text-lg font-semibold">What kind of journey fits today?</h3>}</div>
+        <div><p className="technical-label text-muted-foreground">Tune this run</p>{open && <h3 id={`${engine.toLowerCase()}-tune-heading`} className="mt-1 text-lg font-semibold">What kind of journey are you looking for?</h3>}</div>
         <CaretDownIcon aria-hidden className={`size-5 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && <div id={`${engine.toLowerCase()}-tune-controls`} className="border-t border-border p-4">
