@@ -103,29 +103,29 @@
 **Suggested fix:** Replace raw diagnostics with a clear health indicator and next actions; place era, tag, and other learned signals in collapsed disclosures.
 **Resolution:**
 
-### F-13 [P3] open - Wishlist detail actions and offer hero lack focus
+### F-13 [P3] fixed - Wishlist detail actions and offer hero lack focus
 
 **Area:** Wishlist detail hero and actions
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** Core wishlist decisions are visually secondary and the offer hierarchy under-emphasizes title, final price, and discount.
 **Suggested fix:** Create a focused action area similar to Library play-state controls, expose selected actions in the hero, link and strengthen the title, color the discounted price, and emphasize the discount percentage.
-**Resolution:**
+**Resolution:** Fixed on `fix/wishlist-detail-purchase-flow-and-artwork`: wishlist detail now foregrounds the selected offer and acquisition action, with linked seller title and stronger price and discount hierarchy.
 
-### F-14 [P2] open - Mexico keyshop activation warning is detached from the main price
+### F-14 [P2] fixed - Mexico keyshop activation warning is detached from the main price
 
 **Area:** Wishlist selected offer
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** Regional activation risk may be missed when it is not adjacent to the price that motivates purchase.
 **Suggested fix:** Place the keyshop activation warning directly below the selected offer price while keeping the seller page authoritative.
-**Resolution:**
+**Resolution:** Fixed on `fix/wishlist-detail-purchase-flow-and-artwork`: the Mexico keyshop warning now appears directly below the selected offer price and the seller link remains available.
 
-### F-15 [P3] open - Acquisition confirmation lacks a distinctive completion moment
+### F-15 [P3] fixed - Acquisition confirmation lacks a distinctive completion moment
 
 **Area:** Wishlist Acquire modal
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** A major catalog transition feels visually generic.
 **Suggested fix:** Add cover artwork and restrained celebratory motion with reduced-motion and reduced-data fallbacks, without delaying confirmation.
-**Resolution:**
+**Resolution:** Fixed on `fix/wishlist-detail-purchase-flow-and-artwork`: successful acquisition now keeps an accessible confirmation open with cover-art and reduced-data fallback plus reduced-motion celebration.
 
 ### F-16 [P3] open - Wishlist and Add Game forms need layout cleanup
 
@@ -167,13 +167,13 @@
 **Suggested fix:** Use compact responsive groups and accessible information controls for optional explanations, preserving breathing room only where needed.
 **Resolution:** Planned in feature 29.
 
-### F-21 [P3] open - Detail artwork carousels are slow and lack fullscreen viewing
+### F-21 [P3] fixed - Detail artwork carousels are slow and lack fullscreen viewing
 
 **Area:** Game and wishlist detail artwork
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** Artwork exploration feels sluggish and cannot adapt framing to the source image resolution.
 **Suggested fix:** Modestly increase carousel movement speed and add an accessible fullscreen viewer with contain-aware framing, keyboard controls, and reduced-motion behavior.
-**Resolution:**
+**Resolution:** Fixed on `fix/wishlist-detail-purchase-flow-and-artwork`: shared detail artwork now advances faster and opens in an accessible contain-aware fullscreen viewer with keyboard controls and reduced-data behavior.
 
 ### F-22 [P2] open - Tags and manual collections duplicate personal grouping
 

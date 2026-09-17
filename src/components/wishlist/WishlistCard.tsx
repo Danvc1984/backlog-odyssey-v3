@@ -30,6 +30,7 @@ function formatDuration(hours: number): string {
 
 interface WishlistCardProps {
   baseGames: { id: string; name: string }[];
+  alternativeSources: { id: string; name: string; iconName: string; brandIcon?: string }[];
   entry: {
     id: string;
     name: string;
@@ -56,6 +57,7 @@ interface WishlistCardProps {
 export function WishlistCard({
   entry,
   baseGames,
+  alternativeSources,
   variant = "focus",
 }: WishlistCardProps & { variant?: "focus" | "list" }) {
   const coverTitle = entry.type === "DLC" ? `${entry.name} (DLC)` : entry.name;
@@ -98,7 +100,13 @@ export function WishlistCard({
               {entry.compatTag && <ProtonDbTag tag={entry.compatTag} />}
             </div>
             <div className="shrink-0">
-              <WishlistEntryActions entry={entry} baseGames={baseGames} />
+              <WishlistEntryActions
+                entry={entry}
+                baseGames={baseGames}
+                imageUrl={imageUrl}
+                selectedOffer={selectedOffer}
+                alternativeSources={alternativeSources}
+              />
             </div>
           </div>
           <div className="min-w-0 p-4 pt-0">
@@ -170,7 +178,13 @@ export function WishlistCard({
             />
             {entry.compatTag && <ProtonDbTag tag={entry.compatTag} />}
           </div>
-          <WishlistEntryActions entry={entry} baseGames={baseGames} />
+          <WishlistEntryActions
+            entry={entry}
+            baseGames={baseGames}
+            imageUrl={entry.metadata?.imageUrl ?? null}
+            selectedOffer={selectedOffer}
+            alternativeSources={alternativeSources}
+          />
         </div>
 
         {entry.type === "BASE_GAME" && !entry.hasOwnMetadata && !entry.hasInheritedMetadata && (

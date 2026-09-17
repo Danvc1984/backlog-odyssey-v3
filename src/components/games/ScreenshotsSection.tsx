@@ -83,7 +83,18 @@ export function ScreenshotsSection({
 
   return (
     <SectionCard eyebrow="Media" title="Artwork and screenshots">
-      <Carousel label="Artwork and screenshots" slides={slides} />
+      <Carousel
+        label="Artwork and screenshots"
+        slides={slides}
+        fullscreenImages={
+          reducedData
+            ? []
+            : media.map((item, index) => ({
+                src: item.image,
+                alt: `${item.kind} ${index + 1} of ${title}`,
+              }))
+        }
+      />
       <CreditLine sourceUrl={sourceUrl} />
     </SectionCard>
   );

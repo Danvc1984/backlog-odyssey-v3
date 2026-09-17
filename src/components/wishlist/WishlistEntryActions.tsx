@@ -17,14 +17,18 @@ import {
 } from "@/components/ui/dialog";
 import { EditWishlistDialog } from "./EditWishlistDialog";
 import { AcquireWishlistDialog } from "./AcquireWishlistDialog";
+import type { WishlistOfferView } from "@/types/wishlist-offers";
 
 interface WishlistEntryActionsProps {
   entry: { id: string; name: string; type: string; baseGameId: string | null; interest: number | null; gameExperience: string | null; handheldSuitable: boolean | null };
   baseGames: { id: string; name: string }[];
   showDelete?: boolean;
+  imageUrl?: string | null;
+  selectedOffer?: WishlistOfferView | null;
+  alternativeSources?: { id: string; name: string; iconName: string; brandIcon?: string }[];
 }
 
-export function WishlistEntryActions({ entry, baseGames, showDelete = true }: WishlistEntryActionsProps) {
+export function WishlistEntryActions({ entry, baseGames, showDelete = true, imageUrl, selectedOffer, alternativeSources }: WishlistEntryActionsProps) {
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -46,7 +50,12 @@ export function WishlistEntryActions({ entry, baseGames, showDelete = true }: Wi
 
   return (
     <div className="flex items-center gap-2">
-      <AcquireWishlistDialog entry={entry} />
+      <AcquireWishlistDialog
+        entry={entry}
+        imageUrl={imageUrl}
+        selectedOffer={selectedOffer}
+        alternativeSources={alternativeSources}
+      />
       <EditWishlistDialog entry={entry} baseGames={baseGames} />
       {showDelete && (
         <Dialog

@@ -16,6 +16,7 @@ import { igdbWishlistCardMetadataView } from "@/lib/card-metadata-view";
 import { resolveDurationEstimate, type DurationProfile, type PlaytimeEvidenceRow } from "@/lib/playtime-evidence";
 import { ListPaginationControls } from "@/components/list/ListPaginationControls";
 import { parsePage, parsePageSize, resolveRange } from "@/lib/list-pagination";
+import { resolveSourcePresentation, UNSPECIFIED_OTHER_SOURCE_NAME, normalizeSourceName } from "@/lib/sources/known-sources";
 
 interface WishlistSearchParams {
   type?: string;
@@ -60,7 +61,7 @@ export default async function WishlistPage({
   const query = params.q?.trim() || undefined;
   const compatibilityGate = await getCompatibilityGate();
 
-  const [entries, baseGames, appSettings] = await Promise.all([
+  const [entries, baseGames, appSettings, alternativeSources] = await Promise.all([
     prisma.wishlistEntry.findMany({
       where: wishlistWhere({ type, interest: interestFilter }),
       orderBy: [{ interest: "desc" }, { updatedAt: "desc" }],
@@ -98,8 +99,19 @@ export default async function WishlistPage({
       orderBy: { name: "asc" },
     }),
     prisma.appSettings.findUnique({ where: { id: 1 }, select: { durationProfile: true } }),
+    prisma.alternativeSource.findMany({
+      where: { archivedAt: null },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
   ]);
   const durationProfile = (appSettings?.durationProfile ?? "NORMALLY") as DurationProfile;
+  const sourceOptions = alternativeSources
+    .filter((source) => normalizeSourceName(source.name) !== normalizeSourceName(UNSPECIFIED_OTHER_SOURCE_NAME))
+    .map((source) => ({
+      ...source,
+      ...resolveSourcePresentation(source.name),
+    }));
 
   const entriesWithOfferViews = entries.map(({
     offers,
@@ -206,7 +218,13 @@ export default async function WishlistPage({
         />
       </div>
       <WishlistImportReviewSection />
-      <WishlistList entries={paginatedEntries} baseGames={baseGames} view={view} hasFilters={hasFilters} />
+      <WishlistList
+        entries={paginatedEntries}
+        baseGames={baseGames}
+        alternativeSources={sourceOptions}
+        view={view}
+        hasFilters={hasFilters}
+      />
       {orderedEntries.length > 0 && (
         <ListPaginationControls
           ariaLabel="Wishlist pages"

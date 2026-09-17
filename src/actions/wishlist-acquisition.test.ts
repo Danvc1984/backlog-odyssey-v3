@@ -88,6 +88,13 @@ beforeEach(() => {
 });
 
 describe("acquireWishlistBaseGame", () => {
+  it("rejects ROM as a wishlist acquisition source", async () => {
+    const result = await acquireWishlistBaseGame({ wishlistEntryId: "wish-1", source: "ROM" });
+
+    expect(result).toEqual({ success: false, data: null, error: "Invalid input" });
+    expect(mockFindUniqueWishlist).not.toHaveBeenCalled();
+  });
+
   it("creates catalog records, transfers IGDB metadata, and deletes the wish", async () => {
     mockFindUniqueWishlist.mockResolvedValue({
       id: "wish-1",
@@ -179,7 +186,7 @@ describe("acquireWishlistBaseGame", () => {
     });
     mockFindUniqueExternalId.mockResolvedValue({ id: "existing" });
 
-    const result = await acquireWishlistBaseGame({ wishlistEntryId: "wish-1", source: "ROM" });
+    const result = await acquireWishlistBaseGame({ wishlistEntryId: "wish-1", source: "STEAM" });
 
     expect(result.error).toBe("IGDB game identity is already attached to another catalog game");
     expect(mockGameCreate).not.toHaveBeenCalled();

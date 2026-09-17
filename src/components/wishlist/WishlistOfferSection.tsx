@@ -56,26 +56,34 @@ export function WishlistOfferSection({
   return (
     <div className="space-y-2 border-t border-border pt-3 text-sm">
       <div className="flex items-start justify-between gap-3">
-        <span className="font-medium">{offer.shop}</span>
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <span className="font-semibold">{formatCurrency(offer.price, offer.currency)}</span>
-          {offer.isKeyshop && (
-            <span
-              className="inline-flex items-center gap-1 text-xs text-amber-300"
-              title="Keyshop - activation not guaranteed in Mexico"
-            >
-              <WarningIcon className="size-3" aria-hidden="true" />
-              Keyshop - activation not guaranteed in Mexico
-            </span>
-          )}
-        </div>
+        {offer.url ? (
+          <a
+            href={offer.url}
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold text-primary underline-offset-4 hover:underline"
+          >
+            {offer.shop}
+          </a>
+        ) : (
+          <span className="font-semibold">{offer.shop}</span>
+        )}
+        <span className={cn("text-xl font-bold", offer.discount && offer.discount > 0 ? "text-emerald-300" : "text-foreground")}>
+          {formatCurrency(offer.price, offer.currency)}
+        </span>
       </div>
+      {offer.isKeyshop && (
+        <p className="flex items-center gap-1 text-xs font-medium text-amber-300">
+          <WarningIcon className="size-3" aria-hidden="true" />
+          Keyshop activation is not guaranteed in Mexico.
+        </p>
+      )}
       {sourcePriceLabel(offer) && (
         <p className="text-xs text-muted-foreground">{sourcePriceLabel(offer)}</p>
       )}
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
         {offer.discount !== null && offer.discount > 0 && (
-          <span className={cn("rounded bg-emerald-500/15 px-1.5 py-0.5 font-medium text-emerald-400", shouldGlowOffer(offer.discount) && "shadow-glow")}>
+          <span className={cn("rounded bg-emerald-500/15 px-2 py-1 text-sm font-bold text-emerald-300", shouldGlowOffer(offer.discount) && "shadow-glow")}>
             -{offer.discount}%
           </span>
         )}

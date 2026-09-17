@@ -28,6 +28,7 @@ import { resolveIgdbPageScreenshots } from "@/lib/screenshot-view";
 import { deriveWindowsFallbackExists, linuxDevicePhrase } from "@/lib/os-setup";
 import { getCompatibilityGate } from "@/lib/compat-gate";
 import { SourceIcon } from "@/components/sources/SourceIcon";
+import { resolveSourcePresentation, UNSPECIFIED_OTHER_SOURCE_NAME, normalizeSourceName } from "@/lib/sources/known-sources";
 
 export default async function WishlistDetailPage({
   params,
@@ -35,7 +36,7 @@ export default async function WishlistDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [entry, baseGames, buyDismissalCount, compatibilityGate, appSettings] = await Promise.all([
+  const [entry, baseGames, buyDismissalCount, compatibilityGate, appSettings, alternativeSources] = await Promise.all([
     prisma.wishlistEntry.findUnique({
       where: { id },
       select: {
@@ -93,11 +94,23 @@ export default async function WishlistDetailPage({
     }),
     getCompatibilityGate(),
     prisma.appSettings.findUnique({ where: { id: 1 }, select: { durationProfile: true } }),
+    prisma.alternativeSource.findMany({
+      where: { archivedAt: null },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
   ]);
 
   if (!entry) {
     redirect("/wishlist");
   }
+
+  const sourceOptions = alternativeSources
+    .filter((source) => normalizeSourceName(source.name) !== normalizeSourceName(UNSPECIFIED_OTHER_SOURCE_NAME))
+    .map((source) => ({
+      ...source,
+      ...resolveSourcePresentation(source.name),
+    }));
 
   const latestBuyRun = await prisma.recommendationRun.findFirst({
     where: { kind: "BUY" },
@@ -202,6 +215,8 @@ export default async function WishlistDetailPage({
           day: "numeric",
         })}
         baseGame={entry.baseGame}
+        selectedOffer={offerView.selected}
+        alternativeSources={sourceOptions}
       />
 
       {metadata ? (
@@ -330,6 +345,9 @@ export default async function WishlistDetailPage({
                 gameExperience: entry.gameExperience,
                 handheldSuitable: entry.handheldSuitable,
               }}
+              imageUrl={metadata ? (metadata.artworkUrls[0] ?? metadata.screenshots[0]?.image ?? metadata.coverUrl ?? null) : null}
+              selectedOffer={offerView.selected}
+              alternativeSources={sourceOptions}
               baseGames={baseGames}
               showDelete={false}
             />

@@ -120,7 +120,7 @@ export function EditWishlistDialog({ entry, baseGames }: EditWishlistDialogProps
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button type="button" variant="outline" size="sm">Edit</Button>
+        <Button type="button" variant="secondary" size="lg">Edit</Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>

@@ -3,12 +3,13 @@ import { WishlistCard } from "./WishlistCard";
 
 interface WishlistListProps {
   baseGames: { id: string; name: string }[];
+  alternativeSources: { id: string; name: string; iconName: string; brandIcon?: string }[];
   entries: React.ComponentProps<typeof WishlistCard>["entry"][];
   view?: "focus" | "list";
   hasFilters?: boolean;
 }
 
-export function WishlistList({ entries, baseGames, view = "focus", hasFilters = false }: WishlistListProps) {
+export function WishlistList({ entries, baseGames, alternativeSources, view = "focus", hasFilters = false }: WishlistListProps) {
   if (entries.length === 0) {
     return (
       <div className="mt-12 rounded-lg border border-dashed border-border p-10 text-center">
@@ -33,7 +34,7 @@ export function WishlistList({ entries, baseGames, view = "focus", hasFilters = 
   return (
     <div className={view === "list" ? "mt-6 grid gap-3" : "mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"}>
       {entries.map((entry) => (
-        <WishlistCard key={entry.id} entry={entry} baseGames={baseGames} variant={view} />
+        <WishlistCard key={entry.id} entry={entry} baseGames={baseGames} alternativeSources={alternativeSources} variant={view} />
       ))}
     </div>
   );

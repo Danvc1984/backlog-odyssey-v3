@@ -55,7 +55,8 @@ const getWishlistEntriesSchema = z
 const acquireWishlistBaseGameSchema = z
   .object({
     wishlistEntryId: z.string().trim().min(1),
-    source: z.enum(["STEAM", "OTHER_PLATFORM", "ROM"]),
+    source: z.enum(["STEAM", "OTHER_PLATFORM"]),
+    alternativeSourceId: z.string().trim().min(1).optional(),
     displayName: z.string().trim().max(200).optional(),
   })
   .strict();
@@ -63,7 +64,8 @@ const acquireWishlistBaseGameSchema = z
 const acquireWishlistDlcSchema = z
   .object({
     wishlistEntryId: z.string().trim().min(1),
-    source: z.enum(["STEAM", "OTHER_PLATFORM", "ROM"]).default("OTHER_PLATFORM"),
+    source: z.enum(["STEAM", "OTHER_PLATFORM"]).default("OTHER_PLATFORM"),
+    alternativeSourceId: z.string().trim().min(1).optional(),
     updateParentPlayState: z
       .enum(["NOT_STARTED", "IN_PROGRESS", "PLAN_TO_PLAY"])
       .optional(),
@@ -308,9 +310,19 @@ export async function acquireWishlistBaseGame(input: unknown) {
       }
 
       const alternativeSourceId =
-        parsed.data.source === "OTHER_PLATFORM"
-          ? (await getOrCreateUnspecifiedSource(tx)).id
-          : null;
+        parsed.data.source === "OTHER_PLATFORM" && parsed.data.alternativeSourceId
+          ? parsed.data.alternativeSourceId
+          : parsed.data.source === "OTHER_PLATFORM"
+            ? (await getOrCreateUnspecifiedSource(tx)).id
+            : null;
+      if (parsed.data.source === "OTHER_PLATFORM" && parsed.data.alternativeSourceId) {
+        const source = await tx.alternativeSource.findUnique({
+          where: { id: parsed.data.alternativeSourceId },
+          select: { id: true, archivedAt: true },
+        });
+        if (!source) throw new ActionError("Alternative source not found");
+        if (source.archivedAt) throw new ActionError("This source is archived and cannot be selected");
+      }
       const created = await tx.game.create({
         data: {
           type: "BASE_GAME",
@@ -389,9 +401,19 @@ export async function acquireWishlistDlc(input: unknown) {
       }
 
       const alternativeSourceId =
-        parsed.data.source === "OTHER_PLATFORM"
-          ? (await getOrCreateUnspecifiedSource(tx)).id
-          : null;
+        parsed.data.source === "OTHER_PLATFORM" && parsed.data.alternativeSourceId
+          ? parsed.data.alternativeSourceId
+          : parsed.data.source === "OTHER_PLATFORM"
+            ? (await getOrCreateUnspecifiedSource(tx)).id
+            : null;
+      if (parsed.data.source === "OTHER_PLATFORM" && parsed.data.alternativeSourceId) {
+        const source = await tx.alternativeSource.findUnique({
+          where: { id: parsed.data.alternativeSourceId },
+          select: { id: true, archivedAt: true },
+        });
+        if (!source) throw new ActionError("Alternative source not found");
+        if (source.archivedAt) throw new ActionError("This source is archived and cannot be selected");
+      }
       const created = await tx.game.create({
         data: {
           type: "DLC",
