@@ -396,6 +396,14 @@
     text-transform: uppercase;
   }
 
+  .section-label {
+    font-family: var(--font-technical);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
   .game-theme-scope {
     --primary: var(--game-accent);
     --ring: var(--game-accent);

@@ -17,6 +17,39 @@ import { getLatestWishlistCompatSweep } from "@/actions/wishlist-compatibility";
 import { isCompatibilityActive } from "@/lib/os-setup";
 import { DurationProfileCard } from "@/components/settings/DurationProfileCard";
 
+function CollapsibleSettingsSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section>
+      <details className="group space-y-6">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-md [&::-webkit-details-marker]:hidden">
+          <h2 className="section-label text-muted-foreground transition-colors group-open:text-foreground hover:text-foreground">
+            {title}
+          </h2>
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+            aria-hidden
+          >
+            <path d="m4 6 4 4 4-4" />
+          </svg>
+        </summary>
+        {children}
+      </details>
+    </section>
+  );
+}
+
 export default async function SettingsPage() {
   const session = await requireUser();
   const [
@@ -118,8 +151,7 @@ export default async function SettingsPage() {
           Keep the ship&apos;s connections, appearance, provider upkeep, and recommendation course in your hands.
         </p>
       </div>
-      <section className="space-y-6">
-        <h2>Account</h2>
+      <CollapsibleSettingsSection title="Account">
         <AccountCard
           email={session.user?.email ?? null}
           signOutAction={async () => {
@@ -128,17 +160,15 @@ export default async function SettingsPage() {
           }}
           settings={appSettings}
         />
-      </section>
-      <section className="space-y-6">
-        <h2>Appearance</h2>
+      </CollapsibleSettingsSection>
+      <CollapsibleSettingsSection title="Appearance">
         <AppearanceSection
           initialWallpaperEnabled={appSettings?.wallpaperEnabled ?? true}
           poolCachedAt={wallpaperState?.cachedAt ?? null}
           lastError={wallpaperState?.lastError ?? null}
         />
-      </section>
-      <section className="space-y-6">
-        <h2>Steam and catalog sources</h2>
+      </CollapsibleSettingsSection>
+      <CollapsibleSettingsSection title="Steam and catalog sources">
         <SteamConnectionCard
           connected={Boolean(steamConnection)}
           steamId64={steamConnection?.steamId64 ?? null}
@@ -149,17 +179,15 @@ export default async function SettingsPage() {
         />
         <UnresolvedDlcReviewCard items={unresolvedDlcs} baseGames={baseGames} />
         <AlternativeSourcesCard sources={sources} />
-      </section>
-      <section className="space-y-6">
-        <h2>Recommendations</h2>
+      </CollapsibleSettingsSection>
+      <CollapsibleSettingsSection title="Recommendations">
         <DurationProfileCard initialProfile={appSettings?.durationProfile ?? "NORMALLY"} />
         <RecommendationProfileSection
           profile={profile}
           preferences={preferences}
         />
-      </section>
-      <section className="space-y-6">
-        <h2>Provider queues</h2>
+      </CollapsibleSettingsSection>
+      <CollapsibleSettingsSection title="Provider queues">
         <PriceStatusCard lastRun={latestPriceRefresh} />
         <CompatibilitySweepPanel
           compatibilityActive={appSettings ? isCompatibilityActive(appSettings) : false}
@@ -194,15 +222,14 @@ export default async function SettingsPage() {
               gameName: job.game.name,
             }))}
         />
-      </section>
-      <section className="space-y-6">
-        <h2>Personal data</h2>
+      </CollapsibleSettingsSection>
+      <CollapsibleSettingsSection title="Personal data">
         <PersonalDataCard
           gameCount={exportGameCount}
           wishlistCount={exportWishlistCount}
           recommendationRunCount={exportRecommendationRunCount}
         />
-      </section>
+      </CollapsibleSettingsSection>
     </div>
   );
 }
