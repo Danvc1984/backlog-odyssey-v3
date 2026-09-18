@@ -141,7 +141,7 @@
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** Common per-game actions take unnecessary navigation, while reusable source administration appears in the wrong context.
 **Suggested fix:** Add Library-card overflow actions for Edit availability and Delete; keep reusable-source create/rename/archive in Settings and link there from detail availability.
-**Resolution:** Planned in feature 29.
+**Resolution:** Planned in feature 30.
 
 ### F-18 [P2] open - Per-game availability display labels duplicate source identity
 
@@ -149,7 +149,7 @@
 **Found:** 2026-09-15 by owner decision (planning triage)
 **Why it matters:** Two names for one reusable source create inconsistent labels and unnecessary form, migration, export, and rendering paths.
 **Suggested fix:** Remove the display-label field from the schema and every contract, use the reusable source's canonical name, and discard legacy labels during migration/import.
-**Resolution:** Planned in feature 29.
+**Resolution:** Planned in feature 30.
 
 ### F-19 [P2] open - Catalog and wishlist notes are no longer part of the product
 
@@ -157,7 +157,7 @@
 **Found:** 2026-09-15 by owner decision (planning triage)
 **Why it matters:** Retaining an intentionally removed field increases UI density and leaves unsupported personal data contracts.
 **Suggested fix:** Remove notes from the data model and every read/write/transfer/export path, with an explicit migration and legacy-import policy.
-**Resolution:** Planned in feature 29.
+**Resolution:** Planned in feature 30.
 
 ### F-20 [P3] open - Game-detail personal fields use too much space
 
@@ -165,7 +165,7 @@
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** Persistent descriptions and one-input-per-row composition overwhelm the retained controls.
 **Suggested fix:** Use compact responsive groups and accessible information controls for optional explanations, preserving breathing room only where needed.
-**Resolution:** Planned in feature 29.
+**Resolution:** Planned in feature 30.
 
 ### F-21 [P3] fixed - Detail artwork carousels are slow and lack fullscreen viewing
 
@@ -181,7 +181,7 @@
 **Found:** 2026-09-15 by owner decision (planning triage)
 **Why it matters:** Two overlapping manual grouping systems create redundant editing and unclear ownership of shelves.
 **Suggested fix:** Make tags the sole manual grouping model, generate a shelf per tag, migrate manual collections into tags, support multiple tags per game, and remove the separate detail collection editor.
-**Resolution:** Planned in feature 30.
+**Resolution:** Planned in feature 31.
 
 ### F-23 [P2] open - Personal tags cannot explicitly tune recommendations
 
@@ -189,7 +189,7 @@
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** Owner-defined groupings cannot currently influence a requested recommendation run independently from provider metadata.
 **Suggested fix:** Add inactive-by-default personal-tag targets as a soft capped any-match boost, distinct from IGDB genres/themes/keywords and covered by presets and explanations.
-**Resolution:** Planned in feature 30.
+**Resolution:** Planned in feature 31.
 
 ### F-24 [P2] open - PLAYED_BEFORE conflates current state with completion history
 
@@ -197,12 +197,12 @@
 **Found:** 2026-09-15 by owner decision (planning triage)
 **Why it matters:** A replay cannot truthfully be both currently in progress and previously completed when prior completion is encoded as the current state.
 **Suggested fix:** Replace `PLAYED_BEFORE` with current `COMPLETED` state plus an independent `playedBefore` checkbox, migrate existing rows, and prevent replay history from being double-counted.
-**Resolution:** Planned in feature 31.
+**Resolution:** Planned in feature 32.
 
 ### F-25 [P2] open - Prior-completion semantics use a played-before name and prompt
 
 **File:** blueprint/project-plan.md:134
 **Found:** 2026-09-15 by `/audit` (scope: changed; lens: quality)
 **Why it matters:** The plan defines `playedBefore` as proof that the game was completed, while taste setup labels the same mutation `I've played this`. Implementers could record partial past play as completion evidence, affecting completed shelves, backlog counts, and recommendation learning.
-**Suggested fix:** Before feature 31 is specified, choose one contract. For the stated requirement, prefer a completion-specific field and label such as `completedBefore` / `Completed before`, while keeping ordinary past play as separate provider or event evidence.
+**Suggested fix:** Before feature 32 is specified, choose one contract. For the stated requirement, prefer a completion-specific field and label such as `completedBefore` / `Completed before`, while keeping ordinary past play as separate provider or event evidence.
 **Resolution:**

@@ -649,7 +649,17 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   Named presets persist but load only into the tab-local state. Rotation,
   exposure, and calibration behavior stay unchanged pending real usage data
 
-- [ ] 29. **Personal-data and availability simplification** - remove the
+- [ ] 29. **Today recommendation spotlight carousels** - replace the role-grid
+  presentation of Play Next and Buy recommendations on Today with one spotlight
+  carousel per section, one slide per pick showing game art next to metadata and
+  the pick's reasoning factors. Play Next slides through the two Best Fits, Out
+  of the Box, Change of Pace, and the Handheld pick when present; Buy mixes the
+  two Best Fits with the Deal picks in one carousel. Sparse runs or missing
+  roles simply yield fewer slides so the section never looks empty or lopsided.
+  Slides keep the existing per-role dismiss and feedback controls but drop the
+  optional dismissal-reason input; role omission explanations stay visible.
+
+- [ ] 30. **Personal-data and availability simplification** - remove the
   redundant per-game availability display label and remove catalog/wishlist
   notes from the Prisma model, migrations, validation, actions, forms, detail
   pages, acquisition transfer, recommendation inputs, and export/import. Use
@@ -662,7 +672,7 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   information controls, align related fields where space permits, and version
   export/import so legacy removed fields are discarded rather than restored.
 
-- [ ] 30. **Unified personal tags and collection shelves** - make personal tags
+- [ ] 31. **Unified personal tags and collection shelves** - make personal tags
   the sole manual grouping model: every tag automatically creates a browsable
   collection shelf, games may belong to multiple tags, and existing manual
   collections migrate to same-named tags with memberships unioned on normalized
@@ -675,7 +685,7 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   genres/themes/keywords and inactive by default; include presets, run context,
   explanations, reset, and export/import coverage.
 
-- [ ] 31. **Current play state and prior-completion history** - retire
+- [ ] 32. **Current play state and prior-completion history** - retire
   `PLAYED_BEFORE` as a play state, add an independent `playedBefore` checkbox,
   and use current states `NOT_STARTED`, `IN_PROGRESS`, `COMPLETED`, and
   `ABANDONED`. A replay can be `IN_PROGRESS` while `playedBefore` remains true;
@@ -686,7 +696,7 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   import, and test. Preserve completion evidence without double-counting an
   active replay.
 
-- [ ] 32. **Deployment and CI readiness** - Vercel/Supabase environment
+- [ ] 33. **Deployment and CI readiness** - Vercel/Supabase environment
   review, Vercel Cron daily run at 06:00 UTC-6 with `CRON_SECRET` enqueueing
   the price refresh plus a compatibility freshness sweep for catalog and
   wishlist evidence older than the 180-day window, queue overlap protection,
