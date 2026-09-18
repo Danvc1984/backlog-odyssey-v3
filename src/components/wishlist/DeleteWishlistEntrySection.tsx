@@ -44,8 +44,7 @@ export function DeleteWishlistEntrySection({
 
   return (
     <SectionCard
-      eyebrow="Danger zone"
-      title="Remove from wishlist"
+        title="Remove from wishlist"
       description="Permanently remove this entry and its locally stored wishlist data."
       tone="danger"
       aside={

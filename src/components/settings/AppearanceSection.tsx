@@ -147,8 +147,7 @@ export function AppearanceSection({
 
   return (
     <SectionCard
-      eyebrow="Interface"
-      title="Appearance"
+        title="Appearance"
       id="appearance-heading"
       description="Choose how the app looks and how much motion or imagery it uses."
     >

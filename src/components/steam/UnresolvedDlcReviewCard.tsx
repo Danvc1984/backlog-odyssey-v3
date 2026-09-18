@@ -141,8 +141,7 @@ export function UnresolvedDlcReviewCard({
 
   return (
     <SectionCard
-      eyebrow="Manual review"
-      title="Unresolved Steam DLC"
+        title="Unresolved Steam DLC"
       id="unresolved-dlc-heading"
       description="Review DLC whose base game is not in the catalog."
       status={

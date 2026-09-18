@@ -67,7 +67,6 @@ export default async function SettingsPage() {
     ignoredWishlistImports,
     wallpaperState,
     latestPriceRefresh,
-    enrichmentJobs,
     exportGameCount,
     exportWishlistCount,
     exportRecommendationRunCount,
@@ -125,17 +124,6 @@ export default async function SettingsPage() {
     prisma.priceRefresh.findFirst({
       orderBy: { requestedAt: "desc" },
       select: { id: true, status: true, counts: true, requestedAt: true, finishedAt: true },
-    }),
-    prisma.enrichmentJob.findMany({
-      select: {
-        id: true,
-        provider: true,
-        status: true,
-        stage: true,
-        lastErrorMessage: true,
-        finishedAt: true,
-        game: { select: { id: true, name: true } },
-      },
     }),
     prisma.game.count(),
     prisma.wishlistEntry.count(),
@@ -206,21 +194,6 @@ export default async function SettingsPage() {
                 }
               : null
           }
-          failedJobs={enrichmentJobs
-            .filter((job) => job.status === "FAILED")
-            .sort(
-              (a, b) =>
-                (b.finishedAt?.getTime() ?? 0) - (a.finishedAt?.getTime() ?? 0),
-            )
-            .slice(0, 10)
-            .map((job) => ({
-              id: job.id,
-              provider: job.provider,
-              error: job.lastErrorMessage,
-              finishedAt: job.finishedAt,
-              gameId: job.game.id,
-              gameName: job.game.name,
-            }))}
         />
       </CollapsibleSettingsSection>
       <CollapsibleSettingsSection title="Personal data">

@@ -1,6 +1,62 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/prisma", () => ({ prisma: {} }));
+
 import { Prisma } from "@/generated/prisma/client";
-import { buildEnvelope, EXPORT_VERSION, toJsonSafe } from "./export-data";
+import { prisma } from "@/lib/prisma";
+import { buildEnvelope, buildExportDocument, EXPORT_VERSION, toJsonSafe } from "./export-data";
+
+const createExportDelegates = () => ({
+  appSettings: { findUnique: vi.fn().mockResolvedValue(null) },
+  game: { findMany: vi.fn().mockResolvedValue([]) },
+  libraryEntry: { findMany: vi.fn().mockResolvedValue([]) },
+  gameAvailability: { findMany: vi.fn().mockResolvedValue([]) },
+  externalGameId: { findMany: vi.fn().mockResolvedValue([]) },
+  alternativeSource: { findMany: vi.fn().mockResolvedValue([]) },
+  personalTag: { findMany: vi.fn().mockResolvedValue([]) },
+  gameTag: { findMany: vi.fn().mockResolvedValue([]) },
+  wishlistEntry: { findMany: vi.fn().mockResolvedValue([]) },
+  unresolvedSteamDlc: { findMany: vi.fn().mockResolvedValue([]) },
+  wishlistImportReview: { findMany: vi.fn().mockResolvedValue([]) },
+  wishlistImportIgnore: { findMany: vi.fn().mockResolvedValue([]) },
+  possibleDuplicate: { findMany: vi.fn().mockResolvedValue([]) },
+  recommendationRun: { findMany: vi.fn().mockResolvedValue([]) },
+  recommendationItem: { findMany: vi.fn().mockResolvedValue([]) },
+  recommendationFeedback: { findMany: vi.fn().mockResolvedValue([]) },
+  recommendationEvent: { findMany: vi.fn().mockResolvedValue([]) },
+  recommendationProfile: { findUnique: vi.fn().mockResolvedValue(null) },
+  recommendationPreference: { findMany: vi.fn().mockResolvedValue([]) },
+  recommendationTuneState: { findUnique: vi.fn().mockResolvedValue(null) },
+  recommendationPreset: { findMany: vi.fn().mockResolvedValue([]) },
+});
+
+type ExportDelegates = ReturnType<typeof createExportDelegates>;
+
+const delegateMethods = (delegates: ExportDelegates) =>
+  Object.values(delegates).flatMap((delegate) => Object.values(delegate));
+
+describe("buildExportDocument", () => {
+  it("reads every export model through the transaction client", async () => {
+    const transactionDelegates = createExportDelegates();
+    const globalDelegates = createExportDelegates();
+    const transaction = vi.fn().mockImplementation(
+      async (callback: (client: ExportDelegates) => unknown) =>
+        callback(transactionDelegates),
+    );
+
+    Object.assign(prisma, globalDelegates, { $transaction: transaction });
+
+    await buildExportDocument();
+
+    expect(transaction).toHaveBeenCalledOnce();
+    for (const method of delegateMethods(transactionDelegates)) {
+      expect(method).toHaveBeenCalledOnce();
+    }
+    for (const method of delegateMethods(globalDelegates)) {
+      expect(method).not.toHaveBeenCalled();
+    }
+  });
+});
 
 describe("toJsonSafe", () => {
   it("converts dates to ISO strings", () => {

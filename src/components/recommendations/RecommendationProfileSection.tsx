@@ -107,8 +107,7 @@ export function RecommendationProfileSection({
   const health = profileHealth(payload);
   return (
     <SectionCard
-      eyebrow="Recommendations"
-      title="Recommendation Profile"
+        title="Recommendation Profile"
       id="recommendation-profile-heading"
       description="Tune how recommendations learn from your choices. Resetting recommendations does not change your games, wishlist, offers, or provider data."
       aside={

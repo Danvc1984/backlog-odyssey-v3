@@ -133,11 +133,11 @@ experience-fit evidence.
 
 A library entry separates current status from prior completion. Current
 `playState` uses `NOT_STARTED`, `IN_PROGRESS`, `COMPLETED`, or `ABANDONED`.
-The independent `playedBefore` checkbox records that the owner completed the
+The independent `completedBefore` checkbox records that the owner completed the
 game before the current playthrough. A replay can therefore be `IN_PROGRESS`
-while `playedBefore` remains true. The existing `replay` flag continues to mean
+while `completedBefore` remains true. The existing `replay` flag continues to mean
 "recommend this for another playthrough," not completion history. Legacy
-`PLAYED_BEFORE` rows migrate to `COMPLETED` with `playedBefore: true`; shelves,
+`PLAYED_BEFORE` rows migrate to `COMPLETED` with `completedBefore: true`; shelves,
 counts, taste setup, recommendation events, import/export, and forms use the new
 separation.
 

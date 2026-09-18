@@ -35,8 +35,7 @@ export function DurationProfileCard({ initialProfile }: { initialProfile: Durati
 
   return (
     <SectionCard
-      eyebrow="Recommendations"
-      title="Duration profile"
+        title="Duration profile"
       description="Choose which IGDB time-to-beat estimate represents your expected playthrough."
     >
       <SegmentedControl value={profile} options={options} onChange={(value) => void changeProfile(value)} label="Duration profile" />

@@ -1,6 +1,6 @@
 # Backlog Odyssey - Project Overview
 
-<!-- blueprint:source-hash 4b5dea56d3f75ad04e780c706795a685902705397cfcbe787d5c439b61a20913 -->
+<!-- blueprint:source-hash 9665ab06f3d9b4d7057f02db64bc90ed7cdcc15989a30d534ee16973569cae4b -->
 
 > A private, single-user gaming library and decision assistant for choosing what to play and buy in Mexico across a configured PC and handheld setup.
 
@@ -42,7 +42,7 @@ Completed work establishes the app shell, manual catalog, Steam import, catalog 
 
 - **User** - authenticated single-owner record; owns all personal data and provider operations.
 - **Game** - catalog-only record: `id`, `name`, `type` (`BASE_GAME` | `DLC`), immutable `origin`, and optional `baseGameId` for DLC. A DLC must reference one base game and has no library entry or play state.
-- **LibraryEntry** - one base-game personal record: `gameId`, current `playState` (`NOT_STARTED` | `IN_PROGRESS` | `COMPLETED` | `ABANDONED` after feature 32), independent `playedBefore`, `mainGame`, `hidden`, `replay`, `priority`, nullable `interest` (0-5), `gameExperience`, `handheldSuitable`, preferred environment, and play history. Notes are removed in feature 30.
+- **LibraryEntry** - one base-game personal record: `gameId`, current `playState` (`NOT_STARTED` | `IN_PROGRESS` | `COMPLETED` | `ABANDONED` after feature 32), independent `completedBefore`, `mainGame`, `hidden`, `replay`, `priority`, nullable `interest` (0-5), `gameExperience`, `handheldSuitable`, preferred environment, and play history. Notes are removed in feature 30.
 - **Availability** - `gameId`, built-in kind (`STEAM` | `ROM`) or `OTHER_PLATFORM`, and optional `alternativeSourceId`; a game can have many. Feature 29 removes its redundant per-game display label.
 - **AlternativeSource** - user-owned reusable source: `id`, canonical/normalized name, optional known-source key, icon metadata, and archive state. Definitions are administered only in Settings; archived sources remain referenced but cannot be newly selected.
 - **ExternalGameId** - provider identity: namespace, external ID, provenance, and `gameId`; confirmed Steam App IDs key Steam, IGDB, price, and compatibility work.
@@ -68,7 +68,7 @@ Completed work establishes the app shell, manual catalog, Steam import, catalog 
 
 - Catalog and wishlist are separate. Acquiring a wish creates a real catalog game (or linked DLC), transfers applicable IGDB metadata and base-game interest, then removes the wish.
 - Reusable source definitions are managed in Settings; game forms assign existing active sources and use the canonical source name everywhere.
-- Current play state and prior completion are independent after feature 32, so a replay may be `IN_PROGRESS` while `playedBefore` is true.
+- Current play state and prior completion are independent after feature 32, so a replay may be `IN_PROGRESS` while `completedBefore` is true.
 - Steam owned sync never implies DLC ownership. DLC stays outside Library and recommendations; deleting a base game explicitly cascades to its DLC.
 - Compatibility UI and automatic work exist only when a configured device runs Linux. All-Windows setups render no compatibility controls or tags.
 - Recommendations are deterministic and explain their factors. Compatibility is normally soft evidence; Linux without Windows fallback can hard-exclude fallback-needing play candidates, subject to the configured Windows-handheld rescue.

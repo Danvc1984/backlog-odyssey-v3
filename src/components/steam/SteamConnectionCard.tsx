@@ -89,8 +89,7 @@ export function SteamConnectionCard({
 
   return (
     <SectionCard
-      eyebrow="Account"
-      title="Steam connection"
+        title="Steam connection"
       id="steam-connection-card"
       description={connected
         ? `Linked to SteamID64 ${steamId64}`

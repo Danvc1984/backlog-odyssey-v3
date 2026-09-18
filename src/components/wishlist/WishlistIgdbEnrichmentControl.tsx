@@ -122,8 +122,7 @@ export function WishlistIgdbEnrichmentControl({
 
   return (
     <SectionCard
-      eyebrow="Maintenance"
-      title="Enrichment"
+        title="Enrichment"
       id="wishlist-igdb-enrichment-heading"
       description="Refresh matched game information."
       status={<StatusPill tone={loading || confirmOverwrite || showCandidates ? "warning" : "neutral"}>{confirmOverwrite ? "Confirm refresh" : status}</StatusPill>}

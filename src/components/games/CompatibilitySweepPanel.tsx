@@ -18,26 +18,13 @@ import {
   IgdbBatchEnrichmentPanel,
 } from "@/components/games/IgdbBatchEnrichmentPanel";
 import type { IgdbBatchView } from "@/lib/igdb-batch-runner";
-import { EnrichmentRetryButton } from "@/components/settings/EnrichmentRetryButton";
 
 interface CompatibilitySweepPanelProps {
   compatibilityActive: boolean;
   initialBatch: CompatBatchView | null;
   initialIgdbBatch: IgdbBatchView | null;
   initialWishlistRun: WishlistCompatSweepRunView | null;
-  failedJobs: FailedEnrichmentJobView[];
 }
-
-export interface FailedEnrichmentJobView {
-  id: string;
-  provider: string;
-  error: string | null;
-  finishedAt: Date | null;
-  gameId: string;
-  gameName: string;
-}
-
-const RETRYABLE_PROVIDERS = ["IGDB", "PROTONDB", "ARE_WE_ANTICHEAT_YET"];
 
 interface BatchEndpointResult {
   success: boolean;
@@ -78,7 +65,6 @@ export function CompatibilitySweepPanel({
   initialBatch,
   initialIgdbBatch,
   initialWishlistRun,
-  failedJobs,
 }: CompatibilitySweepPanelProps) {
   const router = useRouter();
   const [batch, setBatch] = useState<CompatBatchView | null>(
@@ -217,8 +203,7 @@ export function CompatibilitySweepPanel({
 
   return (
     <SectionCard
-      eyebrow="Provider maintenance"
-      title={
+            title={
         compatibilityActive ? "Enrichment and compatibility" : "IGDB enrichment"
       }
       id="compatibility-sweep-heading"

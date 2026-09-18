@@ -272,7 +272,6 @@ export default async function GameDetailPage({
       />
 
       <SectionCard
-        eyebrow="Catalog identity"
         title="Update Game Title"
       >
         {game.type === "DLC" && (
@@ -297,7 +296,6 @@ export default async function GameDetailPage({
 
       {game.type === "BASE_GAME" && (
       <SectionCard
-        eyebrow="Play status"
         title="Play state"
         id="play-state"
         sectionId="play-state"
@@ -333,7 +331,6 @@ export default async function GameDetailPage({
 
       {game.type === "BASE_GAME" && (
       <SectionCard
-        eyebrow="Personal"
         title="Personal Profile"
         id="personal-fields"
         sectionId="personal-fields"
@@ -414,7 +411,6 @@ export default async function GameDetailPage({
       {game.type === "BASE_GAME" && (
       <>
       <SectionCard
-        eyebrow="Where it lives"
         title="Platforms"
         id="availability"
         description={
@@ -449,7 +445,6 @@ export default async function GameDetailPage({
       </SectionCard>
 
       <SectionCard
-        eyebrow="Organization"
         title="Tags"
         description="Personal markers for finding your way back to this game."
         status={
@@ -493,7 +488,6 @@ export default async function GameDetailPage({
       />
 
       <SectionCard
-        eyebrow="Danger zone"
         title={`Delete ${game.name}`}
         description="Removes this game and its attached records."
         tone="danger"

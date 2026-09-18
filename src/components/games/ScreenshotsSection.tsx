@@ -82,7 +82,7 @@ export function ScreenshotsSection({
   });
 
   return (
-    <SectionCard eyebrow="Media" title="Artwork and screenshots">
+    <SectionCard title="Artwork and screenshots">
       <Carousel
         label="Artwork and screenshots"
         slides={slides}

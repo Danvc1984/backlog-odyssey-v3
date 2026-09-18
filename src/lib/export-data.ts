@@ -41,7 +41,7 @@ export function buildEnvelope(data: unknown): ExportEnvelope {
 
 export function buildExportDocument(): Promise<ExportEnvelope> {
   // Snapshot all reads in one transaction so an export never mixes rows from mid-write.
-  return prisma.$transaction(async () => {
+  return prisma.$transaction(async (tx) => {
     const [
       settings,
       games,
@@ -65,27 +65,27 @@ export function buildExportDocument(): Promise<ExportEnvelope> {
       recommendationTuneState,
       recommendationPresets,
     ] = await Promise.all([
-      prisma.appSettings.findUnique({ where: { id: 1 } }),
-      prisma.game.findMany(),
-      prisma.libraryEntry.findMany(),
-      prisma.gameAvailability.findMany(),
-      prisma.externalGameId.findMany(),
-      prisma.alternativeSource.findMany(),
-      prisma.personalTag.findMany(),
-      prisma.gameTag.findMany(),
-      prisma.wishlistEntry.findMany(),
-      prisma.unresolvedSteamDlc.findMany(),
-      prisma.wishlistImportReview.findMany(),
-      prisma.wishlistImportIgnore.findMany(),
-      prisma.possibleDuplicate.findMany(),
-      prisma.recommendationRun.findMany(),
-      prisma.recommendationItem.findMany(),
-      prisma.recommendationFeedback.findMany(),
-      prisma.recommendationEvent.findMany(),
-      prisma.recommendationProfile.findUnique({ where: { id: 1 } }),
-      prisma.recommendationPreference.findMany(),
-      prisma.recommendationTuneState.findUnique({ where: { id: 1 } }),
-      prisma.recommendationPreset.findMany(),
+      tx.appSettings.findUnique({ where: { id: 1 } }),
+      tx.game.findMany(),
+      tx.libraryEntry.findMany(),
+      tx.gameAvailability.findMany(),
+      tx.externalGameId.findMany(),
+      tx.alternativeSource.findMany(),
+      tx.personalTag.findMany(),
+      tx.gameTag.findMany(),
+      tx.wishlistEntry.findMany(),
+      tx.unresolvedSteamDlc.findMany(),
+      tx.wishlistImportReview.findMany(),
+      tx.wishlistImportIgnore.findMany(),
+      tx.possibleDuplicate.findMany(),
+      tx.recommendationRun.findMany(),
+      tx.recommendationItem.findMany(),
+      tx.recommendationFeedback.findMany(),
+      tx.recommendationEvent.findMany(),
+      tx.recommendationProfile.findUnique({ where: { id: 1 } }),
+      tx.recommendationPreference.findMany(),
+      tx.recommendationTuneState.findUnique({ where: { id: 1 } }),
+      tx.recommendationPreset.findMany(),
     ]);
 
     const data: ExportDocument["data"] = {

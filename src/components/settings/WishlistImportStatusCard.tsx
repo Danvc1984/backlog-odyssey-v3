@@ -12,8 +12,7 @@ export function WishlistImportStatusCard({
 
   return (
     <SectionCard
-      eyebrow="Steam import"
-      title="Wishlist import matches"
+        title="Wishlist import matches"
       description="Steam wishlist rows waiting for a local identity decision."
       status={
         <StatusPill tone={needsReview ? "warning" : "ok"}>

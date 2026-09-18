@@ -75,8 +75,7 @@ export function PersonalDataCard({
 
   return (
     <SectionCard
-      eyebrow="Data"
-      title="Personal data"
+        title="Personal data"
       description="Download your catalog, wishlist, and platform decisions as a JSON file, or restore them from one."
     >
       <div className="grid gap-4">

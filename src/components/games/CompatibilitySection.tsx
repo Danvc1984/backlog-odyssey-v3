@@ -168,8 +168,7 @@ export function CompatibilitySection({
 
   return (
     <SectionCard
-      eyebrow="Playability"
-      title="Compatibility"
+        title="Compatibility"
       id="compatibility-heading"
       aside={
         <div className="flex items-center gap-3 text-xs text-muted-foreground">

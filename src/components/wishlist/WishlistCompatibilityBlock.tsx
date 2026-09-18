@@ -130,8 +130,7 @@ export function WishlistCompatibilityBlock({
 
   return (
     <SectionCard
-      eyebrow="Playability"
-      title="Compatibility"
+        title="Compatibility"
       description="Compatibility evidence for this wishlist entry."
       aside={
         <div className="flex items-center gap-1.5">

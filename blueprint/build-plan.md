@@ -686,9 +686,9 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   explanations, reset, and export/import coverage.
 
 - [ ] 32. **Current play state and prior-completion history** - retire
-  `PLAYED_BEFORE` as a play state, add an independent `playedBefore` checkbox,
+  `PLAYED_BEFORE` as a play state, add an independent `completedBefore` checkbox,
   and use current states `NOT_STARTED`, `IN_PROGRESS`, `COMPLETED`, and
-  `ABANDONED`. A replay can be `IN_PROGRESS` while `playedBefore` remains true;
+  `ABANDONED`. A replay can be `IN_PROGRESS` while `completedBefore` remains true;
   the separate replay flag continues to mean recommendation intent. Migrate
   legacy `PLAYED_BEFORE` rows to `COMPLETED` plus prior completion, then update
   every state control, bulk/taste-setup flow, system shelf, backlog count,

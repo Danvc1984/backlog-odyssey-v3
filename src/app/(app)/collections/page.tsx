@@ -56,7 +56,6 @@ export default async function CollectionsPage() {
       </div>
 
       <SectionCard
-        eyebrow="System collections"
         title="Built-in shelves"
         id="system-collections-heading"
         description="Calculated from the current state of your library."
@@ -85,7 +84,6 @@ export default async function CollectionsPage() {
       </SectionCard>
 
       <SectionCard
-        eyebrow="IGDB collections"
         title="Series and franchises"
         id="dynamic-collections-heading"
         description="Derived from valid current IGDB metadata on games in your library."
@@ -129,7 +127,6 @@ export default async function CollectionsPage() {
       </SectionCard>
 
       <SectionCard
-        eyebrow="Personal tags"
         title="Tag shelves"
         id="personal-tags-heading"
         description="Each personal tag automatically becomes a shelf, and a game can belong to more than one."

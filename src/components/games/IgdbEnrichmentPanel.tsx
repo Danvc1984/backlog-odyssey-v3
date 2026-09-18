@@ -191,7 +191,7 @@ export function IgdbEnrichmentPanel({ gameId, catalogName, initialJob, hasIgdbSn
 
   const canStart = !job || job.status === "SUCCEEDED" || job.status === "FAILED";
   return (
-    <SectionCard eyebrow="Maintenance" title="Enrichment" id="igdb-enrichment-heading" description="Refresh matched game information." status={<StatusPill tone={job?.status === "FAILED" ? "danger" : job ? "warning" : "neutral"}>{job?.status?.replaceAll("_", " ") ?? "Ready"}</StatusPill>}>
+    <SectionCard title="Enrichment" id="igdb-enrichment-heading" description="Refresh matched game information." status={<StatusPill tone={job?.status === "FAILED" ? "danger" : job ? "warning" : "neutral"}>{job?.status?.replaceAll("_", " ") ?? "Ready"}</StatusPill>}>
       <div className="flex flex-wrap items-center justify-between gap-2"><div className="flex flex-wrap gap-2">
         {canStart && !pendingOverwrite && !hasIgdbSnapshot && <Button type="button" size="sm" disabled={running} onClick={() => void startEnrichment(false)}>{running ? "Starting..." : "Load IGDB metadata"}</Button>}
         {canStart && !pendingOverwrite && hasIgdbSnapshot && <Button type="button" size="sm" variant="outline" disabled={running} onClick={() => void startMatchReview()}>{running ? "Searching..." : "Choose another match"}</Button>}

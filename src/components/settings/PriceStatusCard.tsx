@@ -26,8 +26,7 @@ export function PriceStatusCard({ lastRun }: { lastRun: PriceRefreshView | null 
 
   return (
     <SectionCard
-      eyebrow="Provider maintenance"
-      title="Prices"
+        title="Prices"
       description="Global price refresh across the wishlist."
       status={
         lastRun ? (

@@ -89,8 +89,7 @@ export function AccountCard({
 
   return (
     <SectionCard
-      eyebrow="Account"
-      title="Account"
+        title="Account"
       description="The Google session and device context this library runs for."
       status={<StatusPill tone="ok">Connected</StatusPill>}
     >

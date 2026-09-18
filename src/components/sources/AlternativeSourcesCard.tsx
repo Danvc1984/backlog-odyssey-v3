@@ -136,8 +136,7 @@ export function AlternativeSourcesCard({ sources }: AlternativeSourcesCardProps)
 
   return (
     <SectionCard
-      eyebrow="Catalog configuration"
-      title="Alternative sources"
+        title="Alternative sources"
       id="alternative-sources-heading"
       description="Reusable stores behind Other platform rows. Archived sources keep their references but stop appearing in platform quick picks."
     >

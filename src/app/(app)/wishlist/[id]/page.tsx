@@ -249,7 +249,6 @@ export default async function WishlistDetailPage({
       )}
 
       <SectionCard
-        eyebrow="Current offers"
         title={<span className="inline-flex items-center gap-2">Offers <SourceIcon iconName="Box" brandIcon="itad.svg" /></span>}
         id="offers"
         description={<>Cheapest valid offers via <a href="https://isthereanydeal.com" target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-foreground">ITAD</a>.</>}
@@ -274,8 +273,7 @@ export default async function WishlistDetailPage({
 
       {buyItem && buyItem.wishlistEntryId === entry.id && (
         <SectionCard
-          eyebrow="Recommendation"
-          title="Buy recommendation"
+        title="Buy recommendation"
           description="The current recommendation for this wishlist entry."
           status={<StatusPill tone="opportunity">Best opportunity</StatusPill>}
           tone="opportunity"
@@ -314,7 +312,6 @@ export default async function WishlistDetailPage({
       )}
 
       <SectionCard
-        eyebrow="Wishlist entry"
         title="Identity and actions"
         status={
           <StatusPill>
