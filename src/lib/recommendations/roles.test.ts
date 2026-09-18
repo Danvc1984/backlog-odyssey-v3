@@ -105,13 +105,14 @@ describe("assignPlayRoles", () => {
     expect(result.assigned).toEqual([{ id: "only", role: "BEST_FIT_1", caveats: [] }]);
   });
 
-  it("keeps two best fits and replaces change of pace with the handheld pick", () => {
+  it("keeps Handheld additive alongside both best fits, out-of-the-box, and change of pace", () => {
     const result = assignPlayRoles(
       [
         candidate("best", 8),
-        { ...candidate("handheld", 7), handheldSuitable: true },
-        { ...candidate("later-handheld", 6), handheldSuitable: true },
-        candidate("other", 5),
+        candidate("second-best", 7),
+        { ...candidate("handheld", 6), handheldSuitable: true },
+        candidate("ready", 5, "READY"),
+        candidate("pace", -2),
         { ...candidate("reserve-handheld", 4), handheldSuitable: true },
       ],
       "RERANKED",
@@ -122,21 +123,24 @@ describe("assignPlayRoles", () => {
 
     expect(result.assigned.map((item) => [item.id, item.role])).toEqual([
       ["best", "BEST_FIT_1"],
-      ["handheld", "BEST_FIT_2"],
-      ["later-handheld", "HANDHELD_PICK"],
-      ["other", "OUT_OF_THE_BOX"],
+      ["second-best", "BEST_FIT_2"],
+      ["ready", "OUT_OF_THE_BOX"],
+      ["pace", "CHANGE_OF_PACE"],
+      ["handheld", "HANDHELD_PICK"],
     ]);
+    expect(new Set(result.assigned.map((item) => item.id)).size).toBe(5);
     expect(result.batches.HANDHELD_PICK).toEqual(["reserve-handheld"]);
     expect(result.omissions).toBeUndefined();
   });
 
-  it("keeps two diversified best fits before the handheld pick in cold start", () => {
+  it("keeps five unique roles in cold start when handheld is configured", () => {
     const result = assignPlayRoles(
       [
         candidate("best", 8, "UNKNOWN", ["RPG"]),
         candidate("second-best", 7, "UNKNOWN", ["Strategy"]),
         { ...candidate("handheld", 6, "UNKNOWN", ["Puzzle"]), handheldSuitable: true },
         candidate("ready", 5, "READY", ["Racing"]),
+        candidate("pace", -2, "UNKNOWN", ["Adventure"]),
       ],
       "COLD_START",
       [],
@@ -147,8 +151,9 @@ describe("assignPlayRoles", () => {
     expect(result.assigned.map((item) => [item.id, item.role])).toEqual([
       ["best", "BEST_FIT_1"],
       ["second-best", "BEST_FIT_2"],
-      ["handheld", "HANDHELD_PICK"],
       ["ready", "OUT_OF_THE_BOX"],
+      ["pace", "CHANGE_OF_PACE"],
+      ["handheld", "HANDHELD_PICK"],
     ]);
   });
 

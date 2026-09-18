@@ -280,8 +280,10 @@ export default async function WishlistDetailPage({
         >
           <RecommendationRoleLabel role={buyItem.role} kind="BUY" />
           <RecommendationItemCard
+            itemId={buyItem.id}
             target={{ kind: "BUY", wishlistEntryId: entry.id }}
             runId={latestBuyRun?.id}
+            role={buyItem.role}
             name={entry.name}
             rank={buyItem.rank}
             score={buyItem.score}

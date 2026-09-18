@@ -67,12 +67,13 @@ function assignRole(
 
 function selectColdStartOrder(
   pool: readonly PlayRoleCandidate[],
+  limit: number,
 ): PlayRoleCandidate[] {
   const picked: PlayRoleCandidate[] = [];
   const pickedGenres = new Set<string>();
   const deferred: PlayRoleCandidate[] = [];
   for (const candidate of pool) {
-    if (picked.length >= 4) break;
+    if (picked.length >= limit) break;
     if ((candidate.genres ?? []).some((genre) => pickedGenres.has(genre))) {
       deferred.push(candidate);
       continue;
@@ -81,7 +82,7 @@ function selectColdStartOrder(
     for (const genre of candidate.genres ?? []) pickedGenres.add(genre);
   }
   for (const candidate of deferred) {
-    if (picked.length >= 4) break;
+    if (picked.length >= limit) break;
     picked.push(candidate);
   }
   return picked;
@@ -123,35 +124,42 @@ export function assignPlayRoles(
   );
 
   if (mode === "COLD_START") {
-    const displayPool = selectColdStartOrder(hasPrimary ? primaryPool : secondChancePool);
-    assignPlayRole(displayPool[0], "BEST_FIT_1");
-    assignPlayRole(displayPool[1], "BEST_FIT_2");
+    const workingPool = hasPrimary ? primaryPool : secondChancePool;
+    const displayPool = selectColdStartOrder(workingPool, hasHandheld ? 5 : 4);
+    const bestFit1 = displayPool[0];
+    const bestFit2 = displayPool[1];
+    const displayIds = new Set(
+      [bestFit1?.id, bestFit2?.id].filter((id): id is string => Boolean(id)),
+    );
     const handheldCandidate = hasHandheld
-      ? displayPool.find(
+      ? workingPool.find(
           (candidate, index) => index > 1 && candidate.handheldSuitable === true,
         )
       : undefined;
-    if (hasHandheld) assignPlayRole(handheldCandidate, "HANDHELD_PICK");
-    const displayIds = new Set(assigned.map((item) => item.id));
+    if (handheldCandidate) displayIds.add(handheldCandidate.id);
+
     const remaining = displayPool.filter((candidate) => !displayIds.has(candidate.id));
     const ready = remaining.find((candidate) => candidate.envStatus === "READY");
-    const outOfTheBox = ready ?? (requireReadyForOutOfTheBox ? undefined : remaining[0]);
-    assignPlayRole(
-      outOfTheBox,
-      "OUT_OF_THE_BOX",
-      ready || requireReadyForOutOfTheBox ? [] : [fallbackCaveat(ROLE_FALLBACK_LABELS.noReady)],
-    );
-    if (!outOfTheBox && hasPrimary && !requireReadyForOutOfTheBox) assignPlayRole(secondChancePool[0], "OUT_OF_THE_BOX");
-    if (!hasHandheld || !handheldCandidate) {
-      const paceCandidate = remaining.find((candidate) => candidate.id !== outOfTheBox?.id);
-      assignPlayRole(
-        paceCandidate,
-        "CHANGE_OF_PACE",
-        [fallbackCaveat(ROLE_FALLBACK_LABELS.noTaste)],
-      );
+    let outOfTheBox = ready ?? (requireReadyForOutOfTheBox ? undefined : remaining[0]);
+    let outOfTheBoxCaveats = ready || requireReadyForOutOfTheBox
+      ? []
+      : [fallbackCaveat(ROLE_FALLBACK_LABELS.noReady)];
+    if (!outOfTheBox && hasPrimary && !requireReadyForOutOfTheBox) {
+      outOfTheBox = secondChancePool[0];
+      outOfTheBoxCaveats = [];
     }
-    for (const candidate of displayPool) displayIds.add(candidate.id);
-    if (!outOfTheBox && hasPrimary && secondChancePool[0]) displayIds.add(secondChancePool[0].id);
+    if (outOfTheBox) displayIds.add(outOfTheBox.id);
+
+    const paceCandidate = remaining.find((candidate) => candidate.id !== outOfTheBox?.id);
+    if (paceCandidate) displayIds.add(paceCandidate.id);
+
+    // Persist the role order used by recommendation surfaces; Handheld is additive.
+    assignPlayRole(bestFit1, "BEST_FIT_1");
+    assignPlayRole(bestFit2, "BEST_FIT_2");
+    assignPlayRole(outOfTheBox, "OUT_OF_THE_BOX", outOfTheBoxCaveats);
+    assignPlayRole(paceCandidate, "CHANGE_OF_PACE", [fallbackCaveat(ROLE_FALLBACK_LABELS.noTaste)]);
+    assignPlayRole(handheldCandidate, "HANDHELD_PICK");
+
     batches.BEST_FIT_1 = primaryPool.filter((candidate) => !displayIds.has(candidate.id)).map((candidate) => candidate.id);
     batches.BEST_FIT_2 = batches.BEST_FIT_1.slice();
     batches.HANDHELD_PICK = hasHandheld
@@ -171,44 +179,49 @@ export function assignPlayRoles(
     return omissions.length > 0 ? { assigned, batches, omissions } : { assigned, batches };
   }
 
-  const displayIds = new Set<string>();
   const workingPool = hasPrimary ? primaryPool : secondChancePool;
-  assignPlayRole(workingPool[0], "BEST_FIT_1");
-  assignPlayRole(workingPool[1], "BEST_FIT_2");
+  const bestFit1 = workingPool[0];
+  const bestFit2 = workingPool[1];
+  const displayIds = new Set(
+    [bestFit1?.id, bestFit2?.id].filter((id): id is string => Boolean(id)),
+  );
   const handheldCandidate = hasHandheld
     ? workingPool.find(
         (candidate, index) => index > 1 && candidate.handheldSuitable === true,
       )
     : undefined;
-  if (hasHandheld) assignPlayRole(handheldCandidate, "HANDHELD_PICK");
-  for (const candidate of assigned) displayIds.add(candidate.id);
+  if (handheldCandidate) displayIds.add(handheldCandidate.id);
 
   const remaining = workingPool.filter((candidate) => !displayIds.has(candidate.id));
   const ready = remaining.find((candidate) => candidate.envStatus === "READY");
-  const outOfTheBox = ready ?? (requireReadyForOutOfTheBox ? undefined : remaining[0]);
-  assignPlayRole(
-    outOfTheBox,
-    "OUT_OF_THE_BOX",
-    ready || requireReadyForOutOfTheBox ? [] : [fallbackCaveat(ROLE_FALLBACK_LABELS.noReady)],
-  );
-  if (!outOfTheBox && hasPrimary && !requireReadyForOutOfTheBox) assignPlayRole(secondChancePool[0], "OUT_OF_THE_BOX");
-  if (outOfTheBox) displayIds.add(outOfTheBox.id);
-  if (!outOfTheBox && secondChancePool[0]) displayIds.add(secondChancePool[0].id);
-
-  if (!hasHandheld || !handheldCandidate) {
-    const paceCandidates = remaining.filter((candidate) => !displayIds.has(candidate.id));
-    const changeOfPace = paceCandidates
-      .filter((candidate) => candidate.tastePoints !== 0)
-      .slice()
-      .sort((left, right) => left.tastePoints - right.tastePoints)[0];
-    const pace = changeOfPace ?? paceCandidates[0];
-    assignPlayRole(
-      pace,
-      "CHANGE_OF_PACE",
-      changeOfPace ? [] : [fallbackCaveat(ROLE_FALLBACK_LABELS.noTaste)],
-    );
-    if (pace) displayIds.add(pace.id);
+  let outOfTheBox = ready ?? (requireReadyForOutOfTheBox ? undefined : remaining[0]);
+  let outOfTheBoxCaveats = ready || requireReadyForOutOfTheBox
+    ? []
+    : [fallbackCaveat(ROLE_FALLBACK_LABELS.noReady)];
+  if (!outOfTheBox && hasPrimary && !requireReadyForOutOfTheBox) {
+    outOfTheBox = secondChancePool[0];
+    outOfTheBoxCaveats = [];
   }
+  if (outOfTheBox) displayIds.add(outOfTheBox.id);
+
+  const paceCandidates = remaining.filter((candidate) => !displayIds.has(candidate.id));
+  const changeOfPace = paceCandidates
+    .filter((candidate) => candidate.tastePoints !== 0)
+    .slice()
+    .sort((left, right) => left.tastePoints - right.tastePoints)[0];
+  const pace = changeOfPace ?? paceCandidates[0];
+  if (pace) displayIds.add(pace.id);
+
+  // Persist the role order used by recommendation surfaces; Handheld is additive.
+  assignPlayRole(bestFit1, "BEST_FIT_1");
+  assignPlayRole(bestFit2, "BEST_FIT_2");
+  assignPlayRole(outOfTheBox, "OUT_OF_THE_BOX", outOfTheBoxCaveats);
+  assignPlayRole(
+    pace,
+    "CHANGE_OF_PACE",
+    changeOfPace ? [] : [fallbackCaveat(ROLE_FALLBACK_LABELS.noTaste)],
+  );
+  assignPlayRole(handheldCandidate, "HANDHELD_PICK");
 
   batches.BEST_FIT_1 = primaryPool.filter((candidate) => !displayIds.has(candidate.id)).map((candidate) => candidate.id);
   batches.BEST_FIT_2 = batches.BEST_FIT_1.slice();

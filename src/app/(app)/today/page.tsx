@@ -1,9 +1,7 @@
-import { RecommendationItemCard } from "@/components/recommendations/RecommendationItemCard";
-import { ShowAnotherButton } from "@/components/recommendations/ShowAnotherButton";
+import { RecommendationSpotlightCarousel } from "@/components/recommendations/RecommendationSpotlightCarousel";
 import { UpdateRecommendationsButton } from "@/components/recommendations/UpdateRecommendationsButton";
 import { ColdStartNote } from "@/components/recommendations/ColdStartNote";
 import { prisma } from "@/lib/prisma";
-import { RunExposureTracker } from "@/components/recommendations/RunExposureTracker";
 import { TuneThisRunPanel } from "@/components/recommendations/TuneThisRunPanel";
 import { TasteSetupPanel } from "@/components/recommendations/TasteSetupPanel";
 import {
@@ -32,25 +30,8 @@ import { SectionCard } from "@/components/ui/detail-card";
 import { buildEntryOfferView } from "@/lib/offer-selection";
 import { formatPlayExclusionReasons } from "@/lib/recommendations/environment-fit";
 
-const PLAY_ROLE_GROUPS_WITH_HANDHELD = [
-  { label: "Best fit", roles: ["BEST_FIT_1", "BEST_FIT_2"] },
-  { label: "Handheld pick", roles: ["HANDHELD_PICK"] },
-  { label: "Out of the box", roles: ["OUT_OF_THE_BOX"] },
-] as const;
-const PLAY_ROLE_GROUPS = [
-  { label: "Best fit", roles: ["BEST_FIT_1", "BEST_FIT_2"] },
-  { label: "Out of the box", roles: ["OUT_OF_THE_BOX"] },
-  { label: "Change of pace", roles: ["CHANGE_OF_PACE"] },
-] as const;
-
-const BUY_ROLE_GROUPS = [
-  { label: "Best fit", roles: ["BEST_FIT_1", "BEST_FIT_2"] },
-  { label: "Deal", roles: ["DEAL"] },
-] as const;
-
-function hasRole(roles: readonly string[], role: string | null): boolean {
-  return role !== null && roles.includes(role);
-}
+const PLAY_ROLE_ORDER = ["BEST_FIT_1", "BEST_FIT_2", "OUT_OF_THE_BOX", "CHANGE_OF_PACE", "HANDHELD_PICK"] as const;
+const BUY_ROLE_ORDER = ["BEST_FIT_1", "BEST_FIT_2", "DEAL"] as const;
 
 export default async function TodayPage() {
   const [
@@ -223,17 +204,12 @@ export default async function TodayPage() {
     })();
   const coldStart = playContext?.rerank?.mode === "COLD_START";
   const playExclusions = playContext?.play?.exclusions ?? [];
-  const playRoleOmissions = playContext?.roles?.omissions ?? [];
   const showPlayExclusions = todaySettings?.primaryOs === "LINUX";
   const excludedPlayCount = showPlayExclusions ? playExclusions.length : 0;
   const exclusionReasons = showPlayExclusions
     ? formatPlayExclusionReasons(playExclusions)
     : null;
   const hasPlayRoles = items.some((item) => item.role !== null);
-  const hasHandheldPick = items.some((item) => item.role === "HANDHELD_PICK");
-  const playRoleGroups = todaySettings?.handheldOs !== "NONE" && hasHandheldPick
-    ? PLAY_ROLE_GROUPS_WITH_HANDHELD
-    : PLAY_ROLE_GROUPS;
   const hasBuyRoles = buyItems.some((item) => item.role !== null);
   const activityAppIds = [
     ...steamActivityView.imported,
@@ -338,94 +314,32 @@ export default async function TodayPage() {
             {exclusionReasons ? `: ${exclusionReasons}` : "."}
           </p>
         )}
-        {playRoleOmissions.map((omission) => (
-          <p key={omission.role ?? omission.label} className="mt-2 text-sm text-muted-foreground">
-            {omission.label}
-          </p>
-        ))}
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No games match your current setup.
           </p>
-        ) : !hasPlayRoles ? (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {items.map((item) => {
-              if (!item.gameId) return null;
-              return (
-                <RecommendationItemCard
-                  key={item.id}
-                  target={{ kind: "PLAY_NEXT", gameId: item.gameId }}
-                  runId={latestPlayNextRun?.id}
-                  name={item.game?.name ?? "Unknown game"}
-                  rank={item.rank}
-                  score={item.score}
-                  positive={item.positive}
-                  negative={item.negative}
-                  caveats={item.caveats}
-                  imageUrl={playItemCover(item)}
-                />
-              );
-            })}
-          </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:items-start">
-            {(() => {
-              const roleItems = playRoleGroups.flatMap((group) =>
-                group.roles
-                  .map((role) =>
-                    items.find((item) => item.role === role && item.gameId),
-                  )
-                  .filter(
-                    (item): item is (typeof items)[number] =>
-                      item !== undefined,
-                  ),
-              );
-              return roleItems.map((item) => (
-                <ShowAnotherButton
-                  key={item.id}
-                  runId={latestPlayNextRun?.id ?? ""}
-                  role={item.role!}
-                  itemId={item.id}
-                  target={{ kind: "PLAY_NEXT", gameId: item.gameId! }}
-                  name={item.game?.name ?? "Unknown game"}
-                  rank={item.rank}
-                  score={item.score}
-                  positive={item.positive}
-                  negative={item.negative}
-                  caveats={item.caveats}
-                  imageUrl={playItemCover(item)}
-                />
-              ));
-            })()}
-          </div>
+          <RecommendationSpotlightCarousel
+            label="Play Next recommendations"
+            slides={(hasPlayRoles
+              ? PLAY_ROLE_ORDER.flatMap((role) => items.filter((item) => item.role === role))
+              : items
+            ).flatMap((item) => item.gameId ? [{
+              itemId: item.id,
+              target: { kind: "PLAY_NEXT" as const, gameId: item.gameId },
+              runId: latestPlayNextRun.id,
+              role: item.role,
+              name: item.game?.name ?? "Unknown game",
+              rank: item.rank,
+              score: item.score,
+              positive: item.positive,
+              negative: item.negative,
+              caveats: item.caveats,
+              imageUrl: playItemCover(item),
+            }] : [])}
+          />
         )}
       </section>}
-
-      {latestPlayNextRun && (
-        <RunExposureTracker
-          runId={latestPlayNextRun.id}
-          items={items.flatMap((item) =>
-            item.gameId
-              ? [{ gameId: item.gameId, role: item.role ?? undefined }]
-              : [],
-          )}
-        />
-      )}
-      {latestBuyRun && (
-        <RunExposureTracker
-          runId={latestBuyRun.id}
-          items={buyItems.flatMap((item) =>
-            item.wishlistEntryId
-              ? [
-                  {
-                    wishlistEntryId: item.wishlistEntryId,
-                    role: item.role ?? undefined,
-                  },
-                ]
-              : [],
-          )}
-        />
-      )}
 
       {latestBuyRun && <section>
         <div className="mb-4">
@@ -444,57 +358,27 @@ export default async function TodayPage() {
           <p className="text-sm text-muted-foreground">
             No wishlist items match your current setup.
           </p>
-        ) : !hasBuyRoles ? (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {buyItems.map((item) => {
-              if (!item.wishlistEntryId) return null;
-              return (
-                <RecommendationItemCard
-                  key={item.id}
-                  target={{
-                    kind: "BUY",
-                    wishlistEntryId: item.wishlistEntryId,
-                  }}
-                  runId={latestBuyRun?.id}
-                  name={item.wishlistEntry?.name ?? "Unknown game"}
-                  rank={item.rank}
-                  score={item.score}
-                  positive={item.positive}
-                  negative={item.negative}
-                  caveats={item.caveats}
-                  imageUrl={buyItemCover(item)}
-                  offerDiscount={selectedOfferDiscountByWishlistId.get(item.wishlistEntryId) ?? null}
-                />
-              );
-            })}
-          </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-3">
-            {BUY_ROLE_GROUPS.flatMap((group) =>
-              buyItems.filter((item) => hasRole(group.roles, item.role)),
-            ).map((item) =>
-              item.wishlistEntryId && item.role ? (
-                <ShowAnotherButton
-                  key={item.id}
-                  runId={latestBuyRun?.id ?? ""}
-                  role={item.role}
-                  itemId={item.id}
-                  target={{
-                    kind: "BUY",
-                    wishlistEntryId: item.wishlistEntryId,
-                  }}
-                  name={item.wishlistEntry?.name ?? "Unknown game"}
-                  rank={item.rank}
-                  score={item.score}
-                  positive={item.positive}
-                  negative={item.negative}
-                  caveats={item.caveats}
-                  imageUrl={buyItemCover(item)}
-                  offerDiscount={selectedOfferDiscountByWishlistId.get(item.wishlistEntryId) ?? null}
-                />
-              ) : null,
-            )}
-          </div>
+          <RecommendationSpotlightCarousel
+            label="Purchase recommendations"
+            slides={(hasBuyRoles
+              ? BUY_ROLE_ORDER.flatMap((role) => buyItems.filter((item) => item.role === role))
+              : buyItems
+            ).flatMap((item) => item.wishlistEntryId ? [{
+              itemId: item.id,
+              target: { kind: "BUY" as const, wishlistEntryId: item.wishlistEntryId },
+              runId: latestBuyRun.id,
+              role: item.role,
+              name: item.wishlistEntry?.name ?? "Unknown game",
+              rank: item.rank,
+              score: item.score,
+              positive: item.positive,
+              negative: item.negative,
+              caveats: item.caveats,
+              imageUrl: buyItemCover(item),
+              offerDiscount: selectedOfferDiscountByWishlistId.get(item.wishlistEntryId) ?? null,
+            }] : [])}
+          />
         )}
       </section>}
 

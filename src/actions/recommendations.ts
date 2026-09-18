@@ -106,6 +106,8 @@ const rotateRecommendationRoleSchema = z.object({
   itemId: z.string().trim().min(1),
 }).strict();
 
+const dismissAndReplaceRecommendationSchema = rotateRecommendationRoleSchema;
+
 const startPlayingFromRecommendationSchema = z.object({
   gameId: z.string().trim().min(1),
   makeMain: z.boolean().optional(),
@@ -327,6 +329,168 @@ export async function rotateRecommendationRole(input: unknown) {
       success: false as const,
       data: null,
       error: friendlyActionError(err, "Failed to rotate recommendation"),
+    };
+  }
+}
+
+export async function dismissAndReplaceRecommendation(input: unknown) {
+  try {
+    await requireUser();
+    const parsed = dismissAndReplaceRecommendationSchema.safeParse(input);
+    if (!parsed.success) return { success: false as const, data: null, error: "Invalid input" };
+
+    const result = await prisma.$transaction(async (tx) => {
+      const run = await tx.recommendationRun.findUnique({
+        where: { id: parsed.data.runId },
+        select: { id: true, kind: true, context: true },
+      });
+      if (!run) throw new ActionError("Recommendation run not found");
+
+      const item = await tx.recommendationItem.findFirst({
+        where: { id: parsed.data.itemId, runId: run.id, role: parsed.data.role },
+        select: { id: true, gameId: true, wishlistEntryId: true },
+      });
+      if (!item) throw new ActionError("Recommendation item is no longer available");
+
+      const isPlay = run.kind === "PLAY_NEXT";
+      const targetId = isPlay ? item.gameId : item.wishlistEntryId;
+      if (!targetId || (isPlay && item.wishlistEntryId) || (!isPlay && item.gameId)) {
+        throw new ActionError("Recommendation item does not match this run");
+      }
+
+      const context = run.context as
+        | { roles?: { batches?: Partial<Record<RecommendationRole, BatchEntry[]>> } }
+        | null;
+      const sources = context?.roles?.batches ?? {};
+      const batch = (sources[parsed.data.role] ?? []).map(toRotatableCandidate);
+      const batchIds = batch.map((candidate) => candidate.id).filter(Boolean);
+      const cooldownCutoff = new Date(Date.now() - EXPOSURE_COOLDOWN_DAYS * 24 * 60 * 60 * 1000);
+      const recentEvents = batchIds.length === 0 ? [] : await tx.recommendationEvent.findMany({
+        where: {
+          kind: "EXPOSURE",
+          createdAt: { gte: cooldownCutoff },
+          ...(isPlay ? { gameId: { in: batchIds } } : { wishlistEntryId: { in: batchIds } }),
+        },
+        select: { gameId: true, wishlistEntryId: true },
+      });
+      const recentIds = new Set(recentEvents.map((event) => isPlay ? event.gameId : event.wishlistEntryId));
+      const replacementCandidate = batch.find((candidate) => !recentIds.has(candidate.id)) ?? null;
+
+      await tx.recommendationFeedback.create({
+        data: isPlay
+          ? { gameId: targetId, wishlistEntryId: null, kind: run.kind }
+          : { gameId: null, wishlistEntryId: targetId, kind: run.kind },
+      });
+
+      if (!replacementCandidate) {
+        const deleted = await tx.recommendationItem.deleteMany({
+          where: { id: item.id, runId: run.id, role: parsed.data.role },
+        });
+        if (deleted.count !== 1) throw new ActionError("Recommendation changed concurrently");
+        return { dismissedItemId: item.id, replacement: null, kind: run.kind, targetId };
+      }
+
+      const updated = await tx.recommendationItem.updateMany({
+        where: { id: item.id, runId: run.id, role: parsed.data.role },
+        data: {
+          ...(isPlay
+            ? { gameId: replacementCandidate.id, wishlistEntryId: null }
+            : { gameId: null, wishlistEntryId: replacementCandidate.id }),
+          score: replacementCandidate.score,
+          positive: replacementCandidate.positive as unknown as Prisma.InputJsonValue,
+          negative: replacementCandidate.negative as unknown as Prisma.InputJsonValue,
+          caveats: replacementCandidate.caveats as unknown as Prisma.InputJsonValue,
+        },
+      });
+      if (updated.count !== 1) throw new ActionError("Recommendation changed concurrently");
+
+      const nextBatches = Object.fromEntries(
+        Object.entries(sources).map(([role, entries]) => [
+          role,
+          (entries ?? []).filter((entry) => candidateId(entry) !== replacementCandidate.id),
+        ]),
+      );
+      await tx.recommendationRun.update({
+        where: { id: run.id },
+        data: {
+          context: {
+            ...(context ?? {}),
+            roles: { ...(context?.roles ?? {}), batches: nextBatches },
+          } as Prisma.InputJsonValue,
+        },
+      });
+
+      return {
+        dismissedItemId: item.id,
+        replacement: {
+          itemId: item.id,
+          role: parsed.data.role,
+          gameId: isPlay ? replacementCandidate.id : null,
+          wishlistEntryId: isPlay ? null : replacementCandidate.id,
+          name: "",
+          imageUrl: null,
+          score: replacementCandidate.score,
+          positive: replacementCandidate.positive,
+          negative: replacementCandidate.negative,
+          caveats: replacementCandidate.caveats,
+        } as RotatedRecommendationItem,
+        kind: run.kind,
+        targetId,
+      };
+    });
+
+    if (result.replacement) {
+      const imageFromPayload = (payload: unknown) => {
+        const metadata = parseIgdbMetadataPayload(payload);
+        return metadata?.artworkUrls[0] ?? metadata?.coverUrl ?? null;
+      };
+      if (result.kind === "PLAY_NEXT") {
+        const replacementTarget = await prisma.game.findUnique({
+          where: { id: result.replacement.gameId! },
+          select: { name: true, metadataSnapshots: { where: { provider: "IGDB" }, orderBy: { fetchedAt: "desc" }, take: 1, select: { payload: true } } },
+        });
+        result.replacement.name = replacementTarget?.name ?? "Unknown";
+        result.replacement.imageUrl = imageFromPayload(replacementTarget?.metadataSnapshots[0]?.payload);
+      } else {
+        const replacementTarget = await prisma.wishlistEntry.findUnique({
+          where: { id: result.replacement.wishlistEntryId! },
+          select: { name: true, metadataSnapshot: { select: { payload: true } }, baseGame: { select: { metadataSnapshots: { where: { provider: "IGDB" }, orderBy: { fetchedAt: "desc" }, take: 1, select: { payload: true } } } } },
+        });
+        result.replacement.name = replacementTarget?.name ?? "Unknown";
+        result.replacement.imageUrl = imageFromPayload(replacementTarget?.metadataSnapshot?.payload)
+          ?? imageFromPayload(replacementTarget?.baseGame?.metadataSnapshots[0]?.payload);
+      }
+    }
+
+    try {
+      await logRecommendationEvent(prisma, {
+        kind: "DISMISSAL",
+        runId: parsed.data.runId,
+        ...(result.kind === "PLAY_NEXT" ? { gameId: result.targetId } : { wishlistEntryId: result.targetId }),
+        payload: { role: parsed.data.role },
+      });
+      if (result.replacement) {
+        await logRecommendationEvent(prisma, {
+          kind: "EXPOSURE",
+          runId: parsed.data.runId,
+          ...(result.kind === "PLAY_NEXT" ? { gameId: result.replacement.gameId! } : { wishlistEntryId: result.replacement.wishlistEntryId! }),
+          payload: { role: parsed.data.role },
+        });
+      }
+    } catch {
+      // Telemetry never changes the authoritative dismissal-and-replacement result.
+    }
+
+    return {
+      success: true as const,
+      data: { dismissedItemId: result.dismissedItemId, replacement: result.replacement },
+      error: null,
+    };
+  } catch (err) {
+    return {
+      success: false as const,
+      data: null,
+      error: friendlyActionError(err, "Failed to replace recommendation"),
     };
   }
 }

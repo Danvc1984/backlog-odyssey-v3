@@ -13,6 +13,7 @@ export function DetailHeroArt({
   code,
   hideLabel = false,
   className,
+  labelClassName,
   fit,
 }: {
   id: string;
@@ -21,6 +22,7 @@ export function DetailHeroArt({
   code?: string | null;
   hideLabel?: boolean;
   className?: string;
+  labelClassName?: string;
   fit?: "contain" | "cover";
 }) {
   const { resolvedData } = useVisualPreferences();
@@ -39,7 +41,7 @@ export function DetailHeroArt({
           aria-hidden="true"
         />
         {!hideLabel && (
-          <span className="absolute inset-x-5 bottom-4 z-40 text-base font-bold text-white drop-shadow-sm">
+          <span className={cn("absolute inset-x-5 bottom-4 z-40 text-base font-bold text-white drop-shadow-sm", labelClassName)}>
             {title}
           </span>
         )}
@@ -54,7 +56,7 @@ export function DetailHeroArt({
       )}
       <div className="flex h-full w-full items-end p-6">
         {!hideLabel && (
-          <span className="text-[clamp(28px,4vw,40px)] font-extrabold uppercase leading-[0.88] tracking-[-0.08em] text-white">
+          <span className={cn("text-[clamp(28px,4vw,40px)] font-extrabold uppercase leading-[0.88] tracking-[-0.08em] text-white", labelClassName)}>
             {title}
           </span>
         )}

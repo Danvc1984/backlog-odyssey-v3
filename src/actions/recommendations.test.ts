@@ -69,6 +69,7 @@ function igdbPayload({
   };
 }
 import {
+  dismissAndReplaceRecommendation,
   dismissRecommendation,
   recordRunExposure,
   restartRecommendations,
@@ -93,6 +94,7 @@ const runDeleteMany = vi.fn();
 const runUpdate = vi.fn();
 const runFindUnique = vi.fn();
 const itemUpdateMany = vi.fn();
+const itemDeleteMany = vi.fn();
 const itemFindFirst = vi.fn();
 const eventFindMany = vi.fn();
 const gameFindUnique = vi.fn();
@@ -138,16 +140,17 @@ const EMPTY_DIMENSIONS = {
 function txFactory() {
   return {
     appSettings: { findUnique: appSettingsFindUnique },
-    recommendationRun: { create: runCreate, deleteMany: runDeleteMany },
+    recommendationRun: { create: runCreate, update: runUpdate, findUnique: runFindUnique, deleteMany: runDeleteMany },
+    recommendationItem: { findFirst: itemFindFirst, updateMany: itemUpdateMany, deleteMany: itemDeleteMany },
     recommendationFeedback: { create: feedbackCreate, groupBy: feedbackGroupBy, deleteMany: feedbackDeleteMany },
     recommendationEvent: { create: eventCreate, createMany: eventCreateMany, deleteMany: eventDeleteMany, findMany: eventFindMany },
+    game: { findMany: gameFindMany, findUnique: gameFindUnique },
+    wishlistEntry: { findMany: wishlistFindMany, findUnique: wishlistFindUnique },
     recommendationProfile: { upsert: vi.fn(), deleteMany: profileDeleteMany },
     recommendationPreference: { upsert: preferenceUpsert, deleteMany: preferenceDeleteMany, findMany: preferenceFindMany },
     recommendationPreset: { deleteMany: presetDeleteMany },
     recommendationTuneState: { deleteMany: tuneStateDeleteMany, findUnique: tuneStateFindUnique },
-    game: { findMany: gameFindMany },
     libraryEntry: { update: libraryEntryUpdate },
-    wishlistEntry: { findMany: wishlistFindMany },
   };
 }
 
@@ -166,7 +169,7 @@ transaction.mockImplementation(async (callback: (tx: ReturnType<typeof txFactory
     prismaMock.recommendationRun = { create: runCreate, update: runUpdate, findUnique: runFindUnique, deleteMany: runDeleteMany };
     prismaMock.recommendationTuneState = { upsert: tuneStateUpsert };
     prismaMock.recommendationPreset = { upsert: presetUpsert, findMany: presetFindMany, findUnique: presetFindUnique, deleteMany: presetDeleteManyDirect };
-    prismaMock.recommendationItem = { findFirst: itemFindFirst, updateMany: itemUpdateMany };
+    prismaMock.recommendationItem = { findFirst: itemFindFirst, updateMany: itemUpdateMany, deleteMany: itemDeleteMany };
     prismaMock.libraryEntry = { findFirst: libraryFindFirst, update: libraryEntryUpdate };
     prismaMock.game = { findMany: gameFindMany, findUnique: gameFindUnique };
     prismaMock.wishlistEntry = { findMany: wishlistFindMany, findUnique: wishlistFindUnique };
@@ -177,6 +180,7 @@ transaction.mockImplementation(async (callback: (tx: ReturnType<typeof txFactory
   runUpdate.mockResolvedValue({ id: "run-1" });
   runFindUnique.mockResolvedValue(null);
   itemUpdateMany.mockResolvedValue({ count: 1 });
+  itemDeleteMany.mockResolvedValue({ count: 1 });
   itemFindFirst.mockResolvedValue(null);
   eventFindMany.mockResolvedValue([]);
   gameFindUnique.mockResolvedValue(null);
@@ -1514,6 +1518,69 @@ describe("updateRecommendations buy re-ranking", () => {
     const items = buyCall[0].data.items.create;
     expect(items[0].score).toBe(17);
     expect(items[0].positive).toContainEqual({ factor: "taste_profile", label: "Matches your taste for rpg games", points: 3 });
+  });
+});
+
+describe("dismissAndReplaceRecommendation", () => {
+  function playRun(batches: Record<string, Array<{ id: string; score: number; positive?: unknown[]; negative?: unknown[]; caveats?: unknown[] }>>) {
+    runFindUnique.mockResolvedValue({ id: "run-play", kind: "PLAY_NEXT", context: { roles: { batches } } });
+  }
+
+  it("atomically records one dismissal, replaces from the retained role batch, and consumes that candidate", async () => {
+    playRun({
+      BEST_FIT_1: [{ id: "game-next", score: 20, positive: [], negative: [], caveats: [] }],
+      BEST_FIT_2: [{ id: "game-next", score: 20, positive: [], negative: [], caveats: [] }],
+    });
+    itemFindFirst.mockResolvedValue({ id: "item-1", gameId: "game-old", wishlistEntryId: null });
+    gameFindUnique.mockResolvedValue({ name: "Game next", metadataSnapshots: [] });
+
+    const result = await dismissAndReplaceRecommendation({ runId: "run-play", role: "BEST_FIT_1", itemId: "item-1" });
+
+    expect(result).toMatchObject({ success: true, data: { dismissedItemId: "item-1", replacement: { gameId: "game-next" } } });
+    expect(feedbackCreate).toHaveBeenCalledTimes(1);
+    expect(feedbackCreate).toHaveBeenCalledWith({ data: { gameId: "game-old", wishlistEntryId: null, kind: "PLAY_NEXT" } });
+    expect(itemUpdateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "item-1", runId: "run-play", role: "BEST_FIT_1" },
+      data: expect.objectContaining({ gameId: "game-next" }),
+    }));
+    const context = (runUpdate.mock.calls[0][0] as any).data.context;
+    expect(context.roles.batches.BEST_FIT_1).toEqual([]);
+    expect(context.roles.batches.BEST_FIT_2).toEqual([]);
+  });
+
+  it("removes an exhausted role while recording exactly one dismissal", async () => {
+    playRun({ BEST_FIT_1: [] });
+    itemFindFirst.mockResolvedValue({ id: "item-1", gameId: "game-old", wishlistEntryId: null });
+
+    const result = await dismissAndReplaceRecommendation({ runId: "run-play", role: "BEST_FIT_1", itemId: "item-1" });
+
+    expect(result).toEqual({ success: true, data: { dismissedItemId: "item-1", replacement: null }, error: null });
+    expect(itemDeleteMany).toHaveBeenCalledWith({ where: { id: "item-1", runId: "run-play", role: "BEST_FIT_1" } });
+    expect(feedbackCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects malformed, stale, and unauthorized requests without recording calibration", async () => {
+    expect((await dismissAndReplaceRecommendation({ runId: "run-play", role: "NOPE", itemId: "item-1" })).success).toBe(false);
+    playRun({ BEST_FIT_1: [] });
+    expect((await dismissAndReplaceRecommendation({ runId: "run-play", role: "BEST_FIT_1", itemId: "item-1" })).success).toBe(false);
+    vi.mocked(requireUser).mockRejectedValueOnce(new Error("Unauthorized"));
+    expect((await dismissAndReplaceRecommendation({ runId: "run-play", role: "BEST_FIT_1", itemId: "item-1" })).success).toBe(false);
+    expect(feedbackCreate).not.toHaveBeenCalled();
+  });
+
+  it("does not commit partial calibration when the guarded item replacement loses a race", async () => {
+    playRun({ BEST_FIT_1: [{ id: "game-next", score: 20, positive: [], negative: [], caveats: [] }] });
+    itemFindFirst.mockResolvedValue({ id: "item-1", gameId: "game-old", wishlistEntryId: null });
+    itemUpdateMany.mockResolvedValueOnce({ count: 0 });
+    transaction.mockImplementationOnce(async (callback: (tx: ReturnType<typeof txFactory>) => unknown) => {
+      try { await callback(txFactory()); } catch { /* Prisma rolls back the transaction. */ }
+      throw new Error("transaction rolled back");
+    });
+
+    const result = await dismissAndReplaceRecommendation({ runId: "run-play", role: "BEST_FIT_1", itemId: "item-1" });
+
+    expect(result.success).toBe(false);
+    expect(runUpdate).not.toHaveBeenCalled();
   });
 });
 

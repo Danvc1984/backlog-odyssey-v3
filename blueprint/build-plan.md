@@ -648,7 +648,7 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   Named presets persist but load only into the tab-local state. Rotation,
   exposure, and calibration behavior stay unchanged pending real usage data
 
-- [ ] 29. **Today recommendation spotlight carousels** - replace the Play Next
+- [x] 29. **Today recommendation spotlight carousels** - replace the Play Next
   and Buy role grids on Today with one spotlight carousel per section. Play Next
   retains both general fit picks, labeling the second **You Might Also Enjoy**,
   and may add Out of the Box, Change of Pace, and Handheld for up to five

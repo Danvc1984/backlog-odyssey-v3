@@ -21,6 +21,16 @@ function formatPrice(offer: WishlistOfferView): string {
   return `${offer.currency?.trim().toUpperCase() ?? "Unknown currency"} ${priceFormatter.format(offer.price)}`;
 }
 
+function externalOfferUrl(value: string | null): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 export function WishlistDetailHero({
   id,
   name,
@@ -97,7 +107,13 @@ export function WishlistDetailHero({
           {selectedOffer && (
             <div className="mt-6 rounded-lg border border-border-strong bg-background/40 p-4">
               <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                <span className="font-semibold">Best current offer from {selectedOffer.shop}</span>
+                {externalOfferUrl(selectedOffer.url) ? (
+                  <a href={externalOfferUrl(selectedOffer.url)!} target="_blank" rel="noreferrer" className="font-semibold underline underline-offset-4 hover:text-primary">
+                    Best current offer from {selectedOffer.shop}
+                  </a>
+                ) : (
+                  <span className="font-semibold">Best current offer from {selectedOffer.shop}</span>
+                )}
               </div>
               <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <span className="text-2xl font-bold text-emerald-300">{formatPrice(selectedOffer)}</span>
