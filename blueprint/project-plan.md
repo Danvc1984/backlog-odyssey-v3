@@ -38,8 +38,8 @@ registration, and collaboration are outside the MVP.
   fields, tags, and availability.
 - One manual grouping model: personal tags automatically produce collection
   shelves and support multi-tag membership. Default system shelves (in progress,
-  completed, backlog, handheld picks) and calculated IGDB series/franchise
-  shelves remain distinct calculated views.
+  previously completed, backlog, handheld picks) and calculated IGDB
+  series/franchise shelves remain distinct calculated views.
 - Steam account linking, initial import, and independent manual synchronization.
 - Duplicate detection, review, dismiss, merge, delete, and short-lived Undo.
 - IGDB metadata, artwork, and playtime enrichment for catalog and wishlist entries.
@@ -133,13 +133,30 @@ experience-fit evidence.
 
 A library entry separates current status from prior completion. Current
 `playState` uses `NOT_STARTED`, `IN_PROGRESS`, `COMPLETED`, or `ABANDONED`.
-The independent `completedBefore` checkbox records that the owner completed the
-game before the current playthrough. A replay can therefore be `IN_PROGRESS`
-while `completedBefore` remains true. The existing `replay` flag continues to mean
-"recommend this for another playthrough," not completion history. Legacy
-`PLAYED_BEFORE` rows migrate to `COMPLETED` with `completedBefore: true`; shelves,
-counts, taste setup, recommendation events, import/export, and forms use the new
-separation.
+The independent, user-editable `completedBefore` checkbox records that the owner
+completed the game before the current playthrough. A replay can therefore be
+`IN_PROGRESS` while `completedBefore` remains true. The existing `replay` flag
+continues to mean "recommend this for another playthrough," not completion
+history.
+
+Any transition away from `COMPLETED` activates `completedBefore`. Entering
+`IN_PROGRESS` from `COMPLETED`, either manually or through `Start playing`,
+also clears `replay` because that intent has been consumed. The user may clear
+`completedBefore` afterward to correct the record. Taste Setup's
+`I've played this` changes only `completedBefore`.
+
+Active-backlog progress derives only from the current state: `COMPLETED` counts
+as complete, `NOT_STARTED` and `IN_PROGRESS` count as active backlog, and
+`ABANDONED` is excluded. Prior completion never double-counts that metric.
+Current and prior completion consolidate into one positive learning signal,
+while a prior completion and a current abandonment remain distinct evidence.
+
+The calculated completion shelf is named **Previously completed** and contains
+games currently `COMPLETED` or marked `completedBefore`. It may intentionally
+overlap with In Progress or Backlog. A currently `COMPLETED` game remains
+eligible for Play Next when explicitly marked for replay. The project requires
+no `PLAYED_BEFORE` migration or legacy import support because the database will
+be rebuilt before staging.
 
 Price target and provider offers belong to the later pricing feature, not the
 initial local wishlist feature. Store preference remains intentionally excluded
@@ -168,6 +185,12 @@ Steam, ROM, and saved active alternative sources. Detail surfaces may assign or
 remove saved sources but never modify the source definitions; they link to the
 relevant Settings section when source administration is needed.
 
+When a required source does not yet exist, the user follows the Settings link
+and completes source administration as a separate flow; game forms do not
+retain or restore an unfinished draft. `Change platform` remains a Game Detail
+action and is not added to Library cards. The existing Library-card delete
+action remains available with its confirmation and short-lived Undo.
+
 The built-in known-source catalog is code-owned rather than a database enum so
 custom sources remain possible. Its initial suggestions are Epic Games Store,
 GOG, EA app, Ubisoft Connect, Battle.net, Xbox/Microsoft Store, itch.io,
@@ -178,13 +201,14 @@ their designated icons; a custom source uses a neutral fallback icon.
 Alternative sources may be renamed or archived. Archiving removes a source from
 new availability selection and new tuning choices, but preserves existing game
 availability, presets, recommendation-run explanations, and historical data.
-A referenced source is not permanently deleted; a later destructive flow would
-first require explicit reassignment.
+An archived source already assigned to a game remains visible with an
+`Archived` marker and may be preserved or removed, but cannot be selected again
+after removal. A referenced source is not permanently deleted; a later
+destructive flow would first require explicit reassignment.
 
-Existing `OTHER_PLATFORM` rows are migrated conservatively to reusable sources.
-Legacy per-game display labels are removed after source relationships are
-resolved; no duplicate second label remains and no store is inferred from an
-arbitrary label.
+Per-game availability display labels are removed directly during the clean
+database rebuild. Every surface uses the reusable source's canonical name; no
+legacy export or import compatibility is required.
 
 Game-detail availability values display accessible icon-decorated source chips.
 Library source filtering includes Steam, ROM, all alternative sources, and each
@@ -214,18 +238,32 @@ ROMs are excluded from wishlist and purchase recommendations.
 ### Tags, collections, and shelves
 
 Personal tags are the sole manual grouping primitive. A game may have multiple
-tags, and every tag automatically appears as a collection shelf. Existing
-manual collections migrate to same-named tags, unioning memberships on a
-normalized-name collision; the separate manual `Collection` model and detail
-editor are then removed. Tag assignment remains available from compact game
-editing, while the Collections page becomes the unified place to browse and
-manage tag-generated shelves.
+tags, and every tag, including an empty tag, automatically appears as a
+collection shelf. The separate manual `Collection` model is removed during the
+clean database rebuild. Calculated system shelves and IGDB series/franchise
+shelves remain read-only and never become personal tags.
 
-Calculated system shelves expand to in-progress, completed, backlog, handheld
-picks, and Games with DLC, alongside play-soon, replay-candidates, favorites,
-hidden, and abandoned shelves. Calculated series/franchise shelves continue to
-derive from IGDB collection and franchise evidence. System and IGDB shelves are
-read-only calculated views and never become personal tags.
+Game Detail retains quick tag creation, reuse, assignment, and removal.
+Collections owns global administration through a `Manage tags` dialog in the
+Tag shelves section. It lists every tag with its game count and supports create,
+rename, merge, and delete. Names preserve user-entered capitalization but are
+unique after trimming surrounding whitespace and ignoring case.
+
+Renaming to an existing normalized name requires confirmation and merges the
+tags by unioning memberships. Merge and deletion update active recommendation
+presets, while historical recommendation runs retain the tag names captured
+when they were created.
+
+Tag shelves may be sorted alphabetically or by game count; alphabetical is the
+default. Library filtering remains available. Tune exposes personal tags under
+More filters, visually separate from IGDB metadata. Selected tags apply one
+soft, capped, any-match boost regardless of how many selected tags a game
+matches.
+
+Calculated system shelves include in-progress, Previously completed, backlog,
+handheld picks, and Games with DLC, alongside play-soon, replay-candidates,
+favorites, hidden, and abandoned shelves. Calculated series/franchise shelves
+continue to derive from IGDB collection and franchise evidence.
 
 ## 5. DLC and Unresolved Steam DLC
 
@@ -815,20 +853,20 @@ load only into the tab-local Tune state. Each generated run still retains its
 applied context and explanations.
 
 Each run retains its context, explanations, and qualified candidate batches.
-The dashboard initially displays four play-next roles: two best-fit picks, one
-qualified out-of-the-box pick that favors underrepresented genres, tags, or
-experiences, and one change-of-pace pick different from recent play. When the
-configured setup includes a handheld, play-next replaces the second Best Fit
-with a Handheld pick. It is the highest-ranked candidate that is both
-play-eligible and marked handheld-suitable under the existing environment-fit
-rules. If none qualifies, the role is absent with a clear explanation. When the
-Handheld Tune toggle is selected, every Play Next role is strictly limited to
-handheld-suitable games. Setups without a handheld keep the current four play
-roles. It displays three buy roles: two best-fit wishlist picks and one exceptional-deal pick. When
-deal-saturation applies - at least three fresh offers discounted 80% or more
-and at least 20% of eligible wishes qualify - Buy instead shows one best-fit and
-two exceptional-deal picks. Deal picks must still clear fit and quality floors;
-a discount never wins by itself.
+Play Next keeps two general fit roles: **Best Fit** and
+**You Might Also Enjoy**, plus Out of the Box and Change of Pace. When the
+configured setup includes a handheld, Handheld is added as a fifth possible
+role rather than replacing a Best Fit. It is the highest-ranked candidate that
+is both play-eligible and marked handheld-suitable under the existing
+environment-fit rules. A role without a qualified candidate is omitted
+silently.
+
+When the Handheld Tune toggle is selected, every Play Next role is strictly
+limited to handheld-suitable games. Buy labels its second general fit pick
+**You Might Also Enjoy** as well. Its existing normal and deal-saturation
+composition remains otherwise unchanged: two general fit picks and one deal,
+or one general fit and two deals under saturation. Deal picks must still clear
+fit and quality floors; a discount never wins by itself.
 
 An unhidden `ABANDONED` game explicitly marked as a replay candidate may be a
 low-priority second-chance consideration for the Out of the Box role only when
@@ -836,22 +874,27 @@ stronger fit, compatibility, and tune signals do not point to another qualified
 candidate. It receives a visible second-chance explanation and never reserves
 or guarantees that role.
 
-Each role offers `Show another`, rotating a different item from its retained
-batch without creating a new run. Showing or rotating an item records a light
-exposure and applies a temporary cooldown; it is never a negative signal.
-Daily price refreshes do not create or replace a run.
+Across every recommendation surface, neutral `Show another`, separate dismiss
+controls, and optional dismissal reasons are replaced by one action:
+`Maybe some other time — show me another`. It records a dismissal and
+immediately replaces the item from the retained candidate batch for the same
+role without creating a new run. If no replacement exists, that role disappears
+from the current presentation. Exposure cooldowns and retained batches continue
+to prevent immediate repetition. Daily price refreshes do not create or replace
+a run.
 
-Dismissing an item hides it only during the current run. A persistent dismissal
-counter is maintained separately for play-next and buy recommendations. After
-three cumulative dismissals of the same recommendation type, the adjusted
-interest decreases by one point, with a floor of zero.
+A persistent dismissal counter remains separate for play-next and buy
+recommendations. After three cumulative dismissals of the same recommendation
+type, adjusted interest decreases by one point, with a floor of zero.
 
 The user-entered interest remains manually editable. When automatic calibration
 has changed it, the detail view explains that the value was adjusted because of
 repeated recommendation dismissals. The technical counter remains an internal
 implementation detail. Starting a catalog recommendation is an explicit action:
 it marks the game `IN_PROGRESS`; when no other game is in progress it also
-makes it the main game, otherwise it asks before replacing the main game.
+makes it the main game, otherwise it asks before replacing the main game. When
+starting from `COMPLETED`, it also activates `completedBefore` and clears the
+consumed replay flag.
 
 ### Cold start, learning, and control
 
@@ -872,16 +915,14 @@ from authoritative catalog fields and replaceable provider snapshots:
 
 - `RecommendationRun` and its items retain context, visible results,
   explanation factors, and candidate batches for 12 months.
-- Append-only recommendation events record meaningful exposure, rotation,
-  taste-setup answers, starts, completions, abandonment, dismissals, and
-  optional dismissal reasons.
+- Append-only recommendation events record meaningful exposure, taste-setup
+  answers, starts, completions, abandonment, and dismissals.
 - Explicit current-state transitions and the independent prior-completion flag
-  remain profile evidence even when the game is hidden. `COMPLETED` and the
-  prior-completion flag record completion evidence; `ABANDONED` records
-  abandonment evidence. Existing event weights and recency decay remain
-  unchanged. Thus a normal recorded start followed by abandonment may balance
-  to neutral overall, while direct abandonment remains negative; neither state
-  makes a hidden game recommendable.
+  remain profile evidence even when the game is hidden. Current and prior
+  completion consolidate into one positive completion signal. A prior
+  completion and a current `ABANDONED` state remain distinct positive and
+  negative evidence. Existing event weights and recency decay remain unchanged;
+  hidden games remain ineligible as candidates.
 - A rebuildable derived profile aggregates preferences for genres, tags,
   experience, length, publisher, era, series, environment, and maturity.
 - User-editable preferences use semantic `Prefer`, `Neutral`, and `Avoid`
@@ -889,19 +930,15 @@ from authoritative catalog fields and replaceable provider snapshots:
   its evidence, and these controls.
 - Presets hold named optional Tune-this-run contexts.
 
-Events phase out by usefulness: exposure after 90 days; runs, starts,
-dismissals, and optional reasons after 12 months; played, completed, abandoned,
-and taste-setup events after 24 months. Derived preferences rebuild from the
-retained events and use recency decay before deletion. `Restart recommendations`
-immediately deletes all recommendation-owned runs, events, derived profiles,
-preferences, and presets, while preserving the catalog, ownership, and personal
-catalog data.
+Events phase out by usefulness: exposure after 90 days; runs, starts, and
+dismissals after 12 months; played, completed, abandoned, and taste-setup events
+after 24 months. Derived preferences rebuild from the retained events and use
+recency decay before deletion. `Restart recommendations` immediately deletes
+all recommendation-owned runs, events, derived profiles, preferences, and
+presets, while preserving the catalog, ownership, and personal catalog data.
 
 The `Update recommendations` action lives on the Today dashboard header and
 empty state, and is reachable from the Library and Wishlist headers.
-
-Rotation, exposure, and calibration behavior stay unchanged until real usage
-data justifies changes; this is an accepted deferral, not an oversight.
 
 ## 12. Today Dashboard
 
@@ -927,10 +964,11 @@ It displays:
 - Clickable coverage counts open accessible dialogs with up to ten affected
   game titles linking to their game details. The dialog can expand into a
   paginated list for additional games.
-- The latest play-next run's stored roles (two best-fit picks, one qualified
-  out-of-the-box pick, one change-of-pace pick) and the latest buy run's stored
-  roles (best-fit and deal picks per the documented deal-saturation rule);
-  these remain the latest explicitly generated runs.
+- The latest play-next run's stored roles (Best Fit, You Might Also Enjoy,
+  qualified Out of the Box, Change of Pace, and Handheld when configured and
+  qualified) and the latest buy run's stored roles (fit and deal picks per the
+  documented deal-saturation rule); these remain the latest explicitly
+  generated runs.
 - Up to five games recently played on Steam, showing last-played date and
   accumulated playtime. Recent activity may include games not yet imported into
   the catalog; those entries visibly suggest the existing manual library sync
@@ -1035,19 +1073,23 @@ reduced motion they remain manual. When data is absent, their place is retained
 by a contextual empty state such as selecting a main game, browsing Library,
 or manually updating prices; these prompts never trigger hidden provider work.
 
-**Play Next** receives the largest independent section. Its existing latest
-explicit run and role semantics remain unchanged: one primary Best Fit card
-occupies roughly two thirds of the layout, while a compact rail carries every
-remaining stored role, including the second Best Fit, Change of Pace, and Out
-of the Box. The dominant card exposes the stored explanation, factors, caveats,
-compatibility/source context, and existing `Start playing` action. That action
-marks a catalog item `IN_PROGRESS` and follows the existing main-game decision
-flow; it never opens or resumes an external game.
+**Play Next** and **Buy** each use a spotlight carousel. Every slide places game
+art next to useful metadata and the recommendation reasoning. The three or four
+strongest factors appear first; remaining factors and caveats are available
+through an accessible disclosure. Missing roles produce fewer slides without
+placeholders or omission messages.
 
-The existing Buy recommendation surface remains a full section below Play Next.
-Recent Steam activity, data-health coverage, provider freshness, and background
-operations remain lower-priority supporting sections. All existing empty,
-fresh, stale-on-error, and operation states stay explicit.
+`View details` is the primary action. Play Next retains `Start playing` as a
+secondary action. Buy opens Wishlist Detail rather than sending the user
+straight to a seller. In the Wishlist Detail hero, the provider name in the
+selected-offer sentence links directly to the external offer.
+
+The recommendation carousels advance every ten seconds, pause on hover, focus,
+touch, manual navigation, or another interaction, and resume afterward. Reduced
+motion disables automatic advancement. Recent Steam activity, data-health
+coverage, provider freshness, and background operations remain lower-priority
+supporting sections. All existing empty, fresh, stale-on-error, and operation
+states stay explicit.
 
 ### Visual delivery order
 
@@ -1090,6 +1132,21 @@ states, alongside the existing automated checks. Feature 14 remains
 presentation and interaction composition only: it does not add providers,
 migrations, queues, background work, recommendation changes, price changes, or
 new catalog, wishlist, compatibility, or provider-data boundaries.
+
+### Personal-data composition
+
+Game Detail combines the former Play state and Personal Profile sections into
+one compact personal-data surface:
+
+- **Journey:** current state, previously completed, main game, play soon,
+  replay, and hidden.
+- **Preferences:** interest, rating, priority, game experience, preferred
+  environment, and handheld suitability.
+
+Wishlist Detail groups interest, game experience, and handheld suitability
+under **Personal fit**. Target price, identity, and offers remain purchase
+information. Permanent helper paragraphs are replaced by accessible information
+popovers usable by pointer, keyboard, and touch.
 
 ### Wallhaven global background
 
@@ -1202,8 +1259,9 @@ alternative sources, all external IDs regardless of provenance, current play
 states, prior-completion history, interest, ratings, personal tags, settings
 (including duration profile), manual overrides, and recommendation-related
 personal decisions. Removed notes and per-game availability display labels are
-not exported or restored; legacy export normalization may discard those fields
-but must not recreate them.
+not exported or restored. The new schema is introduced directly and older
+export versions are rejected clearly rather than normalized, because the app
+has not reached staging and the database will be rebuilt.
 Rebuildable IGDB/SteamSpy, price, compatibility, provider-operation, and
 recent-activity snapshots are excluded; Steam connections and credentials are
 never exported.

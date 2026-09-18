@@ -404,18 +404,17 @@
     tag states - evidence, unknown/not-checked, stale, absent - with no
     hollow placeholders and no tag without a confirmed App ID); the
     deployment feature's cron sweep becomes a no-op here
-  - [x] 19c. **OS-aware recommendations and wishlist discovery** - play-next
-    and buy engines derive environment fit, play floors (e.g. the
-    out-of-the-box READY floor), caveats, and explanations from the
-    configured devices; compatibility contributes only when Linux targets
-    exist; on a Linux setup without a Windows fallback, fallback-needing
-    evidence hard-excludes a game from all play roles with a visible,
-    explained reason (the sanctioned carve-out from the soft-signal rule;
-    an emptied role is absent from the run) while buy picks and wishlist
-    discovery apply a heavy practical-fit penalty plus caveat, never
-    exclusion; setup changes re-derive compatibility and synchronously
-    regenerate runs; preferred-environment options and the derived profile
-    adapt to the configured setup
+  **OS-aware recommendations and wishlist discovery** - play-next and buy
+  engines derive environment fit, play floors (e.g. the out-of-the-box READY
+  floor), caveats, and explanations from the configured devices;
+  compatibility contributes only when Linux targets exist; on a Linux setup
+  without a Windows fallback, fallback-needing evidence hard-excludes a game
+  from all play roles with a visible, explained reason (the sanctioned
+  carve-out from the soft-signal rule; an emptied role is absent from the
+  run) while buy picks and wishlist discovery apply a heavy practical-fit
+  penalty plus caveat, never exclusion; setup changes re-derive compatibility
+  and synchronously regenerate runs; preferred-environment options and the
+  derived profile adapt to the configured setup.
   - [x] 19c. **Play environment fit and the no-fallback exclusion** -
     setup-aware compatibility context in the play engine (compatibility
     contributes only when Linux targets exist), device-derived environment
@@ -649,52 +648,125 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   Named presets persist but load only into the tab-local state. Rotation,
   exposure, and calibration behavior stay unchanged pending real usage data
 
-- [ ] 29. **Today recommendation spotlight carousels** - replace the role-grid
-  presentation of Play Next and Buy recommendations on Today with one spotlight
-  carousel per section, one slide per pick showing game art next to metadata and
-  the pick's reasoning factors. Play Next slides through the two Best Fits, Out
-  of the Box, Change of Pace, and the Handheld pick when present; Buy mixes the
-  two Best Fits with the Deal picks in one carousel. Sparse runs or missing
-  roles simply yield fewer slides so the section never looks empty or lopsided.
-  Slides keep the existing per-role dismiss and feedback controls but drop the
-  optional dismissal-reason input; role omission explanations stay visible.
+- [ ] 29. **Today recommendation spotlight carousels** - replace the Play Next
+  and Buy role grids on Today with one spotlight carousel per section. Play Next
+  retains both general fit picks, labeling the second **You Might Also Enjoy**,
+  and may add Out of the Box, Change of Pace, and Handheld for up to five
+  slides. Handheld is additive rather than replacing a Best Fit. Buy applies
+  the same label to its second Best Fit when present and retains the existing
+  deal-saturation role rules. Roles without a qualified candidate are omitted
+  silently, producing a shorter balanced carousel without placeholders or
+  omission notices.
 
-- [ ] 30. **Personal-data and availability simplification** - remove the
-  redundant per-game availability display label and remove catalog/wishlist
-  notes from the Prisma model, migrations, validation, actions, forms, detail
-  pages, acquisition transfer, recommendation inputs, and export/import. Use
-  each reusable source's canonical name everywhere. Keep reusable-source
-  creation, rename, and archive exclusively in Settings; game forms and detail
-  pages may only assign saved active sources and link to that Settings section.
-  Add compact Library-card overflow actions for Edit availability and Delete,
-  reusing the existing destructive confirmation and Undo behavior. Compact the
-  retained personal fields, replace permanent helper paragraphs with accessible
-  information controls, align related fields where space permits, and version
-  export/import so legacy removed fields are discarded rather than restored.
+  Each slide places game artwork beside useful metadata and the recommendation
+  reasoning. Show the three or four strongest factors initially, with remaining
+  factors and caveats available through an accessible disclosure. `View details`
+  is the primary action; Play Next keeps `Start playing` as a secondary action.
+  Buy opens Wishlist Detail rather than navigating directly to a seller. In the
+  Wishlist Detail hero, the provider name in copy such as
+  `Best current offer from Fanatical` links to the selected external offer.
 
-- [ ] 31. **Unified personal tags and collection shelves** - make personal tags
-  the sole manual grouping model: every tag automatically creates a browsable
-  collection shelf, games may belong to multiple tags, and existing manual
-  collections migrate to same-named tags with memberships unioned on normalized
-  collisions before the separate manual Collection model is removed. Keep
-  calculated system shelves and IGDB series/franchise shelves read-only and
-  distinct. Rework Collections browsing and tag management around the unified
-  model, remove the separate Collection editor from game details, and preserve
-  Library filtering. Add explicit personal-tag targets to Tune under More
-  filters as a soft, capped, any-match boost, visually distinct from IGDB
-  genres/themes/keywords and inactive by default; include presets, run context,
-  explanations, reset, and export/import coverage.
+  Both carousels advance every ten seconds, pause on hover, focus, touch, manual
+  navigation, or another interaction, and resume afterward. Reduced motion
+  makes them manual. Replace neutral `Show another`, separate dismiss controls,
+  and optional dismissal reasons across every recommendation surface with one
+  action: `Maybe some other time — show me another`. It records a dismissal,
+  preserves the existing cumulative calibration rule, and immediately replaces
+  the item from the retained batch for the same role. If that batch has no
+  replacement, the slide disappears.
 
-- [ ] 32. **Current play state and prior-completion history** - retire
-  `PLAYED_BEFORE` as a play state, add an independent `completedBefore` checkbox,
-  and use current states `NOT_STARTED`, `IN_PROGRESS`, `COMPLETED`, and
-  `ABANDONED`. A replay can be `IN_PROGRESS` while `completedBefore` remains true;
-  the separate replay flag continues to mean recommendation intent. Migrate
-  legacy `PLAYED_BEFORE` rows to `COMPLETED` plus prior completion, then update
-  every state control, bulk/taste-setup flow, system shelf, backlog count,
-  recommendation eligibility/profile/event rule, acquisition prompt, export,
-  import, and test. Preserve completion evidence without double-counting an
-  active replay.
+- [ ] 30. **Current play state and prior-completion history** - use current
+  states `NOT_STARTED`, `IN_PROGRESS`, `COMPLETED`, and `ABANDONED`, with an
+  independent user-editable `completedBefore` flag. No legacy-state migration
+  or backward compatibility is required because the database will be rebuilt.
+
+  Any transition away from `COMPLETED` automatically activates
+  `completedBefore`. Moving from `COMPLETED` to `IN_PROGRESS`, whether manually
+  or through `Start playing`, also consumes and clears `replay`; starting a
+  recommended replay follows the same rule. The user may later clear
+  `completedBefore` to correct their history. Taste Setup's
+  `I've played this` activates only `completedBefore` and does not infer or
+  change the current state.
+
+  Active-backlog progress uses only the current state: `COMPLETED` counts as
+  complete, `NOT_STARTED` and `IN_PROGRESS` count as active backlog, and
+  `ABANDONED` is excluded. Prior completion remains visible history and does
+  not double-count progress. For recommendation learning, current completion
+  and prior completion consolidate into one positive completion signal. A
+  prior completion and a current abandonment remain distinct positive and
+  negative evidence.
+
+  Rename the calculated Completed shelf to **Previously completed**. It includes
+  games currently `COMPLETED` and games with `completedBefore = true`, so a
+  replay may intentionally appear in both Previously completed and In Progress
+  or Backlog. A `COMPLETED` game marked `replay` remains Play Next eligible.
+
+  Update every state control, main-game/start flow, recommendation eligibility,
+  profile/event derivation, Taste Setup, shelves, counts, acquisition prompt,
+  export/import, and tests. DLC acquisition retains `No change`, `Not started`,
+  `In progress`, and the separate `Plan to play` flag, plus the independent
+  `Mark parent as replay candidate` option; state transitions apply the same
+  completion-history and replay-consumption rules.
+
+- [ ] 31. **Personal-data and availability simplification** - remove catalog
+  and wishlist notes and remove the redundant per-game availability display
+  label from the Prisma model, validation, actions, forms, details,
+  recommendation inputs, acquisition transfer, and export/import. Existing
+  values may be discarded directly. Use each reusable source's canonical name
+  everywhere.
+
+  Keep reusable-source creation, rename, and archive exclusively in Settings.
+  Game forms and Game Detail may assign or remove saved active sources and link
+  to Settings, but never administer source definitions or preserve a draft
+  while the user completes that separate Settings flow. An archived source
+  already assigned to a game remains visible and marked `Archived`; it can be
+  preserved or removed but cannot be assigned again after removal.
+
+  Keep `Change platform` exclusive to Game Detail. Do not add it to Library
+  cards. Preserve the existing Library-card `Delete` action, destructive
+  confirmation, and Undo behavior.
+
+  Merge the Game Detail `Play state` and `Personal Profile` sections into one
+  compact personal-data section with two visual groups:
+  **Journey** (current state, previously completed, main game, play soon,
+  replay, hidden) and **Preferences** (interest, rating, priority, game
+  experience, preferred environment, handheld suitability). Wishlist Detail
+  uses **Personal fit** for interest, experience, and handheld suitability,
+  while target price, identity, and offers remain in the purchase area.
+  Replace permanent helper paragraphs with accessible information popovers
+  usable by pointer, keyboard, and touch.
+
+  Introduce the new export/import schema directly without backward-compatible
+  normalization because the app has not reached staging and the database will
+  be rebuilt. Removed fields are neither exported nor accepted for restore.
+
+- [ ] 32. **Unified personal tags and collection shelves** - make personal
+  tags the only manual grouping model and remove the separate manual
+  `Collection` model as part of the clean database rebuild. Every tag,
+  including an empty tag, automatically creates a browsable collection shelf.
+  Games may belong to multiple tags. Calculated system shelves and IGDB
+  series/franchise shelves remain read-only and distinct.
+
+  Add a `Manage tags` action to the Tag shelves section on Collections. Its
+  dialog lists tags with game counts and supports creating, renaming, merging,
+  and deleting them. Game Detail continues to support quick create-or-reuse,
+  assignment, and removal. Tag names preserve the user's displayed
+  capitalization, while uniqueness trims surrounding whitespace and ignores
+  case.
+
+  Renaming to an existing normalized name offers an explicit merge confirmation.
+  A merge unions and deduplicates game memberships, updates active presets to
+  the surviving tag, and removes the absorbed tag. Deleting a tag removes its
+  memberships and active preset references. Historical recommendation runs
+  retain their recorded tag names after rename, merge, or deletion.
+
+  Tag shelves support alphabetical and game-count ordering, with alphabetical
+  as the default. Preserve Library filtering. Add personal tags to Tune under
+  More filters, visually distinct from IGDB genres/themes/keywords and inactive
+  by default. Multiple selected tags use a soft, capped, any-match boost:
+  matching several tags does not accumulate extra points. Include presets,
+  current run context, explanations, recommendation reset, export/import, and
+  tests.
 
 - [ ] 33. **Deployment and CI readiness** - Vercel/Supabase environment
   review, Vercel Cron daily run at 06:00 UTC-6 with `CRON_SECRET` enqueueing
