@@ -188,6 +188,7 @@ export async function loadBuyCandidates(
         select: {
           rating: true,
           playState: true,
+          completedBefore: true,
           replayCandidate: true,
         },
       },

@@ -29,6 +29,7 @@ export interface BuyBaseGameView {
   libraryEntry: {
     rating: number | null;
     playState: PlayStateLike | null;
+    completedBefore?: boolean;
     replayCandidate: boolean;
   } | null;
 }
@@ -185,7 +186,7 @@ export function scoreBuyCandidate(
     if (base?.libraryEntry) {
       const entry = base.libraryEntry;
       const ratedHigh = entry.rating != null && entry.rating >= 4;
-      const completed = entry.playState === "COMPLETED";
+      const completed = entry.playState === "COMPLETED" || entry.completedBefore === true;
       const replayFlagged = entry.replayCandidate;
       if (ratedHigh || completed || replayFlagged) {
         score += DLC_AFFINITY_POINTS;

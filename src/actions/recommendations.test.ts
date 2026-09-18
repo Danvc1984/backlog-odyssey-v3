@@ -421,7 +421,7 @@ describe("saveTasteSetup", () => {
 
     expect(libraryEntryUpdate).toHaveBeenNthCalledWith(1, {
       where: { gameId: "in-progress" },
-      data: { gameExperience: "PC_GAMING", preferredEnvironment: "LINUX" },
+      data: { completedBefore: true, gameExperience: "PC_GAMING", preferredEnvironment: "LINUX" },
     });
     expect(libraryEntryUpdate).toHaveBeenNthCalledWith(2, {
       where: { gameId: "already-liked" },

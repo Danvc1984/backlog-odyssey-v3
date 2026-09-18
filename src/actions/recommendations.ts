@@ -729,7 +729,7 @@ export async function saveTasteSetup(input: unknown) {
         }
 
         const updateData: Prisma.LibraryEntryUpdateInput = {};
-        if (pick.answer === "PLAYED" && row.libraryEntry!.playState === "NOT_STARTED") {
+        if (pick.answer === "PLAYED") {
           updateData.completedBefore = true;
         }
         if (pick.answer === "LIKED" && row.libraryEntry!.interest === null) {

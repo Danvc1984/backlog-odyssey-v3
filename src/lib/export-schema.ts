@@ -21,22 +21,6 @@ const appSettingsSchema = z.object({
   updatedAt: isoDateTime,
 });
 
-const legacyAppSettingsSchema = z.object({
-  id: z.number().int(),
-  theme: z.enum(["LIGHT", "DARK", "SYSTEM"]),
-  desktopOs: z.string(),
-  portableDevice: z.string(),
-  fallbackOs: z.string(),
-  priceCountry: z.string(),
-  timeZone: z.string(),
-  wallpaperEnabled: z.boolean(),
-  reducedData: z.boolean(),
-  steamDailySyncEnabled: z.boolean(),
-  itadDailyRefresh: z.boolean(),
-  createdAt: isoDateTime,
-  updatedAt: isoDateTime,
-});
-
 const gameSchema = z.object({
   id: z.string(),
   type: z.enum(["BASE_GAME", "DLC"]),
@@ -69,11 +53,6 @@ const libraryEntrySchema = z.object({
   hidden: z.boolean(),
   createdAt: isoDateTime,
   updatedAt: isoDateTime,
-});
-
-const legacyLibraryEntrySchema = libraryEntrySchema.extend({
-  playState: z.enum(["NOT_STARTED", "IN_PROGRESS", "COMPLETED", "PLAYED_BEFORE", "ABANDONED"]),
-  preferredEnvironment: z.enum(["BAZZITE", "STEAM_DECK", "WINDOWS"]).nullable(),
 });
 
 const availabilityRowSchema = z.object({
@@ -328,71 +307,12 @@ const exportDataSchema = <
   });
 
 const currentExportDataSchema = exportDataSchema(appSettingsSchema, libraryEntrySchema);
-const legacyExportDataSchema = exportDataSchema(legacyAppSettingsSchema, legacyLibraryEntrySchema);
 
-const legacyExportDocumentSchema = z.object({
-  version: z.literal(1),
+export const exportDocumentSchema = z.object({
+  version: z.literal(EXPORT_VERSION),
   exportedAt: isoDateTime,
-  data: legacyExportDataSchema,
+  data: currentExportDataSchema,
 });
-
-function migrateLegacyDocument(input: unknown): unknown {
-  const parsed = legacyExportDocumentSchema.safeParse(input);
-  const document = parsed.success ? parsed.data : input;
-  if (typeof document !== "object" || document === null || !("data" in document)) return input;
-
-  const version = (document as { version?: unknown }).version;
-  if (!parsed.success && version !== EXPORT_VERSION) return input;
-
-  const data = (document as { data?: unknown }).data;
-  if (typeof data !== "object" || data === null || !Array.isArray((data as { libraryEntries?: unknown }).libraryEntries)) {
-    return document;
-  }
-
-  const legacySettings = parsed.success ? parsed.data.data.settings : null;
-  const settings = legacySettings
-    ? (() => {
-        const { desktopOs, portableDevice, fallbackOs, ...rest } = legacySettings;
-        return {
-          ...rest,
-          primaryOs: desktopOs === "WINDOWS" ? "WINDOWS" : "LINUX",
-          hasWindowsFallback: fallbackOs === "WINDOWS",
-          handheldOs:
-            portableDevice === "WINDOWS"
-              ? "WINDOWS"
-              : portableDevice === "STEAM_DECK" || portableDevice === "BAZZITE" || portableDevice === "LINUX"
-                ? "LINUX"
-                : "NONE",
-          onboardingCompleted: true,
-          durationProfile: "NORMALLY",
-        };
-      })()
-    : (data as { settings?: unknown }).settings;
-
-  return {
-    ...(document as Record<string, unknown>),
-    version: EXPORT_VERSION,
-    data: {
-      ...(data as Record<string, unknown>),
-      settings,
-      libraryEntries: (data as { libraryEntries: Array<Record<string, unknown>> }).libraryEntries.map((entry) => ({
-        ...entry,
-        playState: entry.playState === "PLAYED_BEFORE" ? "COMPLETED" : entry.playState,
-        completedBefore: entry.completedBefore === true || entry.playState === "PLAYED_BEFORE",
-        preferredEnvironment: entry.preferredEnvironment === "BAZZITE" ? "LINUX" : entry.preferredEnvironment,
-      })),
-    },
-  };
-}
-
-export const exportDocumentSchema = z.preprocess(
-  migrateLegacyDocument,
-  z.object({
-    version: z.literal(EXPORT_VERSION),
-    exportedAt: isoDateTime,
-    data: currentExportDataSchema,
-  }),
-);
 
 export type ExportDocument = z.infer<typeof exportDocumentSchema>;
 

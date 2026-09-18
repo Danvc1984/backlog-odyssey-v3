@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { logRecommendationEvent, playStateTransitionKind } from "@/lib/recommendations/events";
 import { getOrCreateUnspecifiedSource } from "@/lib/sources/store";
+import { derivePlayStateMutation } from "@/lib/play-state";
 import { revalidatePath } from "next/cache";
 
 const updatePersonalFieldsSchema = z.object({
@@ -375,66 +376,38 @@ export async function updatePlayState(
     }
 
     const data = parsed.data;
-    const current = await prisma.libraryEntry.findUnique({
-      where: { gameId },
-      select: { playState: true, completedBefore: true, isMainGame: true },
-    });
-    if (!current) {
-      throw new ActionError("Library entry not found");
-    }
+    const result = await prisma.$transaction(async (tx) => {
+      const current = await tx.libraryEntry.findUnique({
+        where: { gameId },
+        select: { playState: true, completedBefore: true, isMainGame: true },
+      });
+      if (!current) {
+        throw new ActionError("Library entry not found");
+      }
 
-    const updateData = {
-      ...(data.playState !== undefined && { playState: data.playState }),
-      ...(data.playSoon !== undefined && { playSoon: data.playSoon }),
-      ...(data.replayCandidate !== undefined && {
-        replayCandidate: data.replayCandidate,
-      }),
-      ...(data.hidden !== undefined && { hidden: data.hidden }),
-      ...(data.completedBefore !== undefined && { completedBefore: data.completedBefore }),
-      ...(data.isMainGame !== undefined && { isMainGame: data.isMainGame }),
-    };
-    const shouldClearWallpaper =
-      (data.isMainGame === true && !current.isMainGame) ||
-      (data.isMainGame === false && current.isMainGame);
+      const updateData = derivePlayStateMutation(current, data);
+      const shouldClearWallpaper =
+        (data.isMainGame === true && !current.isMainGame) ||
+        (data.isMainGame === false && current.isMainGame);
 
-    if (data.isMainGame === true) {
-      const entry = await prisma.$transaction(async (tx) => {
+      if (data.isMainGame === true) {
         await tx.libraryEntry.updateMany({
           where: { isMainGame: true, gameId: { not: gameId } },
           data: { isMainGame: false },
         });
-        const updatedEntry = await tx.libraryEntry.update({
-          where: { gameId },
-          data: updateData,
-        });
-        if (shouldClearWallpaper) {
-          await clearWallpaperPool(tx);
-        }
-        return updatedEntry;
-      });
-      await logPlayStateEvent(current.playState, data.playState, gameId);
-      return { success: true as const, data: entry, error: null };
-    }
+      }
 
-    if (shouldClearWallpaper) {
-      const entry = await prisma.$transaction(async (tx) => {
-        const updatedEntry = await tx.libraryEntry.update({
-          where: { gameId },
-          data: updateData,
-        });
+      const entry = await tx.libraryEntry.update({
+        where: { gameId },
+        data: updateData,
+      });
+      if (shouldClearWallpaper) {
         await clearWallpaperPool(tx);
-        return updatedEntry;
-      });
-      await logPlayStateEvent(current.playState, data.playState, gameId);
-      return { success: true as const, data: entry, error: null };
-    }
-
-    const entry = await prisma.libraryEntry.update({
-      where: { gameId },
-      data: updateData,
+      }
+      return { current, entry };
     });
-    await logPlayStateEvent(current.playState, data.playState, gameId);
-    return { success: true as const, data: entry, error: null };
+    await logPlayStateEvent(result.current.playState, data.playState, gameId);
+    return { success: true as const, data: result.entry, error: null };
   } catch (err) {
     return {
       success: false as const,

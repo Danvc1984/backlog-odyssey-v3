@@ -16,6 +16,30 @@ export const EVENT_SIGNAL_WEIGHTS: Partial<Record<RecommendationEventKind, numbe
   DISMISSAL: -1.5,
 };
 
+type CompletionEventLike = {
+  kind: RecommendationEventKind;
+  gameId: string | null;
+  createdAt: Date;
+};
+
+export function consolidateCompletionEvents<T extends CompletionEventLike>(
+  events: readonly T[],
+): T[] {
+  const latestByGame = new Map<string, T>();
+  for (const event of events) {
+    if (event.kind === "COMPLETION" && event.gameId) {
+      latestByGame.set(event.gameId, event);
+    }
+  }
+
+  return events.filter(
+    (event) =>
+      event.kind !== "COMPLETION" ||
+      !event.gameId ||
+      latestByGame.get(event.gameId) === event,
+  );
+}
+
 export interface ProfileDimensionSignal {
   weight: number;
   support: number;
@@ -158,13 +182,14 @@ export async function rebuildRecommendationProfile(
   configuredEnvironments: readonly Environment[] = ["LINUX"],
   durationProfile: DurationProfile = "NORMALLY",
 ): Promise<RecommendationProfilePayload> {
-  const events = await client.recommendationEvent.findMany({
+  const rawEvents = await client.recommendationEvent.findMany({
     orderBy: { createdAt: "asc" },
     include: {
       game: { include: { libraryEntry: true, metadataSnapshots: { orderBy: { fetchedAt: "desc" }, take: 1 }, playtimeEvidence: { select: { provider: true, payload: true } } } },
       wishlistEntry: { include: { metadataSnapshot: true } },
     },
   }) as unknown as ProfileEvent[];
+  const events = consolidateCompletionEvents(rawEvents);
   const dimensions = Object.fromEntries(profileDimensionKeys().map((key) => [key, {}])) as RecommendationProfilePayload["dimensions"];
   const byKind: Partial<Record<RecommendationEventKind, number>> = {};
   let unresolvedTargets = 0;

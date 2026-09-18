@@ -32,6 +32,7 @@ function baseGame(
     libraryEntry: {
       rating: null,
       playState: "COMPLETED",
+      completedBefore: false,
       replayCandidate: false,
     },
     ...overrides,
@@ -162,6 +163,12 @@ describe("scoreBuyCandidate", () => {
     const rated = scoreBuyCandidate(dlcBase({ libraryEntry: { rating: 5, playState: "NOT_STARTED", replayCandidate: false } }), now);
     expect(rated.positive).toContainEqual({ factor: "dlc_affinity", label: "You already enjoyed the base game", points: 6 });
     expect(rated.score).toBe(6);
+
+    const previouslyCompleted = scoreBuyCandidate(
+      dlcBase({ libraryEntry: { rating: null, playState: "IN_PROGRESS", completedBefore: true, replayCandidate: false } }),
+      now,
+    );
+    expect(previouslyCompleted.positive).toContainEqual({ factor: "dlc_affinity", label: "You already enjoyed the base game", points: 6 });
 
     const replayed = scoreBuyCandidate(dlcBase({ libraryEntry: { rating: null, playState: "ABANDONED", replayCandidate: true } }), now);
     expect(replayed.positive.filter((factor) => factor.factor === "dlc_affinity")).toHaveLength(1);

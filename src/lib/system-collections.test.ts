@@ -35,7 +35,9 @@ describe("system collection definitions", () => {
       "games-with-dlc",
     ]);
     expect(getSystemCollectionDefinition("in-progress")?.where).toEqual({ playState: "IN_PROGRESS" });
-    expect(getSystemCollectionDefinition("completed")?.where).toEqual({ playState: "COMPLETED" });
+    expect(getSystemCollectionDefinition("completed")?.where).toEqual({
+      OR: [{ playState: "COMPLETED" }, { completedBefore: true }],
+    });
     expect(getSystemCollectionDefinition("backlog")?.where).toEqual({ playState: "NOT_STARTED" });
     expect(getSystemCollectionDefinition("handheld-picks")?.where).toEqual({ handheldSuitable: true });
     expect(getSystemCollectionDefinition("games-with-dlc")?.where).toEqual({
@@ -85,6 +87,13 @@ describe("getSystemCollections", () => {
     const result = await getSystemCollections();
 
     expect(result).toHaveLength(10);
+    expect(result[6]).toEqual({
+      id: "completed",
+      name: "Previously completed",
+      icon: "CheckCircle",
+      color: "#22c55e",
+      count: 3,
+    });
     expect(result[0]).toEqual({
       id: "play-soon",
       name: "Play soon",
@@ -94,6 +103,9 @@ describe("getSystemCollections", () => {
     });
     expect(mockCount).toHaveBeenCalledTimes(10);
     expect(mockCount).toHaveBeenCalledWith({ where: { playState: "IN_PROGRESS" } });
+    expect(mockCount).toHaveBeenCalledWith({
+      where: { OR: [{ playState: "COMPLETED" }, { completedBefore: true }] },
+    });
     expect(mockCount).toHaveBeenCalledWith({
       where: { game: { type: "BASE_GAME", dlcs: { some: {} } } },
     });

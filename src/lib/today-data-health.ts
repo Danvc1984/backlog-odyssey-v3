@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 export interface TodayDataHealth {
   activeBacklog: {
-    completedBefore: number;
+    completed: number;
     inProgress: number;
     notStarted: number;
     total: number;
@@ -57,15 +57,15 @@ const COVERAGE_TITLE_ORDER = (left: CoverageTitle, right: CoverageTitle) =>
 
 export function computeActiveBacklogProgress(
   rows: readonly TodayDataHealthGameRow[],
-): { completedBefore: number; inProgress: number; notStarted: number; total: number } {
-  const counts = { completedBefore: 0, inProgress: 0, notStarted: 0, total: 0 };
+): { completed: number; inProgress: number; notStarted: number; total: number } {
+  const counts = { completed: 0, inProgress: 0, notStarted: 0, total: 0 };
   for (const row of rows) {
     const playState = row.libraryEntry?.playState;
     if (!playState || !(ACTIVE_BACKLOG_STATES as readonly string[]).includes(playState)) {
       continue;
     }
     counts.total += 1;
-    if (row.libraryEntry?.completedBefore || playState === "COMPLETED") counts.completedBefore += 1;
+    if (playState === "COMPLETED") counts.completed += 1;
     if (playState === "IN_PROGRESS") counts.inProgress += 1;
     if (playState === "NOT_STARTED") counts.notStarted += 1;
   }

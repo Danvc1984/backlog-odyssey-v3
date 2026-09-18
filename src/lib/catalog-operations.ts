@@ -128,6 +128,7 @@ export async function resolveOperationUser(
 
 export type PersonalFieldName =
   | "playState"
+  | "completedBefore"
   | "isMainGame"
   | "priority"
   | "interest"
@@ -141,6 +142,7 @@ export type PersonalFieldName =
 
 export const PERSONAL_FIELDS: readonly PersonalFieldName[] = [
   "playState",
+  "completedBefore",
   "isMainGame",
   "priority",
   "interest",
@@ -155,6 +157,7 @@ export const PERSONAL_FIELDS: readonly PersonalFieldName[] = [
 
 export type MergeSourceLibraryEntry = {
   playState: string | null;
+  completedBefore?: boolean | null;
   isMainGame: boolean | null;
   priority: string | null;
   interest: number | null;

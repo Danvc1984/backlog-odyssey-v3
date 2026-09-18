@@ -10,6 +10,7 @@ import { autoEnrichWishlistEntries } from "@/lib/wishlist-igdb-queue";
 import { queueIgdbForDlcGames } from "@/lib/igdb-import-queue";
 import { resolveManualSteamAppId } from "@/actions/wishlist-identity";
 import { getOrCreateUnspecifiedSource } from "@/lib/sources/store";
+import { derivePlayStateMutation } from "@/lib/play-state";
 import { parseIgdbMetadataPayload } from "@/lib/igdb-metadata-payload";
 import type { WishlistIgdbSnapshotPayload } from "@/lib/wishlist-igdb-enrichment";
 
@@ -426,22 +427,25 @@ export async function acquireWishlistDlc(input: unknown) {
         select: { id: true, name: true, type: true, baseGameId: true },
       });
 
-      const parentUpdate: {
-        playState?: "NOT_STARTED" | "IN_PROGRESS";
-        playSoon?: boolean;
-        replayCandidate?: boolean;
-      } = {};
-      if (parsed.data.updateParentPlayState === "PLAN_TO_PLAY") {
-        parentUpdate.playSoon = true;
-      } else if (parsed.data.updateParentPlayState !== undefined) {
-        parentUpdate.playState = parsed.data.updateParentPlayState;
-      }
-      Object.assign(parentUpdate, {
+      const parentRequest = {
+        ...(parsed.data.updateParentPlayState === "PLAN_TO_PLAY"
+          ? { playSoon: true }
+          : parsed.data.updateParentPlayState !== undefined
+            ? { playState: parsed.data.updateParentPlayState }
+            : {}),
         ...(parsed.data.setParentReplay !== undefined && {
           replayCandidate: parsed.data.setParentReplay,
         }),
-      });
-      if (Object.keys(parentUpdate).length > 0) {
+      };
+      if (Object.keys(parentRequest).length > 0) {
+        const parentEntry = await tx.libraryEntry.findUnique({
+          where: { gameId: wishlist.baseGame.id },
+          select: { playState: true },
+        });
+        const parentUpdate = derivePlayStateMutation(
+          parentEntry ?? { playState: "NOT_STARTED" },
+          parentRequest,
+        );
         await tx.libraryEntry.upsert({
           where: { gameId: wishlist.baseGame.id },
           create: { gameId: wishlist.baseGame.id, ...parentUpdate },

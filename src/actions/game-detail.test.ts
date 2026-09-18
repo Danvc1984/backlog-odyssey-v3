@@ -533,6 +533,7 @@ describe("updatePlayState", () => {
       async (
         fn: (client: {
           libraryEntry: {
+            findUnique: typeof mockFindUnique;
             updateMany: typeof mockUpdateMany;
             update: typeof mockTxUpdate;
           };
@@ -540,6 +541,7 @@ describe("updatePlayState", () => {
         }) => unknown,
       ) => fn({
         libraryEntry: {
+          findUnique: mockFindUnique,
           updateMany: mockUpdateMany,
           update: mockTxUpdate,
         },
@@ -555,12 +557,50 @@ describe("updatePlayState", () => {
     });
 
     expect(result.success).toBe(true);
-    expect(mockUpdate).toHaveBeenCalledWith({
+    expect(mockTxUpdate).toHaveBeenCalledWith({
       where: { gameId: "game-1" },
-      data: { playState: "IN_PROGRESS" },
+      data: { playState: "IN_PROGRESS", replayCandidate: false },
     });
-    expect(mockTransaction).not.toHaveBeenCalled();
+    expect(mockTransaction).toHaveBeenCalledOnce();
     expect(logRecommendationEvent).toHaveBeenCalledWith(prisma, { kind: "START", gameId: "game-1" });
+  });
+
+  it("preserves completion history and consumes replay when starting again", async () => {
+    mockFindUnique.mockResolvedValue({
+      playState: "COMPLETED",
+      completedBefore: false,
+      isMainGame: false,
+    });
+
+    await updatePlayState("game-1", {
+      playState: "IN_PROGRESS",
+      completedBefore: false,
+      replayCandidate: true,
+    });
+
+    expect(mockTxUpdate).toHaveBeenCalledWith({
+      where: { gameId: "game-1" },
+      data: {
+        playState: "IN_PROGRESS",
+        replayCandidate: false,
+        completedBefore: true,
+      },
+    });
+  });
+
+  it("allows an explicit prior-completion correction without changing state", async () => {
+    mockFindUnique.mockResolvedValue({
+      playState: "IN_PROGRESS",
+      completedBefore: true,
+      isMainGame: false,
+    });
+
+    await updatePlayState("game-1", { completedBefore: false });
+
+    expect(mockTxUpdate).toHaveBeenCalledWith({
+      where: { gameId: "game-1" },
+      data: { completedBefore: false },
+    });
   });
 
   it.each([
@@ -620,11 +660,11 @@ describe("updatePlayState", () => {
   it("does not clear the wallpaper pool when an already non-main game stays unset", async () => {
     await updatePlayState("game-1", { isMainGame: false });
 
-    expect(mockUpdate).toHaveBeenCalledWith({
+    expect(mockTxUpdate).toHaveBeenCalledWith({
       where: { gameId: "game-1" },
       data: { isMainGame: false },
     });
-    expect(mockTransaction).not.toHaveBeenCalled();
+    expect(mockTransaction).toHaveBeenCalledOnce();
     expect(mockWallpaperUpsert).not.toHaveBeenCalled();
   });
 
@@ -656,7 +696,7 @@ describe("updatePlayState", () => {
       hidden: true,
     });
 
-    expect(mockUpdate).toHaveBeenCalledWith({
+    expect(mockTxUpdate).toHaveBeenCalledWith({
       where: { gameId: "game-1" },
       data: { playSoon: true, replayCandidate: true, hidden: true },
     });

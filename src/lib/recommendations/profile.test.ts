@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  consolidateCompletionEvents,
   decayFactor,
   durationBand,
   eraBucket,
@@ -35,6 +36,14 @@ describe("recommendation profile math", () => {
     expect(decayFactor(180)).toBe(0.5);
     expect(decayFactor(360)).toBe(0.25);
     expect(decayFactor(180)).toBeLessThan(decayFactor(90));
+  });
+
+  it("keeps only the latest completion signal per game", () => {
+    const first = { kind: "COMPLETION" as const, gameId: "g1", createdAt: new Date("2026-01-01") };
+    const second = { kind: "COMPLETION" as const, gameId: "g1", createdAt: new Date("2026-02-01") };
+    const abandonment = { kind: "ABANDONMENT" as const, gameId: "g1", createdAt: new Date("2026-03-01") };
+
+    expect(consolidateCompletionEvents([first, second, abandonment])).toEqual([second, abandonment]);
   });
 
   it("exposes event and taste setup weights", () => {

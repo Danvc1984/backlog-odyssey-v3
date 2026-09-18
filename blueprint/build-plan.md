@@ -675,7 +675,7 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   the item from the retained batch for the same role. If that batch has no
   replacement, the slide disappears.
 
-- [ ] 30. **Current play state and prior-completion history** - use current
+- [x] 30. **Current play state and prior-completion history** - use current
   states `NOT_STARTED`, `IN_PROGRESS`, `COMPLETED`, and `ABANDONED`, with an
   independent user-editable `completedBefore` flag. No legacy-state migration
   or backward compatibility is required because the database will be rebuilt.

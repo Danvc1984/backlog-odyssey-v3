@@ -93,10 +93,12 @@ export const SYSTEM_COLLECTIONS: SystemCollectionDefinition[] = [
   },
   {
     id: "completed",
-    name: "Completed",
+    name: "Previously completed",
     icon: "CheckCircle",
     color: "#22c55e",
-    where: { playState: "COMPLETED" },
+    where: {
+      OR: [{ playState: "COMPLETED" }, { completedBefore: true }],
+    },
   },
   {
     id: "backlog",

@@ -161,7 +161,7 @@ export function LibraryHealthStrip({
       <Tile
         kind="signal"
         eyebrow="Backlog progress"
-        value={`${health.activeBacklog.completedBefore} / ${health.activeBacklog.total}`}
+        value={`${health.activeBacklog.completed} / ${health.activeBacklog.total}`}
         detail="played through"
       />
       <Tile

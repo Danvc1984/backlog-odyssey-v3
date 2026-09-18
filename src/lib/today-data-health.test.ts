@@ -33,7 +33,7 @@ describe("computeActiveBacklogProgress", () => {
       row({ id: "a", libraryEntry: { playState: "ABANDONED", interest: 3, priority: "NONE", preferredEnvironment: null, gameExperience: null } }),
       row({ id: "b", libraryEntry: { playState: "IN_PROGRESS", interest: null, priority: "NONE", preferredEnvironment: null, gameExperience: null } }),
     ];
-    expect(computeActiveBacklogProgress(rows)).toEqual({ completedBefore: 0, inProgress: 1, notStarted: 0, total: 1 });
+    expect(computeActiveBacklogProgress(rows)).toEqual({ completed: 0, inProgress: 1, notStarted: 0, total: 1 });
     expect(computeAbandonedCount(rows)).toBe(1);
   });
 
@@ -44,11 +44,20 @@ describe("computeActiveBacklogProgress", () => {
       row({ id: "c", libraryEntry: { playState: "COMPLETED", interest: null, priority: "NONE", preferredEnvironment: null, gameExperience: null } }),
       row({ id: "d", libraryEntry: { playState: "ABANDONED", interest: null, priority: "NONE", preferredEnvironment: null, gameExperience: null } }),
     ];
-    expect(computeActiveBacklogProgress(rows)).toEqual({ completedBefore: 1, inProgress: 1, notStarted: 1, total: 3 });
+    expect(computeActiveBacklogProgress(rows)).toEqual({ completed: 1, inProgress: 1, notStarted: 1, total: 3 });
+  });
+
+  it("does not count prior-only history as current progress", () => {
+    expect(
+      computeActiveBacklogProgress([
+        row({ libraryEntry: { playState: "NOT_STARTED", completedBefore: true, interest: 3, priority: "NONE", preferredEnvironment: null, gameExperience: null } }),
+        row({ libraryEntry: { playState: "COMPLETED", completedBefore: true, interest: 3, priority: "NONE", preferredEnvironment: null, gameExperience: null } }),
+      ]),
+    ).toEqual({ completed: 1, inProgress: 0, notStarted: 1, total: 2 });
   });
 
   it("returns zero totals for an empty universe", () => {
-    expect(computeActiveBacklogProgress([])).toEqual({ completedBefore: 0, inProgress: 0, notStarted: 0, total: 0 });
+    expect(computeActiveBacklogProgress([])).toEqual({ completed: 0, inProgress: 0, notStarted: 0, total: 0 });
   });
 });
 
@@ -237,7 +246,7 @@ describe("loadTodayDataHealth", () => {
       },
     });
     expect(health).toEqual({
-      activeBacklog: { completedBefore: 0, inProgress: 1, notStarted: 1, total: 2 },
+      activeBacklog: { completed: 0, inProgress: 1, notStarted: 1, total: 2 },
       abandoned: 1,
       igdbMetadata: {
         covered: 1,

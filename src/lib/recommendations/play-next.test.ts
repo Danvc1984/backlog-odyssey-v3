@@ -75,6 +75,20 @@ describe("isEligibleForPlayNext", () => {
     ).toBe(false);
   });
 
+  it("includes a prior completion replay candidate while in backlog", () => {
+    expect(
+      isEligibleForPlayNext(
+        candidate({
+          libraryEntry: {
+            ...candidate().libraryEntry!,
+            completedBefore: true,
+            replayCandidate: true,
+          },
+        }),
+      ),
+    ).toBe(true);
+  });
+
   it("includes flagged replay candidates in replayable states", () => {
     const base = candidate().libraryEntry!;
     expect(

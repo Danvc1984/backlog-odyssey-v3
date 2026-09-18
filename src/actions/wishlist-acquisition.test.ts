@@ -19,6 +19,7 @@ const mockMetadataCreate = vi.fn();
 const mockExternalCreate = vi.fn();
 const mockWishlistDelete = vi.fn();
 const mockLibraryUpsert = vi.fn();
+const mockLibraryFindUnique = vi.fn();
 const mockAltFind = vi.fn();
 const mockAltCreate = vi.fn();
 const transaction = vi.fn();
@@ -69,7 +70,10 @@ beforeEach(() => {
       },
       game: { create: mockGameCreate },
       metadataSnapshot: { create: mockMetadataCreate },
-      libraryEntry: { upsert: mockLibraryUpsert },
+      libraryEntry: {
+        upsert: mockLibraryUpsert,
+        findUnique: mockLibraryFindUnique,
+      },
       alternativeSource: {
         findUnique: mockAltFind,
         create: mockAltCreate,
@@ -83,6 +87,7 @@ beforeEach(() => {
   mockExternalCreate.mockResolvedValue({ id: "external-new" });
   mockWishlistDelete.mockResolvedValue({ id: "wish-1" });
   mockLibraryUpsert.mockResolvedValue({ id: "library-parent" });
+  mockLibraryFindUnique.mockResolvedValue(null);
   mockAltFind.mockResolvedValue(null);
   mockAltCreate.mockResolvedValue({ id: "unsource-1" });
 });
@@ -222,8 +227,8 @@ describe("acquireWishlistDlc", () => {
     expect(mockGameCreate.mock.calls[0][0].data).not.toHaveProperty("libraryEntry");
     expect(mockLibraryUpsert).toHaveBeenCalledWith({
       where: { gameId: "base-1" },
-      create: { gameId: "base-1", playState: "IN_PROGRESS", replayCandidate: true },
-      update: { playState: "IN_PROGRESS", replayCandidate: true },
+      create: { gameId: "base-1", playState: "IN_PROGRESS", replayCandidate: false },
+      update: { playState: "IN_PROGRESS", replayCandidate: false },
     });
     expect(mockWishlistDelete).toHaveBeenCalledWith({ where: { id: "wish-1" } });
   });

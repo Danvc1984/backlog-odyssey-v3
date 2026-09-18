@@ -24,6 +24,7 @@ type SideChoice = { side: "a" | "b" };
 
 const PERSONAL_FIELD_LABELS: Record<PersonalFieldName, string> = {
   playState: "Play state",
+  completedBefore: "Completed before",
   isMainGame: "Main game",
   priority: "Priority",
   interest: "Interest",

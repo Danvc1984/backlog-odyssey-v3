@@ -42,7 +42,7 @@ export function TodayDataHealth({
       <div>
         <p className="technical-label text-muted-foreground">Backlog progress</p>
         <p className="mt-2 text-3xl font-bold tracking-tight">
-          {activeBacklog.completedBefore} / {activeBacklog.total}
+          {activeBacklog.completed} / {activeBacklog.total}
         </p>
         <p className="mt-1 text-xs text-muted-foreground">played through</p>
       </div>

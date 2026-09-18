@@ -184,78 +184,13 @@ describe("export document schema", () => {
     expect(wishlistSchema.parse([wishlistEntry])).toEqual([wishlistEntry]);
   });
 
-  it("maps a version 1 environment into the current settings shape", () => {
-    const legacyEntry = {
-      id: "l1",
-      gameId: "g1",
-      playState: "NOT_STARTED",
-      isMainGame: false,
-      priority: null,
-      interest: null,
-      rating: null,
-      preferredEnvironment: "BAZZITE",
-      gameExperience: null,
-      compatOverrideStatus: null,
-      compatOverrideReason: null,
-      playSoon: false,
-      replayCandidate: false,
-      hidden: false,
-      notes: null,
-      createdAt: now,
-      updatedAt: now,
-    };
-    const legacyData = {
-      settings: {
-        id: 1,
-        theme: "SYSTEM",
-        desktopOs: "BAZZITE",
-        portableDevice: "STEAM_DECK",
-        fallbackOs: "WINDOWS",
-        priceCountry: "MX",
-        timeZone: "America/Mexico_City",
-        wallpaperEnabled: true,
-        reducedData: false,
-        steamDailySyncEnabled: true,
-        itadDailyRefresh: true,
-        createdAt: now,
-        updatedAt: now,
-      },
-      games: [],
-      libraryEntries: [legacyEntry],
-      availability: [],
-      externalIds: [],
-      alternativeSources: [],
-      tags: [],
-      gameTags: [],
-      collections: [],
-      collectionMemberships: [],
-      wishlist: [],
-      unresolvedDlc: [],
-      wishlistImportReviews: [],
-      wishlistImportIgnores: [],
-      possibleDuplicates: [],
-      recommendations: {
-        runs: [],
-        items: [],
-        feedback: [],
-        events: [],
-        profile: null,
-        preferences: [],
-        tuneState: null,
-        presets: [],
-      },
-    };
-
-    const parsed = exportDocumentSchema.parse({ version: 1, exportedAt: now, data: legacyData });
-    expect(parsed.version).toBe(3);
-    expect(parsed.data.settings).toMatchObject({
-      primaryOs: "LINUX",
-      hasWindowsFallback: true,
-      handheldOs: "LINUX",
-      onboardingCompleted: true,
-      durationProfile: "NORMALLY",
-    });
-    expect(parsed.data.libraryEntries[0].preferredEnvironment).toBe("LINUX");
-    expect(parsed.data.libraryEntries[0].handheldSuitable).toBeUndefined();
+  it("rejects legacy export versions instead of migrating play states", () => {
+    expect(() =>
+      exportDocumentSchema.parse({
+        version: 1,
+        exportedAt: now,
+        data: { settings: null, games: [], libraryEntries: [] },
+      }),
+    ).toThrow();
   });
 });
