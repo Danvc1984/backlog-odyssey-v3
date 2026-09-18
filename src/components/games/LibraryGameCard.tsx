@@ -3,6 +3,9 @@ import { formatDescriptionPreview } from "@/lib/cover-presentation";
 import { WishlistCover } from "@/components/wishlist/WishlistCover";
 import { LibraryInterestRating } from "./LibraryInterestRating";
 import { ProtonDbTag } from "./ProtonDbTag";
+import { DeleteGameDialog } from "./DeleteGameDialog";
+import { SourceIcon } from "@/components/sources/SourceIcon";
+import { availabilitySourcePresentation } from "@/lib/sources/known-sources";
 import type { CompatTag } from "@/lib/protondb-tags";
 import type { LibraryCardMetadataView } from "@/lib/card-metadata-view";
 
@@ -22,7 +25,8 @@ export interface LibraryGameCardEntry {
     type: string;
     baseGame: { id: string; name: string } | null;
     metadata: LibraryCardMetadataView | null;
-    _count: { dlcs: number; collections: number };
+    _count: { dlcs: number; tags: number };
+    tags: { name: string }[];
     availability: {
       id: string;
       source: "STEAM" | "OTHER_PLATFORM" | "ROM";
@@ -84,34 +88,17 @@ function MockActions({ gameId }: { gameId: string }) {
       >
         Change state
       </Link>
+      <DeleteGameDialog gameId={gameId} />
     </div>
   );
 }
 
 function CardMeta({ entry }: { entry: LibraryGameCardEntry }) {
-  const notEmpty: string[] = [];
-  if (entry.game.type === "BASE_GAME" && entry.game._count.dlcs > 0) {
-    notEmpty.push(`${entry.game._count.dlcs} DLC`);
-  }
-  if (entry.game._count.collections > 0) {
-    notEmpty.push(
-      `${entry.game._count.collections} ${entry.game._count.collections === 1 ? "collection" : "collections"}`,
-    );
-  }
-
-  const counts =
-    notEmpty.length > 0 ? (
-      <span
-        className="technical-label truncate text-muted-foreground"
-        title={notEmpty.join(" · ")}
-      >
-        {notEmpty.join(" · ")}
-      </span>
-    ) : null;
+  if (entry.game.type !== "BASE_GAME" || entry.game._count.dlcs === 0) return null;
 
   return (
-    <span className="flex min-w-0 items-center gap-2">
-      {counts}
+    <span className="technical-label truncate text-muted-foreground" title={`${entry.game._count.dlcs} DLC`}>
+      {entry.game._count.dlcs} DLC
     </span>
   );
 }
@@ -126,6 +113,8 @@ function CardDetails({
   metacriticScore,
   playtimeHours,
   esrbName,
+  personalTags,
+  availability,
   listView,
 }: {
   descriptionPreview: string | null;
@@ -137,15 +126,20 @@ function CardDetails({
   metacriticScore: number | null;
   playtimeHours: number | null;
   esrbName: string | null;
+  personalTags: string[];
+  availability: LibraryGameCardEntry["game"]["availability"];
   listView: boolean;
 }) {
   const releaseYear = releaseDate?.slice(0, 4);
   const stats = [
     rating === null ? null : `IGDB total ${rating.toFixed(1)}`,
     metacriticScore === null ? null : `MC ${metacriticScore}`,
-    playtimeHours === null ? null : formatPlaytime(playtimeHours),
     esrbName ? `ESRB ${esrbName}` : null,
   ].filter((value): value is string => value !== null);
+  const platforms = availability.map((platform) => ({
+    ...availabilitySourcePresentation(platform.source, platform.alternativeSource?.name ?? null),
+    key: platform.id,
+  }));
 
   return (
     <div className={listView ? "mt-2 flex flex-wrap items-center gap-x-2 gap-y-1" : "mt-4 space-y-3"}>
@@ -163,20 +157,29 @@ function CardDetails({
           IGDB metadata is not available yet. Use Edit to search and choose a match.
         </p>
       )}
-      {genres.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
+      {(genres.length > 0 || personalTags.length > 0 || playtimeHours !== null || platforms.length > 0) && (
+        <div className="flex flex-wrap items-center gap-1.5">
           {genres.slice(0, 3).map((genre) => (
-            <span key={genre} className="rounded-md border border-border px-2 py-0.5 text-xs">
+            <span key={`genre-${genre}`} className="rounded-md border border-border px-2 py-0.5 text-xs">
               {genre}
             </span>
           ))}
-        </div>
-      )}
-      {!listView && playtimeHours !== null && (
-        <div className="flex flex-wrap gap-1.5">
-          <span className="rounded-md border border-border px-2 py-0.5 text-xs">
-            {formatPlaytime(playtimeHours)}
-          </span>
+          {personalTags.map((tag) => (
+            <span key={`tag-${tag}`} className="rounded-md border border-signal/30 bg-signal/5 px-2 py-0.5 text-xs text-signal-strong">
+              {tag}
+            </span>
+          ))}
+          {playtimeHours !== null && (
+            <span className="rounded-md border border-border px-2 py-0.5 text-xs">
+              {formatPlaytime(playtimeHours)}
+            </span>
+          )}
+          {platforms.map((platform) => (
+            <span key={platform.key} className="inline-flex items-center gap-1.5 rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground">
+              <SourceIcon iconName={platform.iconName} brandIcon={platform.brandIcon} />
+              <span>{platform.label}</span>
+            </span>
+          ))}
         </div>
       )}
       {listView && (developers.length > 0 || releaseYear || stats.length > 0) && (
@@ -218,7 +221,7 @@ function CardBody({
       )}
       {includeControls && (
         <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <div className="flex min-w-0 flex-col items-start gap-1">
             <LibraryInterestRating
               gameId={entry.game.id}
               gameName={entry.game.name}
@@ -239,6 +242,8 @@ function CardBody({
         metacriticScore={meta.metacriticScore}
         playtimeHours={meta.playtimeHours}
         esrbName={meta.esrbName}
+        personalTags={entry.game.tags.map((tag) => tag.name)}
+        availability={entry.game.availability}
         listView={variant === "list"}
       />
       <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-2">
@@ -269,12 +274,14 @@ export function LibraryGameCard({
                   {entry.game.name}
                 </Link>
               </h3>
-              <LibraryInterestRating
-                gameId={entry.game.id}
-                gameName={entry.game.name}
-                interest={entry.interest}
-              />
-              {entry.compatTag && <ProtonDbTag tag={entry.compatTag} />}
+              <div className="flex flex-col items-start gap-1">
+                <LibraryInterestRating
+                  gameId={entry.game.id}
+                  gameName={entry.game.name}
+                  interest={entry.interest}
+                />
+                {entry.compatTag && <ProtonDbTag tag={entry.compatTag} />}
+              </div>
             </div>
             <div className="shrink-0">
               <MockActions gameId={entry.game.id} />

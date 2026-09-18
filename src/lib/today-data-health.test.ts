@@ -33,7 +33,7 @@ describe("computeActiveBacklogProgress", () => {
       row({ id: "a", libraryEntry: { playState: "ABANDONED", interest: 3, priority: "NONE", preferredEnvironment: null, gameExperience: null } }),
       row({ id: "b", libraryEntry: { playState: "IN_PROGRESS", interest: null, priority: "NONE", preferredEnvironment: null, gameExperience: null } }),
     ];
-    expect(computeActiveBacklogProgress(rows)).toEqual({ playedBefore: 0, inProgress: 1, notStarted: 0, total: 1 });
+    expect(computeActiveBacklogProgress(rows)).toEqual({ completedBefore: 0, inProgress: 1, notStarted: 0, total: 1 });
     expect(computeAbandonedCount(rows)).toBe(1);
   });
 
@@ -41,14 +41,14 @@ describe("computeActiveBacklogProgress", () => {
     const rows = [
       row({ id: "a" }),
       row({ id: "b", libraryEntry: { playState: "IN_PROGRESS", interest: null, priority: "NONE", preferredEnvironment: null, gameExperience: null } }),
-      row({ id: "c", libraryEntry: { playState: "PLAYED_BEFORE", interest: null, priority: "NONE", preferredEnvironment: null, gameExperience: null } }),
+      row({ id: "c", libraryEntry: { playState: "COMPLETED", interest: null, priority: "NONE", preferredEnvironment: null, gameExperience: null } }),
       row({ id: "d", libraryEntry: { playState: "ABANDONED", interest: null, priority: "NONE", preferredEnvironment: null, gameExperience: null } }),
     ];
-    expect(computeActiveBacklogProgress(rows)).toEqual({ playedBefore: 1, inProgress: 1, notStarted: 1, total: 3 });
+    expect(computeActiveBacklogProgress(rows)).toEqual({ completedBefore: 1, inProgress: 1, notStarted: 1, total: 3 });
   });
 
   it("returns zero totals for an empty universe", () => {
-    expect(computeActiveBacklogProgress([])).toEqual({ playedBefore: 0, inProgress: 0, notStarted: 0, total: 0 });
+    expect(computeActiveBacklogProgress([])).toEqual({ completedBefore: 0, inProgress: 0, notStarted: 0, total: 0 });
   });
 });
 
@@ -153,7 +153,7 @@ describe("computeProfileCoverage", () => {
   it("counts NONE priority and rating as contributing nothing", () => {
     const rows = [
       row({ id: "a", libraryEntry: { playState: "IN_PROGRESS", interest: 5, priority: "NONE", preferredEnvironment: null, gameExperience: null } }),
-      row({ id: "b", libraryEntry: { playState: "PLAYED_BEFORE", interest: null, priority: "HIGH", preferredEnvironment: null, gameExperience: null } }),
+      row({ id: "b", libraryEntry: { playState: "COMPLETED", interest: null, priority: "HIGH", preferredEnvironment: null, gameExperience: null } }),
     ];
     expect(computeProfileCoverage(rows)).toEqual({ complete: 0, total: 2, incomplete: [{ id: "a", name: "Game 1" }, { id: "b", name: "Game 1" }] });
   });
@@ -223,6 +223,7 @@ describe("loadTodayDataHealth", () => {
         libraryEntry: {
           select: {
             playState: true,
+            completedBefore: true,
             interest: true,
             priority: true,
             preferredEnvironment: true,
@@ -236,7 +237,7 @@ describe("loadTodayDataHealth", () => {
       },
     });
     expect(health).toEqual({
-      activeBacklog: { playedBefore: 0, inProgress: 1, notStarted: 1, total: 2 },
+      activeBacklog: { completedBefore: 0, inProgress: 1, notStarted: 1, total: 2 },
       abandoned: 1,
       igdbMetadata: {
         covered: 1,

@@ -12,7 +12,7 @@ const now = "2026-09-04T12:00:00.000Z";
 
 function minimalDocument(): ExportDocument {
   return {
-    version: 2,
+    version: 3,
     exportedAt: now,
     data: {
       settings: null,
@@ -195,6 +195,7 @@ describe("restoreExportDocument", () => {
         id: "l1",
         gameId: "g1",
         playState: "NOT_STARTED",
+        completedBefore: false,
         isMainGame: false,
         priority: "NONE",
         interest: null,
@@ -207,7 +208,6 @@ describe("restoreExportDocument", () => {
         playSoon: false,
         replayCandidate: false,
         hidden: false,
-        notes: null,
         createdAt: now,
         updatedAt: now,
       },
@@ -215,6 +215,7 @@ describe("restoreExportDocument", () => {
         id: "l2",
         gameId: "g2",
         playState: "NOT_STARTED",
+        completedBefore: false,
         isMainGame: false,
         priority: "NONE",
         interest: null,
@@ -226,7 +227,6 @@ describe("restoreExportDocument", () => {
         playSoon: false,
         replayCandidate: false,
         hidden: false,
-        notes: null,
         createdAt: now,
         updatedAt: now,
       },
@@ -255,11 +255,13 @@ describe("restoreExportDocument", () => {
     ];
     doc.data.tags = [{ id: "tag1", name: "Puzzle" }];
     doc.data.collections = [{ id: "col1", name: "Favorites", color: null, icon: null, isSystem: false, createdAt: now }];
+    doc.data.collectionMemberships = [{ collectionId: "col1", gameId: "base1", addedAt: now }];
     doc.data.libraryEntries = [
       {
         id: "l1",
         gameId: "base1",
         playState: "NOT_STARTED",
+        completedBefore: false,
         isMainGame: false,
         priority: "NONE",
         interest: null,
@@ -271,7 +273,6 @@ describe("restoreExportDocument", () => {
         playSoon: false,
         replayCandidate: false,
         hidden: false,
-        notes: null,
         createdAt: now,
         updatedAt: now,
       },
@@ -280,7 +281,7 @@ describe("restoreExportDocument", () => {
       { id: "e1", namespaceId: "s", namespace: "STEAM_APP", externalId: "620", matchMethod: "EXACT_STEAM_APP_ID", gameId: "base1" },
     ];
     doc.data.availability = [
-      { id: "a1", gameId: "base1", source: "STEAM", alternativeSourceId: "alt1", displayName: null, steamAppId: "620", steamPlaytimeTotal: null, steamLastPlayed: null, addedAt: now },
+      { id: "a1", gameId: "base1", source: "STEAM", alternativeSourceId: "alt1", steamAppId: "620", steamPlaytimeTotal: null, steamLastPlayed: null, addedAt: now },
     ];
     doc.data.recommendations.runs = [{ id: "r1", kind: "PLAY_NEXT", context: null, createdAt: now }];
     doc.data.recommendations.items = [
@@ -294,10 +295,11 @@ describe("restoreExportDocument", () => {
       "game",
       "alternativeSource",
       "personalTag",
-      "collection",
+      "personalTag",
       "libraryEntry",
       "externalGameId",
       "gameAvailability",
+      "gameTag",
       "recommendationRun",
       "recommendationItem",
     ]);
@@ -308,6 +310,9 @@ describe("restoreExportDocument", () => {
     expect(firstData.map((r) => r.id)).toEqual(["base2", "base1"]);
     expect(secondData.map((r) => r.id)).toEqual(["dlc2", "dlc1"]);
     expect(counts.games).toBe(4);
+    expect(counts.tags).toBe(2);
+    expect(counts.gameTags).toBe(1);
+    expect(counts.collectionMemberships).toBe(0);
     expect(counts.libraryEntries).toBe(1);
     expect(counts.recommendationRuns).toBe(1);
     expect(counts.recommendationItems).toBe(1);
@@ -354,7 +359,7 @@ describe("restoreExportDocument", () => {
     const { db, callOrder } = mockTxDb();
     const doc = minimalDocument();
     doc.data.wishlist = [
-      { id: "w1", name: "Elden Ring", type: "BASE_GAME", baseGameId: null, interest: 5, gameExperience: null, targetPriceMxn: "899.00", notes: null, steamAppId: "1245620", steamAppIdProvenance: "STEAM_IMPORT", createdAt: now, updatedAt: now },
+      { id: "w1", name: "Elden Ring", type: "BASE_GAME", baseGameId: null, interest: 5, gameExperience: null, targetPriceMxn: "899.00", steamAppId: "1245620", steamAppIdProvenance: "STEAM_IMPORT", createdAt: now, updatedAt: now },
     ];
     doc.data.unresolvedDlc = [
       { id: "u1", steamAppId: "1000", name: "DLC", steamBaseAppId: null, source: "OWNED_SYNC", status: "PENDING", discardedAt: null, createdAt: now, updatedAt: now },
@@ -411,6 +416,7 @@ describe("restoreExportDocument", () => {
         id: "l1",
         gameId: "base1",
         playState: "NOT_STARTED",
+        completedBefore: false,
         isMainGame: false,
         priority: "NONE",
         interest: null,
@@ -422,7 +428,6 @@ describe("restoreExportDocument", () => {
         playSoon: false,
         replayCandidate: false,
         hidden: false,
-        notes: null,
         createdAt: now,
         updatedAt: now,
       },

@@ -22,7 +22,6 @@ const updatePersonalFieldsSchema = z.object({
     .optional()
     .nullable(),
   handheldSuitable: z.boolean().optional().nullable(),
-  notes: z.string().optional().nullable(),
 });
 
 export type UpdatePersonalFieldsInput = z.infer<
@@ -52,7 +51,6 @@ export async function updatePersonalFields(
         }),
         ...(data.gameExperience !== undefined && { gameExperience: data.gameExperience }),
         ...(data.handheldSuitable !== undefined && { handheldSuitable: data.handheldSuitable }),
-        ...(data.notes !== undefined && { notes: data.notes }),
       },
     });
 
@@ -104,7 +102,6 @@ export async function updateGameName(
 const updateGameAvailabilitySchema = z
   .object({
     source: z.enum(["STEAM", "OTHER_PLATFORM", "ROM"]).optional(),
-    displayName: z.string().trim().max(200).nullable().optional(),
   })
   .strict();
 
@@ -174,9 +171,6 @@ export async function updateGameAvailability(
         where: { id: availabilityId },
         data: {
           ...(parsed.data.source !== undefined && { source: parsed.data.source }),
-          ...(parsed.data.displayName !== undefined && {
-            displayName: parsed.data.displayName,
-          }),
           alternativeSourceId,
         },
       });
@@ -358,12 +352,13 @@ export async function removeGameAvailability(availabilityId: string) {
 
 const updatePlayStateSchema = z.object({
   playState: z
-    .enum(["NOT_STARTED", "IN_PROGRESS", "PLAYED_BEFORE", "ABANDONED"])
+    .enum(["NOT_STARTED", "IN_PROGRESS", "COMPLETED", "ABANDONED"])
     .optional(),
   isMainGame: z.boolean().optional(),
   playSoon: z.boolean().optional(),
   replayCandidate: z.boolean().optional(),
   hidden: z.boolean().optional(),
+  completedBefore: z.boolean().optional(),
 });
 
 export type UpdatePlayStateInput = z.infer<typeof updatePlayStateSchema>;
@@ -382,7 +377,7 @@ export async function updatePlayState(
     const data = parsed.data;
     const current = await prisma.libraryEntry.findUnique({
       where: { gameId },
-      select: { playState: true, isMainGame: true },
+      select: { playState: true, completedBefore: true, isMainGame: true },
     });
     if (!current) {
       throw new ActionError("Library entry not found");
@@ -395,6 +390,7 @@ export async function updatePlayState(
         replayCandidate: data.replayCandidate,
       }),
       ...(data.hidden !== undefined && { hidden: data.hidden }),
+      ...(data.completedBefore !== undefined && { completedBefore: data.completedBefore }),
       ...(data.isMainGame !== undefined && { isMainGame: data.isMainGame }),
     };
     const shouldClearWallpaper =
@@ -472,8 +468,8 @@ async function clearWallpaperPool(
 }
 
 async function logPlayStateEvent(
-  previous: "NOT_STARTED" | "IN_PROGRESS" | "PLAYED_BEFORE" | "ABANDONED",
-  next: "NOT_STARTED" | "IN_PROGRESS" | "PLAYED_BEFORE" | "ABANDONED" | undefined,
+  previous: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "ABANDONED",
+  next: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "ABANDONED" | undefined,
   gameId: string,
 ) {
   if (next === undefined) return;
@@ -491,6 +487,8 @@ const addTagToGameSchema = z.object({
 });
 
 export type AddTagToGameInput = z.infer<typeof addTagToGameSchema>;
+
+const tagIdSchema = z.string().trim().min(1, "Tag is required");
 
 export async function addTagToGame(gameId: string, input: AddTagToGameInput) {
   try {
@@ -523,6 +521,32 @@ export async function addTagToGame(gameId: string, input: AddTagToGameInput) {
       success: false as const,
       data: null,
       error: friendlyActionError(err, "Failed to add tag"),
+    };
+  }
+}
+
+export async function removeTagFromGame(gameId: string, tagId: string) {
+  try {
+    await requireUser();
+    const parsedGameId = z.string().trim().min(1).safeParse(gameId);
+    const parsedTagId = tagIdSchema.safeParse(tagId);
+    if (!parsedGameId.success || !parsedTagId.success) {
+      return { success: false as const, data: null, error: "Invalid input" };
+    }
+
+    await prisma.gameTag.deleteMany({
+      where: { gameId: parsedGameId.data, tagId: parsedTagId.data },
+    });
+    return {
+      success: true as const,
+      data: { gameId: parsedGameId.data, tagId: parsedTagId.data },
+      error: null,
+    };
+  } catch (err) {
+    return {
+      success: false as const,
+      data: null,
+      error: friendlyActionError(err, "Failed to remove tag"),
     };
   }
 }

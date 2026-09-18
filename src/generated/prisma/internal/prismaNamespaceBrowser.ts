@@ -68,8 +68,6 @@ export const ModelName = {
   EnrichmentJob: 'EnrichmentJob',
   PersonalTag: 'PersonalTag',
   GameTag: 'GameTag',
-  Collection: 'Collection',
-  CollectionMembership: 'CollectionMembership',
   LibraryEntry: 'LibraryEntry',
   AlternativeSource: 'AlternativeSource',
   GameAvailability: 'GameAvailability',
@@ -340,31 +338,11 @@ export const GameTagScalarFieldEnum = {
 export type GameTagScalarFieldEnum = (typeof GameTagScalarFieldEnum)[keyof typeof GameTagScalarFieldEnum]
 
 
-export const CollectionScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  color: 'color',
-  icon: 'icon',
-  isSystem: 'isSystem',
-  createdAt: 'createdAt'
-} as const
-
-export type CollectionScalarFieldEnum = (typeof CollectionScalarFieldEnum)[keyof typeof CollectionScalarFieldEnum]
-
-
-export const CollectionMembershipScalarFieldEnum = {
-  collectionId: 'collectionId',
-  gameId: 'gameId',
-  addedAt: 'addedAt'
-} as const
-
-export type CollectionMembershipScalarFieldEnum = (typeof CollectionMembershipScalarFieldEnum)[keyof typeof CollectionMembershipScalarFieldEnum]
-
-
 export const LibraryEntryScalarFieldEnum = {
   id: 'id',
   gameId: 'gameId',
   playState: 'playState',
+  completedBefore: 'completedBefore',
   isMainGame: 'isMainGame',
   priority: 'priority',
   interest: 'interest',
@@ -377,7 +355,6 @@ export const LibraryEntryScalarFieldEnum = {
   playSoon: 'playSoon',
   replayCandidate: 'replayCandidate',
   hidden: 'hidden',
-  notes: 'notes',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -403,7 +380,6 @@ export const GameAvailabilityScalarFieldEnum = {
   gameId: 'gameId',
   source: 'source',
   alternativeSourceId: 'alternativeSourceId',
-  displayName: 'displayName',
   steamAppId: 'steamAppId',
   steamPlaytimeTotal: 'steamPlaytimeTotal',
   steamLastPlayed: 'steamLastPlayed',
@@ -422,7 +398,6 @@ export const WishlistEntryScalarFieldEnum = {
   gameExperience: 'gameExperience',
   handheldSuitable: 'handheldSuitable',
   targetPriceMxn: 'targetPriceMxn',
-  notes: 'notes',
   steamAppId: 'steamAppId',
   steamAppIdProvenance: 'steamAppIdProvenance',
   createdAt: 'createdAt',

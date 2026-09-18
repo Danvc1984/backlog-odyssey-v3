@@ -39,7 +39,6 @@ interface WishlistCardProps {
     interest: number | null;
     gameExperience: string | null;
     handheldSuitable: boolean | null;
-    notes: string | null;
     offerView: WishlistOffersView;
     compatTag: CompatTag;
     steamAppId: string | null;
@@ -86,7 +85,7 @@ export function WishlistCard({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-3 p-4 pb-2">
-            <div className="flex min-w-0 flex-wrap items-center gap-3">
+            <div className="flex min-w-0 flex-col items-start gap-1">
               <h2 className="min-w-0 text-base font-bold leading-snug tracking-[-0.02em]">
                 <Link href={`/wishlist/${entry.id}`} className="hover:underline">
                   {coverTitle}
@@ -170,7 +169,7 @@ export function WishlistCard({
       <div className="flex min-w-0 flex-1 flex-col p-4">
         <div className="flex items-center justify-between gap-3">
           <h2 className="sr-only">{entry.name}</h2>
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <div className="flex min-w-0 flex-col items-start gap-1">
             <WishlistInterestRating
               entryId={entry.id}
               entryName={entry.name}
@@ -248,7 +247,6 @@ export function WishlistCard({
           </div>
         )}
 
-        {entry.notes && <p className="text-sm text-muted-foreground">{entry.notes}</p>}
       </div>
     </article>
   );

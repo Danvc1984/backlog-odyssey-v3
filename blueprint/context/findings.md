@@ -23,21 +23,21 @@
 **Suggested fix:** Preserve the last usable cache, distinguish fresh-empty from stale-on-error, and present retry or sync guidance inside the activity section.
 **Resolution:** Activity refreshes now record unexpected provider exceptions as stale-on-error while retaining the last cached entries; focused tests cover the thrown-provider-failure path.
 
-### F-03 [P3] unverified - Wallhaven does not find imagery for Horizon Zero Dawn Remastered
+### F-03 [P3] fixed - Wallhaven does not find imagery for Horizon Zero Dawn Remastered
 
 **Area:** Wallhaven wallpaper matching
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** A known catalog title produces no expected wallpaper candidates.
 **Suggested fix:** Inspect query normalization, title variants, provider responses, and fallback behavior before changing the matching strategy.
-**Resolution:**
+**Resolution:** Wallhaven refresh now retries recognized edition-title suffixes using the base title only after the original query has no results. Focused tests cover the Horizon Zero Dawn Remastered fallback.
 
-### F-04 [P3] unverified - Series and franchise shelves appear limited to about five results
+### F-04 [P3] fixed - Series and franchise shelves appear limited to about five results
 
 **Area:** Collections calculated IGDB shelves
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** The Collections page may be truncating or failing to derive shelves from available library metadata.
 **Suggested fix:** Compare enriched library evidence with the shelf query and UI limits, then fix only if eligible series or franchises are omitted.
-**Resolution:**
+**Resolution:** Confirmed calculated shelf derivation has no five-result cap. Focused coverage now proves all seven distinct eligible series are returned.
 
 ### F-05 [P2] fixed - Compatibility is duplicated and its target platform is unclear
 
@@ -95,13 +95,13 @@
 **Suggested fix:** Start Tune collapsed with no active filters, selected checkboxes, or non-neutral choices; loading a preset remains an explicit action.
 **Resolution:** Tune remains collapsed by default with a neutral empty context; active tab-local choices and explicit preset loading are preserved.
 
-### F-12 [P3] open - Recommendation profile exposes raw implementation details
+### F-12 [P3] fixed - Recommendation profile exposes raw implementation details
 
 **Area:** Settings recommendation profile
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** Rebuild timestamps, raw event names, event counts, and unresolved-target counts obscure useful profile health.
 **Suggested fix:** Replace raw diagnostics with a clear health indicator and next actions; place era, tag, and other learned signals in collapsed disclosures.
-**Resolution:**
+**Resolution:** Settings now shows owner-facing profile health and next actions, while learned signals are behind an accessible collapsed disclosure without rebuild timestamps, event names, counts, or unresolved-target totals.
 
 ### F-13 [P3] fixed - Wishlist detail actions and offer hero lack focus
 
@@ -135,37 +135,37 @@
 **Suggested fix:** Clean up the Wishlist add form using the Library form's composition without adding catalog-only availability to wishes. Separately, align Interest with Availability in the Add Game form where responsive space permits.
 **Resolution:** Grouped Wishlist type and interest controls responsively, expanded the modal fields, changed Add Game availability to a dropdown containing only Steam, ROM, and active Settings sources, and removed the Add Game display-name field without adding availability to Wishlist.
 
-### F-17 [P2] open - Availability administration and destructive actions have weak navigation boundaries
+### F-17 [P2] fixed - Availability administration and destructive actions have weak navigation boundaries
 
 **Area:** Library cards and game-detail availability
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** Common per-game actions take unnecessary navigation, while reusable source administration appears in the wrong context.
 **Suggested fix:** Add Library-card overflow actions for Edit availability and Delete; keep reusable-source create/rename/archive in Settings and link there from detail availability.
-**Resolution:** Planned in feature 30.
+**Resolution:** Library cards now expose availability and delete actions, while game availability links reusable-source administration to Settings and no longer creates sources in place.
 
-### F-18 [P2] open - Per-game availability display labels duplicate source identity
+### F-18 [P2] fixed - Per-game availability display labels duplicate source identity
 
 **Area:** Availability data model and all availability surfaces
 **Found:** 2026-09-15 by owner decision (planning triage)
 **Why it matters:** Two names for one reusable source create inconsistent labels and unnecessary form, migration, export, and rendering paths.
 **Suggested fix:** Remove the display-label field from the schema and every contract, use the reusable source's canonical name, and discard legacy labels during migration/import.
-**Resolution:** Planned in feature 30.
+**Resolution:** Removed `displayName` from the Prisma model, migration, validation, actions, forms, merge planning, and export/import contract. Availability uses the reusable source name.
 
-### F-19 [P2] open - Catalog and wishlist notes are no longer part of the product
+### F-19 [P2] fixed - Catalog and wishlist notes are no longer part of the product
 
 **Area:** LibraryEntry, WishlistEntry, forms, details, acquisition, and export/import
 **Found:** 2026-09-15 by owner decision (planning triage)
 **Why it matters:** Retaining an intentionally removed field increases UI density and leaves unsupported personal data contracts.
 **Suggested fix:** Remove notes from the data model and every read/write/transfer/export path, with an explicit migration and legacy-import policy.
-**Resolution:** Planned in feature 30.
+**Resolution:** Removed catalog and wishlist notes from the Prisma model, migration, actions, forms, details, imports, exports, and acquisition paths. Legacy import values are discarded.
 
-### F-20 [P3] open - Game-detail personal fields use too much space
+### F-20 [P3] fixed - Game-detail personal fields use too much space
 
 **Area:** Game detail personal controls
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** Persistent descriptions and one-input-per-row composition overwhelm the retained controls.
 **Suggested fix:** Use compact responsive groups and accessible information controls for optional explanations, preserving breathing room only where needed.
-**Resolution:** Planned in feature 30.
+**Resolution:** Removed the retired notes control, compacted the personal profile surface, and replaced the permanent source helper with a Settings link.
 
 ### F-21 [P3] fixed - Detail artwork carousels are slow and lack fullscreen viewing
 
@@ -175,34 +175,34 @@
 **Suggested fix:** Modestly increase carousel movement speed and add an accessible fullscreen viewer with contain-aware framing, keyboard controls, and reduced-motion behavior.
 **Resolution:** Fixed on `fix/wishlist-detail-purchase-flow-and-artwork`: shared detail artwork now advances faster and opens in an accessible contain-aware fullscreen viewer with keyboard controls and reduced-data behavior.
 
-### F-22 [P2] open - Tags and manual collections duplicate personal grouping
+### F-22 [P2] fixed - Tags and manual collections duplicate personal grouping
 
 **Area:** Data model, Collections, Library filters, and game detail
 **Found:** 2026-09-15 by owner decision (planning triage)
 **Why it matters:** Two overlapping manual grouping systems create redundant editing and unclear ownership of shelves.
 **Suggested fix:** Make tags the sole manual grouping model, generate a shelf per tag, migrate manual collections into tags, support multiple tags per game, and remove the separate detail collection editor.
-**Resolution:** Planned in feature 31.
+**Resolution:** Migrated editable collection memberships into normalized personal tags, removed the manual collection models and editors, generated read-only tag shelves, and kept calculated shelves intact.
 
-### F-23 [P2] open - Personal tags cannot explicitly tune recommendations
+### F-23 [P2] fixed - Personal tags cannot explicitly tune recommendations
 
 **Area:** Tune More filters and recommendation run context
 **Found:** 2026-09-15 by owner report (planning triage)
 **Why it matters:** Owner-defined groupings cannot currently influence a requested recommendation run independently from provider metadata.
 **Suggested fix:** Add inactive-by-default personal-tag targets as a soft capped any-match boost, distinct from IGDB genres/themes/keywords and covered by presets and explanations.
-**Resolution:** Planned in feature 31.
+**Resolution:** Added inactive-by-default personal-tag tune targets with distinct any-match soft boosts, persisted them through presets and run context, and included them in export/import.
 
-### F-24 [P2] open - PLAYED_BEFORE conflates current state with completion history
+### F-24 [P2] fixed - PLAYED_BEFORE conflates current state with completion history
 
 **Area:** LibraryEntry play state, shelves, recommendations, taste setup, and export/import
 **Found:** 2026-09-15 by owner decision (planning triage)
 **Why it matters:** A replay cannot truthfully be both currently in progress and previously completed when prior completion is encoded as the current state.
 **Suggested fix:** Replace `PLAYED_BEFORE` with current `COMPLETED` state plus an independent `playedBefore` checkbox, migrate existing rows, and prevent replay history from being double-counted.
-**Resolution:** Planned in feature 32.
+**Resolution:** Retired `PLAYED_BEFORE`, added current `COMPLETED` plus independent `completedBefore`, migrated legacy rows, updated state controls and recommendation eligibility, and preserved replay completion history without double-counting.
 
-### F-25 [P2] open - Prior-completion semantics use a played-before name and prompt
+### F-25 [P2] fixed - Prior-completion semantics use a played-before name and prompt
 
 **File:** blueprint/project-plan.md:134
 **Found:** 2026-09-15 by `/audit` (scope: changed; lens: quality)
 **Why it matters:** The plan defines `playedBefore` as proof that the game was completed, while taste setup labels the same mutation `I've played this`. Implementers could record partial past play as completion evidence, affecting completed shelves, backlog counts, and recommendation learning.
 **Suggested fix:** Before feature 32 is specified, choose one contract. For the stated requirement, prefer a completion-specific field and label such as `completedBefore` / `Completed before`, while keeping ordinary past play as separate provider or event evidence.
-**Resolution:**
+**Resolution:** Adopted `completedBefore` and the `Completed before` label in play-state controls and taste setup. Ordinary past play is no longer completion evidence.

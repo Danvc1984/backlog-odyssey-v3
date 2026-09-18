@@ -17,7 +17,7 @@ const SYSTEM_COLLECTION_IDS = [
 ] as const;
 
 export type SystemCollectionId = (typeof SYSTEM_COLLECTION_IDS)[number];
-export type DynamicCollectionKind = "series" | "franchise";
+export type DynamicCollectionKind = "series" | "franchise" | "tag";
 
 export type SystemCollectionDefinition = {
   id: SystemCollectionId;
@@ -34,8 +34,9 @@ export type DynamicSystemCollection = {
   color: string;
   count: number;
   kind: DynamicCollectionKind;
-  igdbId: number;
-};
+  igdbId?: number;
+  tagId?: string;
+}
 
 export type SystemCollectionSummary = {
   id: string;
@@ -95,7 +96,7 @@ export const SYSTEM_COLLECTIONS: SystemCollectionDefinition[] = [
     name: "Completed",
     icon: "CheckCircle",
     color: "#22c55e",
-    where: { playState: "PLAYED_BEFORE" },
+    where: { playState: "COMPLETED" },
   },
   {
     id: "backlog",
@@ -144,8 +145,13 @@ export function isSystemCollectionId(id: string): id is SystemCollectionId {
   return SYSTEM_COLLECTION_IDS.includes(id as SystemCollectionId);
 }
 
+export function parseTagCollectionId(id: string): string | null {
+  const match = /^tag-([a-z0-9_-]+)$/.exec(id);
+  return match?.[1] ?? null;
+}
+
 export function isCalculatedCollectionId(id: string): boolean {
-  return isSystemCollectionId(id) || parseDynamicCollectionId(id) !== null;
+  return isSystemCollectionId(id) || parseDynamicCollectionId(id) !== null || parseTagCollectionId(id) !== null;
 }
 
 export function getSystemCollectionDefinition(id: string) {
@@ -158,6 +164,22 @@ type DynamicEvidenceRow = {
     metadataSnapshots: { payload: unknown }[];
   };
 };
+
+export async function getPersonalTagCollections(): Promise<DynamicSystemCollection[]> {
+  const tags = await prisma.personalTag.findMany({
+    orderBy: { name: "asc" },
+    include: { _count: { select: { games: true } } },
+  });
+  return tags.map((tag) => ({
+    id: `tag-${tag.id}`,
+    name: tag.name,
+    icon: "Tag",
+    color: "#f97316",
+    count: tag._count.games,
+    kind: "tag" as const,
+    tagId: tag.id,
+  }));
+}
 
 function dynamicEvidenceWhere() {
   return {
@@ -257,6 +279,12 @@ export async function getDynamicSystemCollections(): Promise<DynamicSystemCollec
 }
 
 export async function getDynamicSystemCollectionGameIds(id: string): Promise<string[] | null> {
+  const tagId = parseTagCollectionId(id);
+  if (tagId) {
+    const rows = await prisma.gameTag.findMany({ where: { tagId }, select: { gameId: true } });
+    return rows.map((row) => row.gameId);
+  }
+
   const dynamic = parseDynamicCollectionId(id);
   if (!dynamic) return null;
 

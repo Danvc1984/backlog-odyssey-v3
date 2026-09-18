@@ -22,7 +22,6 @@ type LibraryEntryData = {
   rating: number | null;
   preferredEnvironment: string | null;
   gameExperience: string | null;
-  notes: string | null;
 };
 
 const PRIORITY_OPTIONS = [
@@ -67,7 +66,6 @@ export function PersonalFieldsForm({
   const [gameExperience, setGameExperience] = useState(
     libraryEntry?.gameExperience ?? "",
   );
-  const [notes, setNotes] = useState(libraryEntry?.notes ?? "");
   const environmentValues = libraryEntry?.preferredEnvironment && !availableEnvironments.includes(libraryEntry.preferredEnvironment as Environment)
     ? [...availableEnvironments, libraryEntry.preferredEnvironment as Environment]
     : availableEnvironments;
@@ -94,7 +92,6 @@ export function PersonalFieldsForm({
         | "MULTIPLAYER_COOP"
         | "COUCH_GAMING"
         | "ON_THE_GO",
-      notes: notes === "" ? null : notes,
     });
 
     setSaving(false);
@@ -198,19 +195,6 @@ export function PersonalFieldsForm({
             ))}
           </SelectContent>
         </Select>
-      </div>
-
-      <div className="grid gap-2">
-        <Label htmlFor="notes">Notes</Label>
-        <p className="text-xs text-muted-foreground">{PERSONAL_FIELD_HELP.notes}</p>
-        <textarea
-          id="notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Any notes about this game..."
-          rows={3}
-          className="w-full rounded-lg border border-border bg-transparent px-2.5 py-1.5 text-sm transition-colors placeholder:text-muted-foreground focus-visible:border-signal focus-visible:ring-3 focus-visible:ring-signal/30 disabled:pointer-events-none disabled:opacity-50"
-        />
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}

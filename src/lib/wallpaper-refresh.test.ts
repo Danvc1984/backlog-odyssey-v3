@@ -182,6 +182,24 @@ describe("refreshWallpaperPool", () => {
     });
   });
 
+  it("retries a recognized edition title with its base title after no results", async () => {
+    findUnique.mockResolvedValue(null);
+    findMany.mockResolvedValue(catalog({
+      id: "horizon",
+      name: "Horizon Zero Dawn Remastered",
+      main: true,
+    }));
+    vi.mocked(searchWallhaven)
+      .mockResolvedValueOnce({ ok: true, items: [] })
+      .mockResolvedValueOnce({ ok: true, items: [candidate("horizon")] });
+
+    const result = await refreshWallpaperPool(now);
+
+    expect(result).toMatchObject({ success: true, itemCount: 1 });
+    expect(searchWallhaven).toHaveBeenNthCalledWith(1, "Horizon Zero Dawn Remastered", undefined, 10);
+    expect(searchWallhaven).toHaveBeenNthCalledWith(2, "Horizon Zero Dawn", undefined, 10);
+  });
+
   it("advances past empty results and deduplicates candidates", async () => {
     findUnique.mockResolvedValue(null);
     findMany.mockResolvedValue(catalog(

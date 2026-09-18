@@ -566,7 +566,7 @@ export async function saveTasteSetup(input: unknown) {
 
         const updateData: Prisma.LibraryEntryUpdateInput = {};
         if (pick.answer === "PLAYED" && row.libraryEntry!.playState === "NOT_STARTED") {
-          updateData.playState = "PLAYED_BEFORE";
+          updateData.completedBefore = true;
         }
         if (pick.answer === "LIKED" && row.libraryEntry!.interest === null) {
           updateData.interest = 5;

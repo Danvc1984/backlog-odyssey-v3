@@ -18,6 +18,7 @@ export interface TuneCandidateInput {
   releaseDate?: string | null;
   genres?: string[];
   tags?: string[];
+  personalTags?: string[];
   esrbRating?: { name: string } | null;
   seriesGames?: Array<{ name: string; releaseDate?: string | null }>;
   durationHours?: number | null;
@@ -144,6 +145,7 @@ export function matchTuneCriteria(tune: TuneContext, candidate: TuneCandidateInp
   if (tune.experience && tune.experience === candidate.experience) criteria.push("experience");
   if (tune.genres.some((genre) => candidate.genres?.includes(genre))) criteria.push("genre");
   if (tune.tags.some((tag) => candidate.tags?.includes(tag))) criteria.push("tag");
+  if ((tune.personalTags ?? []).some((tag) => candidate.personalTags?.includes(tag))) criteria.push("personal tag");
   if (tune.sequelPosture && matchesSequelPosture(tune.sequelPosture, candidate)) criteria.push("sequelPosture");
   if (tune.era && tune.era === eraBucket(candidate.releaseDate ?? null)) criteria.push("era");
   const legacyLength = tune.length && tune.length === durationBand(candidate.durationHours ?? null);

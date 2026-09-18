@@ -175,7 +175,6 @@ describe("export document schema", () => {
       gameExperience: null,
       handheldSuitable: null,
       targetPriceMxn: null,
-      notes: null,
       steamAppId: "620",
       steamAppIdProvenance: "IGDB_SUGGESTION",
       createdAt: now,
@@ -248,7 +247,7 @@ describe("export document schema", () => {
     };
 
     const parsed = exportDocumentSchema.parse({ version: 1, exportedAt: now, data: legacyData });
-    expect(parsed.version).toBe(2);
+    expect(parsed.version).toBe(3);
     expect(parsed.data.settings).toMatchObject({
       primaryOs: "LINUX",
       hasWindowsFallback: true,

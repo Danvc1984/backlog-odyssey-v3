@@ -58,6 +58,16 @@ describe("matchTuneCriteria", () => {
     expect(match).toEqual({ points: 10, criteria: ["experience", "genre", "tag", "era", "maturity"] });
   });
 
+  it("matches selected personal tags separately from metadata tags", () => {
+    const match = matchTuneCriteria(
+      { ...emptyTune, personalTags: ["Co-op nights"] },
+      candidate({ personalTags: ["Co-op nights"] }),
+    );
+
+    expect(match.criteria).toContain("personal tag");
+    expect(match.points).toBeGreaterThan(0);
+  });
+
   it.each(["Teen", "Mature", "Adults Only"])("matches %s as mature", (rating) => {
     expect(matchTuneCriteria({ ...emptyTune, maturity: "MATURE" }, candidate({ esrbRating: { name: rating } })).criteria).toContain("maturity");
   });

@@ -9,7 +9,7 @@ vi.mock("@/lib/recommendations/events", () => ({
   playStateTransitionKind: vi.fn((previous: string, next: string) => {
     if (previous === next || next === "NOT_STARTED") return null;
     if (next === "IN_PROGRESS") return "START";
-    if (next === "PLAYED_BEFORE") return "COMPLETION";
+    if (next === "COMPLETED") return "COMPLETION";
     if (next === "ABANDONED") return "ABANDONMENT";
     return null;
   }),
@@ -26,6 +26,7 @@ import {
   updateGameAvailability,
   addGameAvailability,
   removeGameAvailability,
+  removeTagFromGame,
 } from "./game-detail";
 
 describe("game availability actions", () => {
@@ -244,7 +245,6 @@ describe("updateGameAvailability", () => {
   it("updates source to ROM, clears the alternative source id, and guards the move", async () => {
     const result = await updateGameAvailability("availability-1", {
       source: "ROM",
-      displayName: "Local copy",
     });
 
     expect(result.success).toBe(true);
@@ -254,7 +254,7 @@ describe("updateGameAvailability", () => {
     });
     expect(mockUpdate).toHaveBeenCalledWith({
       where: { id: "availability-1" },
-      data: { source: "ROM", displayName: "Local copy", alternativeSourceId: null },
+      data: { source: "ROM", alternativeSourceId: null },
     });
   });
 
@@ -267,7 +267,6 @@ describe("updateGameAvailability", () => {
 
     const result = await updateGameAvailability("availability-1", {
       source: "OTHER_PLATFORM",
-      displayName: "Steam library",
     });
 
     expect(result.success).toBe(true);
@@ -278,7 +277,6 @@ describe("updateGameAvailability", () => {
       where: { id: "availability-1" },
       data: {
         source: "OTHER_PLATFORM",
-        displayName: "Steam library",
         alternativeSourceId: "unsource-1",
       },
     });
@@ -332,7 +330,7 @@ describe("updateGameAvailability", () => {
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 
-  it("preserves the selected alternative source when only renaming the row", async () => {
+  it("preserves the selected alternative source when updating the row", async () => {
     mockFindUnique.mockResolvedValue({
       id: "availability-1",
       gameId: "game-1",
@@ -341,14 +339,14 @@ describe("updateGameAvailability", () => {
     });
 
     const result = await updateGameAvailability("availability-1", {
-      displayName: "Renamed",
+      source: "OTHER_PLATFORM",
     });
 
     expect(result.success).toBe(true);
     expect(mockFindMany).not.toHaveBeenCalled();
     expect(mockUpdate).toHaveBeenCalledWith({
       where: { id: "availability-1" },
-      data: { displayName: "Renamed", alternativeSourceId: "source-1" },
+      data: { source: "OTHER_PLATFORM", alternativeSourceId: "source-1" },
     });
   });
 
@@ -360,7 +358,7 @@ describe("updateGameAvailability", () => {
     });
 
     const technicalChange = await updateGameAvailability("availability-1", {
-      displayName: "Steam library",
+      source: "STEAM",
       steamAppId: "123",
       steamPlaytimeTotal: 60,
     } as never);
@@ -373,7 +371,7 @@ describe("updateGameAvailability", () => {
     mockFindUnique.mockResolvedValue(null);
 
     const result = await updateGameAvailability("missing", {
-      displayName: "Name",
+      source: "ROM",
     });
 
     expect(result).toEqual({
@@ -404,7 +402,6 @@ describe("updatePersonalFields", () => {
       rating: 8,
       preferredEnvironment: "LINUX",
       gameExperience: "PC_GAMING",
-      notes: "Great game",
     });
 
     expect(mockUpdate).toHaveBeenCalledWith({
@@ -415,7 +412,6 @@ describe("updatePersonalFields", () => {
         rating: 8,
         preferredEnvironment: "LINUX",
         gameExperience: "PC_GAMING",
-        notes: "Great game",
       },
     });
   });
@@ -568,7 +564,7 @@ describe("updatePlayState", () => {
   });
 
   it.each([
-    ["IN_PROGRESS", "PLAYED_BEFORE", "COMPLETION"],
+    ["IN_PROGRESS", "COMPLETED", "COMPLETION"],
     ["IN_PROGRESS", "ABANDONED", "ABANDONMENT"],
   ])("logs %s -> %s as %s", async (previous, next, kind) => {
     mockFindUnique.mockResolvedValue({ playState: previous });
@@ -688,6 +684,7 @@ describe("updatePlayState", () => {
 describe("addTagToGame", () => {
   const mockUpsert = vi.fn();
   const mockCreate = vi.fn();
+  const mockDeleteMany = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -695,8 +692,9 @@ describe("addTagToGame", () => {
     (prisma as unknown as { personalTag: { upsert: typeof mockUpsert } }).personalTag = {
       upsert: mockUpsert,
     };
-    (prisma as unknown as { gameTag: { create: typeof mockCreate } }).gameTag = {
+    (prisma as unknown as { gameTag: { create: typeof mockCreate; deleteMany: typeof mockDeleteMany } }).gameTag = {
       create: mockCreate,
+      deleteMany: mockDeleteMany,
     };
     mockUpsert.mockResolvedValue({ id: "tag-1", name: "RPG" });
     mockCreate.mockResolvedValue({});
@@ -748,5 +746,18 @@ describe("addTagToGame", () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toBe("Failed to add tag");
+  });
+
+  it("removes a tag from one game without deleting the tag", async () => {
+    const result = await removeTagFromGame("game-1", "tag-1");
+
+    expect(result).toEqual({
+      success: true,
+      data: { gameId: "game-1", tagId: "tag-1" },
+      error: null,
+    });
+    expect(mockDeleteMany).toHaveBeenCalledWith({
+      where: { gameId: "game-1", tagId: "tag-1" },
+    });
   });
 });

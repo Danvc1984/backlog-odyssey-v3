@@ -18,7 +18,7 @@ export function isEligibleForPlayNext(candidate: PlayNextCandidate): boolean {
   if (entry.playState === "NOT_STARTED") return true;
   return (
     entry.replayCandidate &&
-    (entry.playState === "PLAYED_BEFORE" || entry.playState === "ABANDONED")
+    (entry.playState === "COMPLETED" || entry.playState === "ABANDONED" || entry.completedBefore === true)
   );
 }
 
@@ -60,7 +60,7 @@ export function scorePlayNextCandidate(
     }
     const replayState =
       entry.replayCandidate &&
-      (entry.playState === "PLAYED_BEFORE" || entry.playState === "ABANDONED");
+      (entry.playState === "COMPLETED" || entry.playState === "ABANDONED" || entry.completedBefore === true);
     if (replayState) {
       score += 2;
       positive.push({ factor: "replay", label: "You marked it as a replay candidate", points: 2 });

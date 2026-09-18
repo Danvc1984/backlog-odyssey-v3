@@ -194,7 +194,7 @@ export interface SteamActivityInput {
 export function scoreSteamActivity(input: SteamActivityInput, now: Date): ExplanationFactor | null {
   if (!input.steamLastPlayed) return null;
   const isReplayOrAbandoned =
-    input.playState === "ABANDONED" || (input.replayCandidate && input.playState === "PLAYED_BEFORE");
+    input.playState === "ABANDONED" || (input.replayCandidate && input.playState === "COMPLETED");
   if (!isReplayOrAbandoned) return null;
 
   const ageDays = (now.getTime() - input.steamLastPlayed.getTime()) / 86400000;

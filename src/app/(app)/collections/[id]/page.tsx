@@ -5,10 +5,11 @@ import { prisma } from "@/lib/prisma";
 import {
   getDynamicSystemCollectionGameIds,
   getDynamicSystemCollections,
+  getPersonalTagCollections,
   getSystemCollectionDefinition,
 } from "@/lib/system-collections";
-import { CollectionDetailActions } from "@/components/games/CollectionDetailActions";
 import { CollectionListControls } from "@/components/games/CollectionListControls";
+import { PersonalTagDeleteDialog } from "@/components/games/PersonalTagDeleteDialog";
 import { LibraryGameCard, type LibraryGameCardEntry } from "@/components/games/LibraryGameCard";
 import { StatusPill } from "@/components/ui/detail-card";
 import { deriveCompatTag } from "@/lib/protondb-tags";
@@ -46,7 +47,8 @@ function toLibraryEntry(entry: {
     baseGame: { id: string; name: string } | null;
     metadataSnapshots: { id: string; payload?: unknown }[];
     playtimeEvidence: { provider: string; payload: unknown } | null;
-    _count: { dlcs: number; collections: number };
+    tags: { tag: { name: string } }[];
+    _count: { dlcs: number; tags: number };
     externalIds: { externalId: string }[];
     compatSnapshots: { result: unknown; fetchedAt: Date }[];
     availability: LibraryGameCardEntry["game"]["availability"];
@@ -84,6 +86,7 @@ function toLibraryEntry(entry: {
       type: entry.game.type,
       baseGame: entry.game.baseGame,
       metadata,
+      tags: entry.game.tags.map(({ tag }) => ({ name: tag.name })),
       _count: entry.game._count,
       availability: entry.game.availability,
     },
@@ -111,7 +114,8 @@ function collectionGameInclude() {
     playtimeEvidence: {
       select: { provider: true, payload: true },
     },
-    _count: { select: { dlcs: true, collections: true } },
+    tags: { select: { tag: { select: { name: true } } } },
+    _count: { select: { dlcs: true, tags: true } }
   };
 }
 
@@ -123,14 +127,15 @@ export default async function CollectionDetailPage({
   searchParams: Promise<CollectionSearchParams>;
 }) {
   const [{ id }, { q = "", sort = "newest" }] = await Promise.all([params, searchParams]);
-  const [compatibilityGate, appSettings, dynamicCollections] = await Promise.all([
+  const [compatibilityGate, appSettings, dynamicCollections, personalTagCollections] = await Promise.all([
     getCompatibilityGate(),
     prisma.appSettings.findUnique({ where: { id: 1 }, select: { durationProfile: true } }),
     getDynamicSystemCollections(),
+    getPersonalTagCollections(),
   ]);
   const durationProfile = (appSettings?.durationProfile ?? "NORMALLY") as DurationProfile;
   const systemDef = getSystemCollectionDefinition(id);
-  const dynamicCollection = dynamicCollections.find((collection) => collection.id === id);
+  const dynamicCollection = [...dynamicCollections, ...personalTagCollections].find((collection) => collection.id === id);
   const isCalculated = Boolean(systemDef || dynamicCollection);
   let name = "";
   let color: string | null = null;
@@ -146,7 +151,7 @@ export default async function CollectionDetailPage({
     rows = entries.map((entry) => toLibraryEntry(entry, compatibilityGate.active, durationProfile));
   } else if (dynamicCollection) {
     const gameIds = await getDynamicSystemCollectionGameIds(id);
-    if (!gameIds || gameIds.length === 0) redirect("/collections");
+    if (!gameIds) redirect("/collections");
     name = dynamicCollection.name;
     color = dynamicCollection.color;
     const entries = await prisma.libraryEntry.findMany({
@@ -155,28 +160,7 @@ export default async function CollectionDetailPage({
     });
     rows = entries.map((entry) => toLibraryEntry(entry, compatibilityGate.active, durationProfile));
   } else {
-    const collection = await prisma.collection.findUnique({
-      where: { id },
-      include: {
-        members: {
-          include: {
-            game: {
-              include: {
-                libraryEntry: true,
-                ...collectionGameInclude(),
-              },
-            },
-          },
-        },
-      },
-    });
-
-    if (!collection) redirect("/collections");
-    name = collection.name;
-    color = collection.color;
-    rows = collection.members
-      .filter((member) => member.game.libraryEntry !== null)
-      .map((member) => toLibraryEntry({ ...member.game.libraryEntry!, game: member.game }, compatibilityGate.active, durationProfile));
+    redirect("/collections");
   }
 
   const query = q.trim().toLocaleLowerCase();
@@ -213,8 +197,12 @@ export default async function CollectionDetailPage({
             {rows.length} catalog {rows.length === 1 ? "game" : "games"} in this collection.
           </p>
         </div>
-        {!isCalculated && (
-          <CollectionDetailActions collectionId={id} initialName={name} initialColor={color} />
+        {dynamicCollection?.kind === "tag" && dynamicCollection.tagId && (
+          <PersonalTagDeleteDialog
+            tagId={dynamicCollection.tagId}
+            tagName={dynamicCollection.name}
+            gameCount={dynamicCollection.count}
+          />
         )}
       </div>
 

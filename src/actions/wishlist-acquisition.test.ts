@@ -114,7 +114,6 @@ describe("acquireWishlistBaseGame", () => {
     const result = await acquireWishlistBaseGame({
       wishlistEntryId: "wish-1",
       source: "OTHER_PLATFORM",
-      displayName: "Portal 2 (GOG)",
     });
 
     expect(result.success).toBe(true);
@@ -129,7 +128,6 @@ describe("acquireWishlistBaseGame", () => {
         availability: expect.objectContaining({
           create: expect.objectContaining({
             source: "OTHER_PLATFORM",
-            displayName: "Portal 2 (GOG)",
             alternativeSourceId: "unsource-1",
             steamAppId: "620",
           }),

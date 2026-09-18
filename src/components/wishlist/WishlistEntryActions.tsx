@@ -66,7 +66,15 @@ export function WishlistEntryActions({ entry, baseGames, showDelete = true, imag
           }}
         >
           <DialogTrigger asChild>
-            <Button type="button" variant="ghost" size="icon-sm" disabled={deleting} aria-label={`Delete ${entry.name}`}>
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon-sm"
+              className="bg-red-950/80 text-red-200 hover:bg-red-900/90 hover:text-red-100"
+              disabled={deleting}
+              aria-label={`Delete ${entry.name}`}
+              title="Delete wishlist entry"
+            >
               <TrashIcon />
             </Button>
           </DialogTrigger>

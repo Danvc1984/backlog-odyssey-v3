@@ -79,6 +79,12 @@ export function GameDetailHero({
             >
               Edit personal fields
             </Link>
+            <Link
+              href="#availability"
+              className="inline-flex h-9 items-center justify-center rounded-[8px] border border-border-strong bg-card px-3 text-sm font-bold transition-colors hover:bg-card-alt focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30"
+            >
+              Change platform
+            </Link>
           </div>
         )}
       </div>

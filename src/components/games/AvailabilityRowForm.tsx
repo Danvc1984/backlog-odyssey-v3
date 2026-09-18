@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { updateGameAvailability } from "@/actions/game-detail";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -26,19 +25,15 @@ const SOURCE_LABELS: Record<AvailabilitySource, string> = {
 export function AvailabilityRowForm({
   availabilityId,
   source,
-  displayName,
 }: {
   availabilityId: string;
   source: AvailabilitySource;
-  displayName: string | null;
 }) {
   const router = useRouter();
   const [selectedSource, setSelectedSource] = useState(source);
-  const [selectedDisplayName, setSelectedDisplayName] = useState(
-    displayName ?? "",
-  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaving(true);
@@ -46,13 +41,11 @@ export function AvailabilityRowForm({
 
     const result = await updateGameAvailability(availabilityId, {
       source: selectedSource,
-      displayName: selectedDisplayName,
     });
 
     setSaving(false);
     if (result.success) {
       setSelectedSource(result.data.source);
-      setSelectedDisplayName(result.data.displayName ?? "");
       toast.success("Availability saved");
       router.refresh();
     } else {
@@ -63,18 +56,12 @@ export function AvailabilityRowForm({
   return (
     <form onSubmit={handleSubmit} className="grid gap-4 p-4">
       <div className="grid gap-2">
-        <Label htmlFor={`availability-source-${availabilityId}`}>Source</Label>
+        <Label htmlFor={`availability-source-${availabilityId}`}>Platform</Label>
         <Select
           value={selectedSource}
-          onValueChange={(value) =>
-            setSelectedSource(value as AvailabilitySource)
-          }
+          onValueChange={(value) => setSelectedSource(value as AvailabilitySource)}
         >
-          <SelectTrigger
-            id={`availability-source-${availabilityId}`}
-            className="w-full"
-            disabled={saving}
-          >
+          <SelectTrigger id={`availability-source-${availabilityId}`} className="w-full" disabled={saving}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -86,24 +73,9 @@ export function AvailabilityRowForm({
           </SelectContent>
         </Select>
       </div>
-
-      <div className="grid gap-2">
-        <Label htmlFor={`availability-name-${availabilityId}`}>
-          Display name
-        </Label>
-        <Input
-          id={`availability-name-${availabilityId}`}
-          value={selectedDisplayName}
-          onChange={(event) => setSelectedDisplayName(event.target.value)}
-          disabled={saving}
-          placeholder="Optional platform-specific name"
-        />
-      </div>
-
       {error && <p className="text-sm text-destructive">{error}</p>}
-
       <Button type="submit" disabled={saving} className="w-fit">
-        {saving ? "Saving..." : "Save availability"}
+        {saving ? "Saving..." : "Save platform"}
       </Button>
     </form>
   );

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 export interface TodayDataHealth {
   activeBacklog: {
-    playedBefore: number;
+    completedBefore: number;
     inProgress: number;
     notStarted: number;
     total: number;
@@ -32,6 +32,7 @@ export const todayDataHealthGameSelect = {
       priority: true,
       preferredEnvironment: true,
       gameExperience: true,
+      completedBefore: true,
     },
   },
   metadataSnapshots: {
@@ -40,25 +41,31 @@ export const todayDataHealthGameSelect = {
   },
 } as const;
 
-export type TodayDataHealthGameRow = Prisma.GameGetPayload<{
+type TodayDataHealthGamePayload = Prisma.GameGetPayload<{
   select: typeof todayDataHealthGameSelect;
 }>;
 
-const ACTIVE_BACKLOG_STATES = ["NOT_STARTED", "IN_PROGRESS", "PLAYED_BEFORE"] as const;
+export type TodayDataHealthGameRow = Omit<TodayDataHealthGamePayload, "libraryEntry"> & {
+  libraryEntry: (Omit<NonNullable<TodayDataHealthGamePayload["libraryEntry"]>, "completedBefore"> & {
+    completedBefore?: boolean;
+  }) | null;
+};
+
+const ACTIVE_BACKLOG_STATES = ["NOT_STARTED", "IN_PROGRESS", "COMPLETED"] as const;
 const COVERAGE_TITLE_ORDER = (left: CoverageTitle, right: CoverageTitle) =>
   left.name.toLowerCase().localeCompare(right.name.toLowerCase());
 
 export function computeActiveBacklogProgress(
   rows: readonly TodayDataHealthGameRow[],
-): { playedBefore: number; inProgress: number; notStarted: number; total: number } {
-  const counts = { playedBefore: 0, inProgress: 0, notStarted: 0, total: 0 };
+): { completedBefore: number; inProgress: number; notStarted: number; total: number } {
+  const counts = { completedBefore: 0, inProgress: 0, notStarted: 0, total: 0 };
   for (const row of rows) {
     const playState = row.libraryEntry?.playState;
     if (!playState || !(ACTIVE_BACKLOG_STATES as readonly string[]).includes(playState)) {
       continue;
     }
     counts.total += 1;
-    if (playState === "PLAYED_BEFORE") counts.playedBefore += 1;
+    if (row.libraryEntry?.completedBefore || playState === "COMPLETED") counts.completedBefore += 1;
     if (playState === "IN_PROGRESS") counts.inProgress += 1;
     if (playState === "NOT_STARTED") counts.notStarted += 1;
   }

@@ -167,7 +167,6 @@ export async function createWishlistImportReviewAsNew(input: unknown) {
           name: review.name,
           type: "BASE_GAME",
           interest: 2,
-          notes: null,
           steamAppId: review.steamAppId,
           steamAppIdProvenance: "STEAM_IMPORT",
         },

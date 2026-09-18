@@ -7,12 +7,14 @@ import { parseIgdbGameToPayload } from "@/lib/igdb-metadata-payload";
 import {
   SYSTEM_COLLECTIONS,
   getDynamicSystemCollections,
+  getPersonalTagCollections,
   getSystemCollections,
   getSystemCollectionDefinition,
   getSystemCollectionGames,
   isCalculatedCollectionId,
   isSystemCollectionId,
   parseDynamicCollectionId,
+  parseTagCollectionId,
 } from "./system-collections";
 
 const payload = (id: number, name: string, collection: { id: number; name: string } | null, franchise: { id: number; name: string } | null) =>
@@ -33,7 +35,7 @@ describe("system collection definitions", () => {
       "games-with-dlc",
     ]);
     expect(getSystemCollectionDefinition("in-progress")?.where).toEqual({ playState: "IN_PROGRESS" });
-    expect(getSystemCollectionDefinition("completed")?.where).toEqual({ playState: "PLAYED_BEFORE" });
+    expect(getSystemCollectionDefinition("completed")?.where).toEqual({ playState: "COMPLETED" });
     expect(getSystemCollectionDefinition("backlog")?.where).toEqual({ playState: "NOT_STARTED" });
     expect(getSystemCollectionDefinition("handheld-picks")?.where).toEqual({ handheldSuitable: true });
     expect(getSystemCollectionDefinition("games-with-dlc")?.where).toEqual({
@@ -50,6 +52,8 @@ describe("system collection definitions", () => {
     expect(parseDynamicCollectionId("igdb-series-0")).toBeNull();
     expect(parseDynamicCollectionId("igdb-series-not-an-id")).toBeNull();
     expect(isCalculatedCollectionId("igdb-series-20")).toBe(true);
+    expect(parseTagCollectionId("tag-tag-1")).toBe("tag-1");
+    expect(isCalculatedCollectionId("tag-tag-1")).toBe(true);
     expect(isCalculatedCollectionId("not-a-system")).toBe(false);
   });
 
@@ -95,6 +99,25 @@ describe("getSystemCollections", () => {
     });
   });
 
+  it("turns personal tags into browsable shelves", async () => {
+    const personalTagFindMany = vi.fn().mockResolvedValue([
+      { id: "tag-1", name: "Co-op nights", _count: { games: 2 } },
+    ]);
+    (prisma as unknown as { personalTag: { findMany: typeof personalTagFindMany } }).personalTag = {
+      findMany: personalTagFindMany,
+    };
+
+    await expect(getPersonalTagCollections()).resolves.toEqual([{
+      id: "tag-tag-1",
+      name: "Co-op nights",
+      icon: "Tag",
+      color: "#f97316",
+      count: 2,
+      kind: "tag",
+      tagId: "tag-1",
+    }]);
+  });
+
   it("groups only valid current IGDB evidence with stable, distinct ids", async () => {
     mockFindMany.mockResolvedValue([
       { gameId: "game-1", game: { metadataSnapshots: [{ payload: payload(1, "Alpha", { id: 20, name: "Portal" }, { id: 20, name: "Portal" }) }] } },
@@ -126,6 +149,30 @@ describe("getSystemCollections", () => {
       },
     ]);
     expect(await getDynamicSystemCollections()).toHaveLength(2);
+  });
+
+  it("returns every calculated shelf rather than truncating the list", async () => {
+    mockFindMany.mockResolvedValue(Array.from({ length: 7 }, (_, index) => ({
+      gameId: `game-${index}`,
+      game: {
+        metadataSnapshots: [{
+          payload: payload(index + 1, `Game ${index}`, { id: index + 1, name: `Series ${index}` }, null),
+        }],
+      },
+    })));
+
+    const collections = await getDynamicSystemCollections();
+
+    expect(collections).toHaveLength(7);
+    expect(collections.map((collection) => collection.name)).toEqual([
+      "Series 0",
+      "Series 1",
+      "Series 2",
+      "Series 3",
+      "Series 4",
+      "Series 5",
+      "Series 6",
+    ]);
   });
 });
 

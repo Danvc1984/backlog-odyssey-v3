@@ -40,6 +40,7 @@ export type LibraryEntryMinAggregateOutputType = {
   id: string | null
   gameId: string | null
   playState: $Enums.PlayState | null
+  completedBefore: boolean | null
   isMainGame: boolean | null
   priority: $Enums.Priority | null
   interest: number | null
@@ -52,7 +53,6 @@ export type LibraryEntryMinAggregateOutputType = {
   playSoon: boolean | null
   replayCandidate: boolean | null
   hidden: boolean | null
-  notes: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -61,6 +61,7 @@ export type LibraryEntryMaxAggregateOutputType = {
   id: string | null
   gameId: string | null
   playState: $Enums.PlayState | null
+  completedBefore: boolean | null
   isMainGame: boolean | null
   priority: $Enums.Priority | null
   interest: number | null
@@ -73,7 +74,6 @@ export type LibraryEntryMaxAggregateOutputType = {
   playSoon: boolean | null
   replayCandidate: boolean | null
   hidden: boolean | null
-  notes: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -82,6 +82,7 @@ export type LibraryEntryCountAggregateOutputType = {
   id: number
   gameId: number
   playState: number
+  completedBefore: number
   isMainGame: number
   priority: number
   interest: number
@@ -94,7 +95,6 @@ export type LibraryEntryCountAggregateOutputType = {
   playSoon: number
   replayCandidate: number
   hidden: number
-  notes: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -115,6 +115,7 @@ export type LibraryEntryMinAggregateInputType = {
   id?: true
   gameId?: true
   playState?: true
+  completedBefore?: true
   isMainGame?: true
   priority?: true
   interest?: true
@@ -127,7 +128,6 @@ export type LibraryEntryMinAggregateInputType = {
   playSoon?: true
   replayCandidate?: true
   hidden?: true
-  notes?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -136,6 +136,7 @@ export type LibraryEntryMaxAggregateInputType = {
   id?: true
   gameId?: true
   playState?: true
+  completedBefore?: true
   isMainGame?: true
   priority?: true
   interest?: true
@@ -148,7 +149,6 @@ export type LibraryEntryMaxAggregateInputType = {
   playSoon?: true
   replayCandidate?: true
   hidden?: true
-  notes?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -157,6 +157,7 @@ export type LibraryEntryCountAggregateInputType = {
   id?: true
   gameId?: true
   playState?: true
+  completedBefore?: true
   isMainGame?: true
   priority?: true
   interest?: true
@@ -169,7 +170,6 @@ export type LibraryEntryCountAggregateInputType = {
   playSoon?: true
   replayCandidate?: true
   hidden?: true
-  notes?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -265,6 +265,7 @@ export type LibraryEntryGroupByOutputType = {
   id: string
   gameId: string
   playState: $Enums.PlayState
+  completedBefore: boolean
   isMainGame: boolean
   priority: $Enums.Priority | null
   interest: number | null
@@ -277,7 +278,6 @@ export type LibraryEntryGroupByOutputType = {
   playSoon: boolean
   replayCandidate: boolean
   hidden: boolean
-  notes: string | null
   createdAt: Date
   updatedAt: Date
   _count: LibraryEntryCountAggregateOutputType | null
@@ -309,6 +309,7 @@ export type LibraryEntryWhereInput = {
   id?: Prisma.StringFilter<"LibraryEntry"> | string
   gameId?: Prisma.StringFilter<"LibraryEntry"> | string
   playState?: Prisma.EnumPlayStateFilter<"LibraryEntry"> | $Enums.PlayState
+  completedBefore?: Prisma.BoolFilter<"LibraryEntry"> | boolean
   isMainGame?: Prisma.BoolFilter<"LibraryEntry"> | boolean
   priority?: Prisma.EnumPriorityNullableFilter<"LibraryEntry"> | $Enums.Priority | null
   interest?: Prisma.IntNullableFilter<"LibraryEntry"> | number | null
@@ -321,7 +322,6 @@ export type LibraryEntryWhereInput = {
   playSoon?: Prisma.BoolFilter<"LibraryEntry"> | boolean
   replayCandidate?: Prisma.BoolFilter<"LibraryEntry"> | boolean
   hidden?: Prisma.BoolFilter<"LibraryEntry"> | boolean
-  notes?: Prisma.StringNullableFilter<"LibraryEntry"> | string | null
   createdAt?: Prisma.DateTimeFilter<"LibraryEntry"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"LibraryEntry"> | Date | string
   game?: Prisma.XOR<Prisma.GameScalarRelationFilter, Prisma.GameWhereInput>
@@ -331,6 +331,7 @@ export type LibraryEntryOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   gameId?: Prisma.SortOrder
   playState?: Prisma.SortOrder
+  completedBefore?: Prisma.SortOrder
   isMainGame?: Prisma.SortOrder
   priority?: Prisma.SortOrderInput | Prisma.SortOrder
   interest?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -343,7 +344,6 @@ export type LibraryEntryOrderByWithRelationInput = {
   playSoon?: Prisma.SortOrder
   replayCandidate?: Prisma.SortOrder
   hidden?: Prisma.SortOrder
-  notes?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   game?: Prisma.GameOrderByWithRelationInput
@@ -356,6 +356,7 @@ export type LibraryEntryWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.LibraryEntryWhereInput[]
   NOT?: Prisma.LibraryEntryWhereInput | Prisma.LibraryEntryWhereInput[]
   playState?: Prisma.EnumPlayStateFilter<"LibraryEntry"> | $Enums.PlayState
+  completedBefore?: Prisma.BoolFilter<"LibraryEntry"> | boolean
   isMainGame?: Prisma.BoolFilter<"LibraryEntry"> | boolean
   priority?: Prisma.EnumPriorityNullableFilter<"LibraryEntry"> | $Enums.Priority | null
   interest?: Prisma.IntNullableFilter<"LibraryEntry"> | number | null
@@ -368,7 +369,6 @@ export type LibraryEntryWhereUniqueInput = Prisma.AtLeast<{
   playSoon?: Prisma.BoolFilter<"LibraryEntry"> | boolean
   replayCandidate?: Prisma.BoolFilter<"LibraryEntry"> | boolean
   hidden?: Prisma.BoolFilter<"LibraryEntry"> | boolean
-  notes?: Prisma.StringNullableFilter<"LibraryEntry"> | string | null
   createdAt?: Prisma.DateTimeFilter<"LibraryEntry"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"LibraryEntry"> | Date | string
   game?: Prisma.XOR<Prisma.GameScalarRelationFilter, Prisma.GameWhereInput>
@@ -378,6 +378,7 @@ export type LibraryEntryOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   gameId?: Prisma.SortOrder
   playState?: Prisma.SortOrder
+  completedBefore?: Prisma.SortOrder
   isMainGame?: Prisma.SortOrder
   priority?: Prisma.SortOrderInput | Prisma.SortOrder
   interest?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -390,7 +391,6 @@ export type LibraryEntryOrderByWithAggregationInput = {
   playSoon?: Prisma.SortOrder
   replayCandidate?: Prisma.SortOrder
   hidden?: Prisma.SortOrder
-  notes?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.LibraryEntryCountOrderByAggregateInput
@@ -407,6 +407,7 @@ export type LibraryEntryScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"LibraryEntry"> | string
   gameId?: Prisma.StringWithAggregatesFilter<"LibraryEntry"> | string
   playState?: Prisma.EnumPlayStateWithAggregatesFilter<"LibraryEntry"> | $Enums.PlayState
+  completedBefore?: Prisma.BoolWithAggregatesFilter<"LibraryEntry"> | boolean
   isMainGame?: Prisma.BoolWithAggregatesFilter<"LibraryEntry"> | boolean
   priority?: Prisma.EnumPriorityNullableWithAggregatesFilter<"LibraryEntry"> | $Enums.Priority | null
   interest?: Prisma.IntNullableWithAggregatesFilter<"LibraryEntry"> | number | null
@@ -419,7 +420,6 @@ export type LibraryEntryScalarWhereWithAggregatesInput = {
   playSoon?: Prisma.BoolWithAggregatesFilter<"LibraryEntry"> | boolean
   replayCandidate?: Prisma.BoolWithAggregatesFilter<"LibraryEntry"> | boolean
   hidden?: Prisma.BoolWithAggregatesFilter<"LibraryEntry"> | boolean
-  notes?: Prisma.StringNullableWithAggregatesFilter<"LibraryEntry"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"LibraryEntry"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"LibraryEntry"> | Date | string
 }
@@ -427,6 +427,7 @@ export type LibraryEntryScalarWhereWithAggregatesInput = {
 export type LibraryEntryCreateInput = {
   id?: string
   playState?: $Enums.PlayState
+  completedBefore?: boolean
   isMainGame?: boolean
   priority?: $Enums.Priority | null
   interest?: number | null
@@ -439,7 +440,6 @@ export type LibraryEntryCreateInput = {
   playSoon?: boolean
   replayCandidate?: boolean
   hidden?: boolean
-  notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   game: Prisma.GameCreateNestedOneWithoutLibraryEntryInput
@@ -449,6 +449,7 @@ export type LibraryEntryUncheckedCreateInput = {
   id?: string
   gameId: string
   playState?: $Enums.PlayState
+  completedBefore?: boolean
   isMainGame?: boolean
   priority?: $Enums.Priority | null
   interest?: number | null
@@ -461,7 +462,6 @@ export type LibraryEntryUncheckedCreateInput = {
   playSoon?: boolean
   replayCandidate?: boolean
   hidden?: boolean
-  notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -469,6 +469,7 @@ export type LibraryEntryUncheckedCreateInput = {
 export type LibraryEntryUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   playState?: Prisma.EnumPlayStateFieldUpdateOperationsInput | $Enums.PlayState
+  completedBefore?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isMainGame?: Prisma.BoolFieldUpdateOperationsInput | boolean
   priority?: Prisma.NullableEnumPriorityFieldUpdateOperationsInput | $Enums.Priority | null
   interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -481,7 +482,6 @@ export type LibraryEntryUpdateInput = {
   playSoon?: Prisma.BoolFieldUpdateOperationsInput | boolean
   replayCandidate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   hidden?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   game?: Prisma.GameUpdateOneRequiredWithoutLibraryEntryNestedInput
@@ -491,6 +491,7 @@ export type LibraryEntryUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   gameId?: Prisma.StringFieldUpdateOperationsInput | string
   playState?: Prisma.EnumPlayStateFieldUpdateOperationsInput | $Enums.PlayState
+  completedBefore?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isMainGame?: Prisma.BoolFieldUpdateOperationsInput | boolean
   priority?: Prisma.NullableEnumPriorityFieldUpdateOperationsInput | $Enums.Priority | null
   interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -503,7 +504,6 @@ export type LibraryEntryUncheckedUpdateInput = {
   playSoon?: Prisma.BoolFieldUpdateOperationsInput | boolean
   replayCandidate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   hidden?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -512,6 +512,7 @@ export type LibraryEntryCreateManyInput = {
   id?: string
   gameId: string
   playState?: $Enums.PlayState
+  completedBefore?: boolean
   isMainGame?: boolean
   priority?: $Enums.Priority | null
   interest?: number | null
@@ -524,7 +525,6 @@ export type LibraryEntryCreateManyInput = {
   playSoon?: boolean
   replayCandidate?: boolean
   hidden?: boolean
-  notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -532,6 +532,7 @@ export type LibraryEntryCreateManyInput = {
 export type LibraryEntryUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   playState?: Prisma.EnumPlayStateFieldUpdateOperationsInput | $Enums.PlayState
+  completedBefore?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isMainGame?: Prisma.BoolFieldUpdateOperationsInput | boolean
   priority?: Prisma.NullableEnumPriorityFieldUpdateOperationsInput | $Enums.Priority | null
   interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -544,7 +545,6 @@ export type LibraryEntryUpdateManyMutationInput = {
   playSoon?: Prisma.BoolFieldUpdateOperationsInput | boolean
   replayCandidate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   hidden?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -553,6 +553,7 @@ export type LibraryEntryUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   gameId?: Prisma.StringFieldUpdateOperationsInput | string
   playState?: Prisma.EnumPlayStateFieldUpdateOperationsInput | $Enums.PlayState
+  completedBefore?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isMainGame?: Prisma.BoolFieldUpdateOperationsInput | boolean
   priority?: Prisma.NullableEnumPriorityFieldUpdateOperationsInput | $Enums.Priority | null
   interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -565,7 +566,6 @@ export type LibraryEntryUncheckedUpdateManyInput = {
   playSoon?: Prisma.BoolFieldUpdateOperationsInput | boolean
   replayCandidate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   hidden?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -579,6 +579,7 @@ export type LibraryEntryCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   gameId?: Prisma.SortOrder
   playState?: Prisma.SortOrder
+  completedBefore?: Prisma.SortOrder
   isMainGame?: Prisma.SortOrder
   priority?: Prisma.SortOrder
   interest?: Prisma.SortOrder
@@ -591,7 +592,6 @@ export type LibraryEntryCountOrderByAggregateInput = {
   playSoon?: Prisma.SortOrder
   replayCandidate?: Prisma.SortOrder
   hidden?: Prisma.SortOrder
-  notes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -605,6 +605,7 @@ export type LibraryEntryMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   gameId?: Prisma.SortOrder
   playState?: Prisma.SortOrder
+  completedBefore?: Prisma.SortOrder
   isMainGame?: Prisma.SortOrder
   priority?: Prisma.SortOrder
   interest?: Prisma.SortOrder
@@ -617,7 +618,6 @@ export type LibraryEntryMaxOrderByAggregateInput = {
   playSoon?: Prisma.SortOrder
   replayCandidate?: Prisma.SortOrder
   hidden?: Prisma.SortOrder
-  notes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -626,6 +626,7 @@ export type LibraryEntryMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   gameId?: Prisma.SortOrder
   playState?: Prisma.SortOrder
+  completedBefore?: Prisma.SortOrder
   isMainGame?: Prisma.SortOrder
   priority?: Prisma.SortOrder
   interest?: Prisma.SortOrder
@@ -638,7 +639,6 @@ export type LibraryEntryMinOrderByAggregateInput = {
   playSoon?: Prisma.SortOrder
   replayCandidate?: Prisma.SortOrder
   hidden?: Prisma.SortOrder
-  notes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -707,6 +707,7 @@ export type NullableEnumCompatibilityStatusFieldUpdateOperationsInput = {
 export type LibraryEntryCreateWithoutGameInput = {
   id?: string
   playState?: $Enums.PlayState
+  completedBefore?: boolean
   isMainGame?: boolean
   priority?: $Enums.Priority | null
   interest?: number | null
@@ -719,7 +720,6 @@ export type LibraryEntryCreateWithoutGameInput = {
   playSoon?: boolean
   replayCandidate?: boolean
   hidden?: boolean
-  notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -727,6 +727,7 @@ export type LibraryEntryCreateWithoutGameInput = {
 export type LibraryEntryUncheckedCreateWithoutGameInput = {
   id?: string
   playState?: $Enums.PlayState
+  completedBefore?: boolean
   isMainGame?: boolean
   priority?: $Enums.Priority | null
   interest?: number | null
@@ -739,7 +740,6 @@ export type LibraryEntryUncheckedCreateWithoutGameInput = {
   playSoon?: boolean
   replayCandidate?: boolean
   hidden?: boolean
-  notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -763,6 +763,7 @@ export type LibraryEntryUpdateToOneWithWhereWithoutGameInput = {
 export type LibraryEntryUpdateWithoutGameInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   playState?: Prisma.EnumPlayStateFieldUpdateOperationsInput | $Enums.PlayState
+  completedBefore?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isMainGame?: Prisma.BoolFieldUpdateOperationsInput | boolean
   priority?: Prisma.NullableEnumPriorityFieldUpdateOperationsInput | $Enums.Priority | null
   interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -775,7 +776,6 @@ export type LibraryEntryUpdateWithoutGameInput = {
   playSoon?: Prisma.BoolFieldUpdateOperationsInput | boolean
   replayCandidate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   hidden?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -783,6 +783,7 @@ export type LibraryEntryUpdateWithoutGameInput = {
 export type LibraryEntryUncheckedUpdateWithoutGameInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   playState?: Prisma.EnumPlayStateFieldUpdateOperationsInput | $Enums.PlayState
+  completedBefore?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isMainGame?: Prisma.BoolFieldUpdateOperationsInput | boolean
   priority?: Prisma.NullableEnumPriorityFieldUpdateOperationsInput | $Enums.Priority | null
   interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -795,7 +796,6 @@ export type LibraryEntryUncheckedUpdateWithoutGameInput = {
   playSoon?: Prisma.BoolFieldUpdateOperationsInput | boolean
   replayCandidate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   hidden?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -806,6 +806,7 @@ export type LibraryEntrySelect<ExtArgs extends runtime.Types.Extensions.Internal
   id?: boolean
   gameId?: boolean
   playState?: boolean
+  completedBefore?: boolean
   isMainGame?: boolean
   priority?: boolean
   interest?: boolean
@@ -818,7 +819,6 @@ export type LibraryEntrySelect<ExtArgs extends runtime.Types.Extensions.Internal
   playSoon?: boolean
   replayCandidate?: boolean
   hidden?: boolean
-  notes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   game?: boolean | Prisma.GameDefaultArgs<ExtArgs>
@@ -828,6 +828,7 @@ export type LibraryEntrySelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   id?: boolean
   gameId?: boolean
   playState?: boolean
+  completedBefore?: boolean
   isMainGame?: boolean
   priority?: boolean
   interest?: boolean
@@ -840,7 +841,6 @@ export type LibraryEntrySelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   playSoon?: boolean
   replayCandidate?: boolean
   hidden?: boolean
-  notes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   game?: boolean | Prisma.GameDefaultArgs<ExtArgs>
@@ -850,6 +850,7 @@ export type LibraryEntrySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   id?: boolean
   gameId?: boolean
   playState?: boolean
+  completedBefore?: boolean
   isMainGame?: boolean
   priority?: boolean
   interest?: boolean
@@ -862,7 +863,6 @@ export type LibraryEntrySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   playSoon?: boolean
   replayCandidate?: boolean
   hidden?: boolean
-  notes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   game?: boolean | Prisma.GameDefaultArgs<ExtArgs>
@@ -872,6 +872,7 @@ export type LibraryEntrySelectScalar = {
   id?: boolean
   gameId?: boolean
   playState?: boolean
+  completedBefore?: boolean
   isMainGame?: boolean
   priority?: boolean
   interest?: boolean
@@ -884,12 +885,11 @@ export type LibraryEntrySelectScalar = {
   playSoon?: boolean
   replayCandidate?: boolean
   hidden?: boolean
-  notes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type LibraryEntryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "gameId" | "playState" | "isMainGame" | "priority" | "interest" | "rating" | "preferredEnvironment" | "gameExperience" | "handheldSuitable" | "compatOverrideStatus" | "compatOverrideReason" | "playSoon" | "replayCandidate" | "hidden" | "notes" | "createdAt" | "updatedAt", ExtArgs["result"]["libraryEntry"]>
+export type LibraryEntryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "gameId" | "playState" | "completedBefore" | "isMainGame" | "priority" | "interest" | "rating" | "preferredEnvironment" | "gameExperience" | "handheldSuitable" | "compatOverrideStatus" | "compatOverrideReason" | "playSoon" | "replayCandidate" | "hidden" | "createdAt" | "updatedAt", ExtArgs["result"]["libraryEntry"]>
 export type LibraryEntryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   game?: boolean | Prisma.GameDefaultArgs<ExtArgs>
 }
@@ -909,6 +909,7 @@ export type $LibraryEntryPayload<ExtArgs extends runtime.Types.Extensions.Intern
     id: string
     gameId: string
     playState: $Enums.PlayState
+    completedBefore: boolean
     isMainGame: boolean
     priority: $Enums.Priority | null
     interest: number | null
@@ -921,7 +922,6 @@ export type $LibraryEntryPayload<ExtArgs extends runtime.Types.Extensions.Intern
     playSoon: boolean
     replayCandidate: boolean
     hidden: boolean
-    notes: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["libraryEntry"]>
@@ -1351,6 +1351,7 @@ export interface LibraryEntryFieldRefs {
   readonly id: Prisma.FieldRef<"LibraryEntry", 'String'>
   readonly gameId: Prisma.FieldRef<"LibraryEntry", 'String'>
   readonly playState: Prisma.FieldRef<"LibraryEntry", 'PlayState'>
+  readonly completedBefore: Prisma.FieldRef<"LibraryEntry", 'Boolean'>
   readonly isMainGame: Prisma.FieldRef<"LibraryEntry", 'Boolean'>
   readonly priority: Prisma.FieldRef<"LibraryEntry", 'Priority'>
   readonly interest: Prisma.FieldRef<"LibraryEntry", 'Int'>
@@ -1363,7 +1364,6 @@ export interface LibraryEntryFieldRefs {
   readonly playSoon: Prisma.FieldRef<"LibraryEntry", 'Boolean'>
   readonly replayCandidate: Prisma.FieldRef<"LibraryEntry", 'Boolean'>
   readonly hidden: Prisma.FieldRef<"LibraryEntry", 'Boolean'>
-  readonly notes: Prisma.FieldRef<"LibraryEntry", 'String'>
   readonly createdAt: Prisma.FieldRef<"LibraryEntry", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"LibraryEntry", 'DateTime'>
 }

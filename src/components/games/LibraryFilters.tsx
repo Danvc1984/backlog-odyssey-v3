@@ -27,14 +27,14 @@ const SOURCE_OPTIONS = [
 const STATE_CHIPS = [
   { value: "NOT_STARTED", label: "Not started" },
   { value: "IN_PROGRESS", label: "In progress" },
-  { value: "PLAYED_BEFORE", label: "Played before" },
+  { value: "COMPLETED", label: "Completed" },
 ];
 
 const STATE_OPTIONS = [
   { value: "ALL", label: "All states" },
   { value: "NOT_STARTED", label: "Not started" },
   { value: "IN_PROGRESS", label: "In progress" },
-  { value: "PLAYED_BEFORE", label: "Played before" },
+  { value: "COMPLETED", label: "Completed" },
   { value: "ABANDONED", label: "Abandoned" },
 ];
 
@@ -114,7 +114,7 @@ export function LibraryFilters({
   const hasDlc = searchParams.get("hasDlc") === "true";
 
   const systemCollections = collections.filter((c) => c.isSystem);
-  const manualCollections = collections.filter((c) => !c.isSystem);
+  const personalTagCollections = collections.filter((c) => !c.isSystem);
 
   const toggleState = useCallback(
     (value: string) => {
@@ -150,6 +150,21 @@ export function LibraryFilters({
     (collection !== null && collection !== "ALL") ||
     handheld !== "ALL" ||
     hasDlc;
+  const hasActiveFilters = Boolean(
+    q ||
+    alternativeSource ||
+    source !== "ALL" ||
+    state !== "ALL" ||
+    collection !== "ALL" ||
+    handheld !== "ALL" ||
+    hasDlc,
+  );
+  const clearFilters = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    ["q", "source", "alt", "state", "collection", "handheld", "hasDlc", "page"].forEach((key) => params.delete(key));
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname);
+  };
 
   return (
     <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
@@ -233,7 +248,7 @@ export function LibraryFilters({
               </div>
 
               <div>
-                <p className="technical-label mb-1.5 text-muted-foreground">Source</p>
+                <p className="technical-label mb-1.5 text-muted-foreground">Platform</p>
                 <Select
                   value={alternativeSource ? `alt:${alternativeSource}` : source}
                   onValueChange={updateSource}
@@ -271,7 +286,7 @@ export function LibraryFilters({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent position="popper" align="start" className="w-56">
-                    <SelectItem value="ALL">All collections</SelectItem>
+                    <SelectItem value="ALL">All shelves</SelectItem>
                     {systemCollections.length > 0 && (
                       <SelectGroup>
                         <SelectLabel>System</SelectLabel>
@@ -282,10 +297,10 @@ export function LibraryFilters({
                         ))}
                       </SelectGroup>
                     )}
-                    {manualCollections.length > 0 && (
+                    {personalTagCollections.length > 0 && (
                       <SelectGroup>
-                        <SelectLabel>Mine</SelectLabel>
-                        {manualCollections.map((c) => (
+                        <SelectLabel>Personal tags</SelectLabel>
+                        {personalTagCollections.map((c) => (
                           <SelectItem key={c.id} value={c.id}>
                             {c.name}
                           </SelectItem>
@@ -313,6 +328,15 @@ export function LibraryFilters({
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>
+      {hasActiveFilters && (
+        <button
+          type="button"
+          onClick={clearFilters}
+          className="inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-signal/40 hover:bg-signal/10 hover:text-signal-strong"
+        >
+          Clear filters
+        </button>
+      )}
     </div>
   );
 }

@@ -48,7 +48,6 @@ export default async function WishlistDetailPage({
         interest: true,
         gameExperience: true,
         handheldSuitable: true,
-        notes: true,
         steamAppId: true,
         steamAppIdProvenance: true,
         targetPriceMxn: true,
@@ -355,9 +354,6 @@ export default async function WishlistDetailPage({
         </div>
       </SectionCard>
 
-      {entry.notes && (
-        <p className="text-sm text-muted-foreground">{entry.notes}</p>
-      )}
 
       <ScreenshotsSection
         id={entry.id}

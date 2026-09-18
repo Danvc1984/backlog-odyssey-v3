@@ -61,7 +61,6 @@ export async function linkUnresolvedDlc(input: unknown) {
             type: "DLC",
             baseGameId: baseGame.id,
             interest: 2,
-            notes: null,
             steamAppId: unresolved.steamAppId,
             steamAppIdProvenance: "STEAM_IMPORT",
           },

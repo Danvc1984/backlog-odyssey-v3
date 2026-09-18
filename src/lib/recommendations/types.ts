@@ -84,6 +84,7 @@ export interface TuneContext {
   length?: "SHORT" | "MEDIUM" | "LONG" | "VERY_LONG" | null;
   genres: string[];
   tags: string[];
+  personalTags?: string[];
   sequelPosture: "SEQUEL" | "STANDALONE" | null;
   era: "PRE_2005" | "Y2005_2014" | "Y2015_2019" | "Y2020_PLUS" | null;
   maturity: "CASUAL" | "MATURE" | null;
@@ -98,6 +99,7 @@ const tuneContextShape = z.object({
   experience: z.enum(["PC_GAMING", "MULTIPLAYER_COOP", "COUCH_GAMING", "ON_THE_GO"]).nullable(),
   genres: z.array(z.string().trim().min(1)).max(100),
   tags: z.array(z.string().trim().min(1)).max(100),
+  personalTags: z.array(z.string().trim().min(1)).max(100).optional(),
   sequelPosture: z.enum(["SEQUEL", "STANDALONE"]).nullable(),
   era: z.enum(["PRE_2005", "Y2005_2014", "Y2015_2019", "Y2020_PLUS"]).nullable(),
   maturity: z.enum(["CASUAL", "MATURE"]).nullable(),
@@ -178,6 +180,7 @@ export interface RotatableCandidate {
 
 export interface PlayNextLibraryView {
   playState: PlayState;
+  completedBefore?: boolean;
   priority: Priority | null;
   interest: number | null;
   playSoon: boolean;

@@ -127,16 +127,6 @@ export type PersonalTag = Prisma.PersonalTagModel
  */
 export type GameTag = Prisma.GameTagModel
 /**
- * Model Collection
- * 
- */
-export type Collection = Prisma.CollectionModel
-/**
- * Model CollectionMembership
- * 
- */
-export type CollectionMembership = Prisma.CollectionMembershipModel
-/**
  * Model LibraryEntry
  * 
  */

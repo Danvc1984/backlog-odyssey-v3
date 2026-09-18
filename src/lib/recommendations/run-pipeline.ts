@@ -45,11 +45,13 @@ interface PlayRow {
   metadataSnapshots: Array<{ payload: unknown }>;
   libraryEntry: {
     playState: PlayState;
+    completedBefore: boolean;
     replayCandidate: boolean;
     gameExperience: GameExperience | null;
     preferredEnvironment: Environment | null;
     handheldSuitable: boolean | null;
   } | null;
+  tags?: Array<{ tag: { name: string } }>;
   availability: Array<{
     source: "STEAM" | "OTHER_PLATFORM" | "ROM";
     alternativeSourceId: string | null;
@@ -111,6 +113,7 @@ export function buildPlayPipeline(
       dimensionValues,
       steam: {
         playState: row.libraryEntry?.playState ?? null,
+        completedBefore: row.libraryEntry?.completedBefore ?? false,
         replayCandidate: row.libraryEntry?.replayCandidate ?? false,
         steamLastPlayed: steamRow?.steamLastPlayed ?? null,
       },
@@ -503,6 +506,7 @@ export async function runRecommendationPipeline(
           row.libraryEntry?.gameExperience ?? null,
           resolveDurationEstimate(row.playtimeEvidence, durationProfile)?.hours ?? null,
           row.libraryEntry?.handheldSuitable ?? null,
+          (row.tags ?? []).map(({ tag }) => tag.name),
         ),
       ]));
       const playPool = baselinePool.map((item) => ({ ...item, caveats: [] as ExplanationCaveat[] }));

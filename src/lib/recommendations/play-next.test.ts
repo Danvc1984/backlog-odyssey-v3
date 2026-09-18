@@ -65,10 +65,10 @@ describe("isEligibleForPlayNext", () => {
     ).toBe(false);
   });
 
-  it("excludes PLAYED_BEFORE and ABANDONED without the replay flag", () => {
+  it("excludes COMPLETED and ABANDONED without the replay flag", () => {
     const base = candidate().libraryEntry!;
     expect(
-      isEligibleForPlayNext(candidate({ libraryEntry: { ...base, playState: "PLAYED_BEFORE" } })),
+      isEligibleForPlayNext(candidate({ libraryEntry: { ...base, playState: "COMPLETED" } })),
     ).toBe(false);
     expect(
       isEligibleForPlayNext(candidate({ libraryEntry: { ...base, playState: "ABANDONED" } })),
@@ -79,7 +79,7 @@ describe("isEligibleForPlayNext", () => {
     const base = candidate().libraryEntry!;
     expect(
       isEligibleForPlayNext(
-        candidate({ libraryEntry: { ...base, playState: "PLAYED_BEFORE", replayCandidate: true } }),
+        candidate({ libraryEntry: { ...base, playState: "COMPLETED", replayCandidate: true } }),
       ),
     ).toBe(true);
     expect(
@@ -136,7 +136,7 @@ describe("scorePlayNextCandidate", () => {
       candidate({
         libraryEntry: {
           ...candidate().libraryEntry!,
-          playState: "PLAYED_BEFORE",
+          playState: "COMPLETED",
           replayCandidate: true,
         },
       }),

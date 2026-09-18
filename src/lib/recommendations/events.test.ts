@@ -10,10 +10,10 @@ import {
 describe("playStateTransitionKind", () => {
   it.each([
     ["NOT_STARTED", "IN_PROGRESS", "START"],
-    ["IN_PROGRESS", "PLAYED_BEFORE", "COMPLETION"],
-    ["NOT_STARTED", "PLAYED_BEFORE", "COMPLETION"],
+    ["IN_PROGRESS", "COMPLETED", "COMPLETION"],
+    ["NOT_STARTED", "COMPLETED", "COMPLETION"],
     ["IN_PROGRESS", "ABANDONED", "ABANDONMENT"],
-    ["PLAYED_BEFORE", "ABANDONED", "ABANDONMENT"],
+    ["COMPLETED", "ABANDONED", "ABANDONMENT"],
   ])("maps %s -> %s to %s", (previous, next, expected) => {
     expect(playStateTransitionKind(previous as never, next as never)).toBe(expected);
   });
@@ -22,7 +22,7 @@ describe("playStateTransitionKind", () => {
     ["NOT_STARTED", "NOT_STARTED"],
     ["IN_PROGRESS", "IN_PROGRESS"],
     ["ABANDONED", "NOT_STARTED"],
-    ["PLAYED_BEFORE", "NOT_STARTED"],
+    ["COMPLETED", "NOT_STARTED"],
   ])("does not emit for %s -> %s", (previous, next) => {
     expect(playStateTransitionKind(previous as never, next as never)).toBeNull();
   });

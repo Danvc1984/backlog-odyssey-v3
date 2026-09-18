@@ -24,8 +24,6 @@ export interface ImportDb {
   alternativeSource: { count: () => Promise<number> };
   personalTag: { count: () => Promise<number> };
   gameTag: { count: () => Promise<number> };
-  collection: { count: () => Promise<number> };
-  collectionMembership: { count: () => Promise<number> };
   wishlistEntry: { count: () => Promise<number> };
   unresolvedSteamDlc: { count: () => Promise<number> };
   wishlistImportReview: { count: () => Promise<number> };
@@ -50,8 +48,6 @@ const MODEL_TO_DOMAIN: Array<[keyof ImportDb, string]> = [
   ["alternativeSource", "alternativeSources"],
   ["personalTag", "tags"],
   ["gameTag", "gameTags"],
-  ["collection", "collections"],
-  ["collectionMembership", "collectionMemberships"],
   ["wishlistEntry", "wishlist"],
   ["unresolvedSteamDlc", "unresolvedDlc"],
   ["wishlistImportReview", "wishlistImportReviews"],
@@ -110,8 +106,6 @@ export interface TxDb {
   alternativeSource: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
   personalTag: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
   gameTag: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  collection: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  collectionMembership: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
   wishlistEntry: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
   unresolvedSteamDlc: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
   wishlistImportReview: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
@@ -209,10 +203,21 @@ export async function restoreExportDocument(db: TxDb, document: ExportDocument):
     await db.personalTag.createMany({ data: reviveRows(data.tags, DATE_FIELDS.tags) });
   }
   restored.tags = data.tags.length;
-  if (data.collections.length > 0) {
-    await db.collection.createMany({ data: reviveRows(data.collections, DATE_FIELDS.collections) });
+  const importedTagsByName = new Map(data.tags.map((tag) => [tag.name.trim().toLocaleLowerCase(), tag.id]));
+  const legacyTags = data.collections
+    .filter((collection) => !collection.isSystem)
+    .map((collection) => {
+      const key = collection.name.trim().toLocaleLowerCase();
+      const existingId = importedTagsByName.get(key);
+      if (existingId) return null;
+      importedTagsByName.set(key, collection.id);
+      return { id: collection.id, name: collection.name };
+    })
+    .filter((tag): tag is { id: string; name: string } => tag !== null);
+  if (legacyTags.length > 0) {
+    await db.personalTag.createMany({ data: legacyTags });
   }
-  restored.collections = data.collections.length;
+  restored.tags += legacyTags.length;
 
   const dlcGameIds = new Set(
     data.games
@@ -243,12 +248,22 @@ export async function restoreExportDocument(db: TxDb, document: ExportDocument):
     await db.gameTag.createMany({ data: reviveRows(data.gameTags, DATE_FIELDS.gameTags) });
   }
   restored.gameTags = data.gameTags.length;
-  if (data.collectionMemberships.length > 0) {
-    await db.collectionMembership.createMany({
-      data: reviveRows(data.collectionMemberships, DATE_FIELDS.collectionMemberships),
-    });
+  const migratedMembershipKeys = new Set(data.gameTags.map((membership) => `${membership.gameId}:${membership.tagId}`));
+  const migratedMemberships = data.collectionMemberships
+    .map((membership) => {
+      const collection = data.collections.find((candidate) => candidate.id === membership.collectionId);
+      const tagId = collection ? importedTagsByName.get(collection.name.trim().toLocaleLowerCase()) : undefined;
+      if (!tagId) return null;
+      const key = `${membership.gameId}:${tagId}`;
+      if (migratedMembershipKeys.has(key)) return null;
+      migratedMembershipKeys.add(key);
+      return { gameId: membership.gameId, tagId };
+    })
+    .filter((membership): membership is { gameId: string; tagId: string } => membership !== null);
+  if (migratedMemberships.length > 0) {
+    await db.gameTag.createMany({ data: migratedMemberships });
   }
-  restored.collectionMemberships = data.collectionMemberships.length;
+  restored.gameTags += migratedMemberships.length;
 
   if (data.wishlist.length > 0) {
     await db.wishlistEntry.createMany({

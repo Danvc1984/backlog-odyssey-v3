@@ -291,7 +291,7 @@ describe("recommendation tune and preset actions", () => {
 
     await expect(listKnownGenreTagValues()).resolves.toEqual({
       success: true,
-      data: { genres: ["Action", "Puzzle", "RPG"], tags: ["Co-op", "Story"] },
+      data: { genres: ["Action", "Puzzle", "RPG"], tags: ["Co-op", "Story"], personalTags: [] },
       error: null,
     });
   });
@@ -382,7 +382,7 @@ describe("saveTasteSetup", () => {
     expect(result.success).toBe(true);
     expect(libraryEntryUpdate).toHaveBeenNthCalledWith(1, {
       where: { gameId: "game-played" },
-      data: { playState: "PLAYED_BEFORE", gameExperience: "COUCH_GAMING", preferredEnvironment: "STEAM_DECK" },
+      data: { completedBefore: true, gameExperience: "COUCH_GAMING", preferredEnvironment: "STEAM_DECK" },
     });
     expect(libraryEntryUpdate).toHaveBeenNthCalledWith(2, {
       where: { gameId: "game-liked" },
@@ -451,7 +451,7 @@ interface CandidateRowShape {
   name: string;
   type: "BASE_GAME";
   libraryEntry: {
-    playState: "NOT_STARTED" | "IN_PROGRESS" | "PLAYED_BEFORE" | "ABANDONED";
+    playState: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "ABANDONED";
     priority: "NONE" | "LOW" | "MEDIUM" | "HIGH";
     interest: number | null;
     playSoon: boolean;
@@ -956,7 +956,7 @@ describe("updateRecommendations", () => {
           {
             id: "game-1",
             availability: [{ source: "STEAM" }],
-            libraryEntry: { rating: 5, playState: "PLAYED_BEFORE", replayCandidate: false },
+            libraryEntry: { rating: 5, playState: "COMPLETED", replayCandidate: false },
           },
         ]),
       );
@@ -1500,7 +1500,7 @@ describe("updateRecommendations buy re-ranking", () => {
           {
             id: "game-1",
             availability: [{ source: "STEAM" }],
-            libraryEntry: { rating: 5, playState: "PLAYED_BEFORE", replayCandidate: false },
+            libraryEntry: { rating: 5, playState: "COMPLETED", replayCandidate: false },
           },
         ]),
       );

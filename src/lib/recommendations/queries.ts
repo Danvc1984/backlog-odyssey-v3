@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { parseRecommendationMetadata } from "@/lib/recommendations/metadata";
 
 const KNOWN_VALUES_CACHE_TTL_MS = 10 * 60 * 1000;
-export type KnownGenreTagValues = { genres: string[]; tags: string[] };
+export type KnownGenreTagValues = { genres: string[]; tags: string[]; personalTags: string[] };
 
 let knownValuesCache: { data: KnownGenreTagValues; expiresAt: number } | null = null;
 
@@ -15,7 +15,7 @@ export async function loadKnownGenreTagValues(): Promise<KnownGenreTagValues> {
     return knownValuesCache.data;
   }
 
-  const [games, wishlistEntries] = await Promise.all([
+  const [games, wishlistEntries, personalTags] = await Promise.all([
     prisma.game.findMany({
       select: {
         metadataSnapshots: {
@@ -29,6 +29,9 @@ export async function loadKnownGenreTagValues(): Promise<KnownGenreTagValues> {
     prisma.wishlistEntry.findMany({
       select: { metadataSnapshot: { select: { payload: true } } },
     }),
+    prisma.personalTag?.findMany
+      ? prisma.personalTag.findMany({ select: { name: true }, orderBy: { name: "asc" } })
+      : Promise.resolve([]),
   ]);
   const genres = new Set<string>();
   const tags = new Set<string>();
@@ -40,7 +43,7 @@ export async function loadKnownGenreTagValues(): Promise<KnownGenreTagValues> {
     for (const genre of parsed?.genres ?? []) if (genre) genres.add(genre);
     for (const tag of parsed?.tags ?? []) if (tag) tags.add(tag);
   }
-  const data = { genres: [...genres].sort(), tags: [...tags].sort() };
+  const data = { genres: [...genres].sort(), tags: [...tags].sort(), personalTags: personalTags.map(({ name }) => name) };
   knownValuesCache = { data, expiresAt: Date.now() + KNOWN_VALUES_CACHE_TTL_MS };
   return data;
 }

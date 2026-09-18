@@ -12,7 +12,6 @@ const createGameSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
   availabilitySource: z.enum(["STEAM", "OTHER_PLATFORM", "ROM"]),
   alternativeSourceId: z.string().trim().min(1).optional(),
-  displayName: z.string().trim().optional(),
   interest: z.number().int().min(1).max(5).optional(),
   selectedIgdbId: z.number().int().positive().optional(),
 });
@@ -30,7 +29,6 @@ export async function createGame(input: CreateGameInput) {
     const {
       name,
       availabilitySource,
-      displayName,
       interest = 3,
       selectedIgdbId,
     } = parsed.data;
@@ -58,7 +56,6 @@ export async function createGame(input: CreateGameInput) {
           availability: {
             create: {
               source: availabilitySource,
-              displayName: displayName || null,
               alternativeSourceId,
             },
           },

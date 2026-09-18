@@ -1,9 +1,9 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { PersonalFieldsForm } from "@/components/games/PersonalFieldsForm";
 import { PlayStateSection } from "@/components/games/PlayStateSection";
 import { TagsSection } from "@/components/games/TagsSection";
-import { CollectionsSection } from "@/components/games/CollectionsSection";
 import { DuplicateWarning } from "@/components/games/DuplicateWarning";
 import { DeleteGameDialog } from "@/components/games/DeleteGameDialog";
 import { AvailabilityEditor } from "@/components/games/AvailabilityEditor";
@@ -41,7 +41,6 @@ export default async function GameDetailPage({
   const { id } = await params;
   const [
     game,
-    manualCollections,
     possibleDuplicate,
     playDismissalCount,
     savedSources,
@@ -62,9 +61,6 @@ export default async function GameDetailPage({
         },
         tags: {
           include: { tag: true },
-        },
-        collections: {
-          include: { collection: true },
         },
         dlcs: {
           select: {
@@ -115,11 +111,6 @@ export default async function GameDetailPage({
           select: { ...igdbJobSelect, ...compatJobSelect },
         },
       },
-    }),
-    prisma.collection.findMany({
-      where: { isSystem: false },
-      orderBy: { name: "asc" },
-      select: { id: true, name: true, color: true },
     }),
     prisma.possibleDuplicate.findFirst({
       where: {
@@ -325,6 +316,7 @@ export default async function GameDetailPage({
             game.libraryEntry
               ? {
                   playState: game.libraryEntry.playState,
+                  completedBefore: game.libraryEntry.completedBefore,
                   isMainGame: game.libraryEntry.isMainGame,
                   playSoon: game.libraryEntry.playSoon,
                   replayCandidate: game.libraryEntry.replayCandidate,
@@ -346,7 +338,7 @@ export default async function GameDetailPage({
         id="personal-fields"
         sectionId="personal-fields"
         className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
-        description="Your preferences and notes for the journey."
+        description="Your preferences for the journey."
         status={
           <StatusPill>
             {game.libraryEntry ? "Saved" : "Not in library"}
@@ -364,7 +356,6 @@ export default async function GameDetailPage({
                   rating: game.libraryEntry.rating,
                   preferredEnvironment: game.libraryEntry.preferredEnvironment,
                   gameExperience: game.libraryEntry.gameExperience,
-                  notes: game.libraryEntry.notes,
                 }
               : null
           }
@@ -424,12 +415,19 @@ export default async function GameDetailPage({
       <>
       <SectionCard
         eyebrow="Where it lives"
-        title="Availability"
+        title="Platforms"
         id="availability"
-        description="Platforms where you can find this game. You can pick and choose them *here*"
+        description={
+          <span>
+            Platforms where you can find this game. Manage reusable platform names in{" "}
+            <Link href="/settings#alternative-sources-heading" className="underline underline-offset-2">
+              Settings
+            </Link>.
+          </span>
+        }
         status={
           <StatusPill>
-            {game.availability.length} source
+            {game.availability.length} platform
             {game.availability.length === 1 ? "" : "s"}
           </StatusPill>
         }
@@ -469,27 +467,6 @@ export default async function GameDetailPage({
         />
       </SectionCard>
 
-      <SectionCard
-        eyebrow="Organization"
-        title="Collections"
-        description="Your chosen harbors for browsing and tuning."
-        status={
-          <StatusPill>
-            {game.collections.length} collection
-            {game.collections.length === 1 ? "" : "s"}
-          </StatusPill>
-        }
-      >
-        <CollectionsSection
-          gameId={game.id}
-          initialCollections={game.collections.map((cm) => ({
-            id: cm.collection.id,
-            name: cm.collection.name,
-            color: cm.collection.color,
-          }))}
-          availableCollections={manualCollections}
-        />
-      </SectionCard>
       </>
       )}
 

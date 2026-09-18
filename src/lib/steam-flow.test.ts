@@ -35,7 +35,6 @@ describe("reconcileWishlistImportDlcs", () => {
         type: "DLC",
         baseGameId: "base-1",
         interest: 2,
-        notes: null,
         steamAppId: "200",
         steamAppIdProvenance: "STEAM_IMPORT",
       },

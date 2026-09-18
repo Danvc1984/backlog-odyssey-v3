@@ -43,7 +43,7 @@ enum AvailabilitySource {
 enum PlayState {
   NOT_STARTED
   IN_PROGRESS
-  PLAYED_BEFORE
+  COMPLETED
   ABANDONED
 }
 
@@ -334,7 +334,6 @@ model Game {
   libraryEntry        LibraryEntry?
   availability        GameAvailability[]
   wishlistDlcs        WishlistEntry[]            @relation("WishlistDlcToBase")
-  collections         CollectionMembership[]
   tags                GameTag[]
   compatSnapshots     CompatibilitySnapshot[]
   envCompat           EnvironmentCompatibility[]
@@ -470,27 +469,6 @@ model GameTag {
   @@id([gameId, tagId])
 }
 
-model Collection {
-  id        String                 @id @default(cuid())
-  name      String                 @unique
-  color     String?
-  icon      String?
-  isSystem  Boolean                @default(false)
-  members   CollectionMembership[]
-  createdAt DateTime               @default(now())
-}
-
-model CollectionMembership {
-  collectionId String
-  gameId       String
-  addedAt      DateTime @default(now())
-
-  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  game       Game       @relation(fields: [gameId], references: [id], onDelete: Cascade)
-
-  @@id([collectionId, gameId])
-}
-
 // ---------------------------------------------------------------------------
 // Library, availability, wishlist, prices
 // ---------------------------------------------------------------------------
@@ -499,6 +477,7 @@ model LibraryEntry {
   id                   String               @id @default(cuid())
   gameId               String               @unique
   playState            PlayState            @default(NOT_STARTED)
+  completedBefore      Boolean              @default(false)
   isMainGame           Boolean              @default(false)
   priority             Priority?            @default(NONE)
   interest             Int?
@@ -511,7 +490,6 @@ model LibraryEntry {
   playSoon             Boolean              @default(false)
   replayCandidate      Boolean              @default(false)
   hidden               Boolean              @default(false)
-  notes                String?
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 
@@ -538,7 +516,6 @@ model GameAvailability {
   gameId               String
   source               AvailabilitySource
   alternativeSourceId  String?
-  displayName          String?
   steamAppId           String?
   steamPlaytimeTotal   BigInt?
   steamLastPlayed      DateTime?
@@ -560,7 +537,6 @@ model WishlistEntry {
   gameExperience       GameExperience?
   handheldSuitable     Boolean?
   targetPriceMxn       Decimal? @db.Decimal(10, 2)
-  notes                String?
   steamAppId           String?
   steamAppIdProvenance PriceIdentityProvenance?
   createdAt            DateTime @default(now())

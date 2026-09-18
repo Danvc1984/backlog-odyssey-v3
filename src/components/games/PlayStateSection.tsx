@@ -17,6 +17,7 @@ import type { UpdatePlayStateInput } from "@/actions/game-detail";
 
 type PlayStateData = {
   playState: string;
+  completedBefore: boolean;
   isMainGame: boolean;
   playSoon: boolean;
   replayCandidate: boolean;
@@ -24,14 +25,14 @@ type PlayStateData = {
   handheldSuitable: boolean | null;
 };
 
-type PlayStateValue = "NOT_STARTED" | "IN_PROGRESS" | "PLAYED_BEFORE" | "ABANDONED";
+type PlayStateValue = "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "ABANDONED";
 
-type ToggleKey = "isMainGame" | "playSoon" | "replayCandidate" | "hidden";
+type ToggleKey = "isMainGame" | "playSoon" | "replayCandidate" | "hidden" | "completedBefore";
 
 const PLAY_STATE_OPTIONS = [
   { value: "NOT_STARTED", label: "Not started" },
   { value: "IN_PROGRESS", label: "In progress" },
-  { value: "PLAYED_BEFORE", label: "Played before" },
+  { value: "COMPLETED", label: "Completed" },
   { value: "ABANDONED", label: "Abandoned" },
 ];
 
@@ -39,6 +40,7 @@ const TOGGLES: { key: ToggleKey; label: string }[] = [
   { key: "isMainGame", label: "Main game" },
   { key: "playSoon", label: "Play soon" },
   { key: "replayCandidate", label: "Replay candidate" },
+  { key: "completedBefore", label: "Completed before" },
 ];
 
 export function PlayStateSection({
@@ -58,6 +60,7 @@ export function PlayStateSection({
     replayCandidate: libraryEntry?.replayCandidate ?? false,
     hidden: libraryEntry?.hidden ?? false,
     handheldSuitable: libraryEntry?.handheldSuitable === true,
+    completedBefore: libraryEntry?.completedBefore === true,
   });
 
   if (!libraryEntry) {

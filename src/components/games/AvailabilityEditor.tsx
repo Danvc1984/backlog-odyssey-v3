@@ -6,18 +6,11 @@ import { toast } from "sonner"
 import {
   addGameAvailability,
   removeGameAvailability,
-  updateGameAvailability,
 } from "@/actions/game-detail"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { SourceIcon } from "@/components/sources/SourceIcon"
 import {
-  createAlternativeSource,
-} from "@/actions/sources"
-import {
   availabilitySourcePresentation,
-  suggestSources,
   type AvailabilitySource,
 } from "@/lib/sources/known-sources"
 
@@ -25,7 +18,6 @@ interface AvailabilityRow {
   id: string
   source: AvailabilitySource
   alternativeSourceId: string | null
-  displayName: string | null
   steamAppId: string | null
   steamPlaytimeTotal: bigint | null
   steamLastPlayed: Date | null
@@ -54,13 +46,6 @@ type SourceOption = {
 export function AvailabilityEditor({ gameId, rows, savedSources }: AvailabilityEditorProps) {
   const router = useRouter()
   const [busyKey, setBusyKey] = useState<string | null>(null)
-  const [savingId, setSavingId] = useState<string | null>(null)
-  const [displayNames, setDisplayNames] = useState<Record<string, string>>(
-    () => Object.fromEntries(rows.map((row) => [row.id, row.displayName ?? ""])),
-  )
-  const [sourceQuery, setSourceQuery] = useState("")
-  const [sourceListOpen, setSourceListOpen] = useState(false)
-  const [activeSuggestion, setActiveSuggestion] = useState(0)
 
   const rowBySource = new Map(
     rows.map((row) => [
@@ -97,77 +82,17 @@ export function AvailabilityEditor({ gameId, rows, savedSources }: AvailabilityE
     setBusyKey(null)
     if (!result) return
     if (!result.success) {
-      toast.error(result.error ?? "Failed to update availability")
+      toast.error(result.error ?? "Failed to update platform")
       return
     }
-    toast.success(checked ? "Availability added" : "Availability removed")
+    toast.success(checked ? "Platform added" : "Platform removed")
     router.refresh()
-  }
-
-  const saveDisplayName = async (row: AvailabilityRow) => {
-    if (savingId) return
-    setSavingId(row.id)
-    const result = await updateGameAvailability(row.id, {
-      displayName: displayNames[row.id] ?? "",
-    })
-    setSavingId(null)
-    if (!result.success) {
-      toast.error(result.error ?? "Failed to save availability")
-      return
-    }
-    toast.success("Availability saved")
-    router.refresh()
-  }
-
-  const sourceSuggestions = suggestSources(sourceQuery, savedSources)
-
-  const addSource = async (name: string) => {
-    const trimmedName = name.trim()
-    if (!trimmedName || busyKey) return
-    setBusyKey("new-source")
-    const sourceResult = await createAlternativeSource({ name: trimmedName })
-    if (!sourceResult.success) {
-      setBusyKey(null)
-      toast.error(sourceResult.error ?? "Failed to create source")
-      return
-    }
-    const availabilityResult = await addGameAvailability(gameId, {
-      source: "OTHER_PLATFORM",
-      alternativeSourceId: sourceResult.data.id,
-    })
-    setBusyKey(null)
-    if (!availabilityResult.success) {
-      toast.error(availabilityResult.error ?? "Failed to add availability")
-      return
-    }
-    setSourceQuery("")
-    setSourceListOpen(false)
-    toast.success("Availability added")
-    router.refresh()
-  }
-
-  const handleSourceKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    const suggestions = sourceSuggestions.known
-    if (event.key === "ArrowDown") {
-      event.preventDefault()
-      setSourceListOpen(true)
-      setActiveSuggestion((index) => Math.min(index + 1, suggestions.length - 1))
-    } else if (event.key === "ArrowUp") {
-      event.preventDefault()
-      setActiveSuggestion((index) => Math.max(index - 1, 0))
-    } else if (event.key === "Enter") {
-      event.preventDefault()
-      const suggestion = suggestions[activeSuggestion]
-      void addSource(suggestion?.label ?? sourceQuery)
-    } else if (event.key === "Escape") {
-      setSourceListOpen(false)
-    }
   }
 
   return (
     <div className="grid gap-3 p-4">
       {rows.length === 0 && (
-        <p className="text-sm text-muted-foreground">No availability records.</p>
+        <p className="text-sm text-muted-foreground">No platform records.</p>
       )}
       <div className="grid gap-2">
         {options.map((option) => {
@@ -192,20 +117,10 @@ export function AvailabilityEditor({ gameId, rows, savedSources }: AvailabilityE
                 </label>
                 {syncedSteam && <span className="text-xs text-muted-foreground">Synced</span>}
               </div>
-              {row && (
-                <div className="mt-3 grid gap-2 pl-7">
-                  <label htmlFor={`availability-name-${row.id}`} className="text-xs text-muted-foreground">Display name</label>
-                  <Input
-                    id={`availability-name-${row.id}`}
-                    value={displayNames[row.id] ?? ""}
-                    onChange={(event) => setDisplayNames((current) => ({ ...current, [row.id]: event.target.value }))}
-                    disabled={savingId !== null}
-                    placeholder="Optional platform-specific name"
-                  />
-                  <Button type="button" className="w-fit" size="sm" disabled={savingId !== null} onClick={() => void saveDisplayName(row)}>
-                    {savingId === row.id ? "Saving..." : "Save availability"}
-                  </Button>
-                </div>
+              {row?.source === "OTHER_PLATFORM" && (
+                <p className="mt-2 pl-7 text-xs text-muted-foreground">
+                  Managed platform names can be updated in Settings.
+                </p>
               )}
             </div>
           )

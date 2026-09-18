@@ -10,7 +10,6 @@ export const SNAPSHOT_MODELS = [
   "LibraryEntry",
   "ExternalGameId",
   "GameAvailability",
-  "CollectionMembership",
   "GameTag",
   "MetadataSnapshot",
   "WishlistEntry",
@@ -138,8 +137,7 @@ export type PersonalFieldName =
   | "compatOverrideReason"
   | "playSoon"
   | "replayCandidate"
-  | "hidden"
-  | "notes";
+  | "hidden";
 
 export const PERSONAL_FIELDS: readonly PersonalFieldName[] = [
   "playState",
@@ -153,7 +151,6 @@ export const PERSONAL_FIELDS: readonly PersonalFieldName[] = [
   "playSoon",
   "replayCandidate",
   "hidden",
-  "notes",
 ];
 
 export type MergeSourceLibraryEntry = {
@@ -168,7 +165,6 @@ export type MergeSourceLibraryEntry = {
   playSoon: boolean | null;
   replayCandidate: boolean | null;
   hidden: boolean | null;
-  notes: string | null;
 }
 
 export interface PersonalValueConflict {
@@ -209,7 +205,6 @@ export interface MergeSourceGame {
     steamAppId: string | null;
     alternativeSourceId: string | null;
   }[];
-  collections: { collectionId: string }[];
   tags: { tagId: string }[];
   metadataSnapshots: { id: string; provider: string }[];
   compatSnapshots: { id: string; provider: string }[];
@@ -241,7 +236,6 @@ export interface MergeProposal {
   oneToOne: OneToOneConflict[];
   relations: {
     availability: number;
-    collections: number;
     tags: number;
     metadataSnapshots: number;
   };
@@ -454,10 +448,6 @@ export function buildMergeProposal(input: {
         [...gameA.availability, ...gameB.availability],
         (row) => availabilityRowKey(row) ?? row.id,
       ),
-      collections: countUnique(
-        [...gameA.collections, ...gameB.collections],
-        (row) => row.collectionId,
-      ),
       tags: countUnique(
         [...gameA.tags, ...gameB.tags],
         (row) => row.tagId,
@@ -551,7 +541,6 @@ export function buildDeleteSnapshotPlan(
     if (node.libraryEntry) pushDelete("LibraryEntry", node.libraryEntry);
     for (const row of node.externalIds) pushDelete("ExternalGameId", row);
     for (const row of node.availability) pushDelete("GameAvailability", row);
-    for (const row of node.collections) pushDelete("CollectionMembership", row);
     for (const row of node.tags) pushDelete("GameTag", row);
     for (const row of node.metadataSnapshots) pushDelete("MetadataSnapshot", row);
     for (const wishlist of node.wishlistDlcs) pushWishlistDeletes(pushDelete, wishlist);
@@ -706,11 +695,9 @@ export interface MergeGraphGame {
     source: string;
     steamAppId: string | null;
     alternativeSourceId: string | null;
-    displayName: string | null;
     steamPlaytimeTotal: bigint | null;
     steamLastPlayed: Date | null;
   }[];
-  collections: { collectionId: string; gameId: string }[];
   tags: { tagId: string; gameId: string }[];
   metadataSnapshots: {
     id: string;
@@ -757,8 +744,6 @@ export interface MergeMutationPlan {
     original: Record<string, unknown>;
     data: Record<string, unknown>;
   }[];
-  collectionMoves: JoinMoveDirective[];
-  collectionDeletes: JoinMoveDirective[];
   tagMoves: JoinMoveDirective[];
   tagDeletes: JoinMoveDirective[];
   metadataMoves: MoveDirective[];
@@ -926,34 +911,11 @@ function planAvailabilityMutations(context: MergePlannerContext) {
         data: maxSteamValues(duplicate, row) as Record<string, unknown>,
       });
       context.pushMove("GameAvailability", duplicate);
-    } else if (!duplicate.displayName && row.displayName) {
-      merges.push({
-        rowId: duplicate.id,
-        original: { ...duplicate },
-        data: { displayName: row.displayName },
-      });
-      context.pushMove("GameAvailability", duplicate);
     }
     deletes.push({ id: row.id, row });
     context.pushDelete("GameAvailability", row);
   }
   return { moves, deletes, merges };
-}
-
-function planCollectionMutations(context: MergePlannerContext) {
-  const moves: JoinMoveDirective[] = [];
-  const deletes: JoinMoveDirective[] = [];
-  const survivorCollections = new Set(context.survivor.collections.map((row) => row.collectionId));
-  for (const row of context.discarded.collections) {
-    if (survivorCollections.has(row.collectionId)) {
-      deletes.push({ key: row.collectionId, row });
-      context.pushDelete("CollectionMembership", row);
-    } else {
-      moves.push({ key: row.collectionId, row });
-      context.pushMove("CollectionMembership", row);
-    }
-  }
-  return { moves, deletes };
 }
 
 function planTagMutations(context: MergePlannerContext) {
@@ -1095,7 +1057,6 @@ export function planMergeMutations(input: {
   const libraryEntry = planLibraryMutations(context);
   const external = planExternalIdMutations(context);
   const availability = planAvailabilityMutations(context);
-  const collections = planCollectionMutations(context);
   const tags = planTagMutations(context);
   const metadata = planMetadataMutations(context);
   const wishlist = planWishlistMutations(context);
@@ -1142,8 +1103,6 @@ export function planMergeMutations(input: {
     availabilityMoves: availability.moves,
     availabilityDeletes: availability.deletes,
     availabilityMerges: availability.merges,
-    collectionMoves: collections.moves,
-    collectionDeletes: collections.deletes,
     tagMoves: tags.moves,
     tagDeletes: tags.deletes,
     metadataMoves: metadata.moves,

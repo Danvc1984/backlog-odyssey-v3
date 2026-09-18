@@ -45,7 +45,6 @@ export type WishlistEntryMinAggregateOutputType = {
   gameExperience: $Enums.GameExperience | null
   handheldSuitable: boolean | null
   targetPriceMxn: runtime.Decimal | null
-  notes: string | null
   steamAppId: string | null
   steamAppIdProvenance: $Enums.PriceIdentityProvenance | null
   createdAt: Date | null
@@ -61,7 +60,6 @@ export type WishlistEntryMaxAggregateOutputType = {
   gameExperience: $Enums.GameExperience | null
   handheldSuitable: boolean | null
   targetPriceMxn: runtime.Decimal | null
-  notes: string | null
   steamAppId: string | null
   steamAppIdProvenance: $Enums.PriceIdentityProvenance | null
   createdAt: Date | null
@@ -77,7 +75,6 @@ export type WishlistEntryCountAggregateOutputType = {
   gameExperience: number
   handheldSuitable: number
   targetPriceMxn: number
-  notes: number
   steamAppId: number
   steamAppIdProvenance: number
   createdAt: number
@@ -105,7 +102,6 @@ export type WishlistEntryMinAggregateInputType = {
   gameExperience?: true
   handheldSuitable?: true
   targetPriceMxn?: true
-  notes?: true
   steamAppId?: true
   steamAppIdProvenance?: true
   createdAt?: true
@@ -121,7 +117,6 @@ export type WishlistEntryMaxAggregateInputType = {
   gameExperience?: true
   handheldSuitable?: true
   targetPriceMxn?: true
-  notes?: true
   steamAppId?: true
   steamAppIdProvenance?: true
   createdAt?: true
@@ -137,7 +132,6 @@ export type WishlistEntryCountAggregateInputType = {
   gameExperience?: true
   handheldSuitable?: true
   targetPriceMxn?: true
-  notes?: true
   steamAppId?: true
   steamAppIdProvenance?: true
   createdAt?: true
@@ -240,7 +234,6 @@ export type WishlistEntryGroupByOutputType = {
   gameExperience: $Enums.GameExperience | null
   handheldSuitable: boolean | null
   targetPriceMxn: runtime.Decimal | null
-  notes: string | null
   steamAppId: string | null
   steamAppIdProvenance: $Enums.PriceIdentityProvenance | null
   createdAt: Date
@@ -279,7 +272,6 @@ export type WishlistEntryWhereInput = {
   gameExperience?: Prisma.EnumGameExperienceNullableFilter<"WishlistEntry"> | $Enums.GameExperience | null
   handheldSuitable?: Prisma.BoolNullableFilter<"WishlistEntry"> | boolean | null
   targetPriceMxn?: Prisma.DecimalNullableFilter<"WishlistEntry"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.StringNullableFilter<"WishlistEntry"> | string | null
   steamAppId?: Prisma.StringNullableFilter<"WishlistEntry"> | string | null
   steamAppIdProvenance?: Prisma.EnumPriceIdentityProvenanceNullableFilter<"WishlistEntry"> | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFilter<"WishlistEntry"> | Date | string
@@ -303,7 +295,6 @@ export type WishlistEntryOrderByWithRelationInput = {
   gameExperience?: Prisma.SortOrderInput | Prisma.SortOrder
   handheldSuitable?: Prisma.SortOrderInput | Prisma.SortOrder
   targetPriceMxn?: Prisma.SortOrderInput | Prisma.SortOrder
-  notes?: Prisma.SortOrderInput | Prisma.SortOrder
   steamAppId?: Prisma.SortOrderInput | Prisma.SortOrder
   steamAppIdProvenance?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -330,7 +321,6 @@ export type WishlistEntryWhereUniqueInput = Prisma.AtLeast<{
   gameExperience?: Prisma.EnumGameExperienceNullableFilter<"WishlistEntry"> | $Enums.GameExperience | null
   handheldSuitable?: Prisma.BoolNullableFilter<"WishlistEntry"> | boolean | null
   targetPriceMxn?: Prisma.DecimalNullableFilter<"WishlistEntry"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.StringNullableFilter<"WishlistEntry"> | string | null
   steamAppId?: Prisma.StringNullableFilter<"WishlistEntry"> | string | null
   steamAppIdProvenance?: Prisma.EnumPriceIdentityProvenanceNullableFilter<"WishlistEntry"> | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFilter<"WishlistEntry"> | Date | string
@@ -354,7 +344,6 @@ export type WishlistEntryOrderByWithAggregationInput = {
   gameExperience?: Prisma.SortOrderInput | Prisma.SortOrder
   handheldSuitable?: Prisma.SortOrderInput | Prisma.SortOrder
   targetPriceMxn?: Prisma.SortOrderInput | Prisma.SortOrder
-  notes?: Prisma.SortOrderInput | Prisma.SortOrder
   steamAppId?: Prisma.SortOrderInput | Prisma.SortOrder
   steamAppIdProvenance?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -378,7 +367,6 @@ export type WishlistEntryScalarWhereWithAggregatesInput = {
   gameExperience?: Prisma.EnumGameExperienceNullableWithAggregatesFilter<"WishlistEntry"> | $Enums.GameExperience | null
   handheldSuitable?: Prisma.BoolNullableWithAggregatesFilter<"WishlistEntry"> | boolean | null
   targetPriceMxn?: Prisma.DecimalNullableWithAggregatesFilter<"WishlistEntry"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.StringNullableWithAggregatesFilter<"WishlistEntry"> | string | null
   steamAppId?: Prisma.StringNullableWithAggregatesFilter<"WishlistEntry"> | string | null
   steamAppIdProvenance?: Prisma.EnumPriceIdentityProvenanceNullableWithAggregatesFilter<"WishlistEntry"> | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"WishlistEntry"> | Date | string
@@ -393,7 +381,6 @@ export type WishlistEntryCreateInput = {
   gameExperience?: $Enums.GameExperience | null
   handheldSuitable?: boolean | null
   targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: string | null
   steamAppId?: string | null
   steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
   createdAt?: Date | string
@@ -417,7 +404,6 @@ export type WishlistEntryUncheckedCreateInput = {
   gameExperience?: $Enums.GameExperience | null
   handheldSuitable?: boolean | null
   targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: string | null
   steamAppId?: string | null
   steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
   createdAt?: Date | string
@@ -439,7 +425,6 @@ export type WishlistEntryUpdateInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -463,7 +448,6 @@ export type WishlistEntryUncheckedUpdateInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -486,7 +470,6 @@ export type WishlistEntryCreateManyInput = {
   gameExperience?: $Enums.GameExperience | null
   handheldSuitable?: boolean | null
   targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: string | null
   steamAppId?: string | null
   steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
   createdAt?: Date | string
@@ -501,7 +484,6 @@ export type WishlistEntryUpdateManyMutationInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -517,7 +499,6 @@ export type WishlistEntryUncheckedUpdateManyInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -543,7 +524,6 @@ export type WishlistEntryCountOrderByAggregateInput = {
   gameExperience?: Prisma.SortOrder
   handheldSuitable?: Prisma.SortOrder
   targetPriceMxn?: Prisma.SortOrder
-  notes?: Prisma.SortOrder
   steamAppId?: Prisma.SortOrder
   steamAppIdProvenance?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -564,7 +544,6 @@ export type WishlistEntryMaxOrderByAggregateInput = {
   gameExperience?: Prisma.SortOrder
   handheldSuitable?: Prisma.SortOrder
   targetPriceMxn?: Prisma.SortOrder
-  notes?: Prisma.SortOrder
   steamAppId?: Prisma.SortOrder
   steamAppIdProvenance?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -580,7 +559,6 @@ export type WishlistEntryMinOrderByAggregateInput = {
   gameExperience?: Prisma.SortOrder
   handheldSuitable?: Prisma.SortOrder
   targetPriceMxn?: Prisma.SortOrder
-  notes?: Prisma.SortOrder
   steamAppId?: Prisma.SortOrder
   steamAppIdProvenance?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -768,7 +746,6 @@ export type WishlistEntryCreateWithoutBaseGameInput = {
   gameExperience?: $Enums.GameExperience | null
   handheldSuitable?: boolean | null
   targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: string | null
   steamAppId?: string | null
   steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
   createdAt?: Date | string
@@ -790,7 +767,6 @@ export type WishlistEntryUncheckedCreateWithoutBaseGameInput = {
   gameExperience?: $Enums.GameExperience | null
   handheldSuitable?: boolean | null
   targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: string | null
   steamAppId?: string | null
   steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
   createdAt?: Date | string
@@ -842,7 +818,6 @@ export type WishlistEntryScalarWhereInput = {
   gameExperience?: Prisma.EnumGameExperienceNullableFilter<"WishlistEntry"> | $Enums.GameExperience | null
   handheldSuitable?: Prisma.BoolNullableFilter<"WishlistEntry"> | boolean | null
   targetPriceMxn?: Prisma.DecimalNullableFilter<"WishlistEntry"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.StringNullableFilter<"WishlistEntry"> | string | null
   steamAppId?: Prisma.StringNullableFilter<"WishlistEntry"> | string | null
   steamAppIdProvenance?: Prisma.EnumPriceIdentityProvenanceNullableFilter<"WishlistEntry"> | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFilter<"WishlistEntry"> | Date | string
@@ -857,7 +832,6 @@ export type WishlistEntryCreateWithoutMetadataSnapshotInput = {
   gameExperience?: $Enums.GameExperience | null
   handheldSuitable?: boolean | null
   targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: string | null
   steamAppId?: string | null
   steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
   createdAt?: Date | string
@@ -880,7 +854,6 @@ export type WishlistEntryUncheckedCreateWithoutMetadataSnapshotInput = {
   gameExperience?: $Enums.GameExperience | null
   handheldSuitable?: boolean | null
   targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: string | null
   steamAppId?: string | null
   steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
   createdAt?: Date | string
@@ -917,7 +890,6 @@ export type WishlistEntryUpdateWithoutMetadataSnapshotInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -940,7 +912,6 @@ export type WishlistEntryUncheckedUpdateWithoutMetadataSnapshotInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -961,7 +932,6 @@ export type WishlistEntryCreateWithoutOffersInput = {
   gameExperience?: $Enums.GameExperience | null
   handheldSuitable?: boolean | null
   targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: string | null
   steamAppId?: string | null
   steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
   createdAt?: Date | string
@@ -984,7 +954,6 @@ export type WishlistEntryUncheckedCreateWithoutOffersInput = {
   gameExperience?: $Enums.GameExperience | null
   handheldSuitable?: boolean | null
   targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: string | null
   steamAppId?: string | null
   steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
   createdAt?: Date | string
@@ -1021,7 +990,6 @@ export type WishlistEntryUpdateWithoutOffersInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1044,7 +1012,6 @@ export type WishlistEntryUncheckedUpdateWithoutOffersInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1065,7 +1032,6 @@ export type WishlistEntryCreateWithoutRefreshesInput = {
   gameExperience?: $Enums.GameExperience | null
   handheldSuitable?: boolean | null
   targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: string | null
   steamAppId?: string | null
   steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
   createdAt?: Date | string
@@ -1088,7 +1054,6 @@ export type WishlistEntryUncheckedCreateWithoutRefreshesInput = {
   gameExperience?: $Enums.GameExperience | null
   handheldSuitable?: boolean | null
   targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: string | null
   steamAppId?: string | null
   steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
   createdAt?: Date | string
@@ -1125,7 +1090,6 @@ export type WishlistEntryUpdateWithoutRefreshesInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1148,7 +1112,6 @@ export type WishlistEntryUncheckedUpdateWithoutRefreshesInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1169,7 +1132,6 @@ export type WishlistEntryCreateWithoutCompatSnapshotsInput = {
   gameExperience?: $Enums.GameExperience | null
   handheldSuitable?: boolean | null
   targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: string | null
   steamAppId?: string | null
   steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
   createdAt?: Date | string
@@ -1192,7 +1154,6 @@ export type WishlistEntryUncheckedCreateWithoutCompatSnapshotsInput = {
   gameExperience?: $Enums.GameExperience | null
   handheldSuitable?: boolean | null
   targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: string | null
   steamAppId?: string | null
   steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
   createdAt?: Date | string
@@ -1229,7 +1190,6 @@ export type WishlistEntryUpdateWithoutCompatSnapshotsInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1252,7 +1212,6 @@ export type WishlistEntryUncheckedUpdateWithoutCompatSnapshotsInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1273,7 +1232,6 @@ export type WishlistEntryCreateWithoutEnvCompatInput = {
   gameExperience?: $Enums.GameExperience | null
   handheldSuitable?: boolean | null
   targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: string | null
   steamAppId?: string | null
   steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
   createdAt?: Date | string
@@ -1296,7 +1254,6 @@ export type WishlistEntryUncheckedCreateWithoutEnvCompatInput = {
   gameExperience?: $Enums.GameExperience | null
   handheldSuitable?: boolean | null
   targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: string | null
   steamAppId?: string | null
   steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
   createdAt?: Date | string
@@ -1333,7 +1290,6 @@ export type WishlistEntryUpdateWithoutEnvCompatInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1356,7 +1312,6 @@ export type WishlistEntryUncheckedUpdateWithoutEnvCompatInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1377,7 +1332,6 @@ export type WishlistEntryCreateWithoutRecommendationItemsInput = {
   gameExperience?: $Enums.GameExperience | null
   handheldSuitable?: boolean | null
   targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: string | null
   steamAppId?: string | null
   steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
   createdAt?: Date | string
@@ -1400,7 +1354,6 @@ export type WishlistEntryUncheckedCreateWithoutRecommendationItemsInput = {
   gameExperience?: $Enums.GameExperience | null
   handheldSuitable?: boolean | null
   targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: string | null
   steamAppId?: string | null
   steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
   createdAt?: Date | string
@@ -1437,7 +1390,6 @@ export type WishlistEntryUpdateWithoutRecommendationItemsInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1460,7 +1412,6 @@ export type WishlistEntryUncheckedUpdateWithoutRecommendationItemsInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1481,7 +1432,6 @@ export type WishlistEntryCreateWithoutRecommendationEventsInput = {
   gameExperience?: $Enums.GameExperience | null
   handheldSuitable?: boolean | null
   targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: string | null
   steamAppId?: string | null
   steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
   createdAt?: Date | string
@@ -1504,7 +1454,6 @@ export type WishlistEntryUncheckedCreateWithoutRecommendationEventsInput = {
   gameExperience?: $Enums.GameExperience | null
   handheldSuitable?: boolean | null
   targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: string | null
   steamAppId?: string | null
   steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
   createdAt?: Date | string
@@ -1541,7 +1490,6 @@ export type WishlistEntryUpdateWithoutRecommendationEventsInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1564,7 +1512,6 @@ export type WishlistEntryUncheckedUpdateWithoutRecommendationEventsInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1585,7 +1532,6 @@ export type WishlistEntryCreateManyBaseGameInput = {
   gameExperience?: $Enums.GameExperience | null
   handheldSuitable?: boolean | null
   targetPriceMxn?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: string | null
   steamAppId?: string | null
   steamAppIdProvenance?: $Enums.PriceIdentityProvenance | null
   createdAt?: Date | string
@@ -1600,7 +1546,6 @@ export type WishlistEntryUpdateWithoutBaseGameInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1622,7 +1567,6 @@ export type WishlistEntryUncheckedUpdateWithoutBaseGameInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1644,7 +1588,6 @@ export type WishlistEntryUncheckedUpdateManyWithoutBaseGameInput = {
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
   handheldSuitable?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   targetPriceMxn?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steamAppIdProvenance?: Prisma.NullableEnumPriceIdentityProvenanceFieldUpdateOperationsInput | $Enums.PriceIdentityProvenance | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1736,7 +1679,6 @@ export type WishlistEntrySelect<ExtArgs extends runtime.Types.Extensions.Interna
   gameExperience?: boolean
   handheldSuitable?: boolean
   targetPriceMxn?: boolean
-  notes?: boolean
   steamAppId?: boolean
   steamAppIdProvenance?: boolean
   createdAt?: boolean
@@ -1761,7 +1703,6 @@ export type WishlistEntrySelectCreateManyAndReturn<ExtArgs extends runtime.Types
   gameExperience?: boolean
   handheldSuitable?: boolean
   targetPriceMxn?: boolean
-  notes?: boolean
   steamAppId?: boolean
   steamAppIdProvenance?: boolean
   createdAt?: boolean
@@ -1778,7 +1719,6 @@ export type WishlistEntrySelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   gameExperience?: boolean
   handheldSuitable?: boolean
   targetPriceMxn?: boolean
-  notes?: boolean
   steamAppId?: boolean
   steamAppIdProvenance?: boolean
   createdAt?: boolean
@@ -1795,14 +1735,13 @@ export type WishlistEntrySelectScalar = {
   gameExperience?: boolean
   handheldSuitable?: boolean
   targetPriceMxn?: boolean
-  notes?: boolean
   steamAppId?: boolean
   steamAppIdProvenance?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type WishlistEntryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "type" | "baseGameId" | "interest" | "gameExperience" | "handheldSuitable" | "targetPriceMxn" | "notes" | "steamAppId" | "steamAppIdProvenance" | "createdAt" | "updatedAt", ExtArgs["result"]["wishlistEntry"]>
+export type WishlistEntryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "type" | "baseGameId" | "interest" | "gameExperience" | "handheldSuitable" | "targetPriceMxn" | "steamAppId" | "steamAppIdProvenance" | "createdAt" | "updatedAt", ExtArgs["result"]["wishlistEntry"]>
 export type WishlistEntryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   baseGame?: boolean | Prisma.WishlistEntry$baseGameArgs<ExtArgs>
   metadataSnapshot?: boolean | Prisma.WishlistEntry$metadataSnapshotArgs<ExtArgs>
@@ -1842,7 +1781,6 @@ export type $WishlistEntryPayload<ExtArgs extends runtime.Types.Extensions.Inter
     gameExperience: $Enums.GameExperience | null
     handheldSuitable: boolean | null
     targetPriceMxn: runtime.Decimal | null
-    notes: string | null
     steamAppId: string | null
     steamAppIdProvenance: $Enums.PriceIdentityProvenance | null
     createdAt: Date
@@ -2286,7 +2224,6 @@ export interface WishlistEntryFieldRefs {
   readonly gameExperience: Prisma.FieldRef<"WishlistEntry", 'GameExperience'>
   readonly handheldSuitable: Prisma.FieldRef<"WishlistEntry", 'Boolean'>
   readonly targetPriceMxn: Prisma.FieldRef<"WishlistEntry", 'Decimal'>
-  readonly notes: Prisma.FieldRef<"WishlistEntry", 'String'>
   readonly steamAppId: Prisma.FieldRef<"WishlistEntry", 'String'>
   readonly steamAppIdProvenance: Prisma.FieldRef<"WishlistEntry", 'PriceIdentityProvenance'>
   readonly createdAt: Prisma.FieldRef<"WishlistEntry", 'DateTime'>

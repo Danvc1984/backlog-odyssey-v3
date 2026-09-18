@@ -24,7 +24,6 @@ export interface TodayHeroGame {
 const PLAY_STATE_LABELS: Record<string, string> = {
   NOT_STARTED: "Not started",
   IN_PROGRESS: "In progress",
-  PLAYED_BEFORE: "Played before",
   COMPLETED: "Completed",
   ABANDONED: "Abandoned",
 };

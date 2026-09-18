@@ -7,6 +7,7 @@ import {
   WALLPAPER_QUERY_VERSION,
   buildSearchPlan,
   isPoolStale,
+  wallpaperQueryVariants,
   isWallpaperRefreshThrottled,
   type WallpaperFreshnessState,
   type WallpaperGameReference,
@@ -164,26 +165,30 @@ async function searchTerms(plan: WallpaperSearchPlan): Promise<TermOutcome> {
 
   for (const term of plan.terms) {
     searched.push(term);
-    let result;
-    try {
-      result = await searchWallhaven(term.name, undefined, plan.imagesPerTerm);
-    } catch {
-      result = {
-        ok: false as const,
-        error: { category: "NETWORK" as const, message: "Wallhaven could not be reached" },
-      };
-    }
+    const queries = wallpaperQueryVariants(term.name);
+    let result: Awaited<ReturnType<typeof searchWallhaven>> | null = null;
 
-    if (!result.ok) {
-      diagnostics.push(formatProviderError(term, result.error));
-      continue;
+    for (const query of queries) {
+      try {
+        result = await searchWallhaven(query, undefined, plan.imagesPerTerm);
+      } catch {
+        result = {
+          ok: false,
+          error: { category: "NETWORK", message: "Wallhaven could not be reached" },
+        };
+      }
+
+      if (!result.ok) {
+        diagnostics.push(formatProviderError({ ...term, name: query }, result.error));
+        continue;
+      }
+      hadSuccessfulResponse = true;
+      if (result.items.length > 0) {
+        resultBuckets.push(result.items);
+        break;
+      }
+      diagnostics.push(`${query}: no results`);
     }
-    hadSuccessfulResponse = true;
-    if (result.items.length === 0) {
-      diagnostics.push(`${term.name}: no results`);
-      continue;
-    }
-    resultBuckets.push(result.items);
   }
 
   const byId = new Map<string, WallpaperPool["items"][number]>();

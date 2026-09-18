@@ -40,7 +40,6 @@ function baseLibraryEntry(): MergeSourceLibraryEntry {
     playSoon: false,
     replayCandidate: false,
     hidden: false,
-    notes: null,
   };
 }
 
@@ -54,7 +53,6 @@ function makeGame(overrides: Record<string, unknown> = {}) {
     externalIds: [],
     dlcs: [],
     availability: [],
-    collections: [],
     tags: [],
     metadataSnapshots: [],
     wishlistDlcs: [],
@@ -290,7 +288,6 @@ function makeGraphGame(overrides: Record<string, unknown> = {}): MergeGraphGame 
     externalIds: [],
     dlcs: [],
     availability: [],
-    collections: [],
     tags: [],
     metadataSnapshots: [],
     wishlistDlcs: [],
@@ -319,7 +316,6 @@ function makeResolvedPlan(overrides: Partial<ResolvedMergePlan> = {}): ResolvedM
       playSoon: false,
       replayCandidate: false,
       hidden: false,
-      notes: null,
     },
     externalKeep: [],
     externalDeleteRowIds: [],
@@ -340,7 +336,7 @@ describe("resolveMergePlan", () => {
     finalName: "Hades",
     blocked: true,
     library: {
-      defaults: { playState: "NOT_STARTED", isMainGame: false, priority: "NONE", notes: null },
+      defaults: { playState: "NOT_STARTED", isMainGame: false, priority: "NONE" },
       conflicts: [
         {
           field: "rating",
@@ -362,7 +358,7 @@ describe("resolveMergePlan", () => {
       ],
     },
     oneToOne: [],
-    relations: { availability: 0, collections: 0, tags: 0, metadataSnapshots: 0 },
+    relations: { availability: 0, tags: 0, metadataSnapshots: 0 }
   } as Parameters<typeof resolveMergePlan>[0];
 
   it("resolves a complete valid set of choices", () => {
@@ -564,7 +560,7 @@ describe("planMergeMutations", () => {
     ]);
   });
 
-  it("moves unique availability rows and deduplicates collections and tags", () => {
+  it("moves unique availability rows and deduplicates tags", () => {
     const gameA = makeGraphGame({
       id: "game-a",
       availability: [
@@ -577,30 +573,16 @@ describe("planMergeMutations", () => {
           steamLastPlayed: null,
         },
       ],
-      collections: [
-        { collectionId: "col-1", gameId: "game-a" },
-        { collectionId: "col-2", gameId: "game-a" },
-      ],
       tags: [{ tagId: "tag-1", gameId: "game-a" }],
     });
     const gameB = makeGraphGame({
       id: "game-b",
       origin: "STEAM_IMPORT",
-      collections: [{ collectionId: "col-2", gameId: "game-b" }],
     });
 
     const mutations = run(gameA, gameB);
 
     expect(mutations.availabilityMoves.map((m) => m.id)).toEqual(["av-a"]);
-    expect(mutations.collectionMoves).toEqual([
-      { key: "col-1", row: { collectionId: "col-1", gameId: "game-a" } },
-    ]);
-    expect(mutations.collectionDeletes).toEqual([
-      {
-        key: "col-2",
-        row: { collectionId: "col-2", gameId: "game-a" },
-      },
-    ]);
     expect(mutations.tagMoves.map((m) => m.key)).toEqual(["tag-1"]);
   });
 
@@ -944,7 +926,6 @@ describe("buildDeleteSnapshotPlan", () => {
           steamLastPlayed: new Date("2026-02-01T00:00:00.000Z"),
         },
       ],
-      collections: [{ collectionId: "col-1", gameId: "game-a" }],
       tags: [{ tagId: "tag-1", gameId: "game-a" }],
       metadataSnapshots: [{ id: "m1", gameId: "game-a", provider: "IGDB", fetchedAt: new Date("2026-01-01") }],
       wishlistDlcs: [{ id: "w1", baseGameId: "game-a" }],
@@ -973,7 +954,6 @@ describe("buildDeleteSnapshotPlan", () => {
     expect(models).toContain("LibraryEntry");
     expect(models).toContain("ExternalGameId");
     expect(models).toContain("GameAvailability");
-    expect(models).toContain("CollectionMembership");
     expect(models).toContain("GameTag");
     expect(models).toContain("MetadataSnapshot");
     expect(models).toContain("WishlistEntry");
@@ -1035,7 +1015,6 @@ describe("previewDelete", () => {
       _count: {
         externalIds: 1,
         availability: 2,
-        collections: 3,
         tags: 1,
         metadataSnapshots: 1,
         compatSnapshots: 0,
@@ -1057,7 +1036,6 @@ describe("previewDelete", () => {
       expect(result.data.relations).toEqual({
         externalIds: 1,
         availability: 2,
-        collections: 3,
         tags: 1,
         metadataSnapshots: 1,
         compatSnapshots: 0,

@@ -20,7 +20,7 @@ const DLC_AFFINITY_POINTS = 6;
 type PlayStateLike =
   | "NOT_STARTED"
   | "IN_PROGRESS"
-  | "PLAYED_BEFORE"
+  | "COMPLETED"
   | "ABANDONED";
 
 export interface BuyBaseGameView {
@@ -185,9 +185,9 @@ export function scoreBuyCandidate(
     if (base?.libraryEntry) {
       const entry = base.libraryEntry;
       const ratedHigh = entry.rating != null && entry.rating >= 4;
-      const playedBefore = entry.playState === "PLAYED_BEFORE";
+      const completed = entry.playState === "COMPLETED";
       const replayFlagged = entry.replayCandidate;
-      if (ratedHigh || playedBefore || replayFlagged) {
+      if (ratedHigh || completed || replayFlagged) {
         score += DLC_AFFINITY_POINTS;
         positive.push({
           factor: "dlc_affinity",

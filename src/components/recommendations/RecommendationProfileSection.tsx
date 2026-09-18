@@ -26,33 +26,42 @@ interface RecommendationProfileSectionProps {
   }[];
 }
 
+function profileHealth(payload: RecommendationProfilePayload | undefined) {
+  if (!payload || payload.evidence.eventsConsidered === 0) {
+    return {
+      label: "Getting started",
+      description: "Your profile will learn as you play, finish, or dismiss games.",
+      action: "Start using recommendations to build a useful profile.",
+    };
+  }
+
+  if (payload.evidence.unresolvedTargets > 0) {
+    return {
+      label: "Needs a refresh",
+      description: "Your profile has useful learning, but some recent choices need matching game data.",
+      action: "Enrich affected games, then rebuild the profile.",
+    };
+  }
+
+  return {
+    label: "Learning well",
+    description: "Your recent choices are available to improve recommendation ranking.",
+    action: "Keep rating recommendations to make the profile more personal.",
+  };
+}
+
 function ProfileContent({
   payload,
 }: {
   payload: RecommendationProfilePayload;
 }) {
-  const hasEvents = payload.evidence.eventsConsidered > 0;
-  if (!hasEvents) {
-    return (
-      <p className="mt-4 text-sm text-muted-foreground">
-        Not enough history yet. Play, finish, or dismiss games and the profile
-        will build from that.
-      </p>
-    );
+  if (payload.evidence.eventsConsidered === 0) {
+    return null;
   }
+
   return (
-    <>
-      <div className="mt-3 text-sm text-muted-foreground">
-        <p>
-          {payload.evidence.eventsConsidered} events considered,{" "}
-          {payload.evidence.unresolvedTargets} unresolved targets
-        </p>
-        <p className="mt-1">
-          {Object.entries(payload.evidence.byKind)
-            .map(([kind, count]) => `${kind}: ${count}`)
-            .join(" · ")}
-        </p>
-      </div>
+    <details className="mt-4 rounded-md border border-border bg-card-alt/30 p-4">
+      <summary className="cursor-pointer font-medium">Learned signals</summary>
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         {Object.entries(payload.dimensions).map(([dimension, signals]) => {
           const top = Object.entries(signals)
@@ -76,8 +85,7 @@ function ProfileContent({
                     <li key={value} className="flex justify-between gap-3">
                       <span className="truncate">{value}</span>
                       <span className="shrink-0 text-muted-foreground">
-                        {signal.weight >= 0 ? "+" : ""}
-                        {signal.weight.toFixed(2)} · {signal.support}
+                        {signal.weight >= 0 ? "Leans toward" : "Leans away from"}
                       </span>
                     </li>
                   ))}
@@ -87,7 +95,7 @@ function ProfileContent({
           );
         })}
       </div>
-    </>
+    </details>
   );
 }
 
@@ -96,12 +104,13 @@ export function RecommendationProfileSection({
   preferences,
 }: RecommendationProfileSectionProps) {
   const payload = profile?.payload as RecommendationProfilePayload | undefined;
+  const health = profileHealth(payload);
   return (
     <SectionCard
       eyebrow="Recommendations"
       title="Recommendation Profile"
       id="recommendation-profile-heading"
-      description="Remove recommendation runs, dismissals, event history, learned profile, preferences, tune state, and presets. Your games, wishlist, offers, and provider data stay unchanged."
+      description="Tune how recommendations learn from your choices. Resetting recommendations does not change your games, wishlist, offers, or provider data."
       aside={
         <div className="flex flex-wrap items-center justify-end gap-2">
           <RebuildRecommendationProfileButton />
@@ -110,19 +119,15 @@ export function RecommendationProfileSection({
       }
     >
       <RecommendationPreferenceControls profile={payload} preferences={preferences} />
-      {profile && (
-        <p className="mt-2 text-xs text-muted-foreground">
-          Rebuilt {profile.rebuiltAt.toLocaleString()}
-        </p>
-      )}
-      {payload ? (
-        <ProfileContent payload={payload} />
-      ) : (
-        <p className="mt-4 text-sm text-muted-foreground">
-          Not enough history yet. Play, finish, or dismiss games and the profile
-          will build from that.
-        </p>
-      )}
+      <div className="mt-4 rounded-md border border-border bg-card-alt/30 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="font-medium">{health.label}</h3>
+          <span className="technical-label text-muted-foreground">Profile health</span>
+        </div>
+        <p className="mt-2 text-sm text-muted-foreground">{health.description}</p>
+        <p className="mt-2 text-sm">Next: {health.action}</p>
+      </div>
+      {payload && <ProfileContent payload={payload} />}
     </SectionCard>
   );
 }

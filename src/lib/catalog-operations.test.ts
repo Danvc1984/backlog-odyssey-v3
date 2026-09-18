@@ -35,7 +35,6 @@ function makeSourceGame(overrides: Partial<MergeSourceGame> = {}): MergeSourceGa
     externalIds: [],
     dlc: [],
     availability: [],
-    collections: [],
     tags: [],
     metadataSnapshots: [],
     compatSnapshots: [],
@@ -57,7 +56,6 @@ function baseLibraryEntry(): MergeSourceLibraryEntry {
     playSoon: false,
     replayCandidate: false,
     hidden: false,
-    notes: null,
   };
 }
 
@@ -84,14 +82,14 @@ describe("suggestSurvivor", () => {
 describe("resolvePersonalFields", () => {
   it("defaults to the value present on only one side", () => {
     const result = resolvePersonalFields(
-      { ...baseLibraryEntry(), notes: "from A" },
+      { ...baseLibraryEntry(), interest: 3 },
       makeSourceGame().libraryEntry,
       "game-a",
       "game-b",
     );
 
     expect(result.conflicts).toEqual([]);
-    expect(result.defaults.notes).toBe("from A");
+    expect(result.defaults.interest).toBe(3);
     expect(result.defaults.priority).toBe("NONE");
   });
 
@@ -105,18 +103,17 @@ describe("resolvePersonalFields", () => {
 
     expect(result.conflicts).toEqual([]);
     expect(result.defaults.interest).toBeNull();
-    expect(result.defaults.notes).toBeNull();
   });
 
   it("reports a conflict for differing non-null values", () => {
     const result = resolvePersonalFields(
-      { ...baseLibraryEntry(), rating: 8, notes: "A notes" },
-      { ...baseLibraryEntry(), rating: 6, notes: "B notes" },
+      { ...baseLibraryEntry(), rating: 8 },
+      { ...baseLibraryEntry(), rating: 6 },
       "game-a",
       "game-b",
     );
 
-    expect(result.conflicts.map((c) => c.field)).toEqual(["rating", "notes"]);
+    expect(result.conflicts.map((c) => c.field)).toEqual(["rating"]);
     expect(result.conflicts[0]).toEqual({
       field: "rating",
       a: { gameId: "game-a", value: 8 },
@@ -285,7 +282,6 @@ describe("buildMergeProposal", () => {
         { id: "a1", source: "STEAM", steamAppId: "1145360", alternativeSourceId: null },
         { id: "a2", source: "ROM", steamAppId: null, alternativeSourceId: null },
       ],
-      collections: [{ collectionId: "col-1" }],
       tags: [{ tagId: "tag-1" }],
       metadataSnapshots: [{ id: "m1", provider: "IGDB" }],
     });
@@ -297,7 +293,6 @@ describe("buildMergeProposal", () => {
       availability: [
         { id: "a3", source: "STEAM", steamAppId: "1145360", alternativeSourceId: null },
       ],
-      collections: [{ collectionId: "col-2" }],
       metadataSnapshots: [{ id: "m2", provider: "IGDB" }],
       externalIds: [{ id: "e1", namespace: "steam", externalId: "1145360", gameId: "game-b" }],
     });
@@ -311,7 +306,6 @@ describe("buildMergeProposal", () => {
     expect(proposal.games[1]).toEqual({ id: "game-b", name: "Hades", origin: "STEAM_IMPORT", dlcCount: 0 });
     expect(proposal.relations).toEqual({
       availability: 2,
-      collections: 2,
       tags: 1,
       metadataSnapshots: 1,
     });
@@ -522,7 +516,6 @@ describe("availabilityRowKey", () => {
     source: "OTHER_PLATFORM",
     steamAppId: null,
     alternativeSourceId: "as-1",
-    displayName: null,
     steamPlaytimeTotal: null,
     steamLastPlayed: null,
     ...overrides,
@@ -575,7 +568,6 @@ describe("planMergeMutations availability union", () => {
     externalIds: [],
     dlcs: [],
     availability,
-    collections: [],
     tags: [],
     metadataSnapshots: [],
     wishlistDlcs: [],
@@ -591,7 +583,6 @@ describe("planMergeMutations availability union", () => {
     gameId: "survivor",
     steamAppId: null,
     alternativeSourceId: null,
-    displayName: null,
     steamPlaytimeTotal: null,
     steamLastPlayed: null,
     ...overrides,
@@ -610,12 +601,12 @@ describe("planMergeMutations availability union", () => {
   const snapshotFor = (records: { row: Record<string, unknown> }[], id: string) =>
     records.find((record) => record.row.id === id);
 
-  it("folds a duplicate ROM row into the survivor without a display-name change", () => {
+  it("folds a duplicate ROM row into the survivor", () => {
     const gameA = makeGame("survivor", [
-      availabilityRow({ id: "r1", source: "ROM", displayName: "My ROM" }),
+      availabilityRow({ id: "r1", source: "ROM" }),
     ]);
     const gameB = makeGame("discarded", [
-      availabilityRow({ id: "r2", source: "ROM", displayName: null }),
+      availabilityRow({ id: "r2", source: "ROM" }),
     ]);
 
     const result = planMergeMutations({ gameA, gameB, plan });
@@ -630,13 +621,12 @@ describe("planMergeMutations availability union", () => {
     expect(snapshotFor(result.snapshot.records, "r1")).toBeUndefined();
   });
 
-  it("folds an OTHER_PLATFORM duplicate and fills the survivor display name", () => {
+  it("folds an OTHER_PLATFORM duplicate", () => {
     const gameA = makeGame("survivor", [
       availabilityRow({
         id: "o1",
         source: "OTHER_PLATFORM",
         alternativeSourceId: "as-1",
-        displayName: null,
       }),
     ]);
     const gameB = makeGame("discarded", [
@@ -644,7 +634,6 @@ describe("planMergeMutations availability union", () => {
         id: "o2",
         source: "OTHER_PLATFORM",
         alternativeSourceId: "as-1",
-        displayName: "GOG version",
       }),
     ]);
 
@@ -652,14 +641,7 @@ describe("planMergeMutations availability union", () => {
 
     expect(result.availabilityMoves).toEqual([]);
     expect(result.availabilityDeletes.map((d) => d.id)).toEqual(["o2"]);
-    expect(result.availabilityMerges).toMatchObject([
-      { rowId: "o1", data: { displayName: "GOG version" } },
-    ]);
-    expect(snapshotFor(result.snapshot.records, "o1")).toMatchObject({
-      model: "GameAvailability",
-      action: "update",
-      row: { displayName: null },
-    });
+    expect(result.availabilityMerges).toEqual([]);
     expect(snapshotFor(result.snapshot.records, "o2")).toMatchObject({
       model: "GameAvailability",
       action: "delete",
@@ -672,7 +654,6 @@ describe("planMergeMutations availability union", () => {
         id: "o1",
         source: "OTHER_PLATFORM",
         alternativeSourceId: "as-1",
-        displayName: "Existing name",
       }),
     ]);
     const gameB = makeGame("discarded", [
@@ -680,7 +661,6 @@ describe("planMergeMutations availability union", () => {
         id: "o2",
         source: "OTHER_PLATFORM",
         alternativeSourceId: "as-1",
-        displayName: "Other name",
       }),
     ]);
 

@@ -11,7 +11,7 @@ export const EVENT_RETENTION_DAYS: Record<RecommendationEventKind, number> = {
   ABANDONMENT: 730,
 };
 
-type PlayState = "NOT_STARTED" | "IN_PROGRESS" | "PLAYED_BEFORE" | "ABANDONED";
+type PlayState = "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "ABANDONED";
 
 export function playStateTransitionKind(
   previous: PlayState | null,
@@ -19,7 +19,7 @@ export function playStateTransitionKind(
 ): "START" | "COMPLETION" | "ABANDONMENT" | null {
   if (previous === next) return null;
   if (next === "IN_PROGRESS") return "START";
-  if (next === "PLAYED_BEFORE") return "COMPLETION";
+  if (next === "COMPLETED") return "COMPLETION";
   if (next === "ABANDONED") return "ABANDONMENT";
   return null;
 }

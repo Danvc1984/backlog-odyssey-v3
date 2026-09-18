@@ -8,7 +8,7 @@ export const WALLPAPER_MIN_IMAGES_PER_IN_PROGRESS_GAME = 3;
 export const WALLPAPER_MAX_SEARCHES_PER_REFRESH = WALLPAPER_MAX_IN_PROGRESS_GAMES;
 export const WALLPAPER_POOL_STALE_MS = 7 * 24 * 60 * 60 * 1000;
 export const WALLPAPER_REFRESH_THROTTLE_MS = 60 * 60 * 1000;
-export const WALLPAPER_QUERY_VERSION = 3;
+export const WALLPAPER_QUERY_VERSION = 4;
 
 export interface WallpaperCandidate {
   id: string;
@@ -98,6 +98,17 @@ export const wallpaperRenderTargetSchema = z.object({
   day: z.string().refine((value) => parseDay(value) !== null),
   source: z.enum(["daily", "shuffle"]),
 });
+
+export function wallpaperQueryVariants(name: string): string[] {
+  const trimmed = name.trim();
+  const baseTitle = trimmed
+    .replace(/\s*[-:(]?\s*(?:remastered|definitive|complete|game of the year|goty|deluxe|ultimate|enhanced)\s*(?:edition)?\s*\)?$/iu, "")
+    .trim();
+
+  return baseTitle && baseTitle.localeCompare(trimmed, undefined, { sensitivity: "accent" }) !== 0
+    ? [trimmed, baseTitle]
+    : [trimmed];
+}
 
 export function parseWallpaperCandidate(value: unknown): WallpaperCandidate | null {
   const result = wallpaperCandidateSchema.safeParse(value);

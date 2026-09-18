@@ -414,8 +414,6 @@ export const ModelName = {
   EnrichmentJob: 'EnrichmentJob',
   PersonalTag: 'PersonalTag',
   GameTag: 'GameTag',
-  Collection: 'Collection',
-  CollectionMembership: 'CollectionMembership',
   LibraryEntry: 'LibraryEntry',
   AlternativeSource: 'AlternativeSource',
   GameAvailability: 'GameAvailability',
@@ -456,7 +454,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "igdbTokenCache" | "user" | "account" | "session" | "appSettings" | "steamConnection" | "steamRecentActivityCache" | "game" | "unresolvedSteamDlc" | "wishlistImportReview" | "wishlistImportIgnore" | "externalGameId" | "metadataSnapshot" | "playtimeEvidence" | "enrichmentJob" | "personalTag" | "gameTag" | "collection" | "collectionMembership" | "libraryEntry" | "alternativeSource" | "gameAvailability" | "wishlistEntry" | "wishlistMetadataSnapshot" | "dealOffer" | "itadIdentity" | "priceRefresh" | "wishlistCompatSweep" | "compatibilitySnapshot" | "environmentCompatibility" | "wishlistCompatibilitySnapshot" | "wishlistEnvironmentCompatibility" | "possibleDuplicate" | "recommendationRun" | "recommendationItem" | "recommendationFeedback" | "recommendationEvent" | "recommendationProfile" | "recommendationPreference" | "recommendationTuneState" | "recommendationPreset" | "wallpaperState" | "syncRun" | "catalogOperation"
+    modelProps: "igdbTokenCache" | "user" | "account" | "session" | "appSettings" | "steamConnection" | "steamRecentActivityCache" | "game" | "unresolvedSteamDlc" | "wishlistImportReview" | "wishlistImportIgnore" | "externalGameId" | "metadataSnapshot" | "playtimeEvidence" | "enrichmentJob" | "personalTag" | "gameTag" | "libraryEntry" | "alternativeSource" | "gameAvailability" | "wishlistEntry" | "wishlistMetadataSnapshot" | "dealOffer" | "itadIdentity" | "priceRefresh" | "wishlistCompatSweep" | "compatibilitySnapshot" | "environmentCompatibility" | "wishlistCompatibilitySnapshot" | "wishlistEnvironmentCompatibility" | "possibleDuplicate" | "recommendationRun" | "recommendationItem" | "recommendationFeedback" | "recommendationEvent" | "recommendationProfile" | "recommendationPreference" | "recommendationTuneState" | "recommendationPreset" | "wallpaperState" | "syncRun" | "catalogOperation"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1715,154 +1713,6 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.GameTagCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.GameTagCountAggregateOutputType> | number
-        }
-      }
-    }
-    Collection: {
-      payload: Prisma.$CollectionPayload<ExtArgs>
-      fields: Prisma.CollectionFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.CollectionFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.CollectionFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionPayload>
-        }
-        findFirst: {
-          args: Prisma.CollectionFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.CollectionFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionPayload>
-        }
-        findMany: {
-          args: Prisma.CollectionFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionPayload>[]
-        }
-        create: {
-          args: Prisma.CollectionCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionPayload>
-        }
-        createMany: {
-          args: Prisma.CollectionCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.CollectionCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionPayload>[]
-        }
-        delete: {
-          args: Prisma.CollectionDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionPayload>
-        }
-        update: {
-          args: Prisma.CollectionUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionPayload>
-        }
-        deleteMany: {
-          args: Prisma.CollectionDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.CollectionUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.CollectionUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionPayload>[]
-        }
-        upsert: {
-          args: Prisma.CollectionUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionPayload>
-        }
-        aggregate: {
-          args: Prisma.CollectionAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateCollection>
-        }
-        groupBy: {
-          args: Prisma.CollectionGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.CollectionGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.CollectionCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.CollectionCountAggregateOutputType> | number
-        }
-      }
-    }
-    CollectionMembership: {
-      payload: Prisma.$CollectionMembershipPayload<ExtArgs>
-      fields: Prisma.CollectionMembershipFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.CollectionMembershipFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionMembershipPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.CollectionMembershipFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionMembershipPayload>
-        }
-        findFirst: {
-          args: Prisma.CollectionMembershipFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionMembershipPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.CollectionMembershipFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionMembershipPayload>
-        }
-        findMany: {
-          args: Prisma.CollectionMembershipFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionMembershipPayload>[]
-        }
-        create: {
-          args: Prisma.CollectionMembershipCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionMembershipPayload>
-        }
-        createMany: {
-          args: Prisma.CollectionMembershipCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.CollectionMembershipCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionMembershipPayload>[]
-        }
-        delete: {
-          args: Prisma.CollectionMembershipDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionMembershipPayload>
-        }
-        update: {
-          args: Prisma.CollectionMembershipUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionMembershipPayload>
-        }
-        deleteMany: {
-          args: Prisma.CollectionMembershipDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.CollectionMembershipUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.CollectionMembershipUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionMembershipPayload>[]
-        }
-        upsert: {
-          args: Prisma.CollectionMembershipUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectionMembershipPayload>
-        }
-        aggregate: {
-          args: Prisma.CollectionMembershipAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateCollectionMembership>
-        }
-        groupBy: {
-          args: Prisma.CollectionMembershipGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.CollectionMembershipGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.CollectionMembershipCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.CollectionMembershipCountAggregateOutputType> | number
         }
       }
     }
@@ -3982,31 +3832,11 @@ export const GameTagScalarFieldEnum = {
 export type GameTagScalarFieldEnum = (typeof GameTagScalarFieldEnum)[keyof typeof GameTagScalarFieldEnum]
 
 
-export const CollectionScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  color: 'color',
-  icon: 'icon',
-  isSystem: 'isSystem',
-  createdAt: 'createdAt'
-} as const
-
-export type CollectionScalarFieldEnum = (typeof CollectionScalarFieldEnum)[keyof typeof CollectionScalarFieldEnum]
-
-
-export const CollectionMembershipScalarFieldEnum = {
-  collectionId: 'collectionId',
-  gameId: 'gameId',
-  addedAt: 'addedAt'
-} as const
-
-export type CollectionMembershipScalarFieldEnum = (typeof CollectionMembershipScalarFieldEnum)[keyof typeof CollectionMembershipScalarFieldEnum]
-
-
 export const LibraryEntryScalarFieldEnum = {
   id: 'id',
   gameId: 'gameId',
   playState: 'playState',
+  completedBefore: 'completedBefore',
   isMainGame: 'isMainGame',
   priority: 'priority',
   interest: 'interest',
@@ -4019,7 +3849,6 @@ export const LibraryEntryScalarFieldEnum = {
   playSoon: 'playSoon',
   replayCandidate: 'replayCandidate',
   hidden: 'hidden',
-  notes: 'notes',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -4045,7 +3874,6 @@ export const GameAvailabilityScalarFieldEnum = {
   gameId: 'gameId',
   source: 'source',
   alternativeSourceId: 'alternativeSourceId',
-  displayName: 'displayName',
   steamAppId: 'steamAppId',
   steamPlaytimeTotal: 'steamPlaytimeTotal',
   steamLastPlayed: 'steamLastPlayed',
@@ -4064,7 +3892,6 @@ export const WishlistEntryScalarFieldEnum = {
   gameExperience: 'gameExperience',
   handheldSuitable: 'handheldSuitable',
   targetPriceMxn: 'targetPriceMxn',
-  notes: 'notes',
   steamAppId: 'steamAppId',
   steamAppIdProvenance: 'steamAppIdProvenance',
   createdAt: 'createdAt',
@@ -5095,8 +4922,6 @@ export type GlobalOmitConfig = {
   enrichmentJob?: Prisma.EnrichmentJobOmit
   personalTag?: Prisma.PersonalTagOmit
   gameTag?: Prisma.GameTagOmit
-  collection?: Prisma.CollectionOmit
-  collectionMembership?: Prisma.CollectionMembershipOmit
   libraryEntry?: Prisma.LibraryEntryOmit
   alternativeSource?: Prisma.AlternativeSourceOmit
   gameAvailability?: Prisma.GameAvailabilityOmit

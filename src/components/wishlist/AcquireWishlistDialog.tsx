@@ -211,7 +211,7 @@ export function AcquireWishlistDialog({
             <form onSubmit={handleSubmit} className="grid gap-5">
               <div className="grid gap-2 rounded-lg border border-border bg-muted/20 p-3">
                 <Label htmlFor={`acquire-source-${entry.id}`}>Where did you acquire it?</Label>
-                <p className="text-xs text-muted-foreground">This source becomes the availability label in your catalog.</p>
+                <p className="text-xs text-muted-foreground">This source becomes the platform label in your catalog.</p>
                 <Select value={source} onValueChange={(value) => setSource(value as SourceValue)}>
                   <SelectTrigger id={`acquire-source-${entry.id}`} aria-label="Acquisition source">
                     <SelectValue />

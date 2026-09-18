@@ -139,7 +139,7 @@ export function AlternativeSourcesCard({ sources }: AlternativeSourcesCardProps)
       eyebrow="Catalog configuration"
       title="Alternative sources"
       id="alternative-sources-heading"
-      description="Reusable stores behind Other platform availability rows. Archived sources keep their references but stop appearing in quick picks."
+      description="Reusable stores behind Other platform rows. Archived sources keep their references but stop appearing in platform quick picks."
     >
       <div className="flex flex-wrap items-end gap-2">
         <label className="text-xs">

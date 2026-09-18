@@ -58,7 +58,6 @@ export async function reconcileWishlistImportDlcs(
           type: "DLC",
           baseGameId,
           interest: 2,
-          notes: null,
           steamAppId: unresolved.steamAppId,
           steamAppIdProvenance: "STEAM_IMPORT",
         },

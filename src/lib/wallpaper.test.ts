@@ -16,6 +16,7 @@ import {
   parseWallpaperRenderTarget,
   pickShuffleIndex,
   resolveWallpaperSelection,
+  wallpaperQueryVariants,
   type WallpaperCandidate,
   type WallpaperGameReference,
 } from "./wallpaper";
@@ -54,6 +55,16 @@ describe("wallpaper parsers", () => {
     expect(parseWallpaperPool({ ...pool, fetchedAt: "not-a-date" })).toBeNull();
     expect(parseWallpaperPool({ ...pool, queryVersion: 1 })).toBeNull();
     expect(parseWallpaperRenderTarget({ day: "today", source: "shuffle" })).toBeNull();
+  });
+});
+
+describe("wallpaper query variants", () => {
+  it("retries recognized edition suffixes with the base title", () => {
+    expect(wallpaperQueryVariants("Horizon Zero Dawn Remastered")).toEqual([
+      "Horizon Zero Dawn Remastered",
+      "Horizon Zero Dawn",
+    ]);
+    expect(wallpaperQueryVariants("CARRION")).toEqual(["CARRION"]);
   });
 });
 

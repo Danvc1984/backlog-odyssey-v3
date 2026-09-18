@@ -150,7 +150,6 @@ describe("wishlist CRUD", () => {
       name: " New name ",
       interest: 4,
       gameExperience: "COUCH_GAMING",
-      notes: "Later",
       steamAppId: "123",
     });
 
@@ -161,7 +160,6 @@ describe("wishlist CRUD", () => {
         name: "New name",
         interest: 4,
         gameExperience: "COUCH_GAMING",
-        notes: "Later",
         steamAppId: "123",
         steamAppIdProvenance: "USER",
       },

@@ -22,7 +22,6 @@ const createWishlistEntrySchema = z
     type: wishlistTypeSchema,
     baseGameId: z.string().trim().min(1).optional(),
     interest: interestSchema.optional(),
-    notes: z.string().optional().nullable(),
     steamAppId: z.string().trim().regex(/^\d{1,10}$/).optional().nullable(),
   })
   .strict();
@@ -37,7 +36,6 @@ const updateWishlistEntrySchema = z
       .optional()
       .nullable(),
     handheldSuitable: z.boolean().optional().nullable(),
-    notes: z.string().optional().nullable(),
     steamAppId: z.string().trim().regex(/^\d{1,10}$/).optional().nullable(),
     baseGameId: z.string().trim().min(1).optional(),
   })
@@ -57,7 +55,6 @@ const acquireWishlistBaseGameSchema = z
     wishlistEntryId: z.string().trim().min(1),
     source: z.enum(["STEAM", "OTHER_PLATFORM"]),
     alternativeSourceId: z.string().trim().min(1).optional(),
-    displayName: z.string().trim().max(200).optional(),
   })
   .strict();
 
@@ -90,7 +87,7 @@ export async function createWishlistEntry(input: unknown) {
       return { success: false as const, data: null, error: "Invalid input" };
     }
 
-    const { name, type, baseGameId, interest, notes, steamAppId } = parsed.data;
+    const { name, type, baseGameId, interest, steamAppId } = parsed.data;
     if (type === "BASE_GAME" && baseGameId !== undefined) {
       return {
         success: false as const,
@@ -133,7 +130,6 @@ export async function createWishlistEntry(input: unknown) {
           type,
           baseGameId: baseGameId ?? null,
           interest: interest ?? 3,
-          notes: notes ?? null,
           steamAppId: identity?.appId ?? null,
           steamAppIdProvenance: identity?.provenance ?? null,
         },
@@ -331,7 +327,6 @@ export async function acquireWishlistBaseGame(input: unknown) {
           availability: {
             create: {
               source: parsed.data.source,
-              displayName: parsed.data.displayName ?? null,
               alternativeSourceId,
               steamAppId: wishlist.steamAppId,
             },

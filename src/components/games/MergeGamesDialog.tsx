@@ -34,7 +34,6 @@ const PERSONAL_FIELD_LABELS: Record<PersonalFieldName, string> = {
   playSoon: "Play soon",
   replayCandidate: "Replay candidate",
   hidden: "Hidden",
-  notes: "Notes",
 };
 
 function formatValue(value: unknown): string {
@@ -345,8 +344,7 @@ export function MergeGamesDialog({ duplicateId }: { duplicateId: string }) {
                 to the survivor
               </p>
               <p className="text-muted-foreground">
-                {proposal.relations.availability} availability,{" "}
-                {proposal.relations.collections} collections,{" "}
+                {proposal.relations.availability} platform records,{" "}
                 {proposal.relations.tags} tags,{" "}
                 {proposal.relations.metadataSnapshots} metadata snapshots
               </p>

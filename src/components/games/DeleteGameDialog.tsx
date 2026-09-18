@@ -24,7 +24,6 @@ interface DeletePreview {
   relations: {
     externalIds: number;
     availability: number;
-    collections: number;
     tags: number;
     metadataSnapshots: number;
     compatSnapshots: number;
@@ -35,8 +34,7 @@ interface DeletePreview {
 
 const RELATION_LABELS: [keyof DeletePreview["relations"], string][] = [
   ["externalIds", "external ID"],
-  ["availability", "availability record"],
-  ["collections", "collection"],
+  ["availability", "platform record"],
   ["tags", "tag"],
   ["metadataSnapshots", "metadata snapshot"],
   ["compatSnapshots", "compatibility report"],
@@ -113,9 +111,15 @@ export function DeleteGameDialog({ gameId }: { gameId: string }) {
       }}
     >
       <DialogTrigger asChild>
-        <Button type="button" variant="destructive" size="sm">
+        <Button
+          type="button"
+          variant="destructive"
+          size="icon-sm"
+          className="bg-red-950/80 text-red-200 hover:bg-red-900/90 hover:text-red-100"
+          aria-label="Delete game"
+          title="Delete game"
+        >
           <TrashIcon />
-          Delete
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">

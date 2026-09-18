@@ -2,7 +2,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { ExportDocument } from "./export-schema";
 
-export const EXPORT_VERSION = 2 as const;
+export const EXPORT_VERSION = 3 as const;
 
 export interface ExportEnvelope {
   version: typeof EXPORT_VERSION;
@@ -51,8 +51,6 @@ export function buildExportDocument(): Promise<ExportEnvelope> {
       alternativeSources,
       tags,
       gameTags,
-      collections,
-      collectionMemberships,
       wishlist,
       unresolvedDlc,
       wishlistImportReviews,
@@ -75,8 +73,6 @@ export function buildExportDocument(): Promise<ExportEnvelope> {
       prisma.alternativeSource.findMany(),
       prisma.personalTag.findMany(),
       prisma.gameTag.findMany(),
-      prisma.collection.findMany(),
-      prisma.collectionMembership.findMany(),
       prisma.wishlistEntry.findMany(),
       prisma.unresolvedSteamDlc.findMany(),
       prisma.wishlistImportReview.findMany(),
@@ -101,8 +97,8 @@ export function buildExportDocument(): Promise<ExportEnvelope> {
       alternativeSources: toJsonSafe(alternativeSources) as ExportDocument["data"]["alternativeSources"],
       tags: toJsonSafe(tags) as ExportDocument["data"]["tags"],
       gameTags: toJsonSafe(gameTags) as ExportDocument["data"]["gameTags"],
-      collections: toJsonSafe(collections) as ExportDocument["data"]["collections"],
-      collectionMemberships: toJsonSafe(collectionMemberships) as ExportDocument["data"]["collectionMemberships"],
+      collections: [],
+      collectionMemberships: [],
       wishlist: toJsonSafe(wishlist) as ExportDocument["data"]["wishlist"],
       unresolvedDlc: toJsonSafe(unresolvedDlc) as ExportDocument["data"]["unresolvedDlc"],
       wishlistImportReviews: toJsonSafe(wishlistImportReviews) as ExportDocument["data"]["wishlistImportReviews"],

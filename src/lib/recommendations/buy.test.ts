@@ -31,7 +31,7 @@ function baseGame(
     availability: [{ source: "STEAM" }],
     libraryEntry: {
       rating: null,
-      playState: "PLAYED_BEFORE",
+      playState: "COMPLETED",
       replayCandidate: false,
     },
     ...overrides,

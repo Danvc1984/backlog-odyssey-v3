@@ -20,6 +20,7 @@ export async function loadCandidates(client: Prisma.TransactionClient) {
       libraryEntry: {
         select: {
           playState: true,
+          completedBefore: true,
           priority: true,
           interest: true,
           playSoon: true,
@@ -33,6 +34,7 @@ export async function loadCandidates(client: Prisma.TransactionClient) {
           compatOverrideReason: true,
         },
       },
+      tags: { select: { tag: { select: { name: true } } } },
       externalIds: { select: { externalId: true } },
       availability: {
         select: {
@@ -228,6 +230,7 @@ export function tuneInput(
   experience: string | null,
   durationHours: number | null = null,
   handheldSuitable: boolean | null = null,
+  personalTags: string[] = [],
 ): TuneCandidateInput {
   const parsed = parseRecommendationMetadata(payload);
   return parsed
@@ -236,6 +239,7 @@ export function tuneInput(
         releaseDate: parsed.releaseDate,
         genres: parsed.genres,
         tags: parsed.tags,
+        personalTags,
         esrbRating: parsed.esrbRating,
         seriesGames: parsed.seriesGames,
         gameModes: parsed.gameModes,
@@ -243,7 +247,7 @@ export function tuneInput(
         durationHours,
         handheldSuitable,
       }
-    : { experience, durationHours, handheldSuitable };
+    : { experience, durationHours, handheldSuitable, personalTags };
 }
 
 type CalibrationKind = "PLAY_NEXT" | "BUY";

@@ -15,7 +15,8 @@ import {
   getSystemCollectionDefinition,
   getSystemCollections,
   parseDynamicCollectionId,
-} from "@/lib/system-collections";
+  parseTagCollectionId,
+} from "@/lib/system-collections"
 import { availabilitySourcePresentation } from "@/lib/sources/known-sources";
 import { deriveCompatTag } from "@/lib/protondb-tags";
 import { getCompatibilityGate } from "@/lib/compat-gate";
@@ -101,21 +102,17 @@ export default async function LibraryPage({
       : undefined;
   const stateFilter =
     state && state !== "ALL"
-      ? ["NOT_STARTED", "IN_PROGRESS", "PLAYED_BEFORE", "ABANDONED"].includes(
+      ? ["NOT_STARTED", "IN_PROGRESS", "COMPLETED", "ABANDONED"].includes(
           state,
         )
-        ? (state as "NOT_STARTED" | "IN_PROGRESS" | "PLAYED_BEFORE" | "ABANDONED")
+        ? (state as "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "ABANDONED")
         : undefined
       : undefined;
   const handheldFilter = parseHandheldSuitabilityFilter(handheld);
   const hasDlcFilter = parseHasDlcFilter(hasDlc);
 
-  const [manualCollections, systemCollections, pendingUnresolvedDlc, alternativeSources, dataHealth, mainGameGames, appSettings] = await Promise.all([
-    prisma.collection.findMany({
-      where: { isSystem: false },
-      orderBy: { name: "asc" },
-      select: { id: true, name: true },
-    }),
+  const [personalTags, systemCollections, pendingUnresolvedDlc, alternativeSources, dataHealth, mainGameGames, appSettings] = await Promise.all([
+    prisma.personalTag.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
     getSystemCollections(),
     prisma.unresolvedSteamDlc.count({ where: { status: "PENDING" } }),
     prisma.alternativeSource.findMany({
@@ -143,21 +140,13 @@ export default async function LibraryPage({
     collection && collection !== "ALL"
       ? getSystemCollectionDefinition(collection)
       : undefined;
-  const isManualCollection =
-    collection && collection !== "ALL"
-      ? manualCollections.some((c) => c.id === collection)
-      : false;
+  const tagCollectionId = collection ? parseTagCollectionId(collection) : null;
   const dynamicCollectionGameIds =
-    collection && collection !== "ALL" && !systemDef && !isManualCollection && parseDynamicCollectionId(collection)
+    collection && collection !== "ALL" && !systemDef && (parseDynamicCollectionId(collection) || tagCollectionId)
       ? await getDynamicSystemCollectionGameIds(collection)
       : null;
-  const collectionGameWhere = isManualCollection
-    ? {
-        collections: {
-          some: { collectionId: collection as string },
-        },
-      }
-    : collection && collection !== "ALL" && !systemDef
+  const collectionGameWhere =
+    collection && collection !== "ALL" && !systemDef
       ? { id: { in: dynamicCollectionGameIds ?? [] } }
       : undefined;
 
@@ -250,8 +239,9 @@ export default async function LibraryPage({
             playtimeEvidence: {
               select: { provider: true, payload: true },
             },
+            tags: { select: { tag: { select: { name: true } } } },
             _count: {
-              select: { dlcs: true, collections: true },
+              select: { dlcs: true, tags: true }
             },
           },
       },
@@ -297,6 +287,7 @@ export default async function LibraryPage({
       ...entry,
       game: {
         ...game,
+        tags: game.tags.map(({ tag }) => ({ name: tag.name })),
         metadata,
       },
       compatTag: deriveCompatTag({
@@ -377,9 +368,9 @@ export default async function LibraryPage({
               name: c.name,
               isSystem: true,
             })),
-            ...manualCollections.map((c) => ({
-              id: c.id,
-              name: c.name,
+            ...personalTags.map((tag) => ({
+              id: `tag-${tag.id}`,
+              name: tag.name,
               isSystem: false,
             })),
           ]}

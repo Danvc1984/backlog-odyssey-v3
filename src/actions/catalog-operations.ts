@@ -54,7 +54,6 @@ function toMergeSourceGame(game: {
     steamAppId: string | null;
     alternativeSourceId: string | null;
   }[];
-  collections: { collectionId: string }[];
   tags: { tagId: string }[];
   metadataSnapshots: { id: string; provider: string }[];
   compatSnapshots: { id: string; provider: string }[];
@@ -68,7 +67,6 @@ function toMergeSourceGame(game: {
     externalIds: game.externalIds,
     dlc: game.dlcs,
     availability: game.availability,
-    collections: game.collections,
     tags: game.tags,
     metadataSnapshots: game.metadataSnapshots,
     compatSnapshots: game.compatSnapshots,
@@ -142,7 +140,6 @@ export async function proposeMerge(input: { duplicateId: string }) {
             playSoon: true,
             replayCandidate: true,
             hidden: true,
-            notes: true,
           },
         },
         externalIds: true,
@@ -150,7 +147,6 @@ export async function proposeMerge(input: { duplicateId: string }) {
         availability: {
           select: { id: true, source: true, steamAppId: true, alternativeSourceId: true },
         },
-        collections: { select: { collectionId: true } },
         tags: { select: { tagId: true } },
         metadataSnapshots: { select: { id: true, provider: true } },
         wishlistDlcs: { select: { id: true } },
@@ -217,7 +213,6 @@ const GAME_GRAPH_INCLUDE = {
     },
   },
   availability: true,
-  collections: true,
   tags: true,
   metadataSnapshots: true,
   wishlistDlcs: { include: { offers: true, refreshes: true, metadataSnapshot: true } },
@@ -294,17 +289,6 @@ async function applyMergeMutations(
     ),
     mutationPlan.availabilityMerges.map((merge) =>
       tx.gameAvailability.update({ where: { id: merge.rowId }, data: merge.data }),
-    ),
-    mutationPlan.collectionMoves.map((move) =>
-      tx.collectionMembership.updateMany({
-        where: { collectionId: move.key, gameId: discardedId },
-        data: { gameId: survivorId },
-      }),
-    ),
-    mutationPlan.collectionDeletes.map((move) =>
-      tx.collectionMembership.deleteMany({
-        where: { collectionId: move.key, gameId: discardedId },
-      }),
     ),
     mutationPlan.tagMoves.map((move) =>
       tx.gameTag.updateMany({
@@ -479,7 +463,6 @@ export async function previewDelete(input: z.infer<typeof gameIdSchema>) {
           select: {
             externalIds: true,
             availability: true,
-            collections: true,
             tags: true,
             metadataSnapshots: true,
             compatSnapshots: true,
@@ -513,7 +496,6 @@ export async function previewDelete(input: z.infer<typeof gameIdSchema>) {
         relations: {
           externalIds: game._count.externalIds,
           availability: game._count.availability,
-          collections: game._count.collections,
           tags: game._count.tags,
           metadataSnapshots: game._count.metadataSnapshots,
           compatSnapshots: game._count.compatSnapshots,
@@ -635,7 +617,6 @@ const MODEL_DELEGATES: Record<SnapshotModel, string> = {
   LibraryEntry: "libraryEntry",
   ExternalGameId: "externalGameId",
   GameAvailability: "gameAvailability",
-  CollectionMembership: "collectionMembership",
   GameTag: "gameTag",
   MetadataSnapshot: "metadataSnapshot",
   WishlistEntry: "wishlistEntry",
@@ -655,7 +636,6 @@ const RESTORE_ORDER: SnapshotModel[] = [
   "LibraryEntry",
   "ExternalGameId",
   "GameAvailability",
-  "CollectionMembership",
   "GameTag",
   "MetadataSnapshot",
   "CompatibilitySnapshot",
@@ -672,7 +652,6 @@ const MODEL_DATE_FIELDS: Partial<Record<SnapshotModel, string[]>> = {
   PriceRefresh: ["requestedAt", "finishedAt"],
   ExternalGameId: ["createdAt", "updatedAt"],
   GameAvailability: ["addedAt", "steamLastPlayed"],
-  CollectionMembership: ["addedAt"],
   MetadataSnapshot: ["fetchedAt", "expiresAt"],
   CompatibilitySnapshot: ["fetchedAt", "expiresAt"],
   EnvironmentCompatibility: ["updatedAt"],
@@ -730,8 +709,8 @@ async function restoreUpdatedRow(
       }
     >
   )[MODEL_DELEGATES[model]];
-  if (model === "CollectionMembership" || model === "GameTag") {
-    const keyField = model === "CollectionMembership" ? "collectionId" : "tagId";
+  if (model === "GameTag") {
+    const keyField = "tagId";
     await delegate.updateMany({
       where: {
         [keyField]: row[keyField],

@@ -195,13 +195,13 @@ export function CreateGameDialog({
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="source">Availability</Label>
+              <Label htmlFor="source">Platform</Label>
               <Select
                 value={source}
                 onValueChange={(value) => selectSource(value as SourceValue)}
                 disabled={submitting}
               >
-                <SelectTrigger id="source" aria-label="Availability" className="w-full">
+                <SelectTrigger id="source" aria-label="Platform" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

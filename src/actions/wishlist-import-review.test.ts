@@ -119,7 +119,6 @@ describe("wishlist import review actions", () => {
         name: "Portal 2",
         type: "BASE_GAME",
         interest: 2,
-        notes: null,
         steamAppId: "620",
         steamAppIdProvenance: "STEAM_IMPORT",
       },

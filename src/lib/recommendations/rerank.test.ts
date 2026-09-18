@@ -185,7 +185,7 @@ describe("scoreTaste", () => {
 
 describe("scoreSteamActivity", () => {
   const now = new Date("2026-08-27T00:00:00.000Z");
-  const base = { replayCandidate: false, playState: "PLAYED_BEFORE" as const };
+  const base = { replayCandidate: false, playState: "COMPLETED" as const };
 
   it.each([
     [179, 2],
@@ -213,7 +213,7 @@ describe("scoreSteamActivity", () => {
     expect(
       scoreSteamActivity({ ...base, replayCandidate: true, steamLastPlayed: new Date(now.getTime() + 86400000) }, now),
     ).toBeNull();
-    expect(scoreSteamActivity({ playState: "PLAYED_BEFORE", replayCandidate: true, steamLastPlayed: null }, now)).toBeNull();
+    expect(scoreSteamActivity({ playState: "COMPLETED", replayCandidate: true, steamLastPlayed: null }, now)).toBeNull();
     expect(
       scoreSteamActivity(
         { playState: "NOT_STARTED", replayCandidate: false, steamLastPlayed: new Date(now.getTime() - 86400000) },
@@ -222,7 +222,7 @@ describe("scoreSteamActivity", () => {
     ).toBeNull();
     expect(
       scoreSteamActivity(
-        { playState: "PLAYED_BEFORE", replayCandidate: false, steamLastPlayed: new Date(now.getTime() - 86400000) },
+        { playState: "COMPLETED", replayCandidate: false, steamLastPlayed: new Date(now.getTime() - 86400000) },
         now,
       ),
     ).toBeNull();

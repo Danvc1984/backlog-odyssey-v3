@@ -47,7 +47,7 @@ export type AvailabilitySource = (typeof AvailabilitySource)[keyof typeof Availa
 export const PlayState = {
   NOT_STARTED: 'NOT_STARTED',
   IN_PROGRESS: 'IN_PROGRESS',
-  PLAYED_BEFORE: 'PLAYED_BEFORE',
+  COMPLETED: 'COMPLETED',
   ABANDONED: 'ABANDONED'
 } as const
 

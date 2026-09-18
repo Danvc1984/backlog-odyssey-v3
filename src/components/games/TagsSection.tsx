@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { addTagToGame } from "@/actions/game-detail";
-import { PlusIcon } from "@phosphor-icons/react";
+import { addTagToGame, removeTagFromGame } from "@/actions/game-detail";
+import { PlusIcon, XIcon } from "@phosphor-icons/react";
 
 type TagData = {
   id: string;
@@ -55,6 +55,24 @@ export function TagsSection({
     }
   }, [input, gameId, router, tags]);
 
+  const handleRemove = useCallback(async (tag: TagData) => {
+    if (submitting) return;
+    setSubmitting(true);
+    setError(null);
+
+    const result = await removeTagFromGame(gameId, tag.id);
+
+    setSubmitting(false);
+    if (!result.success) {
+      setError(result.error ?? "Failed to remove tag");
+      return;
+    }
+
+    setTags((current) => current.filter((currentTag) => currentTag.id !== tag.id));
+    toast.success(`Tag "${tag.name}" removed`);
+    router.refresh();
+  }, [gameId, router, submitting]);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -69,9 +87,19 @@ export function TagsSection({
           {tags.map((tag) => (
             <span
               key={tag.id}
-              className="rounded-md border border-border bg-muted/30 px-2 py-0.5 text-xs font-medium"
+              className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/30 py-0.5 pl-2 pr-1 text-xs font-medium"
             >
               {tag.name}
+              <button
+                type="button"
+                className="rounded-sm p-0.5 text-muted-foreground hover:bg-background hover:text-foreground disabled:opacity-50"
+                aria-label={`Remove tag ${tag.name}`}
+                title={`Remove tag ${tag.name}`}
+                disabled={submitting}
+                onClick={() => void handleRemove(tag)}
+              >
+                <XIcon className="size-3" aria-hidden />
+              </button>
             </span>
           ))}
         </div>

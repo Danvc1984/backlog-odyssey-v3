@@ -215,7 +215,6 @@ export type GameWhereInput = {
   libraryEntry?: Prisma.XOR<Prisma.LibraryEntryNullableScalarRelationFilter, Prisma.LibraryEntryWhereInput> | null
   availability?: Prisma.GameAvailabilityListRelationFilter
   wishlistDlcs?: Prisma.WishlistEntryListRelationFilter
-  collections?: Prisma.CollectionMembershipListRelationFilter
   tags?: Prisma.GameTagListRelationFilter
   compatSnapshots?: Prisma.CompatibilitySnapshotListRelationFilter
   envCompat?: Prisma.EnvironmentCompatibilityListRelationFilter
@@ -243,7 +242,6 @@ export type GameOrderByWithRelationInput = {
   libraryEntry?: Prisma.LibraryEntryOrderByWithRelationInput
   availability?: Prisma.GameAvailabilityOrderByRelationAggregateInput
   wishlistDlcs?: Prisma.WishlistEntryOrderByRelationAggregateInput
-  collections?: Prisma.CollectionMembershipOrderByRelationAggregateInput
   tags?: Prisma.GameTagOrderByRelationAggregateInput
   compatSnapshots?: Prisma.CompatibilitySnapshotOrderByRelationAggregateInput
   envCompat?: Prisma.EnvironmentCompatibilityOrderByRelationAggregateInput
@@ -274,7 +272,6 @@ export type GameWhereUniqueInput = Prisma.AtLeast<{
   libraryEntry?: Prisma.XOR<Prisma.LibraryEntryNullableScalarRelationFilter, Prisma.LibraryEntryWhereInput> | null
   availability?: Prisma.GameAvailabilityListRelationFilter
   wishlistDlcs?: Prisma.WishlistEntryListRelationFilter
-  collections?: Prisma.CollectionMembershipListRelationFilter
   tags?: Prisma.GameTagListRelationFilter
   compatSnapshots?: Prisma.CompatibilitySnapshotListRelationFilter
   envCompat?: Prisma.EnvironmentCompatibilityListRelationFilter
@@ -329,7 +326,6 @@ export type GameCreateInput = {
   libraryEntry?: Prisma.LibraryEntryCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
@@ -356,7 +352,6 @@ export type GameUncheckedCreateInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityUncheckedCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipUncheckedCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagUncheckedCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
@@ -383,7 +378,6 @@ export type GameUpdateInput = {
   libraryEntry?: Prisma.LibraryEntryUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
@@ -410,7 +404,6 @@ export type GameUncheckedUpdateInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUncheckedUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUncheckedUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUncheckedUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
@@ -641,20 +634,6 @@ export type GameUpdateOneRequiredWithoutTagsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.GameUpdateToOneWithWhereWithoutTagsInput, Prisma.GameUpdateWithoutTagsInput>, Prisma.GameUncheckedUpdateWithoutTagsInput>
 }
 
-export type GameCreateNestedOneWithoutCollectionsInput = {
-  create?: Prisma.XOR<Prisma.GameCreateWithoutCollectionsInput, Prisma.GameUncheckedCreateWithoutCollectionsInput>
-  connectOrCreate?: Prisma.GameCreateOrConnectWithoutCollectionsInput
-  connect?: Prisma.GameWhereUniqueInput
-}
-
-export type GameUpdateOneRequiredWithoutCollectionsNestedInput = {
-  create?: Prisma.XOR<Prisma.GameCreateWithoutCollectionsInput, Prisma.GameUncheckedCreateWithoutCollectionsInput>
-  connectOrCreate?: Prisma.GameCreateOrConnectWithoutCollectionsInput
-  upsert?: Prisma.GameUpsertWithoutCollectionsInput
-  connect?: Prisma.GameWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.GameUpdateToOneWithWhereWithoutCollectionsInput, Prisma.GameUpdateWithoutCollectionsInput>, Prisma.GameUncheckedUpdateWithoutCollectionsInput>
-}
-
 export type GameCreateNestedOneWithoutLibraryEntryInput = {
   create?: Prisma.XOR<Prisma.GameCreateWithoutLibraryEntryInput, Prisma.GameUncheckedCreateWithoutLibraryEntryInput>
   connectOrCreate?: Prisma.GameCreateOrConnectWithoutLibraryEntryInput
@@ -803,7 +782,6 @@ export type GameCreateWithoutDlcsInput = {
   libraryEntry?: Prisma.LibraryEntryCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
@@ -829,7 +807,6 @@ export type GameUncheckedCreateWithoutDlcsInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityUncheckedCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipUncheckedCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagUncheckedCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
@@ -860,7 +837,6 @@ export type GameCreateWithoutBaseGameInput = {
   libraryEntry?: Prisma.LibraryEntryCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
@@ -886,7 +862,6 @@ export type GameUncheckedCreateWithoutBaseGameInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityUncheckedCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipUncheckedCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagUncheckedCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
@@ -933,7 +908,6 @@ export type GameUpdateWithoutDlcsInput = {
   libraryEntry?: Prisma.LibraryEntryUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
@@ -959,7 +933,6 @@ export type GameUncheckedUpdateWithoutDlcsInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUncheckedUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUncheckedUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUncheckedUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
@@ -1015,7 +988,6 @@ export type GameCreateWithoutExternalIdsInput = {
   libraryEntry?: Prisma.LibraryEntryCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
@@ -1041,7 +1013,6 @@ export type GameUncheckedCreateWithoutExternalIdsInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityUncheckedCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipUncheckedCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagUncheckedCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
@@ -1083,7 +1054,6 @@ export type GameUpdateWithoutExternalIdsInput = {
   libraryEntry?: Prisma.LibraryEntryUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
@@ -1109,7 +1079,6 @@ export type GameUncheckedUpdateWithoutExternalIdsInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUncheckedUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUncheckedUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUncheckedUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
@@ -1135,7 +1104,6 @@ export type GameCreateWithoutMetadataSnapshotsInput = {
   libraryEntry?: Prisma.LibraryEntryCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
@@ -1161,7 +1129,6 @@ export type GameUncheckedCreateWithoutMetadataSnapshotsInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityUncheckedCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipUncheckedCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagUncheckedCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
@@ -1203,7 +1170,6 @@ export type GameUpdateWithoutMetadataSnapshotsInput = {
   libraryEntry?: Prisma.LibraryEntryUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
@@ -1229,7 +1195,6 @@ export type GameUncheckedUpdateWithoutMetadataSnapshotsInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUncheckedUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUncheckedUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUncheckedUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
@@ -1255,7 +1220,6 @@ export type GameCreateWithoutPlaytimeEvidenceInput = {
   libraryEntry?: Prisma.LibraryEntryCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
@@ -1281,7 +1245,6 @@ export type GameUncheckedCreateWithoutPlaytimeEvidenceInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityUncheckedCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipUncheckedCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagUncheckedCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
@@ -1323,7 +1286,6 @@ export type GameUpdateWithoutPlaytimeEvidenceInput = {
   libraryEntry?: Prisma.LibraryEntryUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
@@ -1349,7 +1311,6 @@ export type GameUncheckedUpdateWithoutPlaytimeEvidenceInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUncheckedUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUncheckedUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUncheckedUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
@@ -1375,7 +1336,6 @@ export type GameCreateWithoutEnrichmentJobsInput = {
   libraryEntry?: Prisma.LibraryEntryCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
@@ -1401,7 +1361,6 @@ export type GameUncheckedCreateWithoutEnrichmentJobsInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityUncheckedCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipUncheckedCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagUncheckedCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
@@ -1443,7 +1402,6 @@ export type GameUpdateWithoutEnrichmentJobsInput = {
   libraryEntry?: Prisma.LibraryEntryUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
@@ -1469,7 +1427,6 @@ export type GameUncheckedUpdateWithoutEnrichmentJobsInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUncheckedUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUncheckedUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUncheckedUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
@@ -1496,7 +1453,6 @@ export type GameCreateWithoutTagsInput = {
   libraryEntry?: Prisma.LibraryEntryCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
   duplicatesA?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameAInput
@@ -1522,7 +1478,6 @@ export type GameUncheckedCreateWithoutTagsInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityUncheckedCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipUncheckedCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
   duplicatesA?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameAInput
@@ -1564,7 +1519,6 @@ export type GameUpdateWithoutTagsInput = {
   libraryEntry?: Prisma.LibraryEntryUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
   duplicatesA?: Prisma.PossibleDuplicateUpdateManyWithoutGameANestedInput
@@ -1590,127 +1544,6 @@ export type GameUncheckedUpdateWithoutTagsInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUncheckedUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUncheckedUpdateManyWithoutGameNestedInput
-  compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedUpdateManyWithoutGameNestedInput
-  envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
-  duplicatesA?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameANestedInput
-  duplicatesB?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameBNestedInput
-  recommendationItems?: Prisma.RecommendationItemUncheckedUpdateManyWithoutGameNestedInput
-  recommendationEvents?: Prisma.RecommendationEventUncheckedUpdateManyWithoutGameNestedInput
-}
-
-export type GameCreateWithoutCollectionsInput = {
-  id?: string
-  type?: $Enums.GameType
-  origin: $Enums.Origin
-  name: string
-  importAt?: Date | string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  baseGame?: Prisma.GameCreateNestedOneWithoutDlcsInput
-  dlcs?: Prisma.GameCreateNestedManyWithoutBaseGameInput
-  externalIds?: Prisma.ExternalGameIdCreateNestedManyWithoutGameInput
-  metadataSnapshots?: Prisma.MetadataSnapshotCreateNestedManyWithoutGameInput
-  playtimeEvidence?: Prisma.PlaytimeEvidenceCreateNestedOneWithoutGameInput
-  enrichmentJobs?: Prisma.EnrichmentJobCreateNestedManyWithoutGameInput
-  libraryEntry?: Prisma.LibraryEntryCreateNestedOneWithoutGameInput
-  availability?: Prisma.GameAvailabilityCreateNestedManyWithoutGameInput
-  wishlistDlcs?: Prisma.WishlistEntryCreateNestedManyWithoutBaseGameInput
-  tags?: Prisma.GameTagCreateNestedManyWithoutGameInput
-  compatSnapshots?: Prisma.CompatibilitySnapshotCreateNestedManyWithoutGameInput
-  envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
-  duplicatesA?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameAInput
-  duplicatesB?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameBInput
-  recommendationItems?: Prisma.RecommendationItemCreateNestedManyWithoutGameInput
-  recommendationEvents?: Prisma.RecommendationEventCreateNestedManyWithoutGameInput
-}
-
-export type GameUncheckedCreateWithoutCollectionsInput = {
-  id?: string
-  type?: $Enums.GameType
-  origin: $Enums.Origin
-  name: string
-  baseGameId?: string | null
-  importAt?: Date | string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  dlcs?: Prisma.GameUncheckedCreateNestedManyWithoutBaseGameInput
-  externalIds?: Prisma.ExternalGameIdUncheckedCreateNestedManyWithoutGameInput
-  metadataSnapshots?: Prisma.MetadataSnapshotUncheckedCreateNestedManyWithoutGameInput
-  playtimeEvidence?: Prisma.PlaytimeEvidenceUncheckedCreateNestedOneWithoutGameInput
-  enrichmentJobs?: Prisma.EnrichmentJobUncheckedCreateNestedManyWithoutGameInput
-  libraryEntry?: Prisma.LibraryEntryUncheckedCreateNestedOneWithoutGameInput
-  availability?: Prisma.GameAvailabilityUncheckedCreateNestedManyWithoutGameInput
-  wishlistDlcs?: Prisma.WishlistEntryUncheckedCreateNestedManyWithoutBaseGameInput
-  tags?: Prisma.GameTagUncheckedCreateNestedManyWithoutGameInput
-  compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedCreateNestedManyWithoutGameInput
-  envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
-  duplicatesA?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameAInput
-  duplicatesB?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameBInput
-  recommendationItems?: Prisma.RecommendationItemUncheckedCreateNestedManyWithoutGameInput
-  recommendationEvents?: Prisma.RecommendationEventUncheckedCreateNestedManyWithoutGameInput
-}
-
-export type GameCreateOrConnectWithoutCollectionsInput = {
-  where: Prisma.GameWhereUniqueInput
-  create: Prisma.XOR<Prisma.GameCreateWithoutCollectionsInput, Prisma.GameUncheckedCreateWithoutCollectionsInput>
-}
-
-export type GameUpsertWithoutCollectionsInput = {
-  update: Prisma.XOR<Prisma.GameUpdateWithoutCollectionsInput, Prisma.GameUncheckedUpdateWithoutCollectionsInput>
-  create: Prisma.XOR<Prisma.GameCreateWithoutCollectionsInput, Prisma.GameUncheckedCreateWithoutCollectionsInput>
-  where?: Prisma.GameWhereInput
-}
-
-export type GameUpdateToOneWithWhereWithoutCollectionsInput = {
-  where?: Prisma.GameWhereInput
-  data: Prisma.XOR<Prisma.GameUpdateWithoutCollectionsInput, Prisma.GameUncheckedUpdateWithoutCollectionsInput>
-}
-
-export type GameUpdateWithoutCollectionsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  type?: Prisma.EnumGameTypeFieldUpdateOperationsInput | $Enums.GameType
-  origin?: Prisma.EnumOriginFieldUpdateOperationsInput | $Enums.Origin
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  importAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  baseGame?: Prisma.GameUpdateOneWithoutDlcsNestedInput
-  dlcs?: Prisma.GameUpdateManyWithoutBaseGameNestedInput
-  externalIds?: Prisma.ExternalGameIdUpdateManyWithoutGameNestedInput
-  metadataSnapshots?: Prisma.MetadataSnapshotUpdateManyWithoutGameNestedInput
-  playtimeEvidence?: Prisma.PlaytimeEvidenceUpdateOneWithoutGameNestedInput
-  enrichmentJobs?: Prisma.EnrichmentJobUpdateManyWithoutGameNestedInput
-  libraryEntry?: Prisma.LibraryEntryUpdateOneWithoutGameNestedInput
-  availability?: Prisma.GameAvailabilityUpdateManyWithoutGameNestedInput
-  wishlistDlcs?: Prisma.WishlistEntryUpdateManyWithoutBaseGameNestedInput
-  tags?: Prisma.GameTagUpdateManyWithoutGameNestedInput
-  compatSnapshots?: Prisma.CompatibilitySnapshotUpdateManyWithoutGameNestedInput
-  envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
-  duplicatesA?: Prisma.PossibleDuplicateUpdateManyWithoutGameANestedInput
-  duplicatesB?: Prisma.PossibleDuplicateUpdateManyWithoutGameBNestedInput
-  recommendationItems?: Prisma.RecommendationItemUpdateManyWithoutGameNestedInput
-  recommendationEvents?: Prisma.RecommendationEventUpdateManyWithoutGameNestedInput
-}
-
-export type GameUncheckedUpdateWithoutCollectionsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  type?: Prisma.EnumGameTypeFieldUpdateOperationsInput | $Enums.GameType
-  origin?: Prisma.EnumOriginFieldUpdateOperationsInput | $Enums.Origin
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  baseGameId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  importAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  dlcs?: Prisma.GameUncheckedUpdateManyWithoutBaseGameNestedInput
-  externalIds?: Prisma.ExternalGameIdUncheckedUpdateManyWithoutGameNestedInput
-  metadataSnapshots?: Prisma.MetadataSnapshotUncheckedUpdateManyWithoutGameNestedInput
-  playtimeEvidence?: Prisma.PlaytimeEvidenceUncheckedUpdateOneWithoutGameNestedInput
-  enrichmentJobs?: Prisma.EnrichmentJobUncheckedUpdateManyWithoutGameNestedInput
-  libraryEntry?: Prisma.LibraryEntryUncheckedUpdateOneWithoutGameNestedInput
-  availability?: Prisma.GameAvailabilityUncheckedUpdateManyWithoutGameNestedInput
-  wishlistDlcs?: Prisma.WishlistEntryUncheckedUpdateManyWithoutBaseGameNestedInput
-  tags?: Prisma.GameTagUncheckedUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
   duplicatesA?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameANestedInput
@@ -1735,7 +1568,6 @@ export type GameCreateWithoutLibraryEntryInput = {
   enrichmentJobs?: Prisma.EnrichmentJobCreateNestedManyWithoutGameInput
   availability?: Prisma.GameAvailabilityCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
@@ -1761,7 +1593,6 @@ export type GameUncheckedCreateWithoutLibraryEntryInput = {
   enrichmentJobs?: Prisma.EnrichmentJobUncheckedCreateNestedManyWithoutGameInput
   availability?: Prisma.GameAvailabilityUncheckedCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipUncheckedCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagUncheckedCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
@@ -1803,7 +1634,6 @@ export type GameUpdateWithoutLibraryEntryInput = {
   enrichmentJobs?: Prisma.EnrichmentJobUpdateManyWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
@@ -1829,7 +1659,6 @@ export type GameUncheckedUpdateWithoutLibraryEntryInput = {
   enrichmentJobs?: Prisma.EnrichmentJobUncheckedUpdateManyWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUncheckedUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUncheckedUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUncheckedUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
@@ -1855,7 +1684,6 @@ export type GameCreateWithoutAvailabilityInput = {
   enrichmentJobs?: Prisma.EnrichmentJobCreateNestedManyWithoutGameInput
   libraryEntry?: Prisma.LibraryEntryCreateNestedOneWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
@@ -1881,7 +1709,6 @@ export type GameUncheckedCreateWithoutAvailabilityInput = {
   enrichmentJobs?: Prisma.EnrichmentJobUncheckedCreateNestedManyWithoutGameInput
   libraryEntry?: Prisma.LibraryEntryUncheckedCreateNestedOneWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipUncheckedCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagUncheckedCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
@@ -1923,7 +1750,6 @@ export type GameUpdateWithoutAvailabilityInput = {
   enrichmentJobs?: Prisma.EnrichmentJobUpdateManyWithoutGameNestedInput
   libraryEntry?: Prisma.LibraryEntryUpdateOneWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
@@ -1949,7 +1775,6 @@ export type GameUncheckedUpdateWithoutAvailabilityInput = {
   enrichmentJobs?: Prisma.EnrichmentJobUncheckedUpdateManyWithoutGameNestedInput
   libraryEntry?: Prisma.LibraryEntryUncheckedUpdateOneWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUncheckedUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUncheckedUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
@@ -1975,7 +1800,6 @@ export type GameCreateWithoutWishlistDlcsInput = {
   enrichmentJobs?: Prisma.EnrichmentJobCreateNestedManyWithoutGameInput
   libraryEntry?: Prisma.LibraryEntryCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityCreateNestedManyWithoutGameInput
-  collections?: Prisma.CollectionMembershipCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
@@ -2001,7 +1825,6 @@ export type GameUncheckedCreateWithoutWishlistDlcsInput = {
   enrichmentJobs?: Prisma.EnrichmentJobUncheckedCreateNestedManyWithoutGameInput
   libraryEntry?: Prisma.LibraryEntryUncheckedCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityUncheckedCreateNestedManyWithoutGameInput
-  collections?: Prisma.CollectionMembershipUncheckedCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagUncheckedCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
@@ -2043,7 +1866,6 @@ export type GameUpdateWithoutWishlistDlcsInput = {
   enrichmentJobs?: Prisma.EnrichmentJobUpdateManyWithoutGameNestedInput
   libraryEntry?: Prisma.LibraryEntryUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUpdateManyWithoutGameNestedInput
-  collections?: Prisma.CollectionMembershipUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
@@ -2069,7 +1891,6 @@ export type GameUncheckedUpdateWithoutWishlistDlcsInput = {
   enrichmentJobs?: Prisma.EnrichmentJobUncheckedUpdateManyWithoutGameNestedInput
   libraryEntry?: Prisma.LibraryEntryUncheckedUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUncheckedUpdateManyWithoutGameNestedInput
-  collections?: Prisma.CollectionMembershipUncheckedUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUncheckedUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
@@ -2096,7 +1917,6 @@ export type GameCreateWithoutCompatSnapshotsInput = {
   libraryEntry?: Prisma.LibraryEntryCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
   duplicatesA?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameAInput
@@ -2122,7 +1942,6 @@ export type GameUncheckedCreateWithoutCompatSnapshotsInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityUncheckedCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipUncheckedCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagUncheckedCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
   duplicatesA?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameAInput
@@ -2164,7 +1983,6 @@ export type GameUpdateWithoutCompatSnapshotsInput = {
   libraryEntry?: Prisma.LibraryEntryUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
   duplicatesA?: Prisma.PossibleDuplicateUpdateManyWithoutGameANestedInput
@@ -2190,7 +2008,6 @@ export type GameUncheckedUpdateWithoutCompatSnapshotsInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUncheckedUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUncheckedUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUncheckedUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
   duplicatesA?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameANestedInput
@@ -2216,7 +2033,6 @@ export type GameCreateWithoutEnvCompatInput = {
   libraryEntry?: Prisma.LibraryEntryCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotCreateNestedManyWithoutGameInput
   duplicatesA?: Prisma.PossibleDuplicateCreateNestedManyWithoutGameAInput
@@ -2242,7 +2058,6 @@ export type GameUncheckedCreateWithoutEnvCompatInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityUncheckedCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipUncheckedCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagUncheckedCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedCreateNestedManyWithoutGameInput
   duplicatesA?: Prisma.PossibleDuplicateUncheckedCreateNestedManyWithoutGameAInput
@@ -2284,7 +2099,6 @@ export type GameUpdateWithoutEnvCompatInput = {
   libraryEntry?: Prisma.LibraryEntryUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUpdateManyWithoutGameNestedInput
   duplicatesA?: Prisma.PossibleDuplicateUpdateManyWithoutGameANestedInput
@@ -2310,7 +2124,6 @@ export type GameUncheckedUpdateWithoutEnvCompatInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUncheckedUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUncheckedUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUncheckedUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedUpdateManyWithoutGameNestedInput
   duplicatesA?: Prisma.PossibleDuplicateUncheckedUpdateManyWithoutGameANestedInput
@@ -2336,7 +2149,6 @@ export type GameCreateWithoutDuplicatesAInput = {
   libraryEntry?: Prisma.LibraryEntryCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
@@ -2362,7 +2174,6 @@ export type GameUncheckedCreateWithoutDuplicatesAInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityUncheckedCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipUncheckedCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagUncheckedCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
@@ -2393,7 +2204,6 @@ export type GameCreateWithoutDuplicatesBInput = {
   libraryEntry?: Prisma.LibraryEntryCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
@@ -2419,7 +2229,6 @@ export type GameUncheckedCreateWithoutDuplicatesBInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityUncheckedCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipUncheckedCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagUncheckedCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
@@ -2461,7 +2270,6 @@ export type GameUpdateWithoutDuplicatesAInput = {
   libraryEntry?: Prisma.LibraryEntryUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
@@ -2487,7 +2295,6 @@ export type GameUncheckedUpdateWithoutDuplicatesAInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUncheckedUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUncheckedUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUncheckedUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
@@ -2524,7 +2331,6 @@ export type GameUpdateWithoutDuplicatesBInput = {
   libraryEntry?: Prisma.LibraryEntryUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
@@ -2550,7 +2356,6 @@ export type GameUncheckedUpdateWithoutDuplicatesBInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUncheckedUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUncheckedUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUncheckedUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
@@ -2576,7 +2381,6 @@ export type GameCreateWithoutRecommendationItemsInput = {
   libraryEntry?: Prisma.LibraryEntryCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
@@ -2602,7 +2406,6 @@ export type GameUncheckedCreateWithoutRecommendationItemsInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityUncheckedCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipUncheckedCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagUncheckedCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
@@ -2644,7 +2447,6 @@ export type GameUpdateWithoutRecommendationItemsInput = {
   libraryEntry?: Prisma.LibraryEntryUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
@@ -2670,7 +2472,6 @@ export type GameUncheckedUpdateWithoutRecommendationItemsInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUncheckedUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUncheckedUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUncheckedUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
@@ -2696,7 +2497,6 @@ export type GameCreateWithoutRecommendationEventsInput = {
   libraryEntry?: Prisma.LibraryEntryCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityCreateNestedManyWithoutGameInput
@@ -2722,7 +2522,6 @@ export type GameUncheckedCreateWithoutRecommendationEventsInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedCreateNestedOneWithoutGameInput
   availability?: Prisma.GameAvailabilityUncheckedCreateNestedManyWithoutGameInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedCreateNestedManyWithoutBaseGameInput
-  collections?: Prisma.CollectionMembershipUncheckedCreateNestedManyWithoutGameInput
   tags?: Prisma.GameTagUncheckedCreateNestedManyWithoutGameInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedCreateNestedManyWithoutGameInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedCreateNestedManyWithoutGameInput
@@ -2764,7 +2563,6 @@ export type GameUpdateWithoutRecommendationEventsInput = {
   libraryEntry?: Prisma.LibraryEntryUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
@@ -2790,7 +2588,6 @@ export type GameUncheckedUpdateWithoutRecommendationEventsInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUncheckedUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUncheckedUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUncheckedUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
@@ -2825,7 +2622,6 @@ export type GameUpdateWithoutBaseGameInput = {
   libraryEntry?: Prisma.LibraryEntryUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUpdateManyWithoutGameNestedInput
@@ -2851,7 +2647,6 @@ export type GameUncheckedUpdateWithoutBaseGameInput = {
   libraryEntry?: Prisma.LibraryEntryUncheckedUpdateOneWithoutGameNestedInput
   availability?: Prisma.GameAvailabilityUncheckedUpdateManyWithoutGameNestedInput
   wishlistDlcs?: Prisma.WishlistEntryUncheckedUpdateManyWithoutBaseGameNestedInput
-  collections?: Prisma.CollectionMembershipUncheckedUpdateManyWithoutGameNestedInput
   tags?: Prisma.GameTagUncheckedUpdateManyWithoutGameNestedInput
   compatSnapshots?: Prisma.CompatibilitySnapshotUncheckedUpdateManyWithoutGameNestedInput
   envCompat?: Prisma.EnvironmentCompatibilityUncheckedUpdateManyWithoutGameNestedInput
@@ -2883,7 +2678,6 @@ export type GameCountOutputType = {
   enrichmentJobs: number
   availability: number
   wishlistDlcs: number
-  collections: number
   tags: number
   compatSnapshots: number
   envCompat: number
@@ -2900,7 +2694,6 @@ export type GameCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   enrichmentJobs?: boolean | GameCountOutputTypeCountEnrichmentJobsArgs
   availability?: boolean | GameCountOutputTypeCountAvailabilityArgs
   wishlistDlcs?: boolean | GameCountOutputTypeCountWishlistDlcsArgs
-  collections?: boolean | GameCountOutputTypeCountCollectionsArgs
   tags?: boolean | GameCountOutputTypeCountTagsArgs
   compatSnapshots?: boolean | GameCountOutputTypeCountCompatSnapshotsArgs
   envCompat?: boolean | GameCountOutputTypeCountEnvCompatArgs
@@ -2960,13 +2753,6 @@ export type GameCountOutputTypeCountAvailabilityArgs<ExtArgs extends runtime.Typ
  */
 export type GameCountOutputTypeCountWishlistDlcsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.WishlistEntryWhereInput
-}
-
-/**
- * GameCountOutputType without action
- */
-export type GameCountOutputTypeCountCollectionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.CollectionMembershipWhereInput
 }
 
 /**
@@ -3037,7 +2823,6 @@ export type GameSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   libraryEntry?: boolean | Prisma.Game$libraryEntryArgs<ExtArgs>
   availability?: boolean | Prisma.Game$availabilityArgs<ExtArgs>
   wishlistDlcs?: boolean | Prisma.Game$wishlistDlcsArgs<ExtArgs>
-  collections?: boolean | Prisma.Game$collectionsArgs<ExtArgs>
   tags?: boolean | Prisma.Game$tagsArgs<ExtArgs>
   compatSnapshots?: boolean | Prisma.Game$compatSnapshotsArgs<ExtArgs>
   envCompat?: boolean | Prisma.Game$envCompatArgs<ExtArgs>
@@ -3094,7 +2879,6 @@ export type GameInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   libraryEntry?: boolean | Prisma.Game$libraryEntryArgs<ExtArgs>
   availability?: boolean | Prisma.Game$availabilityArgs<ExtArgs>
   wishlistDlcs?: boolean | Prisma.Game$wishlistDlcsArgs<ExtArgs>
-  collections?: boolean | Prisma.Game$collectionsArgs<ExtArgs>
   tags?: boolean | Prisma.Game$tagsArgs<ExtArgs>
   compatSnapshots?: boolean | Prisma.Game$compatSnapshotsArgs<ExtArgs>
   envCompat?: boolean | Prisma.Game$envCompatArgs<ExtArgs>
@@ -3123,7 +2907,6 @@ export type $GamePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     libraryEntry: Prisma.$LibraryEntryPayload<ExtArgs> | null
     availability: Prisma.$GameAvailabilityPayload<ExtArgs>[]
     wishlistDlcs: Prisma.$WishlistEntryPayload<ExtArgs>[]
-    collections: Prisma.$CollectionMembershipPayload<ExtArgs>[]
     tags: Prisma.$GameTagPayload<ExtArgs>[]
     compatSnapshots: Prisma.$CompatibilitySnapshotPayload<ExtArgs>[]
     envCompat: Prisma.$EnvironmentCompatibilityPayload<ExtArgs>[]
@@ -3544,7 +3327,6 @@ export interface Prisma__GameClient<T, Null = never, ExtArgs extends runtime.Typ
   libraryEntry<T extends Prisma.Game$libraryEntryArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Game$libraryEntryArgs<ExtArgs>>): Prisma.Prisma__LibraryEntryClient<runtime.Types.Result.GetResult<Prisma.$LibraryEntryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   availability<T extends Prisma.Game$availabilityArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Game$availabilityArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GameAvailabilityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   wishlistDlcs<T extends Prisma.Game$wishlistDlcsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Game$wishlistDlcsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WishlistEntryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  collections<T extends Prisma.Game$collectionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Game$collectionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CollectionMembershipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   tags<T extends Prisma.Game$tagsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Game$tagsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GameTagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   compatSnapshots<T extends Prisma.Game$compatSnapshotsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Game$compatSnapshotsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CompatibilitySnapshotPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   envCompat<T extends Prisma.Game$envCompatArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Game$envCompatArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EnvironmentCompatibilityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -4188,30 +3970,6 @@ export type Game$wishlistDlcsArgs<ExtArgs extends runtime.Types.Extensions.Inter
   take?: number
   skip?: number
   distinct?: Prisma.WishlistEntryScalarFieldEnum | Prisma.WishlistEntryScalarFieldEnum[]
-}
-
-/**
- * Game.collections
- */
-export type Game$collectionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the CollectionMembership
-   */
-  select?: Prisma.CollectionMembershipSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the CollectionMembership
-   */
-  omit?: Prisma.CollectionMembershipOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.CollectionMembershipInclude<ExtArgs> | null
-  where?: Prisma.CollectionMembershipWhereInput
-  orderBy?: Prisma.CollectionMembershipOrderByWithRelationInput | Prisma.CollectionMembershipOrderByWithRelationInput[]
-  cursor?: Prisma.CollectionMembershipWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.CollectionMembershipScalarFieldEnum | Prisma.CollectionMembershipScalarFieldEnum[]
 }
 
 /**

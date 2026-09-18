@@ -51,7 +51,8 @@ const gameSchema = z.object({
 const libraryEntrySchema = z.object({
   id: z.string(),
   gameId: z.string(),
-  playState: z.enum(["NOT_STARTED", "IN_PROGRESS", "PLAYED_BEFORE", "ABANDONED"]),
+  playState: z.enum(["NOT_STARTED", "IN_PROGRESS", "COMPLETED", "ABANDONED"]),
+  completedBefore: z.boolean().default(false),
   isMainGame: z.boolean(),
   priority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH"]).nullable(),
   interest: z.number().int().nullable(),
@@ -66,12 +67,12 @@ const libraryEntrySchema = z.object({
   playSoon: z.boolean(),
   replayCandidate: z.boolean(),
   hidden: z.boolean(),
-  notes: z.string().nullable(),
   createdAt: isoDateTime,
   updatedAt: isoDateTime,
 });
 
 const legacyLibraryEntrySchema = libraryEntrySchema.extend({
+  playState: z.enum(["NOT_STARTED", "IN_PROGRESS", "COMPLETED", "PLAYED_BEFORE", "ABANDONED"]),
   preferredEnvironment: z.enum(["BAZZITE", "STEAM_DECK", "WINDOWS"]).nullable(),
 });
 
@@ -80,7 +81,6 @@ const availabilityRowSchema = z.object({
   gameId: z.string(),
   source: z.enum(["STEAM", "OTHER_PLATFORM", "ROM"]),
   alternativeSourceId: z.string().nullable(),
-  displayName: z.string().nullable(),
   steamAppId: z.string().nullable(),
   steamPlaytimeTotal: z.string().nullable(),
   steamLastPlayed: isoDateTime.nullable(),
@@ -151,7 +151,6 @@ const wishlistEntrySchema = z.object({
   gameExperience: z.enum(["PC_GAMING", "MULTIPLAYER_COOP", "COUCH_GAMING", "ON_THE_GO"]).nullable(),
   handheldSuitable: z.boolean().nullable().optional(),
   targetPriceMxn: z.string().nullable(),
-  notes: z.string().nullable(),
   steamAppId: z.string().nullable(),
   steamAppIdProvenance: z.enum(["STEAM_IMPORT", "USER", "IGDB_SUGGESTION"]).nullable(),
   createdAt: isoDateTime,
@@ -339,31 +338,47 @@ const legacyExportDocumentSchema = z.object({
 
 function migrateLegacyDocument(input: unknown): unknown {
   const parsed = legacyExportDocumentSchema.safeParse(input);
-  if (!parsed.success) return input;
+  const document = parsed.success ? parsed.data : input;
+  if (typeof document !== "object" || document === null || !("data" in document)) return input;
 
-  const { desktopOs, portableDevice, fallbackOs, ...settings } = parsed.data.data.settings ?? {};
+  const version = (document as { version?: unknown }).version;
+  if (!parsed.success && version !== EXPORT_VERSION) return input;
+
+  const data = (document as { data?: unknown }).data;
+  if (typeof data !== "object" || data === null || !Array.isArray((data as { libraryEntries?: unknown }).libraryEntries)) {
+    return document;
+  }
+
+  const legacySettings = parsed.success ? parsed.data.data.settings : null;
+  const settings = legacySettings
+    ? (() => {
+        const { desktopOs, portableDevice, fallbackOs, ...rest } = legacySettings;
+        return {
+          ...rest,
+          primaryOs: desktopOs === "WINDOWS" ? "WINDOWS" : "LINUX",
+          hasWindowsFallback: fallbackOs === "WINDOWS",
+          handheldOs:
+            portableDevice === "WINDOWS"
+              ? "WINDOWS"
+              : portableDevice === "STEAM_DECK" || portableDevice === "BAZZITE" || portableDevice === "LINUX"
+                ? "LINUX"
+                : "NONE",
+          onboardingCompleted: true,
+          durationProfile: "NORMALLY",
+        };
+      })()
+    : (data as { settings?: unknown }).settings;
+
   return {
-    ...parsed.data,
+    ...(document as Record<string, unknown>),
     version: EXPORT_VERSION,
     data: {
-      ...parsed.data.data,
-      settings: parsed.data.data.settings
-        ? {
-            ...settings,
-            primaryOs: desktopOs === "WINDOWS" ? "WINDOWS" : "LINUX",
-            hasWindowsFallback: fallbackOs === "WINDOWS",
-            handheldOs:
-              portableDevice === "WINDOWS"
-                ? "WINDOWS"
-                : portableDevice === "STEAM_DECK" || portableDevice === "BAZZITE" || portableDevice === "LINUX"
-                  ? "LINUX"
-                  : "NONE",
-            onboardingCompleted: true,
-            durationProfile: "NORMALLY",
-          }
-        : null,
-      libraryEntries: parsed.data.data.libraryEntries.map((entry) => ({
+      ...(data as Record<string, unknown>),
+      settings,
+      libraryEntries: (data as { libraryEntries: Array<Record<string, unknown>> }).libraryEntries.map((entry) => ({
         ...entry,
+        playState: entry.playState === "PLAYED_BEFORE" ? "COMPLETED" : entry.playState,
+        completedBefore: entry.completedBefore === true || entry.playState === "PLAYED_BEFORE",
         preferredEnvironment: entry.preferredEnvironment === "BAZZITE" ? "LINUX" : entry.preferredEnvironment,
       })),
     },

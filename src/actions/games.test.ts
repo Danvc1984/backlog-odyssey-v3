@@ -55,7 +55,7 @@ describe("createGame", () => {
           origin: "MANUAL",
           name: "Hollow Knight",
           availability: {
-            create: { source: "STEAM", displayName: null, alternativeSourceId: null },
+            create: { source: "STEAM", alternativeSourceId: null },
           },
           libraryEntry: { create: { interest: 3 } },
         }),
@@ -111,7 +111,7 @@ describe("createGame", () => {
       expect.objectContaining({
         data: expect.objectContaining({
           availability: {
-            create: { source: "ROM", displayName: null, alternativeSourceId: null },
+            create: { source: "ROM", alternativeSourceId: null },
           },
         }),
       }),
@@ -146,7 +146,6 @@ describe("createGame", () => {
     await createGame({
       name: "Skyrim",
       availabilitySource: "OTHER_PLATFORM",
-      displayName: "Skyrim (GOG)",
     });
 
     expect(mockAltFind).toHaveBeenCalledWith({
@@ -163,7 +162,6 @@ describe("createGame", () => {
           availability: {
             create: {
               source: "OTHER_PLATFORM",
-              displayName: "Skyrim (GOG)",
               alternativeSourceId: "unsource-1",
             },
           },
