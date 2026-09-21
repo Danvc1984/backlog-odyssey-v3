@@ -167,12 +167,26 @@ type DynamicEvidenceRow = {
   };
 };
 
-export async function getPersonalTagCollections(): Promise<DynamicSystemCollection[]> {
+export type PersonalTagShelfSort = "alphabetical" | "game-count";
+
+export function sortPersonalTagCollections(
+  collections: DynamicSystemCollection[],
+  sort: PersonalTagShelfSort = "alphabetical",
+): DynamicSystemCollection[] {
+  return [...collections].sort((left, right) => {
+    if (sort === "game-count" && right.count !== left.count) return right.count - left.count;
+    return left.name.localeCompare(right.name) || left.id.localeCompare(right.id);
+  });
+}
+
+export async function getPersonalTagCollections(
+  sort: PersonalTagShelfSort = "alphabetical",
+): Promise<DynamicSystemCollection[]> {
   const tags = await prisma.personalTag.findMany({
     orderBy: { name: "asc" },
     include: { _count: { select: { games: true } } },
   });
-  return tags.map((tag) => ({
+  return sortPersonalTagCollections(tags.map((tag) => ({
     id: `tag-${tag.id}`,
     name: tag.name,
     icon: "Tag",
@@ -180,7 +194,7 @@ export async function getPersonalTagCollections(): Promise<DynamicSystemCollecti
     count: tag._count.games,
     kind: "tag" as const,
     tagId: tag.id,
-  }));
+  })), sort);
 }
 
 function dynamicEvidenceWhere() {

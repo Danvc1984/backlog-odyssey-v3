@@ -15,6 +15,7 @@ import {
   isSystemCollectionId,
   parseDynamicCollectionId,
   parseTagCollectionId,
+  sortPersonalTagCollections,
 } from "./system-collections";
 
 const payload = (id: number, name: string, collection: { id: number; name: string } | null, franchise: { id: number; name: string } | null) =>
@@ -109,6 +110,16 @@ describe("getSystemCollections", () => {
     expect(mockCount).toHaveBeenCalledWith({
       where: { game: { type: "BASE_GAME", dlcs: { some: {} } } },
     });
+  });
+
+  it("sorts personal shelves alphabetically by default and by count with alphabetical ties", () => {
+    const shelves = [
+      { id: "tag-z", name: "Zeta", icon: "Tag", color: "#f97316", count: 2, kind: "tag" as const, tagId: "z" },
+      { id: "tag-a", name: "Alpha", icon: "Tag", color: "#f97316", count: 2, kind: "tag" as const, tagId: "a" },
+      { id: "tag-b", name: "Beta", icon: "Tag", color: "#f97316", count: 4, kind: "tag" as const, tagId: "b" },
+    ];
+    expect(sortPersonalTagCollections(shelves).map((shelf) => shelf.name)).toEqual(["Alpha", "Beta", "Zeta"]);
+    expect(sortPersonalTagCollections(shelves, "game-count").map((shelf) => shelf.name)).toEqual(["Beta", "Alpha", "Zeta"]);
   });
 
   it("turns personal tags into browsable shelves", async () => {

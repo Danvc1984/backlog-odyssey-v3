@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   availabilitySchema,
-  collectionsSchema,
   exportDocumentSchema,
   externalIdsSchema,
   gamesSchema,
   libraryEntriesSchema,
   settingsSchema,
+  tagsSchema,
   wishlistSchema,
 } from "./export-schema";
 
@@ -86,7 +86,7 @@ describe("export schema: settings and catalog", () => {
     ).toThrow();
   });
 
-  it("parses library, availability, external ids, and collections", () => {
+  it("parses library, availability, and external ids", () => {
     const library = {
       id: "l1",
       gameId: "g1",
@@ -129,11 +129,6 @@ describe("export schema: settings and catalog", () => {
     expect(libraryEntriesSchema.parse([library])[0].handheldSuitable).toBe(true);
     expect(availabilitySchema.parse([availability])).toHaveLength(1);
     expect(externalIdsSchema.parse([external])).toHaveLength(1);
-    expect(
-      collectionsSchema.parse([
-        { id: "c1", name: "Favorites", color: "#ff0000", icon: null, isSystem: false, createdAt: now },
-      ]),
-    ).toHaveLength(1);
   });
 
   it("rejects retired notes and availability display labels", () => {
@@ -172,6 +167,11 @@ describe("export schema: settings and catalog", () => {
 
     expect(() => libraryEntriesSchema.parse([library])).toThrow();
     expect(() => availabilitySchema.parse([availability])).toThrow();
+  });
+
+  it("requires the persisted normalized tag identity", () => {
+    expect(tagsSchema.parse([{ id: "tag-1", name: "RPG", normalizedName: "rpg" }])).toHaveLength(1);
+    expect(() => tagsSchema.parse([{ id: "tag-1", name: "RPG" }])).toThrow();
   });
 
   it("rejects a wrong library entry enum", () => {

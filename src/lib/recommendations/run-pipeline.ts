@@ -568,7 +568,7 @@ export async function runRecommendationPipeline(
         dismissalCounts,
       );
       const buyTuneInputs = new Map(
-        [...wishViews.entries()].map(([id, view]) => [id, tuneInput(view.payload, view.gameExperience, view.durationHours)]),
+        [...wishViews.entries()].map(([id, view]) => [id, tuneInput(view.payload, view.gameExperience, view.durationHours, view.handheldSuitable, view.personalTags)]),
       );
       const tunedBuyPool = applyTune(buyBaselinePool, buyTune, buyTuneInputs, 3);
       const { buyRerank, buyRoles, buyPoolById, buyItems } = buildBuyPipeline(

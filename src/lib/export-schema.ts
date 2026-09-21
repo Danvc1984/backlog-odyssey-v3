@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { EXPORT_VERSION } from "./export-data";
+import { normalizePersonalTagName } from "./personal-tag";
 
 const isoDateTime = z.iso.datetime();
 
@@ -88,26 +89,16 @@ const alternativeSourceSchema = z.strictObject({
 const personalTagSchema = z.strictObject({
   id: z.string(),
   name: z.string(),
+  normalizedName: z.string(),
+}).superRefine((tag, ctx) => {
+  if (tag.name.trim() !== tag.name || normalizePersonalTagName(tag.name) !== tag.normalizedName) {
+    ctx.addIssue({ code: "custom", path: ["normalizedName"], message: "Tag identity does not match its display name" });
+  }
 });
 
 const gameTagSchema = z.strictObject({
   gameId: z.string(),
   tagId: z.string(),
-});
-
-const collectionSchema = z.strictObject({
-  id: z.string(),
-  name: z.string(),
-  color: z.string().nullable(),
-  icon: z.string().nullable(),
-  isSystem: z.boolean(),
-  createdAt: isoDateTime,
-});
-
-const collectionMembershipSchema = z.strictObject({
-  collectionId: z.string(),
-  gameId: z.string(),
-  addedAt: isoDateTime,
 });
 
 export const settingsSchema = appSettingsSchema;
@@ -118,8 +109,6 @@ export const externalIdsSchema = z.array(externalIdSchema);
 export const alternativeSourcesSchema = z.array(alternativeSourceSchema);
 export const tagsSchema = z.array(personalTagSchema);
 export const gameTagsSchema = z.array(gameTagSchema);
-export const collectionsSchema = z.array(collectionSchema);
-export const collectionMembershipsSchema = z.array(collectionMembershipSchema);
 
 const wishlistEntrySchema = z.strictObject({
   id: z.string(),
@@ -296,8 +285,6 @@ const exportDataSchema = <
     alternativeSources: alternativeSourcesSchema,
     tags: tagsSchema,
     gameTags: gameTagsSchema,
-    collections: collectionsSchema,
-    collectionMemberships: collectionMembershipsSchema,
     wishlist: wishlistSchema,
     unresolvedDlc: unresolvedDlcSchema,
     wishlistImportReviews: wishlistImportReviewsSchema,

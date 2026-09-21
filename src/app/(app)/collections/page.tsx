@@ -16,7 +16,9 @@ import {
   StarIcon,
   TagIcon,
 } from "@phosphor-icons/react/ssr";
-import { getPersonalTagCollections, getSystemCollections } from "@/lib/system-collections";
+import { getPersonalTagCollections, getSystemCollections, type PersonalTagShelfSort } from "@/lib/system-collections";
+import { PersonalTagManager } from "@/components/games/PersonalTagManager";
+import { PersonalTagShelfControls } from "@/components/games/PersonalTagShelfControls";
 import { SectionCard, StatusPill } from "@/components/ui/detail-card";
 
 const SYSTEM_ICONS: Record<string, Icon> = {
@@ -34,10 +36,16 @@ const SYSTEM_ICONS: Record<string, Icon> = {
   GitBranch: GitBranchIcon,
 };
 
-export default async function CollectionsPage() {
+export default async function CollectionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tagSort?: string }>;
+}) {
+  const { tagSort: requestedTagSort } = await searchParams;
+  const tagSort: PersonalTagShelfSort = requestedTagSort === "game-count" ? "game-count" : "alphabetical";
   const [systemCollections, personalTagCollections] = await Promise.all([
     getSystemCollections(),
-    getPersonalTagCollections(),
+    getPersonalTagCollections(tagSort),
   ]);
   const builtInCollections = systemCollections.filter((collection) => !collection.kind);
   const dynamicCollections = systemCollections.filter((collection) => collection.kind);
@@ -130,11 +138,17 @@ export default async function CollectionsPage() {
         title="Tag shelves"
         id="personal-tags-heading"
         description="Each personal tag automatically becomes a shelf, and a game can belong to more than one."
-        status={<StatusPill>{tagCollections.length} shelves</StatusPill>}
+        status={
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <PersonalTagShelfControls />
+            <PersonalTagManager initialTags={tagCollections.map((tag) => ({ id: tag.tagId ?? tag.id, name: tag.name, count: tag.count }))} />
+            <StatusPill>{tagCollections.length} shelves</StatusPill>
+          </div>
+        }
       >
         {tagCollections.length === 0 ? (
           <p className="rounded-md border border-dashed border-border bg-card-alt/30 py-8 text-center text-sm text-muted-foreground">
-            Add tags to games to create your first tag shelf.
+            No personal tag shelves yet. Use Manage tags to create your first empty shelf.
           </p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

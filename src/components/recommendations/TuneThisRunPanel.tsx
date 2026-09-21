@@ -13,6 +13,7 @@ interface TuneThisRunPanelProps {
   engine: "PLAY_NEXT" | "BUY";
   knownValues: KnownValues;
   thinPool: boolean;
+  initialTune?: TuneContext | null;
   presets: RecommendationPreset[];
   alternativeSources?: AlternativeSource[];
 }
@@ -51,7 +52,7 @@ function MultiValuePicker({ label, options, selected, onChange }: MultiValuePick
   );
 }
 
-export function TuneThisRunPanel({ engine, knownValues, thinPool, presets, alternativeSources = [] }: TuneThisRunPanelProps) {
+export function TuneThisRunPanel({ engine, knownValues, thinPool, initialTune = null, presets, alternativeSources = [] }: TuneThisRunPanelProps) {
   const [tune, setTune] = useState<TuneContext>(emptyTune());
   const [open, setOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -65,11 +66,15 @@ export function TuneThisRunPanel({ engine, knownValues, thinPool, presets, alter
       const stored = sessionStorage.getItem(storageKey(engine));
       const parsed = stored ? tuneContextSchema.safeParse(JSON.parse(stored)) : null;
       if (parsed?.success) queueMicrotask(() => setTune(parsed.data));
+      else {
+        const restored = tuneContextSchema.safeParse(normalizeTuneContext(initialTune));
+        if (restored.success) queueMicrotask(() => setTune(restored.data));
+      }
     } catch {
       sessionStorage.removeItem(storageKey(engine));
     }
     queueMicrotask(() => setHydrated(true));
-  }, [engine]);
+  }, [engine, initialTune]);
 
   useEffect(() => {
     if (hydrated) sessionStorage.setItem(storageKey(engine), JSON.stringify(tune));
@@ -136,7 +141,10 @@ export function TuneThisRunPanel({ engine, knownValues, thinPool, presets, alter
           <label className="grid gap-1 text-xs text-muted-foreground">Maturity<Select value={tune.maturity ?? "ANY"} onValueChange={(value) => update("maturity", value === "ANY" ? null : value as TuneContext["maturity"])}><SelectTrigger aria-label="Maturity" className={selectClassName}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ANY">Any</SelectItem><SelectItem value="CASUAL">Casual</SelectItem><SelectItem value="MATURE">Mature</SelectItem></SelectContent></Select></label>
           <MultiValuePicker label="Genres" options={knownValues.genres} selected={tune.genres} onChange={(values) => update("genres", values)} />
           <MultiValuePicker label="IGDB tags" options={knownValues.tags} selected={tune.tags} onChange={(values) => update("tags", values)} />
-          <MultiValuePicker label="Personal tags" options={knownValues.personalTags} selected={tune.personalTags ?? []} onChange={(values) => update("personalTags", values)} />
+          <div className="rounded-md border border-signal/30 bg-signal/5 p-2 md:col-span-2 xl:col-span-4">
+            <p className="mb-2 text-xs font-semibold text-signal-strong">Personal tag shelves</p>
+            <MultiValuePicker label="Owner-managed tags (any match)" options={knownValues.personalTags} selected={tune.personalTags ?? []} onChange={(values) => update("personalTags", values)} />
+          </div>
           {engine === "PLAY_NEXT" && <fieldset className="grid gap-2 text-xs text-muted-foreground md:col-span-2 xl:col-span-4"><legend>Sources</legend><div className="flex flex-wrap gap-x-4 gap-y-2"><label className="flex items-center gap-2 text-sm text-foreground"><input type="checkbox" checked={sourceTune.steam} onChange={(event) => updateSourceTune("steam", event.target.checked)} className="accent-foreground" /><SourceIcon iconName="MonitorPlay" brandIcon="steam.svg" />Steam</label><label className="flex items-center gap-2 text-sm text-foreground"><input type="checkbox" checked={sourceTune.rom} onChange={(event) => updateSourceTune("rom", event.target.checked)} className="accent-foreground" /><SourceIcon iconName="Disc3" />ROM</label><label className="flex items-center gap-2 text-sm text-foreground"><input type="checkbox" checked={sourceTune.allAlternatives} onChange={(event) => updateSourceTune("allAlternatives", event.target.checked)} className="accent-foreground" /><SourceIcon iconName="Box" />Any alternative source</label>{alternativeSources.map((source) => <label key={source.id} className="flex items-center gap-2 text-sm text-foreground"><input type="checkbox" checked={sourceTune.alternativeSourceIds.includes(source.id)} onChange={(event) => toggleAlternativeSource(source.id, event.target.checked)} className="accent-foreground" /><SourceIcon iconName={source.iconName} brandIcon={source.brandIcon} />{source.name}</label>)}</div></fieldset>}
         </div>
       </details>

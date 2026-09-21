@@ -80,8 +80,6 @@ const DATE_FIELDS = {
   alternativeSources: ["archivedAt", "createdAt", "updatedAt"],
   tags: [],
   gameTags: [],
-  collections: ["createdAt"],
-  collectionMemberships: ["addedAt"],
   wishlist: ["createdAt", "updatedAt"],
   unresolvedDlc: ["discardedAt", "createdAt", "updatedAt"],
   wishlistImportReviews: ["reviewedAt", "createdAt", "updatedAt"],
@@ -132,8 +130,6 @@ export interface RestoreCounts {
   alternativeSources: number;
   tags: number;
   gameTags: number;
-  collections: number;
-  collectionMemberships: number;
   wishlist: number;
   unresolvedDlc: number;
   wishlistImportReviews: number;
@@ -162,8 +158,6 @@ export async function restoreExportDocument(db: TxDb, document: ExportDocument):
     alternativeSources: 0,
     tags: 0,
     gameTags: 0,
-    collections: 0,
-    collectionMemberships: 0,
     wishlist: 0,
     unresolvedDlc: 0,
     wishlistImportReviews: 0,
@@ -203,21 +197,6 @@ export async function restoreExportDocument(db: TxDb, document: ExportDocument):
     await db.personalTag.createMany({ data: reviveRows(data.tags, DATE_FIELDS.tags) });
   }
   restored.tags = data.tags.length;
-  const importedTagsByName = new Map(data.tags.map((tag) => [tag.name.trim().toLocaleLowerCase(), tag.id]));
-  const legacyTags = data.collections
-    .filter((collection) => !collection.isSystem)
-    .map((collection) => {
-      const key = collection.name.trim().toLocaleLowerCase();
-      const existingId = importedTagsByName.get(key);
-      if (existingId) return null;
-      importedTagsByName.set(key, collection.id);
-      return { id: collection.id, name: collection.name };
-    })
-    .filter((tag): tag is { id: string; name: string } => tag !== null);
-  if (legacyTags.length > 0) {
-    await db.personalTag.createMany({ data: legacyTags });
-  }
-  restored.tags += legacyTags.length;
 
   const dlcGameIds = new Set(
     data.games
@@ -248,22 +227,6 @@ export async function restoreExportDocument(db: TxDb, document: ExportDocument):
     await db.gameTag.createMany({ data: reviveRows(data.gameTags, DATE_FIELDS.gameTags) });
   }
   restored.gameTags = data.gameTags.length;
-  const migratedMembershipKeys = new Set(data.gameTags.map((membership) => `${membership.gameId}:${membership.tagId}`));
-  const migratedMemberships = data.collectionMemberships
-    .map((membership) => {
-      const collection = data.collections.find((candidate) => candidate.id === membership.collectionId);
-      const tagId = collection ? importedTagsByName.get(collection.name.trim().toLocaleLowerCase()) : undefined;
-      if (!tagId) return null;
-      const key = `${membership.gameId}:${tagId}`;
-      if (migratedMembershipKeys.has(key)) return null;
-      migratedMembershipKeys.add(key);
-      return { gameId: membership.gameId, tagId };
-    })
-    .filter((membership): membership is { gameId: string; tagId: string } => membership !== null);
-  if (migratedMemberships.length > 0) {
-    await db.gameTag.createMany({ data: migratedMemberships });
-  }
-  restored.gameTags += migratedMemberships.length;
 
   if (data.wishlist.length > 0) {
     await db.wishlistEntry.createMany({

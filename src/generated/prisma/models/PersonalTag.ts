@@ -27,16 +27,19 @@ export type AggregatePersonalTag = {
 export type PersonalTagMinAggregateOutputType = {
   id: string | null
   name: string | null
+  normalizedName: string | null
 }
 
 export type PersonalTagMaxAggregateOutputType = {
   id: string | null
   name: string | null
+  normalizedName: string | null
 }
 
 export type PersonalTagCountAggregateOutputType = {
   id: number
   name: number
+  normalizedName: number
   _all: number
 }
 
@@ -44,16 +47,19 @@ export type PersonalTagCountAggregateOutputType = {
 export type PersonalTagMinAggregateInputType = {
   id?: true
   name?: true
+  normalizedName?: true
 }
 
 export type PersonalTagMaxAggregateInputType = {
   id?: true
   name?: true
+  normalizedName?: true
 }
 
 export type PersonalTagCountAggregateInputType = {
   id?: true
   name?: true
+  normalizedName?: true
   _all?: true
 }
 
@@ -132,6 +138,7 @@ export type PersonalTagGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inte
 export type PersonalTagGroupByOutputType = {
   id: string
   name: string
+  normalizedName: string
   _count: PersonalTagCountAggregateOutputType | null
   _min: PersonalTagMinAggregateOutputType | null
   _max: PersonalTagMaxAggregateOutputType | null
@@ -158,27 +165,31 @@ export type PersonalTagWhereInput = {
   NOT?: Prisma.PersonalTagWhereInput | Prisma.PersonalTagWhereInput[]
   id?: Prisma.StringFilter<"PersonalTag"> | string
   name?: Prisma.StringFilter<"PersonalTag"> | string
+  normalizedName?: Prisma.StringFilter<"PersonalTag"> | string
   games?: Prisma.GameTagListRelationFilter
 }
 
 export type PersonalTagOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  normalizedName?: Prisma.SortOrder
   games?: Prisma.GameTagOrderByRelationAggregateInput
 }
 
 export type PersonalTagWhereUniqueInput = Prisma.AtLeast<{
   id?: string
   name?: string
+  normalizedName?: string
   AND?: Prisma.PersonalTagWhereInput | Prisma.PersonalTagWhereInput[]
   OR?: Prisma.PersonalTagWhereInput[]
   NOT?: Prisma.PersonalTagWhereInput | Prisma.PersonalTagWhereInput[]
   games?: Prisma.GameTagListRelationFilter
-}, "id" | "name">
+}, "id" | "name" | "normalizedName">
 
 export type PersonalTagOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  normalizedName?: Prisma.SortOrder
   _count?: Prisma.PersonalTagCountOrderByAggregateInput
   _max?: Prisma.PersonalTagMaxOrderByAggregateInput
   _min?: Prisma.PersonalTagMinOrderByAggregateInput
@@ -190,60 +201,71 @@ export type PersonalTagScalarWhereWithAggregatesInput = {
   NOT?: Prisma.PersonalTagScalarWhereWithAggregatesInput | Prisma.PersonalTagScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"PersonalTag"> | string
   name?: Prisma.StringWithAggregatesFilter<"PersonalTag"> | string
+  normalizedName?: Prisma.StringWithAggregatesFilter<"PersonalTag"> | string
 }
 
 export type PersonalTagCreateInput = {
   id?: string
   name: string
+  normalizedName: string
   games?: Prisma.GameTagCreateNestedManyWithoutTagInput
 }
 
 export type PersonalTagUncheckedCreateInput = {
   id?: string
   name: string
+  normalizedName: string
   games?: Prisma.GameTagUncheckedCreateNestedManyWithoutTagInput
 }
 
 export type PersonalTagUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
   games?: Prisma.GameTagUpdateManyWithoutTagNestedInput
 }
 
 export type PersonalTagUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
   games?: Prisma.GameTagUncheckedUpdateManyWithoutTagNestedInput
 }
 
 export type PersonalTagCreateManyInput = {
   id?: string
   name: string
+  normalizedName: string
 }
 
 export type PersonalTagUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type PersonalTagUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type PersonalTagCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  normalizedName?: Prisma.SortOrder
 }
 
 export type PersonalTagMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  normalizedName?: Prisma.SortOrder
 }
 
 export type PersonalTagMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  normalizedName?: Prisma.SortOrder
 }
 
 export type PersonalTagScalarRelationFilter = {
@@ -268,11 +290,13 @@ export type PersonalTagUpdateOneRequiredWithoutGamesNestedInput = {
 export type PersonalTagCreateWithoutGamesInput = {
   id?: string
   name: string
+  normalizedName: string
 }
 
 export type PersonalTagUncheckedCreateWithoutGamesInput = {
   id?: string
   name: string
+  normalizedName: string
 }
 
 export type PersonalTagCreateOrConnectWithoutGamesInput = {
@@ -294,11 +318,13 @@ export type PersonalTagUpdateToOneWithWhereWithoutGamesInput = {
 export type PersonalTagUpdateWithoutGamesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type PersonalTagUncheckedUpdateWithoutGamesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 
@@ -335,6 +361,7 @@ export type PersonalTagCountOutputTypeCountGamesArgs<ExtArgs extends runtime.Typ
 export type PersonalTagSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  normalizedName?: boolean
   games?: boolean | Prisma.PersonalTag$gamesArgs<ExtArgs>
   _count?: boolean | Prisma.PersonalTagCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["personalTag"]>
@@ -342,19 +369,22 @@ export type PersonalTagSelect<ExtArgs extends runtime.Types.Extensions.InternalA
 export type PersonalTagSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  normalizedName?: boolean
 }, ExtArgs["result"]["personalTag"]>
 
 export type PersonalTagSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  normalizedName?: boolean
 }, ExtArgs["result"]["personalTag"]>
 
 export type PersonalTagSelectScalar = {
   id?: boolean
   name?: boolean
+  normalizedName?: boolean
 }
 
-export type PersonalTagOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name", ExtArgs["result"]["personalTag"]>
+export type PersonalTagOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "normalizedName", ExtArgs["result"]["personalTag"]>
 export type PersonalTagInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   games?: boolean | Prisma.PersonalTag$gamesArgs<ExtArgs>
   _count?: boolean | Prisma.PersonalTagCountOutputTypeDefaultArgs<ExtArgs>
@@ -370,6 +400,7 @@ export type $PersonalTagPayload<ExtArgs extends runtime.Types.Extensions.Interna
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     name: string
+    normalizedName: string
   }, ExtArgs["result"]["personalTag"]>
   composites: {}
 }
@@ -796,6 +827,7 @@ export interface Prisma__PersonalTagClient<T, Null = never, ExtArgs extends runt
 export interface PersonalTagFieldRefs {
   readonly id: Prisma.FieldRef<"PersonalTag", 'String'>
   readonly name: Prisma.FieldRef<"PersonalTag", 'String'>
+  readonly normalizedName: Prisma.FieldRef<"PersonalTag", 'String'>
 }
     
 

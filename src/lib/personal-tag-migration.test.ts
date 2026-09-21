@@ -16,6 +16,13 @@ const repairMigrationSql = readFileSync(
   ),
   "utf8",
 );
+const normalizedNameMigrationSql = readFileSync(
+  new URL(
+    "../../prisma/migrations/20260922120000_add_personal_tag_normalized_name/migration.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
 function readEnvironmentValue(name: string): string | undefined {
   const processValue = process.env[name];
   if (processValue) return processValue;
@@ -100,15 +107,16 @@ describeDatabase("collection-to-tag migrations", () => {
       );
 
       await client.query(repairMigrationSql);
+      await client.query(normalizedNameMigrationSql);
 
-      const repairedTags = await client.query<{ id: string; name: string }>(
-        `SELECT "id", "name" FROM "PersonalTag" ORDER BY "id"`,
+      const repairedTags = await client.query<{ id: string; name: string; normalizedName: string }>(
+        `SELECT "id", "name", "normalizedName" FROM "PersonalTag" ORDER BY "id"`,
       );
       const repairedMemberships = await client.query<{ gameId: string; tagId: string }>(
         `SELECT "gameId", "tagId" FROM "GameTag" ORDER BY "gameId", "tagId"`,
       );
       expect(repairedTags.rows).toEqual([
-        { id: "tag-000-existing", name: "Backlog" },
+        { id: "tag-000-existing", name: "Backlog", normalizedName: "backlog" },
       ]);
       expect(repairedMemberships.rows).toEqual([
         { gameId: "game-1", tagId: "tag-000-existing" },

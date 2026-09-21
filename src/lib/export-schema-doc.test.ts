@@ -34,8 +34,6 @@ function emptyData(): ExportDocument["data"] {
     alternativeSources: [],
     tags: [],
     gameTags: [],
-    collections: [],
-    collectionMemberships: [],
     wishlist: [],
     unresolvedDlc: [],
     wishlistImportReviews: [],
@@ -58,20 +56,28 @@ describe("export document schema", () => {
   it("parses a complete minimal document", () => {
     const doc = { version: EXPORT_VERSION, exportedAt: now, data: emptyData() };
     const parsed = exportDocumentSchema.parse(doc);
-    expect(parsed.version).toBe(3);
+    expect(parsed.version).toBe(4);
     expect(parsed.data.settings).not.toBeNull();
   });
 
   it("rejects a wrong version", () => {
     expect(() =>
-      exportDocumentSchema.parse({ version: 2, exportedAt: now, data: emptyData() }),
+      exportDocumentSchema.parse({ version: 3, exportedAt: now, data: emptyData() }),
     ).toThrow();
+  });
+
+  it("rejects legacy manual collection fields even at the current version", () => {
+    expect(() => exportDocumentSchema.parse({
+      version: 4,
+      exportedAt: now,
+      data: { ...emptyData(), collections: [], collectionMemberships: [] },
+    })).toThrow();
   });
 
   it("parses a null settings row", () => {
     const data = emptyData();
     data.settings = null;
-    expect(exportDocumentSchema.parse({ version: 3, exportedAt: now, data }).data.settings).toBeNull();
+    expect(exportDocumentSchema.parse({ version: 4, exportedAt: now, data }).data.settings).toBeNull();
   });
 
   it("parses a wishlist row with a decimal target price as a string", () => {
@@ -93,7 +99,7 @@ describe("export document schema", () => {
     ];
     const data = emptyData();
     data.wishlist = wishlist;
-    expect(exportDocumentSchema.parse({ version: 3, exportedAt: now, data }).data.wishlist).toHaveLength(1);
+    expect(exportDocumentSchema.parse({ version: 4, exportedAt: now, data }).data.wishlist).toHaveLength(1);
   });
 
   it("parses a full recommendations object with a profile and tunes", () => {

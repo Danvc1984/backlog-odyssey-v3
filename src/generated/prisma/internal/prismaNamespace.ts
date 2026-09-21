@@ -3818,7 +3818,8 @@ export type EnrichmentJobScalarFieldEnum = (typeof EnrichmentJobScalarFieldEnum)
 
 export const PersonalTagScalarFieldEnum = {
   id: 'id',
-  name: 'name'
+  name: 'name',
+  normalizedName: 'normalizedName'
 } as const
 
 export type PersonalTagScalarFieldEnum = (typeof PersonalTagScalarFieldEnum)[keyof typeof PersonalTagScalarFieldEnum]

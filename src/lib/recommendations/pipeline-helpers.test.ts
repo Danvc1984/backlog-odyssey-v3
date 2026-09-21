@@ -2,9 +2,43 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import { compatEvidenceFor, compatEvidenceForWish, tuneInput } from "./pipeline-helpers";
+import { applyTune, compatEvidenceFor, compatEvidenceForWish, tuneInput } from "./pipeline-helpers";
 import { resolveCandidateDimensionValues } from "./profile";
 import { matchTuneCriteria } from "./tune";
+
+describe("personal tag tune explanations", () => {
+  it("emits one understandable personal-tag explanation without stacking selected matches", () => {
+    const tune = { time: null, playStyle: null, familiarity: "BALANCED" as const, handheld: false, experience: null, genres: [], tags: [], personalTags: ["RPG", "Favorites"], sequelPosture: null, era: null, maturity: null };
+    const result = applyTune(
+      [{ id: "game-1", score: 10, positive: [], negative: [] }],
+      tune,
+      new Map([["game-1", { personalTags: ["rpg", "favorites"] }]]),
+      1,
+    );
+    expect(result[0]?.score).toBe(13);
+    expect(result[0]?.positive).toEqual([{
+      factor: "tune_match",
+      label: "Matches your personal tag shelf",
+      points: 3,
+    }]);
+  });
+
+  it("keeps the personal-tag explanation when combined criteria reach the tune cap", () => {
+    const tune = { time: null, playStyle: null, familiarity: "BALANCED" as const, handheld: false, experience: "COUCH_GAMING" as const, genres: ["Puzzle"], tags: [], personalTags: ["Favorites"], sequelPosture: null, era: null, maturity: null };
+    const result = applyTune(
+      [{ id: "game-1", score: 10, positive: [], negative: [] }],
+      tune,
+      new Map([["game-1", { experience: "COUCH_GAMING", genres: ["Puzzle"], personalTags: ["Favorites"] }]]),
+      1,
+    );
+
+    expect(result[0]?.score).toBe(20);
+    expect(result[0]?.positive).toEqual([
+      { factor: "tune_match", label: "Tuned for experience, genre", points: 7 },
+      { factor: "tune_match", label: "Matches your personal tag shelf", points: 3 },
+    ]);
+  });
+});
 
 describe("compatEvidenceFor", () => {
   it("maps the personal compatibility override and reason", () => {

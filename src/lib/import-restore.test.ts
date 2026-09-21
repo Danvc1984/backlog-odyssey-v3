@@ -12,7 +12,7 @@ const now = "2026-09-04T12:00:00.000Z";
 
 function minimalDocument(): ExportDocument {
   return {
-    version: 3,
+    version: 4,
     exportedAt: now,
     data: {
       settings: null,
@@ -23,8 +23,6 @@ function minimalDocument(): ExportDocument {
       alternativeSources: [],
       tags: [],
       gameTags: [],
-      collections: [],
-      collectionMemberships: [],
       wishlist: [],
       unresolvedDlc: [],
       wishlistImportReviews: [],
@@ -60,8 +58,6 @@ function mockTxDb() {
     alternativeSource: { createMany: createMany("alternativeSource") },
     personalTag: { createMany: createMany("personalTag") },
     gameTag: { createMany: createMany("gameTag") },
-    collection: { createMany: createMany("collection") },
-    collectionMembership: { createMany: createMany("collectionMembership") },
     wishlistEntry: { createMany: createMany("wishlistEntry") },
     unresolvedSteamDlc: { createMany: createMany("unresolvedSteamDlc") },
     wishlistImportReview: { createMany: createMany("wishlistImportReview") },
@@ -103,8 +99,6 @@ const zeroDb = () =>
       "alternativeSource",
       "personalTag",
       "gameTag",
-      "collection",
-      "collectionMembership",
       "wishlistEntry",
       "unresolvedSteamDlc",
       "wishlistImportReview",
@@ -254,9 +248,8 @@ describe("restoreExportDocument", () => {
     doc.data.alternativeSources = [
       { id: "alt1", name: "GOG", normalizedName: "gog", knownKey: null, archivedAt: null, createdAt: now, updatedAt: now },
     ];
-    doc.data.tags = [{ id: "tag1", name: "Puzzle" }];
-    doc.data.collections = [{ id: "col1", name: "Favorites", color: null, icon: null, isSystem: false, createdAt: now }];
-    doc.data.collectionMemberships = [{ collectionId: "col1", gameId: "base1", addedAt: now }];
+    doc.data.tags = [{ id: "tag1", name: "Puzzle", normalizedName: "puzzle" }];
+    doc.data.gameTags = [{ gameId: "base1", tagId: "tag1" }];
     doc.data.libraryEntries = [
       {
         id: "l1",
@@ -297,7 +290,6 @@ describe("restoreExportDocument", () => {
       "game",
       "alternativeSource",
       "personalTag",
-      "personalTag",
       "libraryEntry",
       "externalGameId",
       "gameAvailability",
@@ -312,9 +304,8 @@ describe("restoreExportDocument", () => {
     expect(firstData.map((r) => r.id)).toEqual(["base2", "base1"]);
     expect(secondData.map((r) => r.id)).toEqual(["dlc2", "dlc1"]);
     expect(counts.games).toBe(4);
-    expect(counts.tags).toBe(2);
+    expect(counts.tags).toBe(1);
     expect(counts.gameTags).toBe(1);
-    expect(counts.collectionMemberships).toBe(0);
     expect(counts.libraryEntries).toBe(1);
     expect(counts.recommendationRuns).toBe(1);
     expect(counts.recommendationItems).toBe(1);

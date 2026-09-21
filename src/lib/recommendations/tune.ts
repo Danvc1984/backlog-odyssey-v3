@@ -12,6 +12,7 @@ import {
   TUNE_TOTAL_CAP,
 } from "@/lib/recommendations/types";
 import type { AvailabilitySource } from "@/lib/sources/known-sources";
+import { normalizePersonalTagName } from "@/lib/personal-tag";
 
 export interface TuneCandidateInput {
   experience?: string | null;
@@ -30,6 +31,7 @@ export interface TuneCandidateInput {
 export interface TuneMatch {
   points: number;
   criteria: string[];
+  personalTagPoints?: number;
 }
 
 export type PlayStyleMatch = "MATCH" | "CONFLICT" | "UNKNOWN";
@@ -145,7 +147,9 @@ export function matchTuneCriteria(tune: TuneContext, candidate: TuneCandidateInp
   if (tune.experience && tune.experience === candidate.experience) criteria.push("experience");
   if (tune.genres.some((genre) => candidate.genres?.includes(genre))) criteria.push("genre");
   if (tune.tags.some((tag) => candidate.tags?.includes(tag))) criteria.push("tag");
-  if ((tune.personalTags ?? []).some((tag) => candidate.personalTags?.includes(tag))) criteria.push("personal tag");
+  if ((tune.personalTags ?? []).some((tag) =>
+    candidate.personalTags?.some((candidateTag) => normalizePersonalTagName(candidateTag) === normalizePersonalTagName(tag)),
+  )) criteria.push("personal tag");
   if (tune.sequelPosture && matchesSequelPosture(tune.sequelPosture, candidate)) criteria.push("sequelPosture");
   if (tune.era && tune.era === eraBucket(candidate.releaseDate ?? null)) criteria.push("era");
   const legacyLength = tune.length && tune.length === durationBand(candidate.durationHours ?? null);
@@ -159,9 +163,14 @@ export function matchTuneCriteria(tune: TuneContext, candidate: TuneCandidateInp
   if (tune.playStyle && matchPlayStyle(tune.playStyle, candidate) === "MATCH") criteria.push("playStyle");
   if (matchesMaturity(tune.maturity, candidate.esrbRating?.name ?? null)) criteria.push("maturity");
 
+  const personalTagMatched = criteria.includes("personal tag");
+  const personalTagPoints = personalTagMatched ? 3 : 0;
+  const regularCriteriaCount = criteria.length - (personalTagMatched ? 1 : 0);
+  const regularPoints = Math.min(regularCriteriaCount * TUNE_MATCH_POINTS, TUNE_TOTAL_CAP - personalTagPoints);
   return {
-    points: Math.min(criteria.length * TUNE_MATCH_POINTS, TUNE_TOTAL_CAP),
+    points: regularPoints + personalTagPoints,
     criteria,
+    ...(personalTagMatched ? { personalTagPoints } : {}),
   };
 }
 

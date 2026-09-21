@@ -168,6 +168,7 @@ export async function loadBuyCandidates(
         handheldSuitable: boolean | null;
         compatEvidence: CompatEvidenceInput | null;
         envCompat: { environment: Environment; status: CompatibilityStatus }[];
+        personalTags: string[];
       }>(),
     };
   }
@@ -192,6 +193,7 @@ export async function loadBuyCandidates(
           replayCandidate: true,
         },
       },
+      tags: { select: { tag: { select: { name: true } } } },
     },
   });
   const baseById = new Map(baseGames.map((base) => [base.id, base]));
@@ -220,6 +222,7 @@ export async function loadBuyCandidates(
           handheldSuitable: entry.handheldSuitable,
           compatEvidence: compatEvidenceForWish(entry),
           envCompat: entry.envCompat ?? [],
+          personalTags: entry.baseGameId ? (baseById.get(entry.baseGameId)?.tags ?? []).map(({ tag }) => tag.name) : [],
         },
       ]),
     ),
@@ -337,9 +340,17 @@ export function applyTune<T extends { id: string; score: number; positive: Expla
     const match = matches[index];
     const positive = [...item.positive];
     const caveats = [...(item.caveats ?? [])];
-    if (match.points > 0) {
-      positive.push({ factor: "tune_match", label: `Tuned for ${match.criteria.join(", ")}`, points: match.points });
-    } else if (thinPool) {
+    const personalTagMatched = match.criteria.includes("personal tag");
+    const regularCriteria = match.criteria.filter((criterion) => criterion !== "personal tag");
+    const personalTagPoints = match.personalTagPoints ?? 0;
+    const regularPoints = Math.max(0, match.points - personalTagPoints);
+    if (regularPoints > 0) {
+      positive.push({ factor: "tune_match", label: `Tuned for ${regularCriteria.join(", ")}`, points: regularPoints });
+    }
+    if (personalTagMatched && personalTagPoints > 0) {
+      positive.push({ factor: "tune_match", label: "Matches your personal tag shelf", points: personalTagPoints });
+    }
+    if (match.points === 0 && thinPool) {
       caveats.push({ factor: "tune_thin_pool", label: `Only ${matches.filter((entry) => entry.points > 0).length} candidates match your tune` });
     }
     return {

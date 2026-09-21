@@ -2,7 +2,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { ExportDocument } from "./export-schema";
 
-export const EXPORT_VERSION = 3 as const;
+export const EXPORT_VERSION = 4 as const;
 
 export interface ExportEnvelope {
   version: typeof EXPORT_VERSION;
@@ -97,8 +97,6 @@ export function buildExportDocument(): Promise<ExportEnvelope> {
       alternativeSources: toJsonSafe(alternativeSources) as ExportDocument["data"]["alternativeSources"],
       tags: toJsonSafe(tags) as ExportDocument["data"]["tags"],
       gameTags: toJsonSafe(gameTags) as ExportDocument["data"]["gameTags"],
-      collections: [],
-      collectionMemberships: [],
       wishlist: toJsonSafe(wishlist) as ExportDocument["data"]["wishlist"],
       unresolvedDlc: toJsonSafe(unresolvedDlc) as ExportDocument["data"]["unresolvedDlc"],
       wishlistImportReviews: toJsonSafe(wishlistImportReviews) as ExportDocument["data"]["wishlistImportReviews"],

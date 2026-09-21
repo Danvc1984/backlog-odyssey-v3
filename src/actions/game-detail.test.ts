@@ -14,10 +14,12 @@ vi.mock("@/lib/recommendations/events", () => ({
     return null;
   }),
 }));
+vi.mock("@/lib/recommendations/queries", () => ({ resetKnownGenreTagValuesCache: vi.fn() }));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { logRecommendationEvent } from "@/lib/recommendations/events";
+import { resetKnownGenreTagValuesCache } from "@/lib/recommendations/queries";
 import {
   updatePersonalFields,
   addTagToGame,
@@ -753,13 +755,14 @@ describe("addTagToGame", () => {
 
     expect(result.success).toBe(true);
     expect(mockUpsert).toHaveBeenCalledWith({
-      where: { name: "RPG" },
-      create: { name: "RPG" },
+      where: { normalizedName: "rpg" },
+      create: { name: "RPG", normalizedName: "rpg" },
       update: {},
     });
     expect(mockCreate).toHaveBeenCalledWith({
       data: { gameId: "game-1", tagId: "tag-1" },
     });
+    expect(resetKnownGenreTagValuesCache).toHaveBeenCalledOnce();
   });
 
   it("rejects empty tag name", async () => {

@@ -740,7 +740,7 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   normalization because the app has not reached staging and the database will
   be rebuilt. Removed fields are neither exported nor accepted for restore.
 
-- [ ] 32. **Unified personal tags and collection shelves** - make personal
+- [x] 32. **Unified personal tags and collection shelves** - make personal
   tags the only manual grouping model and remove the separate manual
   `Collection` model as part of the clean database rebuild. Every tag,
   including an empty tag, automatically creates a browsable collection shelf.

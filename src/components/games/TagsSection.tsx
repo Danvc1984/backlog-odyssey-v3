@@ -43,7 +43,7 @@ export function TagsSection({
     if (result.success) {
       const alreadyExists = tags.some((t) => t.id === result.data.id);
       if (!alreadyExists) {
-        setTags((prev) => [...prev, { id: result.data.id, name: trimmed }]);
+        setTags((prev) => [...prev, { id: result.data.id, name: result.data.name }]);
       }
       setInput("");
       toast.success(

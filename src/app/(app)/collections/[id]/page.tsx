@@ -9,7 +9,6 @@ import {
   getSystemCollectionDefinition,
 } from "@/lib/system-collections";
 import { CollectionListControls } from "@/components/games/CollectionListControls";
-import { PersonalTagDeleteDialog } from "@/components/games/PersonalTagDeleteDialog";
 import { LibraryGameCard, type LibraryGameCardEntry } from "@/components/games/LibraryGameCard";
 import { StatusPill } from "@/components/ui/detail-card";
 import { deriveCompatTag } from "@/lib/protondb-tags";
@@ -136,7 +135,8 @@ export default async function CollectionDetailPage({
   const durationProfile = (appSettings?.durationProfile ?? "NORMALLY") as DurationProfile;
   const systemDef = getSystemCollectionDefinition(id);
   const dynamicCollection = [...dynamicCollections, ...personalTagCollections].find((collection) => collection.id === id);
-  const isCalculated = Boolean(systemDef || dynamicCollection);
+  const isPersonalTag = dynamicCollection?.kind === "tag";
+  const isCalculated = Boolean(systemDef || (dynamicCollection && !isPersonalTag));
   let name = "";
   let color: string | null = null;
   let rows: LibraryGameCardEntry[] = [];
@@ -169,7 +169,7 @@ export default async function CollectionDetailPage({
     sort,
   );
   const emptyMessage = rows.length === 0
-    ? isCalculated ? "No games answer this collection's call." : "This collection has no games yet."
+    ? isPersonalTag ? "This personal tag shelf is empty." : isCalculated ? "No games answer this collection's call." : "This collection has no games yet."
     : "No games match this search.";
 
   return (
@@ -186,24 +186,19 @@ export default async function CollectionDetailPage({
           <div className="mt-2 flex flex-wrap items-center gap-3">
             <span className="size-3 rounded-full" style={{ backgroundColor: color ?? "#9ca3af" }} aria-hidden />
             <h1>{name}</h1>
-            {isCalculated && (
+            {isCalculated ? (
               <StatusPill>
                 <CalculatorIcon className="size-3" aria-hidden />
                 Calculated
               </StatusPill>
-            )}
+            ) : isPersonalTag ? (
+              <StatusPill>Personal tag</StatusPill>
+            ) : null}
           </div>
           <p className="mt-2 text-sm text-muted-foreground">
             {rows.length} catalog {rows.length === 1 ? "game" : "games"} in this collection.
           </p>
         </div>
-        {dynamicCollection?.kind === "tag" && dynamicCollection.tagId && (
-          <PersonalTagDeleteDialog
-            tagId={dynamicCollection.tagId}
-            tagName={dynamicCollection.name}
-            gameCount={dynamicCollection.count}
-          />
-        )}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">

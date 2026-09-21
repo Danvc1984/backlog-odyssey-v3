@@ -8,6 +8,8 @@ import { requireUser } from "@/lib/auth-guard";
 import { logRecommendationEvent, playStateTransitionKind } from "@/lib/recommendations/events";
 import { derivePlayStateMutation } from "@/lib/play-state";
 import { revalidatePath } from "next/cache";
+import { preparePersonalTagName } from "@/lib/personal-tag";
+import { resetKnownGenreTagValuesCache } from "@/lib/recommendations/queries";
 
 const updatePersonalFieldsSchema = z.object({
   priority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH"]).optional(),
@@ -495,11 +497,11 @@ export async function addTagToGame(gameId: string, input: AddTagToGameInput) {
       return { success: false as const, data: null, error: "Invalid input" };
     }
 
-    const { tagName } = parsed.data;
+    const { name, normalizedName } = preparePersonalTagName(parsed.data.tagName);
 
     const tag = await prisma.personalTag.upsert({
-      where: { name: tagName },
-      create: { name: tagName },
+      where: { normalizedName },
+      create: { name, normalizedName },
       update: {},
     });
 
@@ -512,6 +514,7 @@ export async function addTagToGame(gameId: string, input: AddTagToGameInput) {
         throw e;
       });
 
+    resetKnownGenreTagValuesCache();
     return { success: true as const, data: tag, error: null };
   } catch (err) {
     return {

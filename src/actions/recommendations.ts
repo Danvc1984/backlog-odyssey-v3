@@ -72,6 +72,10 @@ const recommendationPreferenceSchema = z.object({
 
 const recommendationPreferenceIdSchema = z.object({ id: z.string().trim().min(1) }).strict();
 
+function toNullableJson(value: unknown): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput {
+  return value === null ? Prisma.JsonNull : value as Prisma.InputJsonValue;
+}
+
 const recommendationUpdateSchema = z.object({
   playTune: tuneContextSchema.nullable().default(null),
   buyTune: tuneContextSchema.nullable().default(null),
@@ -127,7 +131,21 @@ export async function updateRecommendations(input: unknown = {}) {
     await requireUser();
     const parsed = recommendationUpdateSchema.safeParse(input);
     if (!parsed.success) return { success: false as const, data: null, error: "Invalid input" };
-    const result = await prisma.$transaction((tx) => runRecommendationPipeline(tx, parsed.data));
+    const result = await prisma.$transaction(async (tx) => {
+      await tx.recommendationTuneState.upsert({
+        where: { id: 1 },
+        create: {
+          id: 1,
+          playTune: toNullableJson(parsed.data.playTune),
+          buyTune: toNullableJson(parsed.data.buyTune),
+        },
+        update: {
+          playTune: toNullableJson(parsed.data.playTune),
+          buyTune: toNullableJson(parsed.data.buyTune),
+        },
+      });
+      return runRecommendationPipeline(tx, parsed.data);
+    });
     return { success: true as const, data: result, error: null };
   } catch (err) {
     return {

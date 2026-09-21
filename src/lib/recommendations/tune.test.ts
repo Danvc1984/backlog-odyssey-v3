@@ -58,6 +58,15 @@ describe("matchTuneCriteria", () => {
     expect(match).toEqual({ points: 10, criteria: ["experience", "genre", "tag", "era", "maturity"] });
   });
 
+  it("matches personal tags case-insensitively with any-match non-stacking semantics", () => {
+    const tune = { ...emptyTune, personalTags: ["Co-op nights", "Favorites"] };
+    const oneMatch = matchTuneCriteria(tune, candidate({ personalTags: ["co-op NIGHTS"] }));
+    const twoMatches = matchTuneCriteria(tune, candidate({ personalTags: ["CO-OP NIGHTS", "favorites"] }));
+    expect(oneMatch.criteria).toEqual(["personal tag"]);
+    expect(twoMatches.criteria).toEqual(["personal tag"]);
+    expect(twoMatches.points).toBe(oneMatch.points);
+  });
+
   it("matches selected personal tags separately from metadata tags", () => {
     const match = matchTuneCriteria(
       { ...emptyTune, personalTags: ["Co-op nights"] },

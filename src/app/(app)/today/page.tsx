@@ -29,6 +29,7 @@ import { parseIgdbMetadataPayload } from "@/lib/igdb-metadata-payload";
 import { SectionCard } from "@/components/ui/detail-card";
 import { buildEntryOfferView } from "@/lib/offer-selection";
 import { formatPlayExclusionReasons } from "@/lib/recommendations/environment-fit";
+import type { TuneContext } from "@/lib/recommendations/types";
 
 const PLAY_ROLE_ORDER = ["BEST_FIT_1", "BEST_FIT_2", "OUT_OF_THE_BOX", "CHANGE_OF_PACE", "HANDHELD_PICK"] as const;
 const BUY_ROLE_ORDER = ["BEST_FIT_1", "BEST_FIT_2", "DEAL"] as const;
@@ -39,6 +40,7 @@ export default async function TodayPage() {
     latestBuyRun,
     knownValues,
     presets,
+    tuneState,
     alternativeSources,
     tasteGames,
     tasteEventCount,
@@ -102,6 +104,7 @@ export default async function TodayPage() {
     }),
     loadKnownGenreTagValues(),
     loadRecommendationPresets(),
+    prisma.recommendationTuneState.findUnique({ where: { id: 1 }, select: { playTune: true, buyTune: true } }),
     prisma.alternativeSource.findMany({
       where: { archivedAt: null },
       orderBy: { name: "asc" },
@@ -300,6 +303,7 @@ export default async function TodayPage() {
             engine="PLAY_NEXT"
             knownValues={knownValues}
             thinPool={playContext?.tune?.thinPool === true}
+            initialTune={tuneState?.playTune as TuneContext | null | undefined}
             presets={presetOptions}
             alternativeSources={alternativeSources.map((source) => ({
               ...source,
@@ -352,6 +356,7 @@ export default async function TodayPage() {
           engine="BUY"
           knownValues={knownValues}
           thinPool={buyContext?.tune?.thinPool === true}
+          initialTune={tuneState?.buyTune as TuneContext | null | undefined}
           presets={presetOptions}
         />
         {buyItems.length === 0 ? (

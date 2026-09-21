@@ -149,7 +149,7 @@ function txFactory() {
     recommendationProfile: { upsert: vi.fn(), deleteMany: profileDeleteMany },
     recommendationPreference: { upsert: preferenceUpsert, deleteMany: preferenceDeleteMany, findMany: preferenceFindMany },
     recommendationPreset: { deleteMany: presetDeleteMany },
-    recommendationTuneState: { deleteMany: tuneStateDeleteMany, findUnique: tuneStateFindUnique },
+    recommendationTuneState: { upsert: tuneStateUpsert, deleteMany: tuneStateDeleteMany, findUnique: tuneStateFindUnique },
     libraryEntry: { update: libraryEntryUpdate },
   };
 }
@@ -263,7 +263,10 @@ describe("recommendation tune and preset actions", () => {
     const result = await updateRecommendations({ playTune: tune, buyTune: null });
     expect(result.success).toBe(true);
     expect(tuneStateFindUnique).not.toHaveBeenCalled();
-    expect(tuneStateUpsert).not.toHaveBeenCalled();
+    expect(tuneStateUpsert).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 1 },
+      update: expect.objectContaining({ playTune: tune }),
+    }));
   });
 
   it("upserts, lists, and deletes presets and rejects invalid inputs", async () => {
