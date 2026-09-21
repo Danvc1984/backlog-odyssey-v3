@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { InfoPopover } from "@/components/ui/info-popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { IgdbSearchCandidate } from "@/lib/igdb-types";
 import { GAME_EXPERIENCE_LABELS, PERSONAL_FIELD_HELP } from "@/lib/personal-field-help";
@@ -187,8 +188,9 @@ export function EditWishlistDialog({ entry, baseGames }: EditWishlistDialogProps
             </div>
           )}
           <div className="grid gap-2">
-            <Label htmlFor={`edit-wishlist-interest-${entry.id}`}>Interest</Label>
-            <p className="text-xs text-muted-foreground">{PERSONAL_FIELD_HELP.interest}</p>
+            <Label htmlFor={`edit-wishlist-interest-${entry.id}`} className="flex items-center gap-1">
+              Interest <InfoPopover label="Interest" content={PERSONAL_FIELD_HELP.interest} />
+            </Label>
             <Select value={interest} onValueChange={setInterest}>
               <SelectTrigger id={`edit-wishlist-interest-${entry.id}`} aria-label="Wishlist interest"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -197,8 +199,9 @@ export function EditWishlistDialog({ entry, baseGames }: EditWishlistDialogProps
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor={`edit-wishlist-experience-${entry.id}`}>Game experience</Label>
-            <p className="text-xs text-muted-foreground">{PERSONAL_FIELD_HELP.gameExperience}</p>
+            <Label htmlFor={`edit-wishlist-experience-${entry.id}`} className="flex items-center gap-1">
+              Game experience <InfoPopover label="Game experience" content={PERSONAL_FIELD_HELP.gameExperience} />
+            </Label>
             <Select value={gameExperience} onValueChange={setGameExperience}>
               <SelectTrigger id={`edit-wishlist-experience-${entry.id}`}><SelectValue placeholder="Not set" /></SelectTrigger>
               <SelectContent>
@@ -218,6 +221,7 @@ export function EditWishlistDialog({ entry, baseGames }: EditWishlistDialogProps
               className="size-4 accent-primary disabled:cursor-not-allowed disabled:opacity-50"
             />
             Handheld option
+            <InfoPopover label="Handheld suitability" content={PERSONAL_FIELD_HELP.handheldSuitable} />
           </Label>
           {entry.type === "DLC" && (
             <div className="grid gap-2">

@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   FALLBACK_SOURCE_ICON,
   KNOWN_SOURCES,
-  UNSPECIFIED_OTHER_SOURCE_NAME,
   availabilitySourcePresentation,
   matchKnownSource,
   normalizeSourceName,
@@ -74,9 +73,9 @@ describe("resolveSourcePresentation", () => {
     });
   });
 
-  it("falls back to the unspecified name for an empty label", () => {
+  it("reports unavailable presentation data for an empty label", () => {
     expect(resolveSourcePresentation("")).toEqual({
-      label: UNSPECIFIED_OTHER_SOURCE_NAME,
+      label: "Source unavailable",
       iconName: FALLBACK_SOURCE_ICON,
     });
   });
@@ -109,9 +108,9 @@ describe("availabilitySourcePresentation", () => {
     });
   });
 
-  it("uses the generic Other platform fallback when no name is available", () => {
+  it("reports unavailable presentation data when no saved name is available", () => {
     expect(availabilitySourcePresentation("OTHER_PLATFORM", null)).toEqual({
-      label: "Other platform",
+      label: "Source unavailable",
       iconName: FALLBACK_SOURCE_ICON,
     });
   });

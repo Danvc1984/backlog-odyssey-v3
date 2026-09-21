@@ -30,7 +30,6 @@ import { SectionCard, StatusPill } from "@/components/ui/detail-card";
 import { resolvePagePalette } from "@/lib/game-theme";
 import { deriveWindowsFallbackExists, linuxDevicePhrase } from "@/lib/os-setup";
 import { getCompatibilityGate } from "@/lib/compat-gate";
-import { availableEnvironments } from "@/lib/recommendations/environment-fit";
 import type { DurationProfile } from "@/lib/playtime-evidence";
 
 export default async function GameDetailPage({
@@ -211,13 +210,6 @@ export default async function GameDetailPage({
       !latest || snapshot.fetchedAt > latest ? snapshot.fetchedAt : latest,
     null,
   );
-  const configuredEnvironments = availableEnvironments(
-    compatibilityGate.setup ?? {
-      primaryOs: "LINUX",
-      hasWindowsFallback: false,
-      handheldOs: "NONE",
-    },
-  );
   const configuredLinuxDevicePhrase = linuxDevicePhrase(
     compatibilityGate.setup ?? { primaryOs: "LINUX", handheldOs: "NONE" },
   );
@@ -294,74 +286,67 @@ export default async function GameDetailPage({
         igdbTitle={igdbPayload?.name ?? null}
       />
 
-      {game.type === "BASE_GAME" && (
-      <SectionCard
-        title="Play state"
-        id="play-state"
-        sectionId="play-state"
-        className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
-        description="Set the status of your journey with this game."
-        status={
-          <StatusPill>
-            {game.libraryEntry?.playState?.replaceAll("_", " ") ??
-              "Not in library"}
-          </StatusPill>
-        }
-      >
-        <PlayStateSection
-          gameId={game.id}
-          libraryEntry={
-            game.libraryEntry
-              ? {
-                  playState: game.libraryEntry.playState,
-                  completedBefore: game.libraryEntry.completedBefore,
-                  isMainGame: game.libraryEntry.isMainGame,
-                  playSoon: game.libraryEntry.playSoon,
-                  replayCandidate: game.libraryEntry.replayCandidate,
-                  hidden: game.libraryEntry.hidden,
-                  handheldSuitable: game.libraryEntry.handheldSuitable,
-                }
-              : null
-          }
-        />
-      </SectionCard>
-      )}
-
       {otherGameName && <DuplicateWarning otherGameName={otherGameName} />}
 
       {game.type === "BASE_GAME" && (
-      <SectionCard
-        title="Personal Profile"
-        id="personal-fields"
-        sectionId="personal-fields"
-        className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
-        description="Your preferences for the journey."
-        status={
-          <StatusPill>
-            {game.libraryEntry ? "Saved" : "Not in library"}
-          </StatusPill>
-        }
-      >
-        <PersonalFieldsForm
-          gameId={game.id}
-          availableEnvironments={configuredEnvironments}
-          libraryEntry={
-            game.libraryEntry
-              ? {
-                  priority: game.libraryEntry.priority,
-                  interest: game.libraryEntry.interest,
-                  rating: game.libraryEntry.rating,
-                  preferredEnvironment: game.libraryEntry.preferredEnvironment,
-                  gameExperience: game.libraryEntry.gameExperience,
-                }
-              : null
+        <SectionCard
+          title="Personal data"
+          id="personal-data"
+          sectionId="personal-data"
+          className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
+          description="Keep your journey and preferences together."
+          status={
+            <StatusPill>
+              {game.libraryEntry ? "Saved" : "Not in library"}
+            </StatusPill>
           }
-        />
-        <CalibrationNote
-          interest={game.libraryEntry?.interest ?? null}
-          dismissalCount={playDismissalCount}
-        />
-      </SectionCard>
+        >
+          <div
+            id="play-state"
+            className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
+          >
+            <h3 className="mb-3 text-base font-semibold">Journey</h3>
+            <PlayStateSection
+              gameId={game.id}
+              libraryEntry={
+                game.libraryEntry
+                  ? {
+                      playState: game.libraryEntry.playState,
+                      completedBefore: game.libraryEntry.completedBefore,
+                      isMainGame: game.libraryEntry.isMainGame,
+                      playSoon: game.libraryEntry.playSoon,
+                      replayCandidate: game.libraryEntry.replayCandidate,
+                      hidden: game.libraryEntry.hidden,
+                    }
+                  : null
+              }
+            />
+          </div>
+          <div
+            id="personal-fields"
+            className="mt-6 border-t border-border pt-6 scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
+          >
+            <h3 className="mb-3 text-base font-semibold">Preferences</h3>
+            <PersonalFieldsForm
+              gameId={game.id}
+              libraryEntry={
+                game.libraryEntry
+                  ? {
+                      priority: game.libraryEntry.priority,
+                      interest: game.libraryEntry.interest,
+                      rating: game.libraryEntry.rating,
+                      gameExperience: game.libraryEntry.gameExperience,
+                      handheldSuitable: game.libraryEntry.handheldSuitable,
+                    }
+                  : null
+              }
+            />
+            <CalibrationNote
+              interest={game.libraryEntry?.interest ?? null}
+              dismissalCount={playDismissalCount}
+            />
+          </div>
+        </SectionCard>
       )}
 
       {compatibilityGate.active && game.type === "BASE_GAME" && (

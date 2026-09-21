@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { InfoPopover } from "@/components/ui/info-popover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -14,14 +15,13 @@ import {
 } from "@/components/ui/select";
 import { updatePersonalFields } from "@/actions/game-detail";
 import { PERSONAL_FIELD_HELP } from "@/lib/personal-field-help";
-import type { Environment } from "@/generated/prisma/client";
 
 type LibraryEntryData = {
   priority: string | null;
   interest: number | null;
   rating: number | null;
-  preferredEnvironment: string | null;
   gameExperience: string | null;
+  handheldSuitable: boolean | null;
 };
 
 const PRIORITY_OPTIONS = [
@@ -29,12 +29,6 @@ const PRIORITY_OPTIONS = [
   { value: "LOW", label: "Low" },
   { value: "MEDIUM", label: "Medium" },
   { value: "HIGH", label: "High" },
-];
-
-const ENV_OPTIONS: Array<{ value: Environment; label: string }> = [
-  { value: "LINUX", label: "Linux" },
-  { value: "STEAM_DECK", label: "Steam Deck" },
-  { value: "WINDOWS", label: "Windows" },
 ];
 
 const EXPERIENCE_OPTIONS = [
@@ -47,11 +41,9 @@ const EXPERIENCE_OPTIONS = [
 export function PersonalFieldsForm({
   gameId,
   libraryEntry,
-  availableEnvironments,
 }: {
   gameId: string;
   libraryEntry: LibraryEntryData | null;
-  availableEnvironments: Environment[];
 }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,16 +52,12 @@ export function PersonalFieldsForm({
     libraryEntry?.interest?.toString() ?? "",
   );
   const [rating, setRating] = useState(libraryEntry?.rating?.toString() ?? "");
-  const [preferredEnvironment, setPreferredEnvironment] = useState(
-    libraryEntry?.preferredEnvironment ?? "",
-  );
   const [gameExperience, setGameExperience] = useState(
     libraryEntry?.gameExperience ?? "",
   );
-  const environmentValues = libraryEntry?.preferredEnvironment && !availableEnvironments.includes(libraryEntry.preferredEnvironment as Environment)
-    ? [...availableEnvironments, libraryEntry.preferredEnvironment as Environment]
-    : availableEnvironments;
-
+  const [handheldSuitable, setHandheldSuitable] = useState(
+    libraryEntry?.handheldSuitable === true,
+  );
   if (!libraryEntry) {
     return <p className="text-sm text-muted-foreground">Not in library</p>;
   }
@@ -83,15 +71,12 @@ export function PersonalFieldsForm({
       priority: priority as "NONE" | "LOW" | "MEDIUM" | "HIGH",
       interest: interest === "" ? null : Number(interest),
       rating: rating === "" ? null : Number(rating),
-      preferredEnvironment:
-        preferredEnvironment === ""
-          ? null
-          : (preferredEnvironment as "LINUX" | "STEAM_DECK" | "WINDOWS"),
       gameExperience: gameExperience === "" ? null : gameExperience as
         | "PC_GAMING"
         | "MULTIPLAYER_COOP"
         | "COUCH_GAMING"
         | "ON_THE_GO",
+      handheldSuitable: handheldSuitable ? true : null,
     });
 
     setSaving(false);
@@ -104,10 +89,12 @@ export function PersonalFieldsForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-5">
+    <form onSubmit={handleSubmit} className="grid gap-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       <div className="grid gap-2">
-        <Label htmlFor="priority">Priority</Label>
-        <p className="text-xs text-muted-foreground">{PERSONAL_FIELD_HELP.priority}</p>
+        <Label htmlFor="priority" className="flex items-center gap-1">
+          Priority <InfoPopover label="Priority" content={PERSONAL_FIELD_HELP.priority} />
+        </Label>
         <Select value={priority} onValueChange={setPriority}>
           <SelectTrigger id="priority" className="w-full">
             <SelectValue />
@@ -123,10 +110,10 @@ export function PersonalFieldsForm({
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="interest">
+        <Label htmlFor="interest" className="flex items-center gap-1">
           Interest <span className="text-muted-foreground">(1-5)</span>
+          <InfoPopover label="Interest" content={PERSONAL_FIELD_HELP.interest} />
         </Label>
-        <p className="text-xs text-muted-foreground">{PERSONAL_FIELD_HELP.interest}</p>
         <Input
           id="interest"
           type="number"
@@ -139,10 +126,10 @@ export function PersonalFieldsForm({
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="rating">
+        <Label htmlFor="rating" className="flex items-center gap-1">
           Rating <span className="text-muted-foreground">(1-10)</span>
+          <InfoPopover label="Rating" content={PERSONAL_FIELD_HELP.rating} />
         </Label>
-        <p className="text-xs text-muted-foreground">{PERSONAL_FIELD_HELP.rating}</p>
         <Input
           id="rating"
           type="number"
@@ -155,33 +142,9 @@ export function PersonalFieldsForm({
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="env">Preferred environment</Label>
-        <p className="text-xs text-muted-foreground">{PERSONAL_FIELD_HELP.preferredEnvironment}</p>
-        <Select
-          value={preferredEnvironment}
-          onValueChange={setPreferredEnvironment}
-        >
-          <SelectTrigger id="env" className="w-full">
-            <SelectValue placeholder="Not set" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">Not set</SelectItem>
-            {environmentValues.map((value) => {
-              const opt = ENV_OPTIONS.find((option) => option.value === value);
-              if (!opt) return null;
-              return (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="grid gap-2">
-        <Label htmlFor="game-experience">Game experience</Label>
-        <p className="text-xs text-muted-foreground">{PERSONAL_FIELD_HELP.gameExperience}</p>
+        <Label htmlFor="game-experience" className="flex items-center gap-1">
+          Game experience <InfoPopover label="Game experience" content={PERSONAL_FIELD_HELP.gameExperience} />
+        </Label>
         <Select value={gameExperience} onValueChange={setGameExperience}>
           <SelectTrigger id="game-experience" className="w-full">
             <SelectValue placeholder="Not set" />
@@ -197,11 +160,26 @@ export function PersonalFieldsForm({
         </Select>
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      </div>
 
-      <Button type="submit" disabled={saving} className="w-fit">
-        {saving ? "Saving..." : "Save"}
-      </Button>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+        <Label className="flex items-center gap-2 text-sm font-medium">
+          <input
+            type="checkbox"
+            checked={handheldSuitable}
+            disabled={saving}
+            onChange={(event) => setHandheldSuitable(event.target.checked)}
+            className="size-4 accent-primary disabled:cursor-not-allowed disabled:opacity-50"
+          />
+          Handheld suitability
+          <InfoPopover label="Handheld suitability" content={PERSONAL_FIELD_HELP.handheldSuitable} />
+        </Label>
+        <Button type="submit" disabled={saving} className="w-fit">
+          {saving ? "Saving..." : "Save"}
+        </Button>
+      </div>
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </form>
   );
 }

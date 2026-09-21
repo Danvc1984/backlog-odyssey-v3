@@ -151,11 +151,11 @@ describe("reviveRows", () => {
 
   it("preserves null and non-date values untouched", () => {
     const revived = reviveRows(
-      [{ id: "w1", reviewedAt: null, notes: "hi", updatedAt: "2026-01-01T00:00:00.000Z" }],
+      [{ id: "w1", reviewedAt: null, marker: "hi", updatedAt: "2026-01-01T00:00:00.000Z" }],
       ["reviewedAt", "updatedAt"],
     );
     expect(revived[0].reviewedAt).toBeNull();
-    expect(revived[0].notes).toBe("hi");
+    expect(revived[0].marker).toBe("hi");
     expect(revived[0].updatedAt).toBeInstanceOf(Date);
   });
 });
@@ -222,6 +222,7 @@ describe("restoreExportDocument", () => {
         rating: null,
         preferredEnvironment: null,
         gameExperience: null,
+        handheldSuitable: null,
         compatOverrideStatus: null,
         compatOverrideReason: null,
         playSoon: false,
@@ -268,6 +269,7 @@ describe("restoreExportDocument", () => {
         rating: null,
         preferredEnvironment: null,
         gameExperience: null,
+        handheldSuitable: null,
         compatOverrideStatus: null,
         compatOverrideReason: null,
         playSoon: false,
@@ -359,7 +361,7 @@ describe("restoreExportDocument", () => {
     const { db, callOrder } = mockTxDb();
     const doc = minimalDocument();
     doc.data.wishlist = [
-      { id: "w1", name: "Elden Ring", type: "BASE_GAME", baseGameId: null, interest: 5, gameExperience: null, targetPriceMxn: "899.00", steamAppId: "1245620", steamAppIdProvenance: "STEAM_IMPORT", createdAt: now, updatedAt: now },
+      { id: "w1", name: "Elden Ring", type: "BASE_GAME", baseGameId: null, interest: 5, gameExperience: null, handheldSuitable: null, targetPriceMxn: "899.00", steamAppId: "1245620", steamAppIdProvenance: "STEAM_IMPORT", createdAt: now, updatedAt: now },
     ];
     doc.data.unresolvedDlc = [
       { id: "u1", steamAppId: "1000", name: "DLC", steamBaseAppId: null, source: "OWNED_SYNC", status: "PENDING", discardedAt: null, createdAt: now, updatedAt: now },
@@ -423,6 +425,7 @@ describe("restoreExportDocument", () => {
         rating: null,
         preferredEnvironment: null,
         gameExperience: null,
+        handheldSuitable: null,
         compatOverrideStatus: null,
         compatOverrideReason: null,
         playSoon: false,

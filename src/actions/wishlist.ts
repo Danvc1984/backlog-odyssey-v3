@@ -9,7 +9,6 @@ import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibili
 import { autoEnrichWishlistEntries } from "@/lib/wishlist-igdb-queue";
 import { queueIgdbForDlcGames } from "@/lib/igdb-import-queue";
 import { resolveManualSteamAppId } from "@/actions/wishlist-identity";
-import { getOrCreateUnspecifiedSource } from "@/lib/sources/store";
 import { derivePlayStateMutation } from "@/lib/play-state";
 import { parseIgdbMetadataPayload } from "@/lib/igdb-metadata-payload";
 import type { WishlistIgdbSnapshotPayload } from "@/lib/wishlist-igdb-enrichment";
@@ -79,6 +78,19 @@ const wishlistInclude = {
   metadataSnapshot: true,
   baseGame: { select: { id: true, name: true } },
 } as const;
+
+function validateAcquisitionSource(
+  source: "STEAM" | "OTHER_PLATFORM",
+  alternativeSourceId: string | undefined,
+): string | null {
+  if (source === "OTHER_PLATFORM" && !alternativeSourceId) {
+    return "Alternative source is required";
+  }
+  if (source === "STEAM" && alternativeSourceId) {
+    return "Alternative source is only valid for other platforms";
+  }
+  return null;
+}
 
 export async function createWishlistEntry(input: unknown) {
   try {
@@ -275,6 +287,13 @@ export async function acquireWishlistBaseGame(input: unknown) {
     if (!parsed.success) {
       return { success: false as const, data: null, error: "Invalid input" };
     }
+    const sourceError = validateAcquisitionSource(
+      parsed.data.source,
+      parsed.data.alternativeSourceId,
+    );
+    if (sourceError) {
+      return { success: false as const, data: null, error: sourceError };
+    }
 
     const game = await prisma.$transaction(async (tx) => {
       const wishlist = await tx.wishlistEntry.findUnique({
@@ -306,15 +325,10 @@ export async function acquireWishlistBaseGame(input: unknown) {
         }
       }
 
-      const alternativeSourceId =
-        parsed.data.source === "OTHER_PLATFORM" && parsed.data.alternativeSourceId
-          ? parsed.data.alternativeSourceId
-          : parsed.data.source === "OTHER_PLATFORM"
-            ? (await getOrCreateUnspecifiedSource(tx)).id
-            : null;
-      if (parsed.data.source === "OTHER_PLATFORM" && parsed.data.alternativeSourceId) {
+      const alternativeSourceId = parsed.data.alternativeSourceId ?? null;
+      if (alternativeSourceId) {
         const source = await tx.alternativeSource.findUnique({
-          where: { id: parsed.data.alternativeSourceId },
+          where: { id: alternativeSourceId },
           select: { id: true, archivedAt: true },
         });
         if (!source) throw new ActionError("Alternative source not found");
@@ -382,6 +396,13 @@ export async function acquireWishlistDlc(input: unknown) {
     if (!parsed.success) {
       return { success: false as const, data: null, error: "Invalid input" };
     }
+    const sourceError = validateAcquisitionSource(
+      parsed.data.source,
+      parsed.data.alternativeSourceId,
+    );
+    if (sourceError) {
+      return { success: false as const, data: null, error: sourceError };
+    }
 
     const acquisition = await prisma.$transaction(async (tx) => {
       const wishlist = await tx.wishlistEntry.findUnique({
@@ -396,15 +417,10 @@ export async function acquireWishlistDlc(input: unknown) {
         throw new ActionError("DLC parent must be a base game");
       }
 
-      const alternativeSourceId =
-        parsed.data.source === "OTHER_PLATFORM" && parsed.data.alternativeSourceId
-          ? parsed.data.alternativeSourceId
-          : parsed.data.source === "OTHER_PLATFORM"
-            ? (await getOrCreateUnspecifiedSource(tx)).id
-            : null;
-      if (parsed.data.source === "OTHER_PLATFORM" && parsed.data.alternativeSourceId) {
+      const alternativeSourceId = parsed.data.alternativeSourceId ?? null;
+      if (alternativeSourceId) {
         const source = await tx.alternativeSource.findUnique({
-          where: { id: parsed.data.alternativeSourceId },
+          where: { id: alternativeSourceId },
           select: { id: true, archivedAt: true },
         });
         if (!source) throw new ActionError("Alternative source not found");

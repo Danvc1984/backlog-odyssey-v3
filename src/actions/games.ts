@@ -4,17 +4,18 @@ import { z } from "zod";
 import { ActionError, friendlyActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
-import { getOrCreateUnspecifiedSource } from "@/lib/sources/store";
 import { IGDB_JOB_MAX_ATTEMPTS } from "@/lib/igdb-job";
 import { Prisma } from "@/generated/prisma/client";
 
-const createGameSchema = z.object({
-  name: z.string().trim().min(1, "Name is required"),
-  availabilitySource: z.enum(["STEAM", "OTHER_PLATFORM", "ROM"]),
-  alternativeSourceId: z.string().trim().min(1).optional(),
-  interest: z.number().int().min(1).max(5).optional(),
-  selectedIgdbId: z.number().int().positive().optional(),
-});
+const createGameSchema = z
+  .object({
+    name: z.string().trim().min(1, "Name is required"),
+    availabilitySource: z.enum(["STEAM", "OTHER_PLATFORM", "ROM"]),
+    alternativeSourceId: z.string().trim().min(1).optional(),
+    interest: z.number().int().min(1).max(5).optional(),
+    selectedIgdbId: z.number().int().positive().optional(),
+  })
+  .strict();
 
 export type CreateGameInput = z.infer<typeof createGameSchema>;
 
@@ -33,16 +34,26 @@ export async function createGame(input: CreateGameInput) {
       selectedIgdbId,
     } = parsed.data;
 
+    if (availabilitySource === "OTHER_PLATFORM" && !parsed.data.alternativeSourceId) {
+      return {
+        success: false as const,
+        data: null,
+        error: "Alternative source is required",
+      };
+    }
+    if (availabilitySource !== "OTHER_PLATFORM" && parsed.data.alternativeSourceId) {
+      return {
+        success: false as const,
+        data: null,
+        error: "Alternative source is only valid for other platforms",
+      };
+    }
+
     const game = await prisma.$transaction(async (tx) => {
-      const alternativeSourceId =
-        availabilitySource === "OTHER_PLATFORM" && parsed.data.alternativeSourceId
-          ? parsed.data.alternativeSourceId
-          : availabilitySource === "OTHER_PLATFORM"
-            ? (await getOrCreateUnspecifiedSource(tx)).id
-          : null;
-      if (availabilitySource === "OTHER_PLATFORM" && parsed.data.alternativeSourceId) {
+      const alternativeSourceId = parsed.data.alternativeSourceId ?? null;
+      if (alternativeSourceId) {
         const source = await tx.alternativeSource.findUnique({
-          where: { id: parsed.data.alternativeSourceId },
+          where: { id: alternativeSourceId },
           select: { id: true, archivedAt: true },
         });
         if (!source) throw new ActionError("Alternative source not found");

@@ -3,7 +3,7 @@ import { EXPORT_VERSION } from "./export-data";
 
 const isoDateTime = z.iso.datetime();
 
-const appSettingsSchema = z.object({
+const appSettingsSchema = z.strictObject({
   id: z.number().int(),
   theme: z.enum(["LIGHT", "DARK", "SYSTEM"]),
   primaryOs: z.enum(["LINUX", "WINDOWS"]),
@@ -21,7 +21,7 @@ const appSettingsSchema = z.object({
   updatedAt: isoDateTime,
 });
 
-const gameSchema = z.object({
+const gameSchema = z.strictObject({
   id: z.string(),
   type: z.enum(["BASE_GAME", "DLC"]),
   origin: z.enum(["STEAM_IMPORT", "MANUAL"]),
@@ -32,18 +32,18 @@ const gameSchema = z.object({
   updatedAt: isoDateTime,
 });
 
-const libraryEntrySchema = z.object({
+const libraryEntrySchema = z.strictObject({
   id: z.string(),
   gameId: z.string(),
   playState: z.enum(["NOT_STARTED", "IN_PROGRESS", "COMPLETED", "ABANDONED"]),
-  completedBefore: z.boolean().default(false),
+  completedBefore: z.boolean(),
   isMainGame: z.boolean(),
   priority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH"]).nullable(),
   interest: z.number().int().nullable(),
   rating: z.number().int().nullable(),
   preferredEnvironment: z.enum(["LINUX", "STEAM_DECK", "WINDOWS"]).nullable(),
   gameExperience: z.enum(["PC_GAMING", "MULTIPLAYER_COOP", "COUCH_GAMING", "ON_THE_GO"]).nullable(),
-  handheldSuitable: z.boolean().nullable().optional(),
+  handheldSuitable: z.boolean().nullable(),
   compatOverrideStatus: z
     .enum(["READY", "READY_WITH_TINKERING", "FALLBACK_RECOMMENDED", "REQUIRED", "UNKNOWN"])
     .nullable(),
@@ -55,7 +55,7 @@ const libraryEntrySchema = z.object({
   updatedAt: isoDateTime,
 });
 
-const availabilityRowSchema = z.object({
+const availabilityRowSchema = z.strictObject({
   id: z.string(),
   gameId: z.string(),
   source: z.enum(["STEAM", "OTHER_PLATFORM", "ROM"]),
@@ -66,7 +66,7 @@ const availabilityRowSchema = z.object({
   addedAt: isoDateTime,
 });
 
-const externalIdSchema = z.object({
+const externalIdSchema = z.strictObject({
   id: z.string(),
   namespaceId: z.string(),
   namespace: z.string(),
@@ -75,7 +75,7 @@ const externalIdSchema = z.object({
   gameId: z.string(),
 });
 
-const alternativeSourceSchema = z.object({
+const alternativeSourceSchema = z.strictObject({
   id: z.string(),
   name: z.string(),
   normalizedName: z.string(),
@@ -85,17 +85,17 @@ const alternativeSourceSchema = z.object({
   updatedAt: isoDateTime,
 });
 
-const personalTagSchema = z.object({
+const personalTagSchema = z.strictObject({
   id: z.string(),
   name: z.string(),
 });
 
-const gameTagSchema = z.object({
+const gameTagSchema = z.strictObject({
   gameId: z.string(),
   tagId: z.string(),
 });
 
-const collectionSchema = z.object({
+const collectionSchema = z.strictObject({
   id: z.string(),
   name: z.string(),
   color: z.string().nullable(),
@@ -104,7 +104,7 @@ const collectionSchema = z.object({
   createdAt: isoDateTime,
 });
 
-const collectionMembershipSchema = z.object({
+const collectionMembershipSchema = z.strictObject({
   collectionId: z.string(),
   gameId: z.string(),
   addedAt: isoDateTime,
@@ -121,14 +121,14 @@ export const gameTagsSchema = z.array(gameTagSchema);
 export const collectionsSchema = z.array(collectionSchema);
 export const collectionMembershipsSchema = z.array(collectionMembershipSchema);
 
-const wishlistEntrySchema = z.object({
+const wishlistEntrySchema = z.strictObject({
   id: z.string(),
   name: z.string(),
   type: z.enum(["BASE_GAME", "DLC"]),
   baseGameId: z.string().nullable(),
   interest: z.number().int().nullable(),
   gameExperience: z.enum(["PC_GAMING", "MULTIPLAYER_COOP", "COUCH_GAMING", "ON_THE_GO"]).nullable(),
-  handheldSuitable: z.boolean().nullable().optional(),
+  handheldSuitable: z.boolean().nullable(),
   targetPriceMxn: z.string().nullable(),
   steamAppId: z.string().nullable(),
   steamAppIdProvenance: z.enum(["STEAM_IMPORT", "USER", "IGDB_SUGGESTION"]).nullable(),
@@ -136,7 +136,7 @@ const wishlistEntrySchema = z.object({
   updatedAt: isoDateTime,
 });
 
-const unresolvedDlcRowSchema = z.object({
+const unresolvedDlcRowSchema = z.strictObject({
   id: z.string(),
   steamAppId: z.string(),
   name: z.string(),
@@ -148,7 +148,7 @@ const unresolvedDlcRowSchema = z.object({
   updatedAt: isoDateTime,
 });
 
-const wishlistImportReviewSchema = z.object({
+const wishlistImportReviewSchema = z.strictObject({
   id: z.string(),
   steamAppId: z.string(),
   name: z.string(),
@@ -159,14 +159,14 @@ const wishlistImportReviewSchema = z.object({
   updatedAt: isoDateTime,
 });
 
-const wishlistImportIgnoreSchema = z.object({
+const wishlistImportIgnoreSchema = z.strictObject({
   id: z.string(),
   steamAppId: z.string(),
   name: z.string(),
   createdAt: isoDateTime,
 });
 
-const possibleDuplicateSchema = z.object({
+const possibleDuplicateSchema = z.strictObject({
   id: z.string(),
   gameAId: z.string(),
   gameBId: z.string(),
@@ -176,14 +176,14 @@ const possibleDuplicateSchema = z.object({
   reviewedAt: isoDateTime.nullable(),
 });
 
-const recommendationRunSchema = z.object({
+const recommendationRunSchema = z.strictObject({
   id: z.string(),
   kind: z.enum(["PLAY_NEXT", "BUY"]),
   context: z.unknown().nullable(),
   createdAt: isoDateTime,
 });
 
-const recommendationItemSchema = z.object({
+const recommendationItemSchema = z.strictObject({
   id: z.string(),
   runId: z.string(),
   gameId: z.string().nullable(),
@@ -197,7 +197,7 @@ const recommendationItemSchema = z.object({
   createdAt: isoDateTime,
 });
 
-const recommendationFeedbackSchema = z.object({
+const recommendationFeedbackSchema = z.strictObject({
   id: z.string(),
   gameId: z.string().nullable(),
   wishlistEntryId: z.string().nullable(),
@@ -205,7 +205,7 @@ const recommendationFeedbackSchema = z.object({
   createdAt: isoDateTime,
 });
 
-const recommendationEventSchema = z.object({
+const recommendationEventSchema = z.strictObject({
   id: z.string(),
   kind: z.enum([
     "EXPOSURE",
@@ -224,7 +224,7 @@ const recommendationEventSchema = z.object({
   createdAt: isoDateTime,
 });
 
-const recommendationProfileSchema = z.object({
+const recommendationProfileSchema = z.strictObject({
   id: z.number().int(),
   version: z.number().int(),
   payload: z.unknown(),
@@ -232,7 +232,7 @@ const recommendationProfileSchema = z.object({
   updatedAt: isoDateTime,
 });
 
-const recommendationPreferenceSchema = z.object({
+const recommendationPreferenceSchema = z.strictObject({
   id: z.string(),
   dimension: z.enum([
     "GENRE",
@@ -251,14 +251,14 @@ const recommendationPreferenceSchema = z.object({
   updatedAt: isoDateTime,
 });
 
-const recommendationTuneStateSchema = z.object({
+const recommendationTuneStateSchema = z.strictObject({
   id: z.number().int(),
   playTune: z.unknown().nullable(),
   buyTune: z.unknown().nullable(),
   updatedAt: isoDateTime,
 });
 
-const recommendationPresetSchema = z.object({
+const recommendationPresetSchema = z.strictObject({
   id: z.string(),
   name: z.string(),
   tune: z.unknown(),
@@ -266,7 +266,7 @@ const recommendationPresetSchema = z.object({
   updatedAt: isoDateTime,
 });
 
-const recommendationsObjectSchema = z.object({
+const recommendationsObjectSchema = z.strictObject({
   runs: z.array(recommendationRunSchema),
   items: z.array(recommendationItemSchema),
   feedback: z.array(recommendationFeedbackSchema),
@@ -287,7 +287,7 @@ export const recommendationsSchema = recommendationsObjectSchema;
 const exportDataSchema = <
   TSettings extends z.ZodTypeAny,
   TLibraryEntry extends z.ZodTypeAny,
->(settings: TSettings, libraryEntry: TLibraryEntry) => z.object({
+>(settings: TSettings, libraryEntry: TLibraryEntry) => z.strictObject({
     settings: settings.nullable(),
     games: gamesSchema,
     libraryEntries: z.array(libraryEntry),
@@ -308,7 +308,7 @@ const exportDataSchema = <
 
 const currentExportDataSchema = exportDataSchema(appSettingsSchema, libraryEntrySchema);
 
-export const exportDocumentSchema = z.object({
+export const exportDocumentSchema = z.strictObject({
   version: z.literal(EXPORT_VERSION),
   exportedAt: isoDateTime,
   data: currentExportDataSchema,

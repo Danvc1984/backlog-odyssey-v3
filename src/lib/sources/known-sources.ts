@@ -12,8 +12,6 @@ export interface SourcePresentation {
   brandIcon?: string;
 }
 
-export const UNSPECIFIED_OTHER_SOURCE_NAME = "Unspecified other source";
-
 export const FALLBACK_SOURCE_ICON = "Box";
 
 export type AvailabilitySource = "STEAM" | "OTHER_PLATFORM" | "ROM";
@@ -114,7 +112,7 @@ export function resolveSourcePresentation(name: string): SourcePresentation {
   }
   const trimmed = name.trim();
   return {
-    label: trimmed || UNSPECIFIED_OTHER_SOURCE_NAME,
+    label: trimmed || "Source unavailable",
     iconName: FALLBACK_SOURCE_ICON,
   };
 }
@@ -130,7 +128,7 @@ export function availabilitySourcePresentation(
     return { label: "ROM", iconName: "Disc3" };
   }
   if (alternativeSourceName === null) {
-    return { label: "Other platform", iconName: FALLBACK_SOURCE_ICON };
+    return { label: "Source unavailable", iconName: FALLBACK_SOURCE_ICON };
   }
   return resolveSourcePresentation(alternativeSourceName);
 }

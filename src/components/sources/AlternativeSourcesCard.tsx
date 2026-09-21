@@ -189,8 +189,7 @@ export function AlternativeSourcesCard({ sources }: AlternativeSourcesCardProps)
 
       {sources.length === 0 ? (
         <p className="mt-4 text-sm text-muted-foreground">
-          No alternative sources yet. Anything stored under Other platform uses
-          the Unspecified source.
+          No alternative sources yet. Create one above before assigning an other-platform source.
         </p>
       ) : (
         <ul className="mt-4 divide-y divide-border">

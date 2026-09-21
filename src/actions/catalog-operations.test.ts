@@ -1246,7 +1246,6 @@ function makeMergeSnapshotEnvelope(
             playSoon: false,
             replayCandidate: false,
             hidden: false,
-            notes: null,
           },
         },
         {
@@ -1460,7 +1459,6 @@ describe("undoOperation", () => {
                   playSoon: false,
                   replayCandidate: false,
                   hidden: false,
-                  notes: null,
                 },
               },
             ],

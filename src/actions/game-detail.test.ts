@@ -208,7 +208,6 @@ describe("updateGameAvailability", () => {
   const mockFindMany = vi.fn();
   const mockUpdate = vi.fn();
   const mockAltFind = vi.fn();
-  const mockAltCreate = vi.fn();
   const mockTransaction = vi.fn();
 
   beforeEach(() => {
@@ -226,7 +225,6 @@ describe("updateGameAvailability", () => {
           },
           alternativeSource: {
             findUnique: mockAltFind,
-            create: mockAltCreate,
           },
         }),
     );
@@ -238,8 +236,7 @@ describe("updateGameAvailability", () => {
     });
     mockFindMany.mockResolvedValue([]);
     mockUpdate.mockResolvedValue({ id: "availability-1" });
-    mockAltFind.mockResolvedValue(null);
-    mockAltCreate.mockResolvedValue({ id: "unsource-1" });
+    mockAltFind.mockResolvedValue({ id: "source-1", archivedAt: null });
   });
 
   it("updates source to ROM, clears the alternative source id, and guards the move", async () => {
@@ -258,26 +255,36 @@ describe("updateGameAvailability", () => {
     });
   });
 
-  it("attaches the unspecified source when moving a row onto OTHER_PLATFORM", async () => {
+  it("requires an active saved source when moving a row onto OTHER_PLATFORM", async () => {
     mockFindUnique.mockResolvedValue({
       id: "availability-1",
       gameId: "game-1",
       source: "ROM",
     });
 
-    const result = await updateGameAvailability("availability-1", {
+    const missing = await updateGameAvailability("availability-1", {
       source: "OTHER_PLATFORM",
     });
+    const result = await updateGameAvailability("availability-1", {
+      source: "OTHER_PLATFORM",
+      alternativeSourceId: "source-1",
+    });
 
+    expect(missing).toEqual({
+      success: false,
+      data: null,
+      error: "Alternative source is required",
+    });
     expect(result.success).toBe(true);
     expect(mockAltFind).toHaveBeenCalledWith({
-      where: { normalizedName: "unspecified other source" },
+      where: { id: "source-1" },
+      select: { id: true, archivedAt: true },
     });
     expect(mockUpdate).toHaveBeenCalledWith({
       where: { id: "availability-1" },
       data: {
         source: "OTHER_PLATFORM",
-        alternativeSourceId: "unsource-1",
+        alternativeSourceId: "source-1",
       },
     });
   });
@@ -320,6 +327,7 @@ describe("updateGameAvailability", () => {
 
     const result = await updateGameAvailability("availability-1", {
       source: "OTHER_PLATFORM",
+      alternativeSourceId: "unsource-1",
     });
 
     expect(result).toEqual({

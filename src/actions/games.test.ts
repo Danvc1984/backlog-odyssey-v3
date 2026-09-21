@@ -10,7 +10,6 @@ import { createGame } from "./games";
 
 describe("createGame", () => {
   const mockAltFind = vi.fn();
-  const mockAltCreate = vi.fn();
   const tx = {
     game: {
       create: vi.fn(),
@@ -20,7 +19,6 @@ describe("createGame", () => {
     },
     alternativeSource: {
       findUnique: mockAltFind,
-      create: mockAltCreate,
     },
   };
   const transaction = vi.fn();
@@ -35,7 +33,6 @@ describe("createGame", () => {
     tx.game.create.mockResolvedValue({ id: "game-1" });
     tx.enrichmentJob.create.mockResolvedValue({});
     mockAltFind.mockResolvedValue(null);
-    mockAltCreate.mockResolvedValue({ id: "unsource-1" });
 
     // The action imports the real auth-guard module once; reset it per test.
   });
@@ -142,52 +139,37 @@ describe("createGame", () => {
     );
   });
 
-  it("builds or reuses the unspecified source for OTHER_PLATFORM rows", async () => {
-    await createGame({
+  it("requires a saved source for OTHER_PLATFORM rows", async () => {
+    const result = await createGame({
       name: "Skyrim",
       availabilitySource: "OTHER_PLATFORM",
     });
 
-    expect(mockAltFind).toHaveBeenCalledWith({
-      where: { normalizedName: "unspecified other source" },
+    expect(result).toEqual({
+      success: false,
+      data: null,
+      error: "Alternative source is required",
     });
-    expect(mockAltCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ name: "Unspecified other source" }),
-      }),
-    );
-    expect(tx.game.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          availability: {
-            create: {
-              source: "OTHER_PLATFORM",
-              alternativeSourceId: "unsource-1",
-            },
-          },
-        }),
-      }),
-    );
+    expect(transaction).not.toHaveBeenCalled();
   });
 
-  it("reuses an existing unspecified record instead of creating one", async () => {
-    mockAltFind.mockResolvedValue({ id: "existing-unsource" });
-
-    await createGame({
+  it("rejects an unknown or archived alternative source", async () => {
+    mockAltFind.mockResolvedValueOnce(null);
+    const missing = await createGame({
       name: "Portal",
       availabilitySource: "OTHER_PLATFORM",
+      alternativeSourceId: "missing",
+    });
+    mockAltFind.mockResolvedValueOnce({ id: "source-1", archivedAt: new Date() });
+    const archived = await createGame({
+      name: "Portal",
+      availabilitySource: "OTHER_PLATFORM",
+      alternativeSourceId: "source-1",
     });
 
-    expect(mockAltCreate).not.toHaveBeenCalled();
-    expect(tx.game.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          availability: expect.objectContaining({
-            create: expect.objectContaining({ alternativeSourceId: "existing-unsource" }),
-          }),
-        }),
-      }),
-    );
+    expect(missing.error).toBe("Alternative source not found");
+    expect(archived.error).toBe("This source is archived and cannot be selected");
+    expect(tx.game.create).not.toHaveBeenCalled();
   });
 
   it("rejects a missing name", async () => {

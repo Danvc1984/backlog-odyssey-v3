@@ -6,7 +6,6 @@ import { ActionError, friendlyActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { logRecommendationEvent, playStateTransitionKind } from "@/lib/recommendations/events";
-import { getOrCreateUnspecifiedSource } from "@/lib/sources/store";
 import { derivePlayStateMutation } from "@/lib/play-state";
 import { revalidatePath } from "next/cache";
 
@@ -103,6 +102,7 @@ export async function updateGameName(
 const updateGameAvailabilitySchema = z
   .object({
     source: z.enum(["STEAM", "OTHER_PLATFORM", "ROM"]).optional(),
+    alternativeSourceId: z.string().trim().min(1).optional(),
   })
   .strict();
 
@@ -135,14 +135,38 @@ export async function updateGameAvailability(
       }
 
       const newSource = parsed.data.source ?? availability.source;
+      if (
+        newSource !== "OTHER_PLATFORM" &&
+        parsed.data.alternativeSourceId !== undefined
+      ) {
+        return { error: "Alternative source is only valid for other platforms" };
+      }
+
       const alternativeSourceId =
         newSource === "OTHER_PLATFORM"
-          ? availability.source === "OTHER_PLATFORM"
-            ? availability.alternativeSourceId
-            : (await getOrCreateUnspecifiedSource(tx)).id
+          ? parsed.data.alternativeSourceId ??
+            (availability.source === "OTHER_PLATFORM"
+              ? availability.alternativeSourceId
+              : null)
           : null;
+      if (newSource === "OTHER_PLATFORM" && !alternativeSourceId) {
+        return { error: "Alternative source is required" };
+      }
+      if (
+        newSource === "OTHER_PLATFORM" &&
+        parsed.data.alternativeSourceId !== undefined
+      ) {
+        const alternativeSource = await tx.alternativeSource.findUnique({
+          where: { id: parsed.data.alternativeSourceId },
+          select: { id: true, archivedAt: true },
+        });
+        if (!alternativeSource) return { error: "Alternative source not found" };
+        if (alternativeSource.archivedAt) {
+          return { error: "This source is archived and cannot be selected" };
+        }
+      }
 
-      if (newSource !== availability.source) {
+      if (newSource !== availability.source || alternativeSourceId !== availability.alternativeSourceId) {
         const rows = await tx.gameAvailability.findMany({
           where: { gameId: availability.gameId },
           select: { id: true, source: true, alternativeSourceId: true },

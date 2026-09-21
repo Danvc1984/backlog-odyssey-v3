@@ -21,7 +21,6 @@ const mockWishlistDelete = vi.fn();
 const mockLibraryUpsert = vi.fn();
 const mockLibraryFindUnique = vi.fn();
 const mockAltFind = vi.fn();
-const mockAltCreate = vi.fn();
 const transaction = vi.fn();
 
 const igdbPayload = {
@@ -76,7 +75,6 @@ beforeEach(() => {
       },
       alternativeSource: {
         findUnique: mockAltFind,
-        create: mockAltCreate,
       },
     }),
   );
@@ -88,8 +86,7 @@ beforeEach(() => {
   mockWishlistDelete.mockResolvedValue({ id: "wish-1" });
   mockLibraryUpsert.mockResolvedValue({ id: "library-parent" });
   mockLibraryFindUnique.mockResolvedValue(null);
-  mockAltFind.mockResolvedValue(null);
-  mockAltCreate.mockResolvedValue({ id: "unsource-1" });
+  mockAltFind.mockResolvedValue({ id: "source-1", archivedAt: null });
 });
 
 describe("acquireWishlistBaseGame", () => {
@@ -119,11 +116,13 @@ describe("acquireWishlistBaseGame", () => {
     const result = await acquireWishlistBaseGame({
       wishlistEntryId: "wish-1",
       source: "OTHER_PLATFORM",
+      alternativeSourceId: "source-1",
     });
 
     expect(result.success).toBe(true);
     expect(mockAltFind).toHaveBeenCalledWith({
-      where: { normalizedName: "unspecified other source" },
+      where: { id: "source-1" },
+      select: { id: true, archivedAt: true },
     });
     expect(mockGameCreate).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
@@ -133,7 +132,7 @@ describe("acquireWishlistBaseGame", () => {
         availability: expect.objectContaining({
           create: expect.objectContaining({
             source: "OTHER_PLATFORM",
-            alternativeSourceId: "unsource-1",
+            alternativeSourceId: "source-1",
             steamAppId: "620",
           }),
         }),
@@ -241,7 +240,10 @@ describe("acquireWishlistDlc", () => {
       baseGame: null,
     });
 
-    const result = await acquireWishlistDlc({ wishlistEntryId: "wish-1" });
+    const result = await acquireWishlistDlc({
+      wishlistEntryId: "wish-1",
+      source: "STEAM",
+    });
 
     expect(result.error).toBe("DLC parent must be a base game");
     expect(mockGameCreate).not.toHaveBeenCalled();
@@ -257,6 +259,7 @@ describe("acquireWishlistDlc", () => {
 
     await acquireWishlistDlc({
       wishlistEntryId: "wish-1",
+      source: "STEAM",
       updateParentPlayState: "PLAN_TO_PLAY",
     });
 
@@ -267,7 +270,7 @@ describe("acquireWishlistDlc", () => {
     });
   });
 
-  it("attaches the unspecified source on the DLC OTHER_PLATFORM default", async () => {
+  it("requires a saved source for the DLC OTHER_PLATFORM acquisition", async () => {
     mockFindUniqueWishlist.mockResolvedValue({
       id: "wish-1",
       name: "DLC",
@@ -277,20 +280,11 @@ describe("acquireWishlistDlc", () => {
 
     const result = await acquireWishlistDlc({ wishlistEntryId: "wish-1" });
 
-    expect(result.success).toBe(true);
-    expect(mockAltFind).toHaveBeenCalledWith({
-      where: { normalizedName: "unspecified other source" },
+    expect(result).toEqual({
+      success: false,
+      data: null,
+      error: "Alternative source is required",
     });
-    expect(mockGameCreate).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({
-        type: "DLC",
-        availability: expect.objectContaining({
-          create: expect.objectContaining({
-            source: "OTHER_PLATFORM",
-            alternativeSourceId: "unsource-1",
-          }),
-        }),
-      }),
-    }));
+    expect(mockGameCreate).not.toHaveBeenCalled();
   });
 });

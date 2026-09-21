@@ -16,7 +16,7 @@ import { igdbWishlistCardMetadataView } from "@/lib/card-metadata-view";
 import { resolveDurationEstimate, type DurationProfile, type PlaytimeEvidenceRow } from "@/lib/playtime-evidence";
 import { ListPaginationControls } from "@/components/list/ListPaginationControls";
 import { parsePage, parsePageSize, resolveRange } from "@/lib/list-pagination";
-import { resolveSourcePresentation, UNSPECIFIED_OTHER_SOURCE_NAME, normalizeSourceName } from "@/lib/sources/known-sources";
+import { resolveSourcePresentation } from "@/lib/sources/known-sources";
 
 interface WishlistSearchParams {
   type?: string;
@@ -105,9 +105,7 @@ export default async function WishlistPage({
     }),
   ]);
   const durationProfile = (appSettings?.durationProfile ?? "NORMALLY") as DurationProfile;
-  const sourceOptions = alternativeSources
-    .filter((source) => normalizeSourceName(source.name) !== normalizeSourceName(UNSPECIFIED_OTHER_SOURCE_NAME))
-    .map((source) => ({
+  const sourceOptions = alternativeSources.map((source) => ({
       ...source,
       ...resolveSourcePresentation(source.name),
     }));

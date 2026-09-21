@@ -708,7 +708,7 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   `Mark parent as replay candidate` option; state transitions apply the same
   completion-history and replay-consumption rules.
 
-- [ ] 31. **Personal-data and availability simplification** - remove catalog
+- [x] 31. **Personal-data and availability simplification** - remove catalog
   and wishlist notes and remove the redundant per-game availability display
   label from the Prisma model, validation, actions, forms, details,
   recommendation inputs, acquisition transfer, and export/import. Existing

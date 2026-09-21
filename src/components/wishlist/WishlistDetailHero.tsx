@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { DetailHeroArt } from "@/components/ui/detail-hero-art";
 import { StatusPill } from "@/components/ui/detail-card";
-import { WishlistInterestRating } from "@/components/wishlist/WishlistInterestRating";
 import { AcquireWishlistDialog } from "@/components/wishlist/AcquireWishlistDialog";
+import { EditWishlistDialog } from "@/components/wishlist/EditWishlistDialog";
 import { Button } from "@/components/ui/button";
 import type { WishlistOfferView } from "@/types/wishlist-offers";
 
@@ -36,11 +36,12 @@ export function WishlistDetailHero({
   name,
   type,
   imageUrl,
+  addedAt,
+  baseGame,
+  baseGames,
   interest,
   gameExperience,
   handheldSuitable,
-  addedAt,
-  baseGame,
   selectedOffer,
   alternativeSources = [],
 }: {
@@ -48,11 +49,12 @@ export function WishlistDetailHero({
   name: string;
   type: string;
   imageUrl: string | null;
+  addedAt: string;
+  baseGame: { id: string; name: string } | null;
+  baseGames: { id: string; name: string }[];
   interest: number | null;
   gameExperience: string | null;
   handheldSuitable: boolean | null;
-  addedAt: string;
-  baseGame: { id: string; name: string } | null;
   selectedOffer: WishlistOfferView | null;
   alternativeSources?: {
     id: string;
@@ -92,16 +94,7 @@ export function WishlistDetailHero({
               </Link>
             </p>
           )}
-          {gameExperience && (
-            <p className="mt-2 text-xs text-muted-foreground">
-              Experience: {gameExperience.replaceAll("_", " ").toLowerCase()}
-            </p>
-          )}
-          {handheldSuitable === true && (
-            <p className="mt-2 text-xs text-muted-foreground">Handheld option</p>
-          )}
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <WishlistInterestRating entryId={id} entryName={name} interest={interest} />
             <span className="technical-label text-muted-foreground">Added {addedAt}</span>
           </div>
           {selectedOffer && (
@@ -140,6 +133,18 @@ export function WishlistDetailHero({
             <Button asChild size="lg" variant="secondary">
               <Link href="#offers">Compare offers</Link>
             </Button>
+            <EditWishlistDialog
+              entry={{
+                id,
+                name,
+                type,
+                baseGameId: baseGame?.id ?? null,
+                interest,
+                gameExperience,
+                handheldSuitable,
+              }}
+              baseGames={baseGames}
+            />
           </div>
         </div>
       </div>

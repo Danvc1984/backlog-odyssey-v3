@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -94,6 +95,14 @@ export function AvailabilityEditor({ gameId, rows, savedSources }: AvailabilityE
       {rows.length === 0 && (
         <p className="text-sm text-muted-foreground">No platform records.</p>
       )}
+      {savedSources.every((source) => source.archivedAt !== null) && (
+        <p className="text-sm text-muted-foreground">
+          Need another platform? Create an active reusable source in{" "}
+          <Link href="/settings#alternative-sources-heading" className="underline underline-offset-2">
+            Settings
+          </Link>.
+        </p>
+      )}
       <div className="grid gap-2">
         {options.map((option) => {
           const row = rowBySource.get(option.key)
@@ -116,12 +125,8 @@ export function AvailabilityEditor({ gameId, rows, savedSources }: AvailabilityE
                   <span className="truncate">{presentation.label}</span>
                 </label>
                 {syncedSteam && <span className="text-xs text-muted-foreground">Synced</span>}
+                {option.archived && <span className="text-xs text-muted-foreground">Archived</span>}
               </div>
-              {row?.source === "OTHER_PLATFORM" && (
-                <p className="mt-2 pl-7 text-xs text-muted-foreground">
-                  Managed platform names can be updated in Settings.
-                </p>
-              )}
             </div>
           )
         })}

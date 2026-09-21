@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { CheckCircleIcon, SparkleIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -20,11 +21,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useVisualPreferences } from "@/components/preferences/VisualPreferencesProvider";
 import { SourceIcon } from "@/components/sources/SourceIcon";
-import { resolveSourcePresentation } from "@/lib/sources/known-sources";
 import type { WishlistOfferView } from "@/types/wishlist-offers";
 
 type AcquisitionSource = "STEAM" | "OTHER_PLATFORM";
-type SourceValue = AcquisitionSource | `ALT:${string}`;
+type SourceValue = "STEAM" | `ALT:${string}`;
 
 type AlternativeSource = {
   id: string;
@@ -110,11 +110,11 @@ export function AcquireWishlistDialog({
   const selectedAlternativeSource = source.startsWith("ALT:")
     ? alternativeSources.find((alternative) => alternative.id === source.slice(4))
     : null;
-  const selectedSourcePresentation = selectedAlternativeSource
-    ? selectedAlternativeSource
-    : source === "STEAM"
-      ? { iconName: "MonitorPlay", brandIcon: "steam.svg", name: "Steam" }
-      : { ...resolveSourcePresentation("Unspecified other source"), name: "Unspecified other source" };
+  const selectedSourcePresentation = selectedAlternativeSource ?? {
+    iconName: "MonitorPlay",
+    brandIcon: "steam.svg",
+    name: "Steam",
+  };
 
   return (
     <Dialog
@@ -218,7 +218,6 @@ export function AcquireWishlistDialog({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="STEAM"><span className="flex items-center gap-2"><SourceIcon iconName="MonitorPlay" brandIcon="steam.svg" />Steam</span></SelectItem>
-                    <SelectItem value="OTHER_PLATFORM"><span className="flex items-center gap-2"><SourceIcon iconName="Box" />Unspecified other source</span></SelectItem>
                     {alternativeSources.map((alternative) => (
                       <SelectItem key={alternative.id} value={`ALT:${alternative.id}`}>
                         <span className="flex items-center gap-2"><SourceIcon iconName={alternative.iconName} brandIcon={alternative.brandIcon} />{alternative.name}</span>
@@ -226,6 +225,14 @@ export function AcquireWishlistDialog({
                     ))}
                   </SelectContent>
                 </Select>
+                {alternativeSources.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Need another source? Create an active reusable source in{" "}
+                    <Link href="/settings#alternative-sources-heading" className="underline underline-offset-2">
+                      Settings
+                    </Link>.
+                  </p>
+                )}
               </div>
 
               {entry.type === "DLC" && (

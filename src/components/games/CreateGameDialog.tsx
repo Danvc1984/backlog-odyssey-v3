@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -215,6 +216,14 @@ export function CreateGameDialog({
                   ))}
                 </SelectContent>
               </Select>
+              {alternativeSources.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Need another platform? Create an active reusable source in{" "}
+                  <Link href="/settings#alternative-sources-heading" className="underline underline-offset-2">
+                    Settings
+                  </Link>.
+                </p>
+              )}
             </div>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}

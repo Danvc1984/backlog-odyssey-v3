@@ -91,6 +91,7 @@ describe("export schema: settings and catalog", () => {
       id: "l1",
       gameId: "g1",
       playState: "IN_PROGRESS",
+      completedBefore: false,
       isMainGame: true,
       priority: "HIGH",
       interest: 4,
@@ -103,7 +104,6 @@ describe("export schema: settings and catalog", () => {
       playSoon: false,
       replayCandidate: true,
       hidden: false,
-      notes: "great",
       createdAt: now,
       updatedAt: now,
     };
@@ -112,7 +112,6 @@ describe("export schema: settings and catalog", () => {
       gameId: "g1",
       source: "STEAM",
       alternativeSourceId: "alt1",
-      displayName: "Steam",
       steamAppId: "620",
       steamPlaytimeTotal: "12345",
       steamLastPlayed: now,
@@ -137,6 +136,44 @@ describe("export schema: settings and catalog", () => {
     ).toHaveLength(1);
   });
 
+  it("rejects retired notes and availability display labels", () => {
+    const library = {
+      id: "l1",
+      gameId: "g1",
+      playState: "IN_PROGRESS",
+      completedBefore: false,
+      isMainGame: true,
+      priority: "HIGH",
+      interest: 4,
+      rating: 4,
+      preferredEnvironment: "LINUX",
+      gameExperience: "PC_GAMING",
+      handheldSuitable: true,
+      compatOverrideStatus: "READY",
+      compatOverrideReason: null,
+      playSoon: false,
+      replayCandidate: true,
+      hidden: false,
+      createdAt: now,
+      updatedAt: now,
+      notes: "retired",
+    };
+    const availability = {
+      id: "a1",
+      gameId: "g1",
+      source: "STEAM",
+      alternativeSourceId: null,
+      steamAppId: null,
+      steamPlaytimeTotal: null,
+      steamLastPlayed: null,
+      addedAt: now,
+      displayName: "retired",
+    };
+
+    expect(() => libraryEntriesSchema.parse([library])).toThrow();
+    expect(() => availabilitySchema.parse([availability])).toThrow();
+  });
+
   it("rejects a wrong library entry enum", () => {
     expect(() =>
       libraryEntriesSchema.parse([
@@ -155,7 +192,6 @@ describe("export schema: settings and catalog", () => {
           playSoon: false,
           replayCandidate: false,
           hidden: false,
-          notes: null,
           createdAt: now,
           updatedAt: now,
         },

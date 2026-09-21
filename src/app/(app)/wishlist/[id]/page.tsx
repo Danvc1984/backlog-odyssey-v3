@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { WishlistEntryActions } from "@/components/wishlist/WishlistEntryActions";
 import { WishlistIdentity } from "@/components/wishlist/WishlistIdentity";
 import { WishlistOfferAlternatives } from "@/components/wishlist/WishlistOfferAlternatives";
 import { WishlistOfferSection } from "@/components/wishlist/WishlistOfferSection";
@@ -17,6 +16,9 @@ import { getWishlistCompatibilityEligibility } from "@/lib/wishlist-compatibilit
 import { parseAntiCheatEvidence } from "@/lib/compat-evidence";
 import { parseProtonDbSummary } from "@/lib/protondb-api";
 import { RecommendationRoleLabel } from "@/components/recommendations/RecommendationRoleLabel";
+import { WishlistInterestRating } from "@/components/wishlist/WishlistInterestRating";
+import { InfoPopover } from "@/components/ui/info-popover";
+import { PERSONAL_FIELD_HELP } from "@/lib/personal-field-help";
 import { CalibrationNote } from "@/components/recommendations/CalibrationNote";
 import { SectionCard, StatusPill } from "@/components/ui/detail-card";
 import { WishlistDetailHero } from "@/components/wishlist/WishlistDetailHero";
@@ -28,7 +30,7 @@ import { resolveIgdbPageScreenshots } from "@/lib/screenshot-view";
 import { deriveWindowsFallbackExists, linuxDevicePhrase } from "@/lib/os-setup";
 import { getCompatibilityGate } from "@/lib/compat-gate";
 import { SourceIcon } from "@/components/sources/SourceIcon";
-import { resolveSourcePresentation, UNSPECIFIED_OTHER_SOURCE_NAME, normalizeSourceName } from "@/lib/sources/known-sources";
+import { resolveSourcePresentation } from "@/lib/sources/known-sources";
 
 export default async function WishlistDetailPage({
   params,
@@ -104,9 +106,7 @@ export default async function WishlistDetailPage({
     redirect("/wishlist");
   }
 
-  const sourceOptions = alternativeSources
-    .filter((source) => normalizeSourceName(source.name) !== normalizeSourceName(UNSPECIFIED_OTHER_SOURCE_NAME))
-    .map((source) => ({
+  const sourceOptions = alternativeSources.map((source) => ({
       ...source,
       ...resolveSourcePresentation(source.name),
     }));
@@ -205,15 +205,16 @@ export default async function WishlistDetailPage({
         name={entry.name}
         type={entry.type}
         imageUrl={metadata ? (metadata.artworkUrls[0] ?? metadata.screenshots[0]?.image ?? metadata.coverUrl ?? null) : null}
-        interest={entry.interest}
-        gameExperience={entry.gameExperience}
-        handheldSuitable={entry.handheldSuitable}
         addedAt={entry.createdAt.toLocaleDateString("en-US", {
           year: "numeric",
           month: "short",
           day: "numeric",
         })}
         baseGame={entry.baseGame}
+        baseGames={baseGames}
+        interest={entry.interest}
+        gameExperience={entry.gameExperience}
+        handheldSuitable={entry.handheldSuitable}
         selectedOffer={offerView.selected}
         alternativeSources={sourceOptions}
       />
@@ -247,6 +248,60 @@ export default async function WishlistDetailPage({
           hasSnapshot={ownSnapshot !== null}
         />
       )}
+
+      <SectionCard
+        title="Personal fit"
+        id="personal-fit"
+        description="Keep personal fit and store identity together."
+        status={<StatusPill>{entry.interest ? `${entry.interest}/5 interest` : "Not set"}</StatusPill>}
+        className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
+      >
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-2">
+            <p className="flex items-center gap-1 text-sm font-medium">
+              Interest <InfoPopover label="Interest" content={PERSONAL_FIELD_HELP.interest} />
+            </p>
+            <WishlistInterestRating entryId={entry.id} entryName={entry.name} interest={entry.interest} />
+          </div>
+          <div className="grid gap-2">
+            <p className="flex items-center gap-1 text-sm font-medium">
+              Game experience <InfoPopover label="Game experience" content={PERSONAL_FIELD_HELP.gameExperience} />
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {entry.gameExperience?.replaceAll("_", " ").toLowerCase() ?? "Not set"}
+            </p>
+          </div>
+          <div className="grid gap-2">
+            <p className="flex items-center gap-1 text-sm font-medium">
+              Handheld suitability <InfoPopover label="Handheld suitability" content={PERSONAL_FIELD_HELP.handheldSuitable} />
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {entry.handheldSuitable === true ? "Suitable" : "Not set"}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-4 border-t border-border pt-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+          <div className="grid gap-2">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium">Store identity</p>
+              <StatusPill>{entry.steamAppId ? "Confirmed" : "Needs identity"}</StatusPill>
+            </div>
+            <WishlistIdentity
+              entryId={entry.id}
+              entryName={entry.name}
+              steamAppId={entry.steamAppId}
+              provenance={entry.steamAppIdProvenance}
+            />
+          </div>
+          <div className="grid gap-2 justify-self-start md:justify-items-end">
+            <CalibrationNote
+              interest={entry.interest}
+              dismissalCount={buyDismissalCount}
+            />
+          </div>
+        </div>
+      </SectionCard>
 
       <SectionCard
         title={<span className="inline-flex items-center gap-2">Offers <SourceIcon iconName="Box" brandIcon="itad.svg" /></span>}
@@ -312,47 +367,6 @@ export default async function WishlistDetailPage({
           latestSnapshotAt={latestCompatAt}
         />
       )}
-
-      <SectionCard
-        title="Identity and actions"
-        status={
-          <StatusPill>
-            {entry.steamAppId ? "Confirmed" : "Needs identity"}
-          </StatusPill>
-        }
-      >
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <WishlistIdentity
-            entryId={entry.id}
-            entryName={entry.name}
-            steamAppId={entry.steamAppId}
-            provenance={entry.steamAppIdProvenance}
-          />
-          <div className="grid justify-items-end gap-2">
-            <CalibrationNote
-              interest={entry.interest}
-              dismissalCount={buyDismissalCount}
-            />
-            <WishlistEntryActions
-              entry={{
-                id: entry.id,
-                name: entry.name,
-                type: entry.type,
-                baseGameId: entry.baseGameId,
-                interest: entry.interest,
-                gameExperience: entry.gameExperience,
-                handheldSuitable: entry.handheldSuitable,
-              }}
-              imageUrl={metadata ? (metadata.artworkUrls[0] ?? metadata.screenshots[0]?.image ?? metadata.coverUrl ?? null) : null}
-              selectedOffer={offerView.selected}
-              alternativeSources={sourceOptions}
-              baseGames={baseGames}
-              showDelete={false}
-            />
-          </div>
-        </div>
-      </SectionCard>
-
 
       <ScreenshotsSection
         id={entry.id}

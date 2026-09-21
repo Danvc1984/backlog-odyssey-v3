@@ -87,8 +87,8 @@ function sourceMatchName(
   if (source.source === "STEAM") return "Steam";
   if (source.source === "ROM") return "ROM";
   return source.alternativeSourceId
-    ? sourcesById.get(source.alternativeSourceId) ?? "Other platform"
-    : "Other platform";
+    ? sourcesById.get(source.alternativeSourceId) ?? "Source unavailable"
+    : "Source unavailable";
 }
 
 export function applySourceTune<T extends SourceTunableCandidate>(
