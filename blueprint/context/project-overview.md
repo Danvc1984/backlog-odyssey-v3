@@ -1,8 +1,8 @@
 # Backlog Odyssey - Project Overview
 
-<!-- blueprint:source-hash 0ddbad93948f857ad5e0bde70fa7a68bc622e5be4daec1c57aea055246006ab2 -->
+<!-- blueprint:source-hash c866a9b16e3274813baa2fd4c7e310b9cddae92eb12c09198b11125c4ee65239 -->
 
-> A private, single-user gaming library and decision assistant for choosing what to play and buy in Mexico across a configured PC and handheld setup.
+> A private, single-user gaming library and decision assistant for choosing what to play and buy across a configured PC and handheld setup, with selectable market and display-currency preferences.
 
 ## Problem
 
@@ -12,7 +12,7 @@ Ownership, prices, compatibility evidence, metadata, and personal gaming decisio
 
 - One authorized Google account; no public registration, collaboration, or roles in the MVP.
 - The owner configures a Linux or Windows primary PC, an optional Linux or Windows handheld, and an optional Windows fallback only when Linux is primary.
-- Prices use MXN and time uses UTC-6.
+- The owner selects Mexico, United States, Canada, Brazil, Colombia, or Argentina as the ITAD market, with MXN, USD, CAD, BRL, COP, or ARS as the display currency. Provider prices retain their original currency; external conversion is presentation-only and visibly estimated. Time defaults to UTC-6.
 
 ## Features
 
@@ -21,7 +21,7 @@ Completed work establishes the authenticated app, catalog, Steam imports, wishli
 1. **1-7a. Foundation and catalog** - authenticated shell, searchable manual library, play state, collections, Steam ownership import, and duplicate review.
 2. **7b-7c. Catalog integrity** - transactional merge/delete with reload-safe Undo and editable game availability.
 3. **8. Legacy RAWG enrichment** - completed provider foundation later superseded by feature 23.
-4. **9-10c. DLC, wishlist, and pricing** - manual DLC ownership, independent base/DLC wishes, acquisition, Mexican offers and targets, and manual Steam wishlist import.
+4. **9-10c. DLC, wishlist, and pricing** - manual DLC ownership, independent base/DLC wishes, acquisition, regional offers and targets, and manual Steam wishlist import.
 5. **11. Compatibility** - ProtonDB/AWAY evidence, Linux-gated presentation and queues, derived Windows fallback, and separate wishlist evidence.
 6. **12. Recommendations** - explicit explainable play-next and buy runs, adaptive profile, tuning, retained batches, calibration, and source-aware ranking.
 7. **13. Today** - dashboard composition, data-health prompts, recent Steam activity, offers, and provider-operation status.
@@ -34,8 +34,9 @@ Completed work establishes the authenticated app, catalog, Steam imports, wishli
 14. **30. Current state and prior completion** - independent `completedBefore`, automatic history preservation, replay consumption on start, deduplicated learning evidence, and the Previously completed shelf.
 15. **31. Personal-data and availability simplification** - removal of notes and per-game source labels, Settings-only source administration, compact Journey/Preferences/Personal fit controls, and a clean export/import schema break.
 16. **32. Unified tags and shelves** - tag-only manual grouping, empty tag shelves, centralized create/rename/merge/delete, shelf sorting, and capped personal-tag Tune targeting.
-17. **33. Sign-in introduction demo** - pending playful, responsive sign-in panel with icon-led branding, the approved tagline, and an accessible static story from manual or Steam-imported backlog addition through personal tracking to explainable recommendation using curated recognizable games.
-18. **34. Deployment and CI readiness** - pending Vercel/Supabase review, protected daily cron, production checks, one reproducible Verify command, and optional automatic checks.
+17. **33. Sign-in introduction demo** - completed playful, responsive sign-in panel with icon-led branding, the approved tagline, and an accessible static story from manual or Steam-imported backlog addition through personal tracking to explainable recommendation using curated recognizable games.
+18. **34. Welcome regional prices and optional Steam connection** - pending 34a regional market/currency preferences, ITAD querying, and Frankfurter v2 presentation-only FX conversion; then 34b optional Steam OpenID connect-or-skip in Welcome.
+19. **35. Deployment and CI readiness** - pending Vercel/Supabase review, protected daily cron, production checks, one reproducible Verify command, and optional automatic checks.
 
 ## Data model
 
@@ -57,7 +58,7 @@ The shapes below describe the intended post-feature-32 model. Provider evidence 
 - **WishlistEntry** - independent unowned base game or DLC with `id`, `name`, type, nullable `baseGameId` required for DLC, interest, game experience, handheld suitability, optional `targetPriceMxn`, and optional confirmed Steam identity/provenance. It never creates a provisional `Game`; notes are removed in feature 31.
 - **IGDB metadata snapshot** - replaceable catalog or wishlist evidence containing fixed IGDB identity, summary, genres/themes/keywords, companies, release date, ESRB context, separate attributed ratings and counts, websites, alternative names, collection/franchise/structural relations, modes, cover/artwork/screenshots, palette, and fetched/updated provenance. DLC carries its own snapshot.
 - **PlaytimeEvidence** - replaceable attributed IGDB `game_time_to_beats` values; SteamSpy median is fallback only when IGDB has no row and a confirmed Steam App ID exists.
-- **PriceOffer** - wishlist relation, store/source, MXN price, discount, seller URL, freshness, optional keyshop warning, and historical-low context. Up to 8-10 valid offers persist; the selected offer is the cheapest valid Mexican offer and becomes stale after 48 hours.
+- **PriceOffer** - wishlist relation, store/source, selected market country, exact ITAD source currency and amount, optional presentation-only converted display amount/rate, discount, seller URL, freshness, optional region-activation warning, and historical-low context. Up to 8-10 valid offers persist; the selected offer is the cheapest comparable regional offer and becomes stale after 48 hours.
 - **Price identity mapping** - confirmed Steam App ID to cached ITAD ID with provenance; seller preference never overrides cheapest-valid selection.
 - Acquiring a base-game wish creates a real catalog game, transfers applicable IGDB metadata and interest, adds availability, and removes the wish. Acquiring a DLC creates a linked catalog DLC and may update the base game's play intent.
 
@@ -77,7 +78,7 @@ The shapes below describe the intended post-feature-32 model. Provider evidence 
 - **RecommendationPreference** - semantic `PREFER | NEUTRAL | AVOID` override.
 - **RecommendationPreset** - persisted named Tune context; loading affects only the active tab-local Tune state.
 - **Dismissal feedback** - `Maybe some other time — show me another` records a dismissal and replaces from the same retained role batch. Three cumulative same-kind dismissals lower adjusted interest by one, floor zero.
-- **AppSettings** - primary OS, optional handheld and valid Windows fallback, onboarding state, duration profile, theme family/mode, reduced-motion/data choices, and provider-related settings.
+- **AppSettings** - primary OS, optional handheld and valid Windows fallback, onboarding state, supported price country and display currency, duration profile, theme family/mode, reduced-motion/data choices, and provider-related settings.
 - **WallpaperState** - cached SFW Wallhaven candidate URLs and deterministic daily selection; reduced-data mode disables all image fetching.
 
 ## Product rules
@@ -97,7 +98,7 @@ The shapes below describe the intended post-feature-32 model. Provider evidence 
 - **Prisma, PostgreSQL, Supabase** - relational persistence and intended hosted database.
 - **Auth.js and Google** - single-owner authentication.
 - **Zod and Vitest** - validation and unit testing.
-- **IGDB/Twitch, Steam, SteamSpy, ITAD, ProtonDB, AWAY, Wallhaven** - server-side metadata, ownership, duration, pricing, compatibility, and optional imagery.
+- **IGDB/Twitch, Steam, SteamSpy, ITAD, Frankfurter v2, ProtonDB, AWAY, Wallhaven** - server-side metadata, ownership, duration, regional pricing, presentation-only currency conversion, compatibility, and optional imagery.
 - **Vercel** - intended application and cron host.
 
 ## Monetization
@@ -115,7 +116,8 @@ Dark-first Dawn and Sunset families use light/dark/system modes, defaulting to d
 - `/wishlist/[id]` - Personal fit, IGDB evidence, offers, linked seller provider, acquisition, and eligible compatibility.
 - `/collections` and `/collections/[id]` - tag-generated shelves plus calculated system and IGDB series/franchise views; feature 32 adds centralized tag management and sorting.
 - `/` when signed out - icon-led Backlog Odyssey sign-in with the tagline "Turn your gaming backlog into your next adventure"; a decorative reduced-motion-aware demo cycles static curated games from manual or Steam-imported backlog addition through personal tracking to an explainable recommendation. Desktop places it alongside authentication; mobile keeps authentication primary and presents it below.
-- `/settings` - session, device setup, theme/accessibility, source administration, provider controls, diagnostics, export, and empty-schema restore.
+- `/welcome` - first-login setup for device context; Mexico, United States, Canada, Brazil, Colombia, or Argentina market selection; MXN, USD, CAD, BRL, COP, or ARS display currency; and an optional Steam OpenID connection with a skip path. Setup completion does not depend on Steam.
+- `/settings` - session, device setup, editable market/currency preferences with a manual price-refresh warning, theme/accessibility, source administration, provider controls, diagnostics, export, and empty-schema restore.
 - First login routes through OS/handheld/fallback setup and optionally into Taste Setup.
 
 ## Deployment
@@ -123,8 +125,8 @@ Dark-first Dawn and Sunset families use light/dark/system modes, defaulting to d
 - **Target:** Vercel application with Supabase/PostgreSQL.
 - **Scheduled work:** Vercel Cron daily at 06:00 UTC-6, protected by `CRON_SECRET`, enqueues price refresh plus catalog/wishlist compatibility evidence older than 180 days. Claims and overlapping invocations must be idempotent; compatibility work is a no-op when inactive.
 - **Runtime:** server-side provider credentials; persistent PostgreSQL queue and retry history.
-- **Verification:** existing pnpm typecheck/test/build checks are to be consolidated into one reproducible Verify command in feature 33.
-- **Still pending feature 34:** exact production environment-variable inventory beyond `CRON_SECRET`, health path, domain, production smoke-test contract, and final CI configuration.
+- **Regional prices:** ITAD receives the configured supported country. Its returned amount and currency remain authoritative; a Frankfurter v2 value is optional display-only context, must remain labeled as an estimate, and cannot silently change offer selection or regional warning semantics.
+- **Still pending feature 35:** exact production environment-variable inventory beyond `CRON_SECRET`, health path, domain, production smoke-test contract, one reproducible Verify command, and final CI configuration.
 
 ## Open questions
 

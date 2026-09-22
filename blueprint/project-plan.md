@@ -88,6 +88,11 @@ registration, and collaboration are outside the MVP.
   Cult of the Lamb, Elden Ring, Grand Theft Auto V, and NieR:Automata through adding a
   game to the backlog and receiving an explainable recommendation. The
   sign-in form remains primary and the demo remains available below it on mobile.
+- Post-sign-in Welcome setup includes a supported market country and display
+  currency choice, plus an optional Steam connection action that never blocks
+  setup. Regional ITAD prices preserve their provider currency; external FX
+  conversion is presentation-only, visibly estimated, and keeps the original
+  provider amount available for comparison.
 - Settings and manual JSON export with empty-schema restore.
 - Simplified personal data and editing boundaries: no per-game availability
   display label or catalog/wishlist notes; reusable alternative-source
@@ -528,10 +533,14 @@ Price enrichment is a separate feature:
 - Price refreshes never create or replace a recommendation run.
 - The seller page remains authoritative for regional activation.
 - ITAD is optional, server-side, read-only enrichment.
-- The integration uses `country=MX`, caching, rate-limit handling, and
-  `429`/`Retry-After` behavior.
-- No ITAD OAuth, Waitlist synchronization, notifications, webhooks, automatic
-  currency conversion, or automatic purchasing is included.
+- The integration uses the selected supported ITAD `country` code, caching,
+  rate-limit handling, and `429`/`Retry-After` behavior. Supported regions are
+  Mexico, United States, Canada, Brazil, Colombia, and Argentina; no fallback
+  market is offered for other regions.
+- No ITAD OAuth, Waitlist synchronization, notifications, webhooks, or
+  automatic purchasing is included. Display-currency conversion is allowed only
+  as a user-selected, external-FX presentation layer; it never changes the
+  regional ITAD result, provider amount, seller price, or purchase decision.
 - For each entry, the cheapest 8-10 valid offers are persisted; the selected
   offer is the cheapest; alternatives render in an expandable view showing
   store, source, price, discount, and freshness.
@@ -540,6 +549,26 @@ Price enrichment is a separate feature:
 - `targetPriceMxn` edits inline on each wishlist row, plus the edit form.
 - An active opportunity renders as a badge on the wishlist entry itself; no
   separate section exists in this feature.
+
+### Regional price presentation
+
+Welcome records one supported ITAD market country and one display currency.
+The initial country catalogue is Mexico, United States, Canada, Brazil,
+Colombia, and Argentina. Its display currencies are MXN, USD, CAD, BRL, COP,
+and ARS.
+
+ITAD receives the selected country code and its regional activation warnings
+apply to the returned offers. Settings lets the owner change the supported market
+country and display currency after Welcome, but warns that they must manually
+refresh prices before offers reflect the new selection. Stored offers retain the
+exact ITAD currency and amount. When the chosen display currency differs, Frankfurter v2 converts the
+returned amount for display only. USD is the normal conversion basis when ITAD
+returns USD, but a non-USD provider result remains its own
+source currency and is never relabeled as USD. Converted values must be clearly
+labeled as estimates, retain the original provider amount, and become
+unavailable rather than guessed if an FX pair cannot be fetched. Cheapest-offer
+selection, targets, discount calculation, and seller warnings use comparable
+source/region amounts and must not compare guessed conversions.
 
 ### Price identity resolution
 
@@ -1244,6 +1273,11 @@ Settings includes:
 - Google session management.
 - OS preferences set at onboarding: primary OS, handheld, and the derived
   fallback, editable afterward.
+- Supported price-country and display-currency preferences set in Welcome and
+  editable afterward; the current market and currency are visible with the
+  presentation-only conversion notice.
+- An optional Steam connection entry point that reuses the existing OpenID flow;
+  connecting or skipping never changes onboarding completion.
 - Steam wishlist-import status and review access.
 - Vercel Cron status and diagnostics for the daily price refresh and
   compatibility sweep once deployment enables it.

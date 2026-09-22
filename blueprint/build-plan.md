@@ -776,7 +776,24 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   an explainable recommendation; sign-in remains primary and the demo follows
   it on mobile.
 
-- [ ] 34. **Deployment and CI readiness** - Vercel/Supabase environment
+- [ ] 34. **Welcome regional prices and optional Steam connection** - deliver
+  market-aware price preferences and the optional Steam connection in two
+  reviewable parts.
+  - [ ] 34a. **Regional price preferences and presentation** - extend Welcome
+    and Settings with Mexico, United States, Canada, Brazil, Colombia, and
+    Argentina markets plus MXN, USD, CAD, BRL, COP, and ARS display currencies.
+    Persist validated preferences; warn in Settings that a change requires a
+    manual price refresh before offers reflect it. ITAD calls use the selected
+    market and its regional activation rules. Offers preserve exact provider
+    currency and amount; Frankfurter v2 conversion is presentation-only,
+    visibly estimated, retains source amounts, and is unavailable rather than
+    guessed when a rate cannot be fetched. Other regions and currencies are out
+    of scope; no fallback market is offered.
+  - [ ] 34b. **Optional Steam connection in Welcome** - offer the existing
+    Steam OpenID connection as an explicit optional Welcome action with a skip
+    path. A connection attempt, cancellation, or failure never blocks setup.
+
+- [ ] 35. **Deployment and CI readiness** - Vercel/Supabase environment
   review, Vercel Cron daily run at 06:00 UTC-6 with `CRON_SECRET` enqueueing
   the price refresh plus a compatibility freshness sweep for catalog and
   wishlist evidence older than the 180-day window, queue overlap protection,
