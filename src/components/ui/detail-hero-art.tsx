@@ -15,6 +15,8 @@ export function DetailHeroArt({
   className,
   labelClassName,
   fit,
+  onImageError,
+  artworkClassName,
 }: {
   id: string;
   title: string;
@@ -24,6 +26,8 @@ export function DetailHeroArt({
   className?: string;
   labelClassName?: string;
   fit?: "contain" | "cover";
+  onImageError?: () => void;
+  artworkClassName?: string;
 }) {
   const { resolvedData } = useVisualPreferences();
   const presentation = resolveDetailArt({
@@ -35,7 +39,7 @@ export function DetailHeroArt({
   if (presentation.kind === "artwork" && presentation.imageUrl) {
     return (
       <div className={cn(baseClassName, "bg-card")}>
-        <ArtworkBackdrop src={presentation.imageUrl} fit={fit} />
+        <ArtworkBackdrop src={presentation.imageUrl} fit={fit} onError={onImageError} foregroundClassName={artworkClassName} />
         <div
           className="absolute inset-0 z-30 bg-gradient-to-t from-black/80 via-black/20 to-transparent"
           aria-hidden="true"

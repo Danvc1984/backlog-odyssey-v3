@@ -48,7 +48,7 @@ const VisualPreferencesContext = createContext<VisualPreferencesValue>({
   resolvedMotion: "full",
   data: "system",
   resolvedData: "off",
-  family: "dawn",
+  family: "sunset",
   setMotion: () => {},
   setData: () => {},
   setFamily: () => {},
@@ -59,7 +59,7 @@ export function useVisualPreferences(): VisualPreferencesValue {
 }
 
 function readStoredPreferences(): VisualPreferencesState {
-  if (typeof window === "undefined") return { motion: "system", data: "system", family: "dawn" };
+  if (typeof window === "undefined") return { motion: "system", data: "system", family: "sunset" };
   try {
     return {
       motion: normalizeMotion(window.localStorage.getItem(MOTION_STORAGE_KEY)),
@@ -67,7 +67,7 @@ function readStoredPreferences(): VisualPreferencesState {
       family: normalizeFamily(window.localStorage.getItem(FAMILY_STORAGE_KEY)),
     };
   } catch {
-    return { motion: "system", data: "system", family: "dawn" };
+    return { motion: "system", data: "system", family: "sunset" };
   }
 }
 

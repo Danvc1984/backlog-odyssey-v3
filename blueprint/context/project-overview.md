@@ -1,6 +1,6 @@
 # Backlog Odyssey - Project Overview
 
-<!-- blueprint:source-hash 799d656f686093c295ca23f050b267ceec8ae490c8de7bc5817abed88f69a8c8 -->
+<!-- blueprint:source-hash 0ddbad93948f857ad5e0bde70fa7a68bc622e5be4daec1c57aea055246006ab2 -->
 
 > A private, single-user gaming library and decision assistant for choosing what to play and buy in Mexico across a configured PC and handheld setup.
 
@@ -30,11 +30,12 @@ Completed work establishes the authenticated app, catalog, Steam imports, wishli
 10. **23. IGDB primary provider** - IGDB metadata, artwork, identity, ratings, playtime evidence, recommendation re-keying, and RAWG retirement.
 11. **24-27. Catalog renewal** - IGDB DLC pages, ingestion-specific interest defaults, IGDB-assisted manual creation, and system/series shelves.
 12. **28. Recommendation behavior renewal** - handheld role, tab-local Tune flow, play-style/familiarity questions, and More filters.
-13. **29. Today recommendation spotlight carousels** - pending Play Next and Buy spotlights with up to five additive roles, ten-second accessible auto-advance, compact reasoning, detail-first actions, and one dismissal-and-replacement action across all recommendation surfaces.
-14. **30. Current state and prior completion** - pending independent `completedBefore`, automatic history preservation, replay consumption on start, deduplicated learning evidence, and the Previously completed shelf.
-15. **31. Personal-data and availability simplification** - pending removal of notes and per-game source labels, Settings-only source administration, compact Journey/Preferences/Personal fit controls, and a clean export/import schema break.
-16. **32. Unified tags and shelves** - pending tag-only manual grouping, empty tag shelves, centralized create/rename/merge/delete, shelf sorting, and capped personal-tag Tune targeting.
-17. **33. Deployment and CI readiness** - pending Vercel/Supabase review, protected daily cron, production checks, one reproducible Verify command, and optional automatic checks.
+13. **29. Today recommendation spotlight carousels** - Play Next and Buy spotlights with up to five additive roles, ten-second accessible auto-advance, compact reasoning, detail-first actions, and one dismissal-and-replacement action across all recommendation surfaces.
+14. **30. Current state and prior completion** - independent `completedBefore`, automatic history preservation, replay consumption on start, deduplicated learning evidence, and the Previously completed shelf.
+15. **31. Personal-data and availability simplification** - removal of notes and per-game source labels, Settings-only source administration, compact Journey/Preferences/Personal fit controls, and a clean export/import schema break.
+16. **32. Unified tags and shelves** - tag-only manual grouping, empty tag shelves, centralized create/rename/merge/delete, shelf sorting, and capped personal-tag Tune targeting.
+17. **33. Sign-in introduction demo** - pending playful, responsive sign-in panel with icon-led branding, the approved tagline, and an accessible static story from manual or Steam-imported backlog addition through personal tracking to explainable recommendation using curated recognizable games.
+18. **34. Deployment and CI readiness** - pending Vercel/Supabase review, protected daily cron, production checks, one reproducible Verify command, and optional automatic checks.
 
 ## Data model
 
@@ -105,7 +106,7 @@ Not in the MVP. This is a private single-owner tool, not a public service or sto
 
 ## UI/UX
 
-Dark-first Dawn and Sunset families use light/dark/system modes, Cinzel display type, Inter body type, semantic accents, accessible overlays, a desktop sidebar, and mobile bottom navigation. Reduced motion disables carousel automation; reduced data prevents remote artwork requests.
+Dark-first Dawn and Sunset families use light/dark/system modes, defaulting to dark Sunset until the owner chooses otherwise, with Cinzel display type, Inter body type, semantic accents, accessible overlays, a desktop sidebar, and mobile bottom navigation. Reduced motion disables carousel automation; reduced data prevents remote artwork requests.
 
 - `/` - Today: current games, recommendation spotlights, offers, activity, coverage, freshness, and operations.
 - `/library` - owned base-game grid/list, search, filters, pagination, card deletion, and catalog health.
@@ -113,6 +114,7 @@ Dark-first Dawn and Sunset families use light/dark/system modes, Cinzel display 
 - `/wishlist` - independent base/DLC wishes, search/sort, offers, targets, identity, and acquisition.
 - `/wishlist/[id]` - Personal fit, IGDB evidence, offers, linked seller provider, acquisition, and eligible compatibility.
 - `/collections` and `/collections/[id]` - tag-generated shelves plus calculated system and IGDB series/franchise views; feature 32 adds centralized tag management and sorting.
+- `/` when signed out - icon-led Backlog Odyssey sign-in with the tagline "Turn your gaming backlog into your next adventure"; a decorative reduced-motion-aware demo cycles static curated games from manual or Steam-imported backlog addition through personal tracking to an explainable recommendation. Desktop places it alongside authentication; mobile keeps authentication primary and presents it below.
 - `/settings` - session, device setup, theme/accessibility, source administration, provider controls, diagnostics, export, and empty-schema restore.
 - First login routes through OS/handheld/fallback setup and optionally into Taste Setup.
 
@@ -122,7 +124,7 @@ Dark-first Dawn and Sunset families use light/dark/system modes, Cinzel display 
 - **Scheduled work:** Vercel Cron daily at 06:00 UTC-6, protected by `CRON_SECRET`, enqueues price refresh plus catalog/wishlist compatibility evidence older than 180 days. Claims and overlapping invocations must be idempotent; compatibility work is a no-op when inactive.
 - **Runtime:** server-side provider credentials; persistent PostgreSQL queue and retry history.
 - **Verification:** existing pnpm typecheck/test/build checks are to be consolidated into one reproducible Verify command in feature 33.
-- **Still pending feature 33:** exact production environment-variable inventory beyond `CRON_SECRET`, health path, domain, production smoke-test contract, and final CI configuration.
+- **Still pending feature 34:** exact production environment-variable inventory beyond `CRON_SECRET`, health path, domain, production smoke-test contract, and final CI configuration.
 
 ## Open questions
 

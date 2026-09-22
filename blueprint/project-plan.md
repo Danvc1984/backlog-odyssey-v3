@@ -82,13 +82,19 @@ registration, and collaboration are outside the MVP.
 - Per-game detail themes and IGDB screenshots on game and wishlist detail.
 - Dawn and Sunset palette families, Cinzel/Inter typography, official brand
   icons, and an Odyssey voice pass over expressive copy.
+- A playful, adventurous desktop sign-in introduction: icon-led Backlog Odyssey
+  branding, the tagline "Turn your gaming backlog into your next adventure",
+  and a decorative, reduced-motion-aware static demo that cycles Half-Life 2,
+  Cult of the Lamb, Elden Ring, Grand Theft Auto V, and NieR:Automata through adding a
+  game to the backlog and receiving an explainable recommendation. The
+  sign-in form remains primary and the demo remains available below it on mobile.
 - Settings and manual JSON export with empty-schema restore.
 - Simplified personal data and editing boundaries: no per-game availability
   display label or catalog/wishlist notes; reusable alternative-source
   definitions are managed only in Settings, while games select from saved
   sources.
-- Deployment and CI readiness as the final planned milestone, without making it
-  an inflexible MVP gate.
+- Deployment and CI readiness as the final planned milestone, after the
+  sign-in introduction, without making it an inflexible MVP gate.
 
 The following are explicitly outside the MVP:
 
@@ -1028,7 +1034,7 @@ The application shell and existing components must support:
 - Stable local fallback visuals.
 - Settings-controlled behavior.
 
-Theme mode defaults to the system preference and may be overridden manually.
+Theme mode defaults to dark Sunset and may be overridden manually.
 Reduced motion and reduced data also respect system preferences by default and
 may be overridden manually from the visual/accessibility portion of Settings.
 These controls use a non-migrating visual-preference mechanism. Reduced motion

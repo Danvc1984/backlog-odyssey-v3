@@ -35,7 +35,7 @@ export function normalizeData(raw: unknown): DataSetting {
 }
 
 export function normalizeFamily(raw: unknown): ThemeFamily {
-  return raw === "sunset" ? "sunset" : "dawn";
+  return raw === "dawn" ? "dawn" : "sunset";
 }
 
 export function resolveVisualPreferences(

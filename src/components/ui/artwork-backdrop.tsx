@@ -4,10 +4,14 @@ export function ArtworkBackdrop({
   src,
   fit = "contain",
   backgroundBlur = "blur-2xl",
+  onError,
+  foregroundClassName,
 }: {
   src: string;
   fit?: "contain" | "cover";
   backgroundBlur?: "blur-xl" | "blur-2xl";
+  onError?: () => void;
+  foregroundClassName?: string;
 }) {
   return (
     <>
@@ -19,6 +23,7 @@ export function ArtworkBackdrop({
         className={`z-0 scale-110 object-cover ${backgroundBlur} opacity-85`}
         loading="lazy"
         unoptimized
+        onError={onError}
       />
       <div className="absolute inset-0 z-10 bg-black/35" aria-hidden="true" />
       <Image
@@ -26,9 +31,10 @@ export function ArtworkBackdrop({
         alt=""
         fill
         sizes="(min-width: 1280px) 33vw, 100vw"
-        className={`z-20 object-${fit}`}
+        className={`z-20 object-${fit} ${foregroundClassName ?? ""}`}
         loading="lazy"
         unoptimized
+        onError={onError}
       />
     </>
   );

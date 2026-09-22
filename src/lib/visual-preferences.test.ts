@@ -40,13 +40,13 @@ describe("normalizeData", () => {
 });
 
 describe("normalizeFamily", () => {
-  it("passes sunset through", () => {
-    expect(normalizeFamily("sunset")).toBe("sunset");
+  it("passes dawn through", () => {
+    expect(normalizeFamily("dawn")).toBe("dawn");
   });
 
-  it("falls back to dawn for invalid or missing values", () => {
-    for (const raw of [null, undefined, "", "dawn", "system", "garbage", 42, {}]) {
-      expect(normalizeFamily(raw)).toBe("dawn");
+  it("falls back to sunset for invalid or missing values", () => {
+    for (const raw of [null, undefined, "", "sunset", "system", "garbage", 42, {}]) {
+      expect(normalizeFamily(raw)).toBe("sunset");
     }
   });
 });

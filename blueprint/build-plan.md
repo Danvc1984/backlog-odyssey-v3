@@ -768,7 +768,15 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   current run context, explanations, recommendation reset, export/import, and
   tests.
 
-- [ ] 33. **Deployment and CI readiness** - Vercel/Supabase environment
+- [x] 33. **Sign-in introduction demo** - playful, adventurous desktop sign-in
+  panel with the brand icon, tagline "Turn your gaming backlog into your next
+  adventure", and a decorative, reduced-motion-aware static cycle showing
+  Half-Life 2, Cult of the Lamb, Elden Ring, Grand Theft Auto V, and NieR:Automata move
+  from manual or Steam-imported backlog addition through personal tracking to
+  an explainable recommendation; sign-in remains primary and the demo follows
+  it on mobile.
+
+- [ ] 34. **Deployment and CI readiness** - Vercel/Supabase environment
   review, Vercel Cron daily run at 06:00 UTC-6 with `CRON_SECRET` enqueueing
   the price refresh plus a compatibility freshness sweep for catalog and
   wishlist evidence older than the 180-day window, queue overlap protection,
