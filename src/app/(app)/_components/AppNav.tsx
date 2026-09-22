@@ -59,7 +59,7 @@ export function AppNav({ email, signOutAction }: AppNavProps) {
         }}
         className={cn(
           "sticky top-0 hidden h-screen shrink-0 flex-col gap-8 border-r border-border bg-sidebar px-4 py-6 md:flex",
-          collapsed ? "w-[68px] items-center" : "w-[232px]",
+          collapsed ? "w-[68px] items-center" : "w-[200px]",
         )}
       >
         <Link
