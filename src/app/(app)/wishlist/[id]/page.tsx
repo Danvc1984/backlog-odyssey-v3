@@ -327,13 +327,13 @@ export default async function WishlistDetailPage({
         >
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="grid gap-2">
-              <p className="flex items-center gap-1 text-sm font-medium">
+              <div className="flex items-center gap-1 text-sm font-medium">
                 Interest{" "}
                 <InfoPopover
                   label="Interest"
                   content={PERSONAL_FIELD_HELP.interest}
                 />
-              </p>
+              </div>
               <WishlistInterestRating
                 entryId={entry.id}
                 entryName={entry.name}
@@ -341,26 +341,26 @@ export default async function WishlistDetailPage({
               />
             </div>
             <div className="grid gap-2">
-              <p className="flex items-center gap-1 text-sm font-medium">
+              <div className="flex items-center gap-1 text-sm font-medium">
                 Game experience{" "}
                 <InfoPopover
                   label="Game experience"
                   content={PERSONAL_FIELD_HELP.gameExperience}
                 />
-              </p>
+              </div>
               <p className="text-sm text-muted-foreground">
                 {entry.gameExperience?.replaceAll("_", " ").toLowerCase() ??
                   "Not set"}
               </p>
             </div>
             <div className="grid gap-2">
-              <p className="flex items-center gap-1 text-sm font-medium">
+              <div className="flex items-center gap-1 text-sm font-medium">
                 Handheld suitability{" "}
                 <InfoPopover
                   label="Handheld suitability"
                   content={PERSONAL_FIELD_HELP.handheldSuitable}
                 />
-              </p>
+              </div>
               <p className="text-sm text-muted-foreground">
                 {entry.handheldSuitable === true ? "Suitable" : "Not set"}
               </p>

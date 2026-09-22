@@ -53,20 +53,20 @@ export function InfoPopover({ label, content }: { label: string; content: string
           id={popoverId}
           role="dialog"
           aria-label={`${label} information`}
-          className="absolute left-0 top-full z-50 mt-2 w-64 rounded-md border border-border bg-popover p-3 text-xs leading-5 text-popover-foreground shadow-lg"
+          className="absolute left-0 top-full z-50 mt-2 w-max max-w-64 rounded-md border border-border bg-popover p-2 pr-7 text-xs leading-5 text-popover-foreground shadow-lg"
         >
           <p>{content}</p>
           <button
             ref={closeRef}
             type="button"
-            className="mt-2 inline-flex items-center gap-1 font-medium text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50"
+            aria-label={`Close ${label} information`}
+            className="absolute right-1.5 top-1.5 inline-flex size-5 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50"
             onClick={() => {
               setOpen(false);
               triggerRef.current?.focus();
             }}
           >
-            <XIcon aria-hidden="true" className="size-3" />
-            Close
+            <XIcon aria-hidden="true" className="size-3.5" />
           </button>
         </div>
       )}
