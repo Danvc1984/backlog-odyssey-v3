@@ -7,7 +7,6 @@ import { WishlistOfferSection } from "@/components/wishlist/WishlistOfferSection
 import { WishlistCompatibilityBlock } from "@/components/wishlist/WishlistCompatibilityBlock";
 import { WishlistIgdbEnrichmentControl } from "@/components/wishlist/WishlistIgdbEnrichmentControl";
 import { MetadataSection } from "@/components/games/MetadataSection";
-import { RecommendationItemCard } from "@/components/recommendations/RecommendationItemCard";
 import { parseIgdbMetadataPayload } from "@/lib/igdb-metadata-payload";
 import type { WishlistIgdbSnapshotPayload } from "@/lib/wishlist-igdb-enrichment";
 import type { DurationProfile } from "@/lib/playtime-evidence";
@@ -15,7 +14,6 @@ import { buildEntryOfferView } from "@/lib/offer-selection";
 import { getWishlistCompatibilityEligibility } from "@/lib/wishlist-compatibility";
 import { parseAntiCheatEvidence } from "@/lib/compat-evidence";
 import { parseProtonDbSummary } from "@/lib/protondb-api";
-import { RecommendationRoleLabel } from "@/components/recommendations/RecommendationRoleLabel";
 import { WishlistInterestRating } from "@/components/wishlist/WishlistInterestRating";
 import { InfoPopover } from "@/components/ui/info-popover";
 import { PERSONAL_FIELD_HELP } from "@/lib/personal-field-help";
@@ -38,7 +36,14 @@ export default async function WishlistDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [entry, baseGames, buyDismissalCount, compatibilityGate, appSettings, alternativeSources] = await Promise.all([
+  const [
+    entry,
+    baseGames,
+    buyDismissalCount,
+    compatibilityGate,
+    appSettings,
+    alternativeSources,
+  ] = await Promise.all([
     prisma.wishlistEntry.findUnique({
       where: { id },
       select: {
@@ -76,12 +81,22 @@ export default async function WishlistDetailPage({
               where: { provider: "IGDB" },
               orderBy: { fetchedAt: "desc" },
               take: 1,
-              select: { provider: true, payload: true, sourceUrl: true, fetchedAt: true },
+              select: {
+                provider: true,
+                payload: true,
+                sourceUrl: true,
+                fetchedAt: true,
+              },
             },
           },
         },
         metadataSnapshot: {
-          select: { provider: true, payload: true, sourceUrl: true, fetchedAt: true },
+          select: {
+            provider: true,
+            payload: true,
+            sourceUrl: true,
+            fetchedAt: true,
+          },
         },
       },
     }),
@@ -94,7 +109,10 @@ export default async function WishlistDetailPage({
       where: { wishlistEntryId: id, kind: "BUY" },
     }),
     getCompatibilityGate(),
-    prisma.appSettings.findUnique({ where: { id: 1 }, select: { durationProfile: true } }),
+    prisma.appSettings.findUnique({
+      where: { id: 1 },
+      select: { durationProfile: true },
+    }),
     prisma.alternativeSource.findMany({
       where: { archivedAt: null },
       select: { id: true, name: true },
@@ -107,9 +125,9 @@ export default async function WishlistDetailPage({
   }
 
   const sourceOptions = alternativeSources.map((source) => ({
-      ...source,
-      ...resolveSourcePresentation(source.name),
-    }));
+    ...source,
+    ...resolveSourcePresentation(source.name),
+  }));
 
   const latestBuyRun = await prisma.recommendationRun.findFirst({
     where: { kind: "BUY" },
@@ -127,7 +145,8 @@ export default async function WishlistDetailPage({
     compatibilityGate.setup ?? { primaryOs: "LINUX", handheldOs: "NONE" },
   );
 
-  const ownSnapshot = entry.metadataSnapshot?.provider === "IGDB" ? entry.metadataSnapshot : null;
+  const ownSnapshot =
+    entry.metadataSnapshot?.provider === "IGDB" ? entry.metadataSnapshot : null;
   const inheritedSnapshot = entry.baseGame?.metadataSnapshots[0] ?? null;
   const ownMetadata = parseIgdbMetadataPayload(ownSnapshot?.payload);
   const inheritedMetadata = parseIgdbMetadataPayload(
@@ -146,7 +165,8 @@ export default async function WishlistDetailPage({
         fetchedAt: new Date(resolvedPayload.durationEvidence.fetchedAt),
       }
     : null;
-  const durationProfile = (appSettings?.durationProfile ?? "NORMALLY") as DurationProfile;
+  const durationProfile = (appSettings?.durationProfile ??
+    "NORMALLY") as DurationProfile;
   const offerView = buildEntryOfferView(
     entry.offers,
     entry.targetPriceMxn,
@@ -180,207 +200,239 @@ export default async function WishlistDetailPage({
 
   return (
     <GameThemeScope palette={resolvePagePalette(themePayload)}>
-    <div className="space-y-6">
-      <p className="technical-label text-muted-foreground">
-        <Link
-          href="/wishlist"
-          className="hover:text-foreground hover:underline"
-        >
-          Wishlist
-        </Link>
-        {entry.type === "DLC" && entry.baseGame ? (
-          <>
-            <span aria-hidden="true"> / </span>
-            <Link href={`/games/${entry.baseGame.id}`} className="hover:text-foreground hover:underline">
-              {entry.baseGame.name}
-            </Link>
-          </>
-        ) : null}
-        <span aria-hidden="true"> / </span>
-        <span>{entry.name}</span>
-      </p>
-
-      <WishlistDetailHero
-        id={entry.id}
-        name={entry.name}
-        type={entry.type}
-        imageUrl={metadata ? (metadata.artworkUrls[0] ?? metadata.screenshots[0]?.image ?? metadata.coverUrl ?? null) : null}
-        addedAt={entry.createdAt.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        })}
-        baseGame={entry.baseGame}
-        baseGames={baseGames}
-        interest={entry.interest}
-        gameExperience={entry.gameExperience}
-        handheldSuitable={entry.handheldSuitable}
-        selectedOffer={offerView.selected}
-        alternativeSources={sourceOptions}
-      />
-
-      {metadata ? (
-        <div className="space-y-2">
-          <MetadataSection
-            payload={metadata}
-            sourceUrl={resolvedSnapshot?.sourceUrl ?? null}
-            fetchedAt={resolvedSnapshot?.fetchedAt ?? null}
-            durationEvidence={durationEvidence}
-            durationProfile={durationProfile}
-          />
-          {!ownMetadata && inheritedMetadata && (
-            <p className="text-xs text-muted-foreground">
-              Metadata inherited from the base game.
-            </p>
-          )}
-        </div>
-      ) : (
-        <p className="text-sm text-warning-text">
-          IGDB metadata is not available yet. Use Edit to search and choose a
-          match.
+      <div className="space-y-6">
+        <p className="technical-label text-muted-foreground">
+          <Link
+            href="/wishlist"
+            className="hover:text-foreground hover:underline"
+          >
+            Wishlist
+          </Link>
+          {entry.type === "DLC" && entry.baseGame ? (
+            <>
+              <span aria-hidden="true"> / </span>
+              <Link
+                href={`/games/${entry.baseGame.id}`}
+                className="hover:text-foreground hover:underline"
+              >
+                {entry.baseGame.name}
+              </Link>
+            </>
+          ) : null}
+          <span aria-hidden="true"> / </span>
+          <span>{entry.name}</span>
         </p>
-      )}
 
-      {(entry.type === "BASE_GAME" || entry.type === "DLC") && (
-        <WishlistIgdbEnrichmentControl
-          wishlistEntryId={entry.id}
-          entryName={entry.name}
-          hasSnapshot={ownSnapshot !== null}
+        <WishlistDetailHero
+          id={entry.id}
+          name={entry.name}
+          type={entry.type}
+          imageUrl={
+            metadata
+              ? (metadata.artworkUrls[0] ??
+                metadata.screenshots[0]?.image ??
+                metadata.coverUrl ??
+                null)
+              : null
+          }
+          addedAt={entry.createdAt.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })}
+          baseGame={entry.baseGame}
+          baseGames={baseGames}
+          interest={entry.interest}
+          gameExperience={entry.gameExperience}
+          handheldSuitable={entry.handheldSuitable}
+          selectedOffer={offerView.selected}
+          alternativeSources={sourceOptions}
         />
-      )}
 
-      <SectionCard
-        title="Personal fit"
-        id="personal-fit"
-        description="Keep personal fit and store identity together."
-        status={<StatusPill>{entry.interest ? `${entry.interest}/5 interest` : "Not set"}</StatusPill>}
-        className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
-      >
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="grid gap-2">
-            <p className="flex items-center gap-1 text-sm font-medium">
-              Interest <InfoPopover label="Interest" content={PERSONAL_FIELD_HELP.interest} />
-            </p>
-            <WishlistInterestRating entryId={entry.id} entryName={entry.name} interest={entry.interest} />
-          </div>
-          <div className="grid gap-2">
-            <p className="flex items-center gap-1 text-sm font-medium">
-              Game experience <InfoPopover label="Game experience" content={PERSONAL_FIELD_HELP.gameExperience} />
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {entry.gameExperience?.replaceAll("_", " ").toLowerCase() ?? "Not set"}
-            </p>
-          </div>
-          <div className="grid gap-2">
-            <p className="flex items-center gap-1 text-sm font-medium">
-              Handheld suitability <InfoPopover label="Handheld suitability" content={PERSONAL_FIELD_HELP.handheldSuitable} />
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {entry.handheldSuitable === true ? "Suitable" : "Not set"}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6 grid gap-4 border-t border-border pt-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
-          <div className="grid gap-2">
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-medium">Store identity</p>
-              <StatusPill>{entry.steamAppId ? "Confirmed" : "Needs identity"}</StatusPill>
-            </div>
-            <WishlistIdentity
-              entryId={entry.id}
-              entryName={entry.name}
-              steamAppId={entry.steamAppId}
-              provenance={entry.steamAppIdProvenance}
+        {metadata ? (
+          <div className="space-y-2">
+            <MetadataSection
+              payload={metadata}
+              sourceUrl={resolvedSnapshot?.sourceUrl ?? null}
+              fetchedAt={resolvedSnapshot?.fetchedAt ?? null}
+              durationEvidence={durationEvidence}
+              durationProfile={durationProfile}
             />
-          </div>
-          <div className="grid gap-2 justify-self-start md:justify-items-end">
-            <CalibrationNote
-              interest={entry.interest}
-              dismissalCount={buyDismissalCount}
-            />
-          </div>
-        </div>
-      </SectionCard>
-
-      <SectionCard
-        title={<span className="inline-flex items-center gap-2">Offers <SourceIcon iconName="Box" brandIcon="itad.svg" /></span>}
-        id="offers"
-        description={<>Cheapest valid offers via <a href="https://isthereanydeal.com" target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-foreground">ITAD</a>.</>}
-        status={
-          <StatusPill>
-            {entry.steamAppId ? "Identity confirmed" : "Unavailable"}
-          </StatusPill>
-        }
-        className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
-      >
-        {entry.steamAppId ? (
-          <div className="space-y-3">
-            <WishlistOfferSection offerView={offerView} hasConfirmedIdentity />
-            <WishlistOfferAlternatives alternatives={alternatives} />
+            {!ownMetadata && inheritedMetadata && (
+              <p className="text-xs text-muted-foreground">
+                Metadata inherited from the base game.
+              </p>
+            )}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            Confirm a store identity above to see current offers.
+          <p className="text-sm text-warning-text">
+            IGDB metadata is not available yet. Use Edit to search and choose a
+            match.
           </p>
         )}
-      </SectionCard>
 
-      {buyItem && buyItem.wishlistEntryId === entry.id && (
         <SectionCard
-        title="Buy recommendation"
-          description="The current recommendation for this wishlist entry."
-          status={<StatusPill tone="opportunity">Best opportunity</StatusPill>}
-          tone="opportunity"
+          title={
+            <span className="inline-flex items-center gap-2">
+              Offers <SourceIcon iconName="Box" brandIcon="itad.svg" />
+            </span>
+          }
+          id="offers"
+          description={
+            <>
+              Cheapest valid offers via{" "}
+              <a
+                href="https://isthereanydeal.com"
+                target="_blank"
+                rel="noreferrer"
+                className="underline underline-offset-2 hover:text-foreground"
+              >
+                ITAD
+              </a>
+              .
+            </>
+          }
+          status={
+            <StatusPill>
+              {entry.steamAppId ? "Identity confirmed" : "Unavailable"}
+            </StatusPill>
+          }
+          className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
         >
-          <RecommendationRoleLabel role={buyItem.role} kind="BUY" />
-          <RecommendationItemCard
-            itemId={buyItem.id}
-            target={{ kind: "BUY", wishlistEntryId: entry.id }}
-            runId={latestBuyRun?.id}
-            role={buyItem.role}
-            name={entry.name}
-            rank={buyItem.rank}
-            score={buyItem.score}
-            positive={buyItem.positive}
-            negative={buyItem.negative}
-            caveats={buyItem.caveats}
-            imageUrl={metadata ? (metadata.artworkUrls[0] ?? metadata.screenshots[0]?.image ?? metadata.coverUrl ?? null) : null}
-            offerDiscount={offerView.selected?.discount ?? null}
-          />
+          {entry.steamAppId ? (
+            <div className="space-y-3">
+              <WishlistOfferSection
+                offerView={offerView}
+                hasConfirmedIdentity
+              />
+              <WishlistOfferAlternatives alternatives={alternatives} />
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Confirm a store identity above to see current offers.
+            </p>
+          )}
         </SectionCard>
-      )}
 
-      {compatibilityGate.active && (
-        <WishlistCompatibilityBlock
-          wishlistEntryId={entry.id}
-          eligibility={eligibility}
-          protonDb={protonDb ? { tier: protonDb.tier } : null}
-          antiCheat={antiCheat}
-          hasWindowsFallback={compatibilityGate.setup ? deriveWindowsFallbackExists(compatibilityGate.setup) : false}
-          linuxDevicePhrase={configuredLinuxDevicePhrase}
-          environments={entry.envCompat.map((row) => ({
-            environment: row.environment,
-            status: row.status,
-            source: row.source,
-          }))}
-          latestSnapshotAt={latestCompatAt}
+        <SectionCard
+          title="Personal fit"
+          id="personal-fit"
+          description="Keep personal fit and store identity together."
+          status={
+            <StatusPill>
+              {entry.interest ? `${entry.interest}/5 interest` : "Not set"}
+            </StatusPill>
+          }
+          className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
+        >
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-2">
+              <p className="flex items-center gap-1 text-sm font-medium">
+                Interest{" "}
+                <InfoPopover
+                  label="Interest"
+                  content={PERSONAL_FIELD_HELP.interest}
+                />
+              </p>
+              <WishlistInterestRating
+                entryId={entry.id}
+                entryName={entry.name}
+                interest={entry.interest}
+              />
+            </div>
+            <div className="grid gap-2">
+              <p className="flex items-center gap-1 text-sm font-medium">
+                Game experience{" "}
+                <InfoPopover
+                  label="Game experience"
+                  content={PERSONAL_FIELD_HELP.gameExperience}
+                />
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {entry.gameExperience?.replaceAll("_", " ").toLowerCase() ??
+                  "Not set"}
+              </p>
+            </div>
+            <div className="grid gap-2">
+              <p className="flex items-center gap-1 text-sm font-medium">
+                Handheld suitability{" "}
+                <InfoPopover
+                  label="Handheld suitability"
+                  content={PERSONAL_FIELD_HELP.handheldSuitable}
+                />
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {entry.handheldSuitable === true ? "Suitable" : "Not set"}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-4 border-t border-border pt-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+            <div className="grid gap-2">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium">Store identity</p>
+                <StatusPill>
+                  {entry.steamAppId ? "Confirmed" : "Needs identity"}
+                </StatusPill>
+              </div>
+              <WishlistIdentity
+                entryId={entry.id}
+                entryName={entry.name}
+                steamAppId={entry.steamAppId}
+                provenance={entry.steamAppIdProvenance}
+              />
+            </div>
+            <div className="grid gap-2 justify-self-start md:justify-items-end">
+              <CalibrationNote
+                interest={entry.interest}
+                dismissalCount={buyDismissalCount}
+              />
+            </div>
+          </div>
+        </SectionCard>
+
+        {(entry.type === "BASE_GAME" || entry.type === "DLC") && (
+          <WishlistIgdbEnrichmentControl
+            wishlistEntryId={entry.id}
+            entryName={entry.name}
+            hasSnapshot={ownSnapshot !== null}
+          />
+        )}
+
+        {compatibilityGate.active && (
+          <WishlistCompatibilityBlock
+            wishlistEntryId={entry.id}
+            eligibility={eligibility}
+            protonDb={protonDb ? { tier: protonDb.tier } : null}
+            antiCheat={antiCheat}
+            hasWindowsFallback={
+              compatibilityGate.setup
+                ? deriveWindowsFallbackExists(compatibilityGate.setup)
+                : false
+            }
+            linuxDevicePhrase={configuredLinuxDevicePhrase}
+            environments={entry.envCompat.map((row) => ({
+              environment: row.environment,
+              status: row.status,
+              source: row.source,
+            }))}
+            latestSnapshotAt={latestCompatAt}
+          />
+        )}
+
+        <ScreenshotsSection
+          id={entry.id}
+          title={entry.name}
+          screenshots={screenshots}
+          artworkUrls={metadata?.artworkUrls}
+          conceptArtUrls={metadata?.conceptArtUrls}
+          coverUrl={metadata?.coverUrl}
+          sourceUrl={resolvedSnapshot?.sourceUrl ?? null}
+          provider="IGDB"
         />
-      )}
 
-      <ScreenshotsSection
-        id={entry.id}
-        title={entry.name}
-        screenshots={screenshots}
-        artworkUrls={metadata?.artworkUrls}
-        conceptArtUrls={metadata?.conceptArtUrls}
-        coverUrl={metadata?.coverUrl}
-        sourceUrl={resolvedSnapshot?.sourceUrl ?? null}
-        provider="IGDB"
-      />
-
-      <DeleteWishlistEntrySection entryId={entry.id} entryName={entry.name} />
-    </div>
+        <DeleteWishlistEntrySection entryId={entry.id} entryName={entry.name} />
+      </div>
     </GameThemeScope>
   );
 }
