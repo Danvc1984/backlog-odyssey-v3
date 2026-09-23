@@ -71,6 +71,7 @@ export default async function SettingsPage() {
     exportGameCount,
     exportWishlistCount,
     exportRecommendationRunCount,
+    wishlistEnrichmentEntries,
   ] = await Promise.all([
     prisma.steamConnection.findUnique({ where: { id: 1 } }),
     prisma.appSettings.findUnique({
@@ -130,6 +131,11 @@ export default async function SettingsPage() {
     prisma.game.count(),
     prisma.wishlistEntry.count(),
     prisma.recommendationRun.count(),
+    prisma.wishlistEntry.findMany({
+      where: { type: { in: ["BASE_GAME", "DLC"] } },
+      select: { id: true },
+      orderBy: { id: "asc" },
+    }),
   ]);
   const pricePreferences = pricePreferencesSchema.parse({
     priceCountry: appSettings?.priceCountry ?? DEFAULT_PRICE_PREFERENCES.priceCountry,
@@ -201,6 +207,7 @@ export default async function SettingsPage() {
                 }
               : null
           }
+          wishlistEntryIds={wishlistEnrichmentEntries.map((entry) => entry.id)}
         />
       </CollapsibleSettingsSection>
       <CollapsibleSettingsSection title="Personal data">

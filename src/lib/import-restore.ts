@@ -39,33 +39,14 @@ export interface ImportDb {
   recommendationPreset: { count: () => Promise<number> };
 }
 
-const MODEL_TO_DOMAIN: Array<[keyof ImportDb, string]> = [
-  ["appSettings", "settings"],
+const BLOCKING_MODEL_TO_DOMAIN: Array<[keyof ImportDb, string]> = [
   ["game", "games"],
-  ["libraryEntry", "libraryEntries"],
-  ["gameAvailability", "availability"],
-  ["externalGameId", "externalIds"],
-  ["alternativeSource", "alternativeSources"],
-  ["personalTag", "tags"],
-  ["gameTag", "gameTags"],
   ["wishlistEntry", "wishlist"],
-  ["unresolvedSteamDlc", "unresolvedDlc"],
-  ["wishlistImportReview", "wishlistImportReviews"],
-  ["wishlistImportIgnore", "wishlistImportIgnores"],
-  ["possibleDuplicate", "possibleDuplicates"],
-  ["recommendationRun", "recommendations"],
-  ["recommendationItem", "recommendations"],
-  ["recommendationFeedback", "recommendations"],
-  ["recommendationEvent", "recommendations"],
-  ["recommendationProfile", "recommendations"],
-  ["recommendationPreference", "recommendations"],
-  ["recommendationTuneState", "recommendations"],
-  ["recommendationPreset", "recommendations"],
 ];
 
 export async function assertEmptySchema(db: ImportDb): Promise<{ empty: boolean; nonEmpty: string[] }> {
-  const counts = await Promise.all(MODEL_TO_DOMAIN.map(([model]) => db[model].count()));
-  const nonEmpty = MODEL_TO_DOMAIN.flatMap(([, domain], index) =>
+  const counts = await Promise.all(BLOCKING_MODEL_TO_DOMAIN.map(([model]) => db[model].count()));
+  const nonEmpty = BLOCKING_MODEL_TO_DOMAIN.flatMap(([, domain], index) =>
     counts[index] > 0 ? [domain] : [],
   ).filter((domain, index, all) => all.indexOf(domain) === index);
   return { empty: nonEmpty.length === 0, nonEmpty };
@@ -95,28 +76,63 @@ const DATE_FIELDS = {
   recommendationPresets: ["createdAt", "updatedAt"],
 } as const;
 
+interface ImportTxModel {
+  createMany: (args: { data: unknown[] }) => Promise<{ count: number }>;
+  deleteMany: () => Promise<{ count: number }>;
+}
+
 export interface TxDb {
-  appSettings: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  game: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  libraryEntry: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  gameAvailability: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  externalGameId: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  alternativeSource: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  personalTag: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  gameTag: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  wishlistEntry: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  unresolvedSteamDlc: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  wishlistImportReview: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  wishlistImportIgnore: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  possibleDuplicate: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  recommendationRun: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  recommendationItem: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  recommendationFeedback: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  recommendationEvent: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  recommendationProfile: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  recommendationPreference: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  recommendationTuneState: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
-  recommendationPreset: { createMany: (args: { data: unknown[] }) => Promise<{ count: number }> };
+  appSettings: ImportTxModel;
+  game: ImportTxModel;
+  libraryEntry: ImportTxModel;
+  gameAvailability: ImportTxModel;
+  externalGameId: ImportTxModel;
+  alternativeSource: ImportTxModel;
+  personalTag: ImportTxModel;
+  gameTag: ImportTxModel;
+  wishlistEntry: ImportTxModel;
+  unresolvedSteamDlc: ImportTxModel;
+  wishlistImportReview: ImportTxModel;
+  wishlistImportIgnore: ImportTxModel;
+  possibleDuplicate: ImportTxModel;
+  recommendationRun: ImportTxModel;
+  recommendationItem: ImportTxModel;
+  recommendationFeedback: ImportTxModel;
+  recommendationEvent: ImportTxModel;
+  recommendationProfile: ImportTxModel;
+  recommendationPreference: ImportTxModel;
+  recommendationTuneState: ImportTxModel;
+  recommendationPreset: ImportTxModel;
+}
+
+const CLEAR_ORDER: Array<keyof TxDb> = [
+  "recommendationItem",
+  "recommendationEvent",
+  "recommendationRun",
+  "recommendationFeedback",
+  "recommendationProfile",
+  "recommendationPreference",
+  "recommendationTuneState",
+  "recommendationPreset",
+  "possibleDuplicate",
+  "gameTag",
+  "libraryEntry",
+  "gameAvailability",
+  "externalGameId",
+  "wishlistEntry",
+  "unresolvedSteamDlc",
+  "wishlistImportReview",
+  "wishlistImportIgnore",
+  "game",
+  "alternativeSource",
+  "personalTag",
+  "appSettings",
+];
+
+export async function clearExistingExportData(db: TxDb): Promise<void> {
+  for (const model of CLEAR_ORDER) {
+    await db[model].deleteMany();
+  }
 }
 
 import type { ExportDocument } from "./export-schema";

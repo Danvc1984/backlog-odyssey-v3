@@ -410,7 +410,6 @@ describe("updatePersonalFields", () => {
       priority: "HIGH",
       interest: 4,
       rating: 8,
-      preferredEnvironment: "LINUX",
       gameExperience: "PC_GAMING",
     });
 
@@ -420,7 +419,6 @@ describe("updatePersonalFields", () => {
         priority: "HIGH",
         interest: 4,
         rating: 8,
-        preferredEnvironment: "LINUX",
         gameExperience: "PC_GAMING",
       },
     });

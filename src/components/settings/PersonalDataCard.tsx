@@ -105,7 +105,7 @@ export function PersonalDataCard({
           <div>
             <h3 className="text-sm font-medium">Import</h3>
             <p className="mt-1 text-xs text-muted-foreground">
-              Restores only into an empty schema. Refuses while any catalog, wishlist, or recommendation data exists.
+              Restores into an empty catalog and wishlist. Existing settings, sources, and recommendation state are replaced during restore.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">

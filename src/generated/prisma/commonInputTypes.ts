@@ -556,13 +556,6 @@ export type EnumPriorityNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumPriorityNullableFilter<$PrismaModel> | $Enums.Priority | null
 }
 
-export type EnumEnvironmentNullableFilter<$PrismaModel = never> = {
-  equals?: $Enums.Environment | Prisma.EnumEnvironmentFieldRefInput<$PrismaModel> | null
-  in?: $Enums.Environment[] | Prisma.ListEnumEnvironmentFieldRefInput<$PrismaModel> | null
-  notIn?: $Enums.Environment[] | Prisma.ListEnumEnvironmentFieldRefInput<$PrismaModel> | null
-  not?: Prisma.NestedEnumEnvironmentNullableFilter<$PrismaModel> | $Enums.Environment | null
-}
-
 export type EnumGameExperienceNullableFilter<$PrismaModel = never> = {
   equals?: $Enums.GameExperience | Prisma.EnumGameExperienceFieldRefInput<$PrismaModel> | null
   in?: $Enums.GameExperience[] | Prisma.ListEnumGameExperienceFieldRefInput<$PrismaModel> | null
@@ -600,16 +593,6 @@ export type EnumPriorityNullableWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumPriorityNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumPriorityNullableFilter<$PrismaModel>
-}
-
-export type EnumEnvironmentNullableWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.Environment | Prisma.EnumEnvironmentFieldRefInput<$PrismaModel> | null
-  in?: $Enums.Environment[] | Prisma.ListEnumEnvironmentFieldRefInput<$PrismaModel> | null
-  notIn?: $Enums.Environment[] | Prisma.ListEnumEnvironmentFieldRefInput<$PrismaModel> | null
-  not?: Prisma.NestedEnumEnvironmentNullableWithAggregatesFilter<$PrismaModel> | $Enums.Environment | null
-  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumEnvironmentNullableFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumEnvironmentNullableFilter<$PrismaModel>
 }
 
 export type EnumGameExperienceNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -1470,13 +1453,6 @@ export type NestedEnumPriorityNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumPriorityNullableFilter<$PrismaModel> | $Enums.Priority | null
 }
 
-export type NestedEnumEnvironmentNullableFilter<$PrismaModel = never> = {
-  equals?: $Enums.Environment | Prisma.EnumEnvironmentFieldRefInput<$PrismaModel> | null
-  in?: $Enums.Environment[] | Prisma.ListEnumEnvironmentFieldRefInput<$PrismaModel> | null
-  notIn?: $Enums.Environment[] | Prisma.ListEnumEnvironmentFieldRefInput<$PrismaModel> | null
-  not?: Prisma.NestedEnumEnvironmentNullableFilter<$PrismaModel> | $Enums.Environment | null
-}
-
 export type NestedEnumGameExperienceNullableFilter<$PrismaModel = never> = {
   equals?: $Enums.GameExperience | Prisma.EnumGameExperienceFieldRefInput<$PrismaModel> | null
   in?: $Enums.GameExperience[] | Prisma.ListEnumGameExperienceFieldRefInput<$PrismaModel> | null
@@ -1514,16 +1490,6 @@ export type NestedEnumPriorityNullableWithAggregatesFilter<$PrismaModel = never>
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumPriorityNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumPriorityNullableFilter<$PrismaModel>
-}
-
-export type NestedEnumEnvironmentNullableWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.Environment | Prisma.EnumEnvironmentFieldRefInput<$PrismaModel> | null
-  in?: $Enums.Environment[] | Prisma.ListEnumEnvironmentFieldRefInput<$PrismaModel> | null
-  notIn?: $Enums.Environment[] | Prisma.ListEnumEnvironmentFieldRefInput<$PrismaModel> | null
-  not?: Prisma.NestedEnumEnvironmentNullableWithAggregatesFilter<$PrismaModel> | $Enums.Environment | null
-  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumEnvironmentNullableFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumEnvironmentNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumGameExperienceNullableWithAggregatesFilter<$PrismaModel = never> = {

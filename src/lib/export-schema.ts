@@ -44,7 +44,6 @@ const libraryEntrySchema = z.strictObject({
   priority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH"]).nullable(),
   interest: z.number().int().nullable(),
   rating: z.number().int().nullable(),
-  preferredEnvironment: z.enum(["LINUX", "STEAM_DECK", "WINDOWS"]).nullable(),
   gameExperience: z.enum(["PC_GAMING", "MULTIPLAYER_COOP", "COUCH_GAMING", "ON_THE_GO"]).nullable(),
   handheldSuitable: z.boolean().nullable(),
   compatOverrideStatus: z
@@ -233,7 +232,6 @@ const recommendationPreferenceSchema = z.strictObject({
     "PUBLISHER",
     "ERA",
     "SERIES",
-    "ENVIRONMENT",
     "MATURITY",
   ]),
   value: z.string(),

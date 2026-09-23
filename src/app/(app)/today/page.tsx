@@ -10,6 +10,7 @@ import {
 } from "@/lib/recommendations/queries";
 import {
   loadPickableTasteSetupGames,
+  hasCompletedTasteSetup,
   selectInitialTasteSetupPicks,
   shouldShowTasteSetup,
 } from "@/lib/recommendations/taste-setup";
@@ -43,7 +44,8 @@ export default async function TodayPage() {
     tuneState,
     alternativeSources,
     tasteGames,
-    tasteEventCount,
+    tasteSetupEvents,
+    libraryBaseGameCount,
     todayGames,
     dataHealth,
     wishlistEntries,
@@ -111,8 +113,12 @@ export default async function TodayPage() {
       select: { id: true, name: true },
     }),
     loadPickableTasteSetupGames(prisma),
-    prisma.recommendationEvent.count({
+    prisma.recommendationEvent.findMany({
       where: { kind: "TASTE_SETUP_ANSWER" },
+      select: { payload: true },
+    }),
+    prisma.game.count({
+      where: { type: "BASE_GAME", libraryEntry: { isNot: null } },
     }),
     prisma.game.findMany({
       where: {
@@ -155,9 +161,12 @@ export default async function TodayPage() {
   ]);
   const presetOptions = presets.map((preset) => ({ id: preset.id, name: preset.name }));
   const initialTastePicks = selectInitialTasteSetupPicks(tasteGames);
+  const tasteSetupComplete = hasCompletedTasteSetup(tasteSetupEvents);
+  const recommendationReady = tasteSetupComplete && libraryBaseGameCount >= 10;
+  const showBuyRecommendations = recommendationReady && wishlistEntries.length > 0;
   const showTasteSetup = shouldShowTasteSetup(
-    tasteEventCount,
-    tasteGames.length,
+    tasteSetupComplete,
+    libraryBaseGameCount,
   );
   const heroGames = todayGames.map((game) => ({
     id: game.id,
@@ -259,19 +268,37 @@ export default async function TodayPage() {
         </h1>
       </header>
 
-      <TodayHeroGrid games={heroGames} offers={todayOffers} />
+      <TodayHeroGrid
+        games={heroGames}
+        offers={todayOffers}
+        showBuySignal={showBuyRecommendations}
+      />
 
-      {showTasteSetup && (
-        <TasteSetupPanel
-          games={tasteGames.map((game) => ({ id: game.id, name: game.name }))}
-          initialPicks={initialTastePicks.map((pick) => ({
-            id: pick.id,
-            name: pick.name,
-          }))}
-        />
+      {!recommendationReady && (
+        showTasteSetup ? (
+          <TasteSetupPanel
+            games={tasteGames.map((game) => ({
+              id: game.id,
+              name: game.name,
+              completedBefore: game.libraryEntry?.completedBefore ?? false,
+            }))}
+            initialPicks={initialTastePicks.map((pick) => ({
+              id: pick.id,
+              name: pick.name,
+              completedBefore: pick.completedBefore,
+            }))}
+          />
+        ) : (
+          <section className="rounded-lg border border-border bg-card p-4">
+            <h2 className="text-sm font-medium">Taste Setup is unavailable</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Add at least ten base games to your Library before recommendations can learn your preferences. You have {libraryBaseGameCount}.
+            </p>
+          </section>
+        )
       )}
 
-      {(!latestPlayNextRun || !latestBuyRun) && (
+      {recommendationReady && (!latestPlayNextRun || (showBuyRecommendations && !latestBuyRun)) && (
         <div className="rounded-lg border border-border p-8 text-center">
           <p className="text-sm text-muted-foreground">
             Update recommendations to build fresh play and purchase lists.
@@ -282,7 +309,7 @@ export default async function TodayPage() {
         </div>
       )}
 
-      {latestPlayNextRun && <section>
+      {recommendationReady && latestPlayNextRun && <section>
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <h2 className="mt-2 text-3xl font-bold leading-tight tracking-[-0.05em]">
             Play these
@@ -346,7 +373,7 @@ export default async function TodayPage() {
         )}
       </section>}
 
-      {latestBuyRun && <section>
+      {showBuyRecommendations && latestBuyRun && <section>
         <div className="mb-4">
           <h2 className="mt-2 text-3xl font-bold leading-tight tracking-[-0.05em]">
             Recommended

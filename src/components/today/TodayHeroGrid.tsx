@@ -215,9 +215,11 @@ function BuySignalEmpty() {
 export function TodayHeroGrid({
   games,
   offers,
+  showBuySignal = true,
 }: {
   games: readonly TodayHeroGame[];
   offers: readonly TodayOfferView[];
+  showBuySignal?: boolean;
 }) {
   const mainGame =
     games.find((game) => game.libraryEntry?.isMainGame === true) ?? null;
@@ -235,13 +237,13 @@ export function TodayHeroGrid({
   ));
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(300px,0.6fr)]">
+    <div className={cn("grid gap-4", showBuySignal && "lg:grid-cols-[minmax(0,1.4fr)_minmax(300px,0.6fr)]")}>
       {focusSlides.length > 0 ? (
         <Carousel label="Today focus" slides={focusSlides} />
       ) : (
         <SpotlightEmpty />
       )}
-      {bestOffer ? <BuySignal offer={bestOffer} /> : <BuySignalEmpty />}
+      {showBuySignal && (bestOffer ? <BuySignal offer={bestOffer} /> : <BuySignalEmpty />)}
     </div>
   );
 }

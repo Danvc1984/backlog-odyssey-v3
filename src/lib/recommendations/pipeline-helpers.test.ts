@@ -113,7 +113,7 @@ describe("wishlist duration inputs", () => {
     const snapshot = { durationEvidence: { provider: "IGDB", payload: { normallySeconds: 9 * 3600 } } };
     const input = tuneInput(snapshot, null, 9);
 
-    expect(resolveCandidateDimensionValues(snapshot, { gameExperience: null, preferredEnvironment: null, durationHours: input.durationHours })).toMatchObject({ DURATION: ["MEDIUM"] });
+    expect(resolveCandidateDimensionValues(snapshot, { gameExperience: null, durationHours: input.durationHours })).toMatchObject({ DURATION: ["MEDIUM"] });
     expect(matchTuneCriteria(tune, input).criteria).toContain("length");
   });
 
@@ -123,11 +123,11 @@ describe("wishlist duration inputs", () => {
       null,
       40,
     );
-    expect(resolveCandidateDimensionValues(null, { gameExperience: null, preferredEnvironment: null, durationHours: steamSpyInput.durationHours })).toMatchObject({ DURATION: ["LONG"] });
+    expect(resolveCandidateDimensionValues(null, { gameExperience: null, durationHours: steamSpyInput.durationHours })).toMatchObject({ DURATION: ["LONG"] });
     expect(matchTuneCriteria({ ...tune, length: "LONG" }, steamSpyInput).criteria).toContain("length");
 
     const absent = tuneInput({ summary: "No duration evidence" }, null, null);
-    expect(resolveCandidateDimensionValues(null, { gameExperience: null, preferredEnvironment: null, durationHours: absent.durationHours }).DURATION).toBeUndefined();
+    expect(resolveCandidateDimensionValues(null, { gameExperience: null, durationHours: absent.durationHours }).DURATION).toBeUndefined();
     expect(matchTuneCriteria(tune, absent).criteria).not.toContain("length");
   });
 });

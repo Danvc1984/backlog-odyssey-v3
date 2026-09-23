@@ -1,11 +1,11 @@
 import type {
-  Environment,
   Prisma,
   RecommendationDimension,
   RecommendationEventKind,
 } from "@/generated/prisma/client";
 import { parseRecommendationMetadata } from "@/lib/recommendations/metadata";
 import { resolveDurationEstimate, resolveWishlistDurationEstimate, type DurationProfile, type PlaytimeEvidenceRow } from "@/lib/playtime-evidence";
+import type { TasteSetupSignal } from "@/lib/recommendations/taste-setup";
 
 export const PROFILE_DECAY_HALF_LIFE_DAYS = 180;
 
@@ -58,9 +58,15 @@ export interface RecommendationProfilePayload {
   };
 }
 
-export function tasteSetupWeight(answer: string): number {
-  if (answer === "LIKED") return 2;
-  if (answer === "PLAYED") return 1;
+export function tasteSetupWeight(signal: string | Partial<TasteSetupSignal>): number {
+  if (typeof signal === "string") {
+    if (signal === "LIKED") return 2;
+    if (signal === "PLAYED") return 1;
+    return 0;
+  }
+  if (signal.completedBefore && signal.recommendMore) return 3;
+  if (signal.recommendMore) return 2;
+  if (signal.completedBefore) return 1;
   return 0;
 }
 
@@ -96,7 +102,6 @@ export function profileDimensionKeys(): RecommendationDimension[] {
     "PUBLISHER",
     "ERA",
     "SERIES",
-    "ENVIRONMENT",
     "MATURITY",
   ];
 }
@@ -108,7 +113,7 @@ interface ProfileEvent {
   createdAt: Date;
   payload: unknown;
   game: {
-    libraryEntry: { gameExperience: string | null; preferredEnvironment: string | null } | null;
+    libraryEntry: { gameExperience: string | null } | null;
     metadataSnapshots: { payload: unknown }[];
     playtimeEvidence: PlaytimeEvidenceRow | null;
   } | null;
@@ -122,8 +127,6 @@ export type CandidateDimensionValues = Partial<Record<RecommendationDimension, s
 
 export interface CandidatePersonalFields {
   gameExperience: string | null;
-  preferredEnvironment: string | null;
-  configuredEnvironments?: readonly Environment[];
   durationHours?: number | null;
 }
 
@@ -147,18 +150,11 @@ export function resolveCandidateDimensionValues(
   if (personal.gameExperience) values.EXPERIENCE = [personal.gameExperience];
   const duration = durationBand(personal.durationHours ?? null);
   if (duration) values.DURATION = [duration];
-  if (
-    personal.preferredEnvironment &&
-    (!personal.configuredEnvironments || personal.configuredEnvironments.includes(personal.preferredEnvironment as Environment))
-  ) {
-    values.ENVIRONMENT = [personal.preferredEnvironment];
-  }
   return values;
 }
 
 function eventValues(
   event: ProfileEvent,
-  configuredEnvironments: readonly Environment[],
   durationProfile: DurationProfile,
 ): CandidateDimensionValues | null {
   const source = event.gameId ? event.game : event.wishlistEntry;
@@ -167,8 +163,6 @@ function eventValues(
     event.game ? event.game.metadataSnapshots[0]?.payload : event.wishlistEntry?.metadataSnapshot?.payload,
     {
       gameExperience: event.game?.libraryEntry?.gameExperience ?? event.wishlistEntry?.gameExperience ?? null,
-      preferredEnvironment: event.game?.libraryEntry?.preferredEnvironment ?? null,
-      configuredEnvironments,
       durationHours: event.game
         ? resolveDurationEstimate(event.game.playtimeEvidence, durationProfile)?.hours ?? null
         : resolveWishlistDurationEstimate(event.wishlistEntry?.metadataSnapshot?.payload, durationProfile)?.hours ?? null,
@@ -179,7 +173,6 @@ function eventValues(
 export async function rebuildRecommendationProfile(
   client: Prisma.TransactionClient,
   now = new Date(),
-  configuredEnvironments: readonly Environment[] = ["LINUX"],
   durationProfile: DurationProfile = "NORMALLY",
 ): Promise<RecommendationProfilePayload> {
   const rawEvents = await client.recommendationEvent.findMany({
@@ -196,10 +189,10 @@ export async function rebuildRecommendationProfile(
   for (const event of events) {
     if (event.kind === "EXPOSURE" || event.kind === "ROTATION") continue;
     byKind[event.kind] = (byKind[event.kind] ?? 0) + 1;
-    const values = eventValues(event, configuredEnvironments, durationProfile);
+    const values = eventValues(event, durationProfile);
     if (!values) { unresolvedTargets += 1; continue; }
     const baseWeight = event.kind === "TASTE_SETUP_ANSWER"
-      ? tasteSetupWeight(typeof (event.payload as { answer?: unknown } | null)?.answer === "string" ? (event.payload as { answer: string }).answer : "SKIPPED")
+      ? tasteSetupWeight((event.payload ?? {}) as Partial<TasteSetupSignal>)
       : EVENT_SIGNAL_WEIGHTS[event.kind] ?? 0;
     if (baseWeight === 0) continue;
     const weight = baseWeight * decayFactor((now.getTime() - event.createdAt.getTime()) / 86400000);

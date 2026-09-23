@@ -30,7 +30,6 @@ export const todayDataHealthGameSelect = {
       playState: true,
       interest: true,
       priority: true,
-      preferredEnvironment: true,
       gameExperience: true,
       completedBefore: true,
     },
@@ -103,11 +102,10 @@ export function computeProfileCoverage(
     }
     const hasNonNonePriority =
       entry.priority !== null && entry.priority !== "NONE";
-    const hasPreferredEnvironment = entry.preferredEnvironment !== null;
     const hasGameExperience = entry.gameExperience !== null;
     if (
       entry.interest !== null &&
-      (hasNonNonePriority || hasPreferredEnvironment || hasGameExperience)
+      (hasNonNonePriority || hasGameExperience)
     ) {
       complete += 1;
     } else {

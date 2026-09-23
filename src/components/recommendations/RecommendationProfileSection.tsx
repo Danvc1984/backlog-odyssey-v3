@@ -12,7 +12,6 @@ const labels: Record<string, string> = {
   PUBLISHER: "Publisher",
   ERA: "Era",
   SERIES: "Series",
-  ENVIRONMENT: "Environment",
   MATURITY: "Maturity",
 };
 

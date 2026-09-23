@@ -65,11 +65,10 @@ describe("environment fit", () => {
   });
 
   it("uses a configured preferred device, maps Steam Deck to Linux, and falls back to Linux evidence", () => {
-    expect(resolvePlayEnvStatus(linuxWithFallback, "WINDOWS", rows)).toBe("REQUIRED");
-    expect(resolvePlayEnvStatus(linuxOnly, "WINDOWS", rows)).toBe("READY");
-    expect(resolvePlayEnvStatus({ ...linuxOnly, handheldOs: "LINUX" }, "STEAM_DECK", rows)).toBe("READY");
-    expect(resolvePlayEnvStatus(linuxOnly, null, rows)).toBe("READY");
-    expect(resolvePlayEnvStatus(allWindows, "WINDOWS", rows)).toBeNull();
+    expect(resolvePlayEnvStatus(linuxWithFallback, rows)).toBe("READY");
+    expect(resolvePlayEnvStatus(linuxOnly, rows)).toBe("READY");
+    expect(resolvePlayEnvStatus({ ...linuxOnly, handheldOs: "LINUX" }, rows)).toBe("READY");
+    expect(resolvePlayEnvStatus(allWindows, rows)).toBeNull();
   });
 
   it("classifies playable, soft, and excluded evidence across setup shapes", () => {

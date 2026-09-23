@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CaretDownIcon } from "@phosphor-icons/react";
 import { deleteRecommendationPreset, loadRecommendationPreset, saveRecommendationPreset } from "@/actions/recommendations";
@@ -32,6 +33,7 @@ function emptyTune(): TuneContext {
 function storageKey(engine: TuneThisRunPanelProps["engine"]): string { return `${STORAGE_PREFIX}${engine}`; }
 
 const selectClassName = "w-full";
+const presetButtonClassName = "rounded-md border border-border bg-input px-3 py-2 text-sm hover:bg-muted/50 hover:text-foreground disabled:opacity-50";
 
 interface MultiValuePickerProps { label: string; options: string[]; selected: string[]; onChange: (values: string[]) => void }
 function MultiValuePicker({ label, options, selected, onChange }: MultiValuePickerProps) {
@@ -40,11 +42,11 @@ function MultiValuePicker({ label, options, selected, onChange }: MultiValuePick
     <div className="grid gap-1 text-xs text-muted-foreground">
       <span>{label}</span>
       <details className="group relative">
-        <summary className="flex h-8 cursor-pointer list-none items-center justify-between rounded-lg border border-border bg-transparent px-2.5 text-sm text-foreground outline-none transition-colors focus-visible:border-signal focus-visible:ring-3 focus-visible:ring-signal/30 dark:bg-input/30">
+        <summary className="flex h-8 cursor-pointer list-none items-center justify-between rounded-lg border border-border bg-input px-2.5 text-sm text-foreground outline-none transition-colors focus-visible:border-signal focus-visible:ring-3 focus-visible:ring-signal/30">
           <span>{selected.length === 0 ? "Any" : `${selected.length} selected`}</span><CaretDownIcon aria-hidden className="size-4 transition-transform group-open:rotate-180" />
         </summary>
         <div className="absolute z-50 mt-1 max-h-64 w-full min-w-48 overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10">
-          <div className="flex items-center justify-between border-b border-border px-2 py-1"><span className="text-xs text-muted-foreground">Choose one or more</span><button type="button" onClick={() => onChange([])} disabled={selected.length === 0} className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50">Clear</button></div>
+          <div className="flex items-center justify-between border-b border-border px-2 py-1"><span className="text-xs text-muted-foreground">Choose one or more</span><button type="button" onClick={() => onChange([])} disabled={selected.length === 0} className="rounded border border-border bg-input px-2 py-1 text-xs text-muted-foreground hover:bg-muted/50 hover:text-foreground disabled:opacity-50">Clear</button></div>
           {options.map((option) => <label key={option} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground"><input type="checkbox" checked={selected.includes(option)} onChange={(event) => toggle(option, event.target.checked)} className="accent-foreground" /><span>{option}</span></label>)}
         </div>
       </details>
@@ -53,6 +55,7 @@ function MultiValuePicker({ label, options, selected, onChange }: MultiValuePick
 }
 
 export function TuneThisRunPanel({ engine, knownValues, thinPool, initialTune = null, presets, alternativeSources = [] }: TuneThisRunPanelProps) {
+  const router = useRouter();
   const [tune, setTune] = useState<TuneContext>(emptyTune());
   const [open, setOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -91,6 +94,8 @@ export function TuneThisRunPanel({ engine, knownValues, thinPool, initialTune = 
     const result = await saveRecommendationPreset({ name: presetName, tune });
     setSaving(false);
     if (!result.success) { toast.error(result.error ?? "Failed to save preset"); return; }
+    setPresetName("");
+    router.refresh();
     toast.success("Preset saved");
   };
   const loadPreset = async () => {
@@ -110,6 +115,8 @@ export function TuneThisRunPanel({ engine, knownValues, thinPool, initialTune = 
     const result = await deleteRecommendationPreset({ id: selectedPresetId });
     setSaving(false);
     if (!result.success) { toast.error(result.error ?? "Failed to delete preset"); return; }
+    setSelectedPresetId("");
+    router.refresh();
     toast.success("Preset deleted");
   };
 
@@ -141,14 +148,13 @@ export function TuneThisRunPanel({ engine, knownValues, thinPool, initialTune = 
           <label className="grid gap-1 text-xs text-muted-foreground">Maturity<Select value={tune.maturity ?? "ANY"} onValueChange={(value) => update("maturity", value === "ANY" ? null : value as TuneContext["maturity"])}><SelectTrigger aria-label="Maturity" className={selectClassName}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ANY">Any</SelectItem><SelectItem value="CASUAL">Casual</SelectItem><SelectItem value="MATURE">Mature</SelectItem></SelectContent></Select></label>
           <MultiValuePicker label="Genres" options={knownValues.genres} selected={tune.genres} onChange={(values) => update("genres", values)} />
           <MultiValuePicker label="IGDB tags" options={knownValues.tags} selected={tune.tags} onChange={(values) => update("tags", values)} />
-          <div className="rounded-md border border-signal/30 bg-signal/5 p-2 md:col-span-2 xl:col-span-4">
-            <p className="mb-2 text-xs font-semibold text-signal-strong">Personal tag shelves</p>
-            <MultiValuePicker label="Owner-managed tags (any match)" options={knownValues.personalTags} selected={tune.personalTags ?? []} onChange={(values) => update("personalTags", values)} />
+          <div className="grid gap-2 md:col-span-2 xl:col-span-4">
+            <MultiValuePicker label="Owner-managed tags" options={knownValues.personalTags} selected={tune.personalTags ?? []} onChange={(values) => update("personalTags", values)} />
           </div>
           {engine === "PLAY_NEXT" && <fieldset className="grid gap-2 text-xs text-muted-foreground md:col-span-2 xl:col-span-4"><legend>Sources</legend><div className="flex flex-wrap gap-x-4 gap-y-2"><label className="flex items-center gap-2 text-sm text-foreground"><input type="checkbox" checked={sourceTune.steam} onChange={(event) => updateSourceTune("steam", event.target.checked)} className="accent-foreground" /><SourceIcon iconName="MonitorPlay" brandIcon="steam.svg" />Steam</label><label className="flex items-center gap-2 text-sm text-foreground"><input type="checkbox" checked={sourceTune.rom} onChange={(event) => updateSourceTune("rom", event.target.checked)} className="accent-foreground" /><SourceIcon iconName="Disc3" />ROM</label><label className="flex items-center gap-2 text-sm text-foreground"><input type="checkbox" checked={sourceTune.allAlternatives} onChange={(event) => updateSourceTune("allAlternatives", event.target.checked)} className="accent-foreground" /><SourceIcon iconName="Box" />Any alternative source</label>{alternativeSources.map((source) => <label key={source.id} className="flex items-center gap-2 text-sm text-foreground"><input type="checkbox" checked={sourceTune.alternativeSourceIds.includes(source.id)} onChange={(event) => toggleAlternativeSource(source.id, event.target.checked)} className="accent-foreground" /><SourceIcon iconName={source.iconName} brandIcon={source.brandIcon} />{source.name}</label>)}</div></fieldset>}
         </div>
       </details>
-      <div className="mt-4 grid gap-2 border-t border-border pt-3"><span className="text-xs text-muted-foreground">Named presets</span><div className="flex flex-wrap items-center justify-between gap-2"><div className="flex flex-wrap gap-2"><input value={presetName} onChange={(event) => setPresetName(event.target.value)} placeholder="Preset name" maxLength={100} className="rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground" aria-label="Preset name" /><button type="button" onClick={() => void savePreset()} disabled={saving} className="rounded-md border border-border px-3 py-2 text-sm hover:text-foreground disabled:opacity-50">Save preset</button><Select value={selectedPresetId || "NONE"} onValueChange={(value) => setSelectedPresetId(value === "NONE" ? "" : value)}><SelectTrigger aria-label="Saved presets" className="w-48"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="NONE">Choose preset</SelectItem>{presets.map((preset) => <SelectItem key={preset.id} value={preset.id}>{preset.name}</SelectItem>)}</SelectContent></Select><button type="button" onClick={() => void loadPreset()} disabled={saving || !selectedPresetId} className="rounded-md border border-border px-3 py-2 text-sm hover:text-foreground disabled:opacity-50">Load preset</button><button type="button" onClick={() => void deletePreset()} disabled={saving || !selectedPresetId} className="rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-50">Delete preset</button></div><button type="button" onClick={reset} disabled={saving} className="rounded-md border border-border px-3 py-2 text-sm hover:text-foreground disabled:opacity-50">Reset</button></div></div>
+      <div className="mt-4 grid gap-2 border-t border-border pt-3"><span className="text-xs text-muted-foreground">Named presets</span><div className="flex flex-wrap items-center justify-between gap-2"><div className="flex flex-wrap gap-2"><input value={presetName} onChange={(event) => setPresetName(event.target.value)} placeholder="Preset name" maxLength={100} className="rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground" aria-label="Preset name" /><button type="button" onClick={() => void savePreset()} disabled={saving} className={presetButtonClassName}>Save preset</button><Select value={selectedPresetId || "NONE"} onValueChange={(value) => setSelectedPresetId(value === "NONE" ? "" : value)}><SelectTrigger aria-label="Saved presets" className="w-48"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="NONE">Choose preset</SelectItem>{presets.map((preset) => <SelectItem key={preset.id} value={preset.id}>{preset.name}</SelectItem>)}</SelectContent></Select><button type="button" onClick={() => void loadPreset()} disabled={saving || !selectedPresetId} className={presetButtonClassName}>Load preset</button><button type="button" onClick={() => void deletePreset()} disabled={saving || !selectedPresetId} className={`${presetButtonClassName} text-muted-foreground`}>Delete preset</button></div><button type="button" onClick={reset} disabled={saving} className={presetButtonClassName}>Reset</button></div></div>
       {thinPool && <p className="mt-3 text-xs text-muted-foreground">This tune matched fewer candidates than this engine displays, so other eligible items remain visible.</p>}
       </div>}
     </section>

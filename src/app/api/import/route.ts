@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { exportDocumentSchema } from "@/lib/export-schema";
-import { assertEmptySchema, restoreExportDocument, type TxDb } from "@/lib/import-restore";
+import { assertEmptySchema, clearExistingExportData, restoreExportDocument, type TxDb } from "@/lib/import-restore";
 
 export async function POST(request: Request) {
   await requireUser();
@@ -35,7 +35,9 @@ export async function POST(request: Request) {
       if (!guard.empty) {
         return { refused: true as const, domains: guard.nonEmpty };
       }
-      const restored = await restoreExportDocument(tx as unknown as TxDb, document);
+      const importDb = tx as unknown as TxDb;
+      await clearExistingExportData(importDb);
+      const restored = await restoreExportDocument(importDb, document);
       return { refused: false as const, restored };
     });
 

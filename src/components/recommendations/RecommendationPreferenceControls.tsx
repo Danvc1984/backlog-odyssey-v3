@@ -8,11 +8,11 @@ import { Button } from "@/components/ui/button";
 import type { RecommendationProfilePayload } from "@/lib/recommendations/profile";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const dimensions = ["GENRE", "TAG", "EXPERIENCE", "DURATION", "PUBLISHER", "ERA", "SERIES", "ENVIRONMENT", "MATURITY"] as const;
+const dimensions = ["GENRE", "TAG", "EXPERIENCE", "DURATION", "PUBLISHER", "ERA", "SERIES", "MATURITY"] as const;
 const attitudes = ["PREFER", "NEUTRAL", "AVOID"] as const;
 const labels: Record<string, string> = {
   GENRE: "Genre", TAG: "Tag", EXPERIENCE: "Experience", DURATION: "Duration", PUBLISHER: "Publisher",
-  ERA: "Era", SERIES: "Series", ENVIRONMENT: "Environment", MATURITY: "Maturity",
+  ERA: "Era", SERIES: "Series", MATURITY: "Maturity",
   PREFER: "Prefer", NEUTRAL: "Neutral", AVOID: "Avoid",
 };
 const displayLabel = (value: string) => labels[value] ?? (value === value.toUpperCase() ? value.toLowerCase().replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase()) : value);

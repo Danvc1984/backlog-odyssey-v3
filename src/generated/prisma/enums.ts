@@ -196,7 +196,6 @@ export const RecommendationDimension = {
   PUBLISHER: 'PUBLISHER',
   ERA: 'ERA',
   SERIES: 'SERIES',
-  ENVIRONMENT: 'ENVIRONMENT',
   MATURITY: 'MATURITY'
 } as const
 

@@ -22,34 +22,17 @@ const SOFT_REASONS: Record<CompatibilityStatus, { factor: string; label: string 
 
 const ROM_REASON = { factor: "compat_na", label: "ROM only, compatibility not applicable" };
 
-function windowsDeviceExists(
-  setup: Pick<OsSetup, "primaryOs" | "hasWindowsFallback" | "handheldOs">,
-): boolean {
-  return (
-    setup.primaryOs === "WINDOWS" ||
-    deriveWindowsFallbackExists(setup) ||
-    setup.handheldOs === "WINDOWS"
-  );
-}
-
-function preferredDeviceExists(setup: OsSetup, preferredEnvironment: Environment): boolean {
-  switch (preferredEnvironment) {
-    case "LINUX":
-      return linuxTargetsExist(setup);
-    case "STEAM_DECK":
-      return setup.handheldOs === "LINUX";
-    case "WINDOWS":
-      return windowsDeviceExists(setup);
-  }
-}
-
 export function availableEnvironments(
   setup: Pick<OsSetup, "primaryOs" | "hasWindowsFallback" | "handheldOs">,
 ): Environment[] {
   const environments: Environment[] = [];
   if (linuxTargetsExist(setup)) environments.push("LINUX");
   if (setup.handheldOs === "LINUX") environments.push("STEAM_DECK");
-  if (windowsDeviceExists(setup)) environments.push("WINDOWS");
+  if (
+    setup.primaryOs === "WINDOWS" ||
+    deriveWindowsFallbackExists(setup) ||
+    setup.handheldOs === "WINDOWS"
+  ) environments.push("WINDOWS");
   return environments;
 }
 
@@ -59,16 +42,11 @@ export function compatContributes(setup: Pick<OsSetup, "primaryOs" | "handheldOs
 
 export function resolvePlayEnvStatus(
   setup: OsSetup,
-  preferredEnvironment: Environment | null,
   envRows: readonly EnvironmentCompatibilityRow[],
 ): CompatibilityStatus | null {
   if (!compatContributes(setup)) return null;
 
   const linuxRow = envRows.find((row) => row.environment === "LINUX");
-  if (preferredEnvironment && preferredDeviceExists(setup, preferredEnvironment)) {
-    const evidenceEnvironment = preferredEnvironment === "STEAM_DECK" ? "LINUX" : preferredEnvironment;
-    return envRows.find((row) => row.environment === evidenceEnvironment)?.status ?? null;
-  }
   return linuxRow?.status ?? null;
 }
 

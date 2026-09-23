@@ -39,7 +39,7 @@ describe("rebuildRecommendationProfile", () => {
       recommendationEvent: { findMany: vi.fn().mockResolvedValue([
         {
           kind: "COMPLETION", gameId: "g1", wishlistEntryId: null, createdAt: now,
-          payload: null, game: { libraryEntry: { gameExperience: "PC_GAMING", preferredEnvironment: "LINUX" }, metadataSnapshots: [{ payload: payload() }], playtimeEvidence: { provider: "IGDB", payload: { normallySeconds: 9 * 3600 } } }, wishlistEntry: null,
+          payload: null, game: { libraryEntry: { gameExperience: "PC_GAMING" }, metadataSnapshots: [{ payload: payload() }], playtimeEvidence: { provider: "IGDB", payload: { normallySeconds: 9 * 3600 } } }, wishlistEntry: null,
         },
         {
           kind: "START", gameId: "g1", wishlistEntryId: null, createdAt: new Date("2025-07-05T00:00:00.000Z"),
@@ -65,7 +65,7 @@ describe("rebuildRecommendationProfile", () => {
     };
     const result = await rebuildRecommendationProfile(client as never, new Date("2026-01-01T00:00:00.000Z"));
     expect(result.evidence.unresolvedTargets).toBe(1);
-    expect(Object.keys(result.dimensions)).toHaveLength(9);
+    expect(Object.keys(result.dimensions)).toHaveLength(8);
   });
 
   it("retains completion and abandonment signals from hidden games", async () => {
@@ -74,7 +74,6 @@ describe("rebuildRecommendationProfile", () => {
       libraryEntry: {
         hidden: true,
         gameExperience: "PC_GAMING",
-        preferredEnvironment: "LINUX",
       },
     };
     const client = {
@@ -111,7 +110,7 @@ describe("rebuildRecommendationProfile", () => {
     expect(result.dimensions.EXPERIENCE.PC_GAMING).toMatchObject({ weight: 1, support: 2 });
   });
 
-  it("filters legacy environment evidence while preserving other dimensions", async () => {
+  it("preserves other dimensions when old rows contain retired fields", async () => {
     const now = new Date("2026-01-01T00:00:00.000Z");
     const client = {
       recommendationEvent: {
@@ -123,7 +122,7 @@ describe("rebuildRecommendationProfile", () => {
             createdAt: now,
             payload: null,
             game: {
-              libraryEntry: { gameExperience: "PC_GAMING", preferredEnvironment: "WINDOWS" },
+              libraryEntry: { gameExperience: "PC_GAMING" },
               metadataSnapshots: [{ payload: payload({ genres: [{ id: 1, name: "RPG" }] }) }],
             },
             wishlistEntry: null,
@@ -133,9 +132,8 @@ describe("rebuildRecommendationProfile", () => {
       recommendationProfile: { upsert: vi.fn().mockResolvedValue({}) },
     };
 
-    const result = await rebuildRecommendationProfile(client as never, now, ["LINUX"]);
+    const result = await rebuildRecommendationProfile(client as never, now);
 
-    expect(result.dimensions.ENVIRONMENT).toEqual({});
     expect(result.dimensions.GENRE.RPG).toMatchObject({ weight: 2, support: 1 });
     expect(result.dimensions.EXPERIENCE.PC_GAMING).toMatchObject({ weight: 2, support: 1 });
   });
@@ -160,7 +158,7 @@ describe("rebuildRecommendationProfile", () => {
       recommendationProfile: { upsert: vi.fn().mockResolvedValue({}) },
     };
 
-    const result = await rebuildRecommendationProfile(client as never, now, ["LINUX"], "NORMALLY");
+    const result = await rebuildRecommendationProfile(client as never, now, "NORMALLY");
 
     expect(result.dimensions.DURATION.MEDIUM).toMatchObject({ weight: 2, support: 1 });
   });

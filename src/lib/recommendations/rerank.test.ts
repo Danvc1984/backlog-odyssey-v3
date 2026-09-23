@@ -24,7 +24,6 @@ const DIMENSIONS: RecommendationDimension[] = [
   "PUBLISHER",
   "ERA",
   "SERIES",
-  "ENVIRONMENT",
   "MATURITY",
 ];
 

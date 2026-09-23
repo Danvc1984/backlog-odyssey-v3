@@ -51,11 +51,14 @@ describe("recommendation profile math", () => {
     expect(tasteSetupWeight("LIKED")).toBe(2);
     expect(tasteSetupWeight("PLAYED")).toBe(1);
     expect(tasteSetupWeight("SKIPPED")).toBe(0);
+    expect(tasteSetupWeight({ completedBefore: true, recommendMore: false, playSoon: false })).toBe(1);
+    expect(tasteSetupWeight({ completedBefore: false, recommendMore: true, playSoon: false })).toBe(2);
+    expect(tasteSetupWeight({ completedBefore: true, recommendMore: true, playSoon: false })).toBe(3);
   });
 
   it("keeps the contract dimension order", () => {
     expect(profileDimensionKeys()).toEqual([
-      "GENRE", "TAG", "EXPERIENCE", "DURATION", "PUBLISHER", "ERA", "SERIES", "ENVIRONMENT", "MATURITY",
+      "GENRE", "TAG", "EXPERIENCE", "DURATION", "PUBLISHER", "ERA", "SERIES", "MATURITY",
     ]);
   });
 });
@@ -95,7 +98,6 @@ describe("candidate dimension resolution", () => {
     expect(
       resolveCandidateDimensionValues(v2Payload, {
         gameExperience: "PLAYED",
-        preferredEnvironment: "READY",
       }),
     ).toEqual({
       GENRE: ["Puzzle"],
@@ -105,7 +107,6 @@ describe("candidate dimension resolution", () => {
       MATURITY: ["Everyone 10+"],
       SERIES: ["Portal"],
       EXPERIENCE: ["PLAYED"],
-      ENVIRONMENT: ["READY"],
     });
   });
 
@@ -120,7 +121,7 @@ describe("candidate dimension resolution", () => {
     };
 
     expect(
-      resolveCandidateDimensionValues(v1Payload, { gameExperience: null, preferredEnvironment: null }),
+      resolveCandidateDimensionValues(v1Payload, { gameExperience: null }),
     ).toEqual({
       GENRE: ["Puzzle"],
       TAG: [],
@@ -133,7 +134,6 @@ describe("candidate dimension resolution", () => {
     expect(
       resolveCandidateDimensionValues(null, {
         gameExperience: "REPLAYING",
-        preferredEnvironment: null,
       }),
     ).toEqual({ EXPERIENCE: ["REPLAYING"] });
   });
@@ -142,18 +142,15 @@ describe("candidate dimension resolution", () => {
     expect(
       resolveCandidateDimensionValues(null, {
         gameExperience: null,
-        preferredEnvironment: null,
         durationHours: 9,
       }),
     ).toEqual({ DURATION: ["MEDIUM"] });
   });
 
-  it("skips a preferred environment that is not configured", () => {
+  it("does not derive a personal environment dimension", () => {
     expect(
       resolveCandidateDimensionValues(null, {
         gameExperience: "PC_GAMING",
-        preferredEnvironment: "WINDOWS",
-        configuredEnvironments: ["LINUX"],
       }),
     ).toEqual({ EXPERIENCE: ["PC_GAMING"] });
   });

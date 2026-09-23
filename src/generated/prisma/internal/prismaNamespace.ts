@@ -3843,7 +3843,6 @@ export const LibraryEntryScalarFieldEnum = {
   priority: 'priority',
   interest: 'interest',
   rating: 'rating',
-  preferredEnvironment: 'preferredEnvironment',
   gameExperience: 'gameExperience',
   handheldSuitable: 'handheldSuitable',
   compatOverrideStatus: 'compatOverrideStatus',
@@ -4523,20 +4522,6 @@ export type ListEnumPriorityFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
 
 
 /**
- * Reference to a field of type 'Environment'
- */
-export type EnumEnvironmentFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Environment'>
-    
-
-
-/**
- * Reference to a field of type 'Environment[]'
- */
-export type ListEnumEnvironmentFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Environment[]'>
-    
-
-
-/**
  * Reference to a field of type 'GameExperience'
  */
 export type EnumGameExperienceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'GameExperience'>
@@ -4631,6 +4616,20 @@ export type EnumSyncStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Prism
  * Reference to a field of type 'SyncStatus[]'
  */
 export type ListEnumSyncStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SyncStatus[]'>
+
+
+
+/**
+ * Reference to a field of type 'Environment'
+ */
+export type EnumEnvironmentFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Environment'>
+
+
+
+/**
+ * Reference to a field of type 'Environment[]'
+ */
+export type ListEnumEnvironmentFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Environment[]'>
     
 
 
@@ -5014,4 +5013,3 @@ export type PrismaAction =
  * `PrismaClient` proxy available in interactive transactions.
  */
 export type TransactionClient = Omit<DefaultPrismaClient, runtime.ITXClientDenyList>
-

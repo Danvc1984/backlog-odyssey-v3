@@ -349,7 +349,6 @@ export const LibraryEntryScalarFieldEnum = {
   priority: 'priority',
   interest: 'interest',
   rating: 'rating',
-  preferredEnvironment: 'preferredEnvironment',
   gameExperience: 'gameExperience',
   handheldSuitable: 'handheldSuitable',
   compatOverrideStatus: 'compatOverrideStatus',

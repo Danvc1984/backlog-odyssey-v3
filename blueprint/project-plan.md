@@ -73,6 +73,11 @@ registration, and collaboration are outside the MVP.
   the catalog.
 - Deterministic explainable play-next and buy recommendations with a
   handheld play role when the setup has one, and DLC affinity weighting.
+- Before recommendations are shown, Taste Setup requires at least ten library
+  games. It samples library games randomly and records independent prior-play,
+  stronger taste, and play-soon signals; recommendation surfaces stay hidden
+  until setup is saved. Buy recommendations are omitted when the wishlist is
+  empty.
 - Recommendation runs with temporary dismissal and persistent calibration signals.
 - Today dashboard with active-backlog progress, data-coverage prompts, daily-cached
   recent Steam activity (including unimported titles), latest explicit recommendations,
@@ -776,7 +781,7 @@ factors such as:
 - Main-game and hidden flags.
 - Priority and declared interest.
 - Availability sources and any active play-next source tune.
-- Game experience / intention, intended environment, and compatibility.
+- Game experience / intention and compatibility.
 - Handheld-suitability personal flag on catalog and wishlist entries.
 - IGDB genres, themes, keywords, release era, publisher, sequel relationship
   where confidently known, ESRB context when available, and `total_rating`
@@ -933,17 +938,21 @@ consumed replay flag.
 
 ### Cold start, learning, and control
 
-A recently imported library must remain useful before its personal fields are
-filled. Cold-start recommendations diversify metadata-complete owned games by
-genre, experience, length, era, platform fit, and broad quality signals, and
-say explicitly that they are based on imported-library metadata. After import,
-an optional taste setup presents five or six varied owned games. For each, the
-user may mark `I've played this` (setting the independent prior-completion
-checkbox without forcing the current play state), `I like this` (setting
-Interest to `5/5` unless a personal value already exists), skip it, or swap it
-for another catalog game. Progressive one-tap prompts after viewing,
-starting, dismissing, or completing games invite useful personalization without
-requiring a bulk data chore.
+Recommendations remain hidden until Taste Setup is saved. Taste Setup becomes
+available only when the library has at least ten base games; before that point,
+it explains that more library games are needed instead of exposing generated
+recommendations. It presents a random sample of owned games and lets the user
+independently select `Played before`, `Recommend more like this`, and `Would
+like to play soon`. `Played before` is preselected when `completedBefore` is
+already true and, when selected, sets that field without changing the current
+play state. `Recommend more like this` teaches the engine from the game's
+metadata and personal details; selecting it together with `Played before` is a
+strong interest signal. `Would like to play soon` sets `playSoon`. `Pick
+another` swaps only that game for a fresh random library game and creates no
+negative signal. Taste Setup no longer asks for preferred environment; game
+experience remains the relevant personal fit field. Progressive one-tap prompts
+after viewing, starting, dismissing, or completing games invite useful
+personalization without requiring a bulk data chore.
 
 Recommendation-owned data stays private in PostgreSQL and remains separate
 from authoritative catalog fields and replaceable provider snapshots:
@@ -959,7 +968,7 @@ from authoritative catalog fields and replaceable provider snapshots:
   negative evidence. Existing event weights and recency decay remain unchanged;
   hidden games remain ineligible as candidates.
 - A rebuildable derived profile aggregates preferences for genres, tags,
-  experience, length, publisher, era, series, environment, and maturity.
+  experience, length, publisher, era, series, and maturity.
 - User-editable preferences use semantic `Prefer`, `Neutral`, and `Avoid`
   overrides instead of exposing raw weights. Settings shows the learned profile,
   its evidence, and these controls.
@@ -972,8 +981,9 @@ recency decay before deletion. `Restart recommendations` immediately deletes
 all recommendation-owned runs, events, derived profiles, preferences, and
 presets, while preserving the catalog, ownership, and personal catalog data.
 
-The `Update recommendations` action lives on the Today dashboard header and
-empty state, and is reachable from the Library and Wishlist headers.
+After Taste Setup is saved, the `Update recommendations` action lives on the
+Today dashboard header and empty state, and is reachable from the Library and
+Wishlist headers.
 
 ## 12. Today Dashboard
 
@@ -993,15 +1003,16 @@ It displays:
   - catalog base games without an IGDB metadata snapshot;
   - visible catalog games with an incomplete recommendation profile.
 - A recommendation profile is incomplete when `interest` is absent, or when
-  interest is present but none of priority other than `NONE`, preferred
-  environment, or game experience/intention is present. Hidden games are
-  excluded. Rating and the default play state do not satisfy this signal.
+  interest is present but neither priority other than `NONE` nor game
+  experience/intention is present. Hidden games are excluded. Rating and the
+  default play state do not satisfy this signal.
 - Clickable coverage counts open accessible dialogs with up to ten affected
   game titles linking to their game details. The dialog can expand into a
   paginated list for additional games.
-- The latest play-next run's stored roles (Best Fit, You Might Also Enjoy,
-  qualified Out of the Box, Change of Pace, and Handheld when configured and
-  qualified) and the latest buy run's stored roles (fit and deal picks per the
+- After Taste Setup is saved, the latest play-next run's stored roles (Best
+  Fit, You Might Also Enjoy, qualified Out of the Box, Change of Pace, and
+  Handheld when configured and qualified) and, only when wishlist entries
+  exist, the latest buy run's stored roles (fit and deal picks per the
   documented deal-saturation rule); these remain the latest explicitly
   generated runs.
 - Up to five games recently played on Steam, showing last-played date and

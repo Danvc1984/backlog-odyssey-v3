@@ -15,10 +15,6 @@ const updatePersonalFieldsSchema = z.object({
   priority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH"]).optional(),
   interest: z.number().int().min(1).max(5).optional().nullable(),
   rating: z.number().int().min(1).max(10).optional().nullable(),
-  preferredEnvironment: z
-    .enum(["LINUX", "STEAM_DECK", "WINDOWS"])
-    .optional()
-    .nullable(),
   gameExperience: z
     .enum(["PC_GAMING", "MULTIPLAYER_COOP", "COUCH_GAMING", "ON_THE_GO"])
     .optional()
@@ -48,9 +44,6 @@ export async function updatePersonalFields(
         ...(data.priority !== undefined && { priority: data.priority }),
         ...(data.interest !== undefined && { interest: data.interest }),
         ...(data.rating !== undefined && { rating: data.rating }),
-        ...(data.preferredEnvironment !== undefined && {
-          preferredEnvironment: data.preferredEnvironment,
-        }),
         ...(data.gameExperience !== undefined && { gameExperience: data.gameExperience }),
         ...(data.handheldSuitable !== undefined && { handheldSuitable: data.handheldSuitable }),
       },

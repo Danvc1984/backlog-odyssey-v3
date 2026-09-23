@@ -134,7 +134,6 @@ export async function proposeMerge(input: { duplicateId: string }) {
             priority: true,
             interest: true,
             rating: true,
-            preferredEnvironment: true,
             compatOverrideStatus: true,
             compatOverrideReason: true,
             playSoon: true,

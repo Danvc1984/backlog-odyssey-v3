@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   assertEmptySchema,
+  clearExistingExportData,
   restoreExportDocument,
   reviveRows,
   type ImportDb,
@@ -44,35 +45,41 @@ function minimalDocument(): ExportDocument {
 
 function mockTxDb() {
   const callOrder: string[] = [];
+  const deleteOrder: string[] = [];
   const createMany = (model: string) =>
     vi.fn().mockImplementation(async () => {
       callOrder.push(model);
       return { count: 0 };
     });
+  const deleteMany = (model: string) =>
+    vi.fn().mockImplementation(async () => {
+      deleteOrder.push(model);
+      return { count: 0 };
+    });
   const db = {
-    appSettings: { createMany: createMany("appSettings") },
-    game: { createMany: createMany("game") },
-    libraryEntry: { createMany: createMany("libraryEntry") },
-    gameAvailability: { createMany: createMany("gameAvailability") },
-    externalGameId: { createMany: createMany("externalGameId") },
-    alternativeSource: { createMany: createMany("alternativeSource") },
-    personalTag: { createMany: createMany("personalTag") },
-    gameTag: { createMany: createMany("gameTag") },
-    wishlistEntry: { createMany: createMany("wishlistEntry") },
-    unresolvedSteamDlc: { createMany: createMany("unresolvedSteamDlc") },
-    wishlistImportReview: { createMany: createMany("wishlistImportReview") },
-    wishlistImportIgnore: { createMany: createMany("wishlistImportIgnore") },
-    possibleDuplicate: { createMany: createMany("possibleDuplicate") },
-    recommendationRun: { createMany: createMany("recommendationRun") },
-    recommendationItem: { createMany: createMany("recommendationItem") },
-    recommendationFeedback: { createMany: createMany("recommendationFeedback") },
-    recommendationEvent: { createMany: createMany("recommendationEvent") },
-    recommendationProfile: { createMany: createMany("recommendationProfile") },
-    recommendationPreference: { createMany: createMany("recommendationPreference") },
-    recommendationTuneState: { createMany: createMany("recommendationTuneState") },
-    recommendationPreset: { createMany: createMany("recommendationPreset") },
+    appSettings: { createMany: createMany("appSettings"), deleteMany: deleteMany("appSettings") },
+    game: { createMany: createMany("game"), deleteMany: deleteMany("game") },
+    libraryEntry: { createMany: createMany("libraryEntry"), deleteMany: deleteMany("libraryEntry") },
+    gameAvailability: { createMany: createMany("gameAvailability"), deleteMany: deleteMany("gameAvailability") },
+    externalGameId: { createMany: createMany("externalGameId"), deleteMany: deleteMany("externalGameId") },
+    alternativeSource: { createMany: createMany("alternativeSource"), deleteMany: deleteMany("alternativeSource") },
+    personalTag: { createMany: createMany("personalTag"), deleteMany: deleteMany("personalTag") },
+    gameTag: { createMany: createMany("gameTag"), deleteMany: deleteMany("gameTag") },
+    wishlistEntry: { createMany: createMany("wishlistEntry"), deleteMany: deleteMany("wishlistEntry") },
+    unresolvedSteamDlc: { createMany: createMany("unresolvedSteamDlc"), deleteMany: deleteMany("unresolvedSteamDlc") },
+    wishlistImportReview: { createMany: createMany("wishlistImportReview"), deleteMany: deleteMany("wishlistImportReview") },
+    wishlistImportIgnore: { createMany: createMany("wishlistImportIgnore"), deleteMany: deleteMany("wishlistImportIgnore") },
+    possibleDuplicate: { createMany: createMany("possibleDuplicate"), deleteMany: deleteMany("possibleDuplicate") },
+    recommendationRun: { createMany: createMany("recommendationRun"), deleteMany: deleteMany("recommendationRun") },
+    recommendationItem: { createMany: createMany("recommendationItem"), deleteMany: deleteMany("recommendationItem") },
+    recommendationFeedback: { createMany: createMany("recommendationFeedback"), deleteMany: deleteMany("recommendationFeedback") },
+    recommendationEvent: { createMany: createMany("recommendationEvent"), deleteMany: deleteMany("recommendationEvent") },
+    recommendationProfile: { createMany: createMany("recommendationProfile"), deleteMany: deleteMany("recommendationProfile") },
+    recommendationPreference: { createMany: createMany("recommendationPreference"), deleteMany: deleteMany("recommendationPreference") },
+    recommendationTuneState: { createMany: createMany("recommendationTuneState"), deleteMany: deleteMany("recommendationTuneState") },
+    recommendationPreset: { createMany: createMany("recommendationPreset"), deleteMany: deleteMany("recommendationPreset") },
   } as unknown as TxDb;
-  return { db, callOrder };
+  return { db, callOrder, deleteOrder };
 }
 
 function gameRow(id: string, baseGameId: string | null) {
@@ -176,7 +183,49 @@ describe("assertEmptySchema", () => {
 
     const result = await assertEmptySchema(db);
     expect(result.empty).toBe(false);
-    expect(result.nonEmpty).toEqual(["wishlist", "recommendations"]);
+    expect(result.nonEmpty).toEqual(["wishlist"]);
+  });
+
+  it("allows initialized settings, sources, and recommendation state when catalog and wishlist are empty", async () => {
+    const db = zeroDb();
+    (db.appSettings.count as ReturnType<typeof vi.fn>).mockResolvedValue(1);
+    (db.alternativeSource.count as ReturnType<typeof vi.fn>).mockResolvedValue(1);
+    (db.recommendationProfile.count as ReturnType<typeof vi.fn>).mockResolvedValue(1);
+    (db.recommendationRun.count as ReturnType<typeof vi.fn>).mockResolvedValue(2);
+
+    await expect(assertEmptySchema(db)).resolves.toEqual({ empty: true, nonEmpty: [] });
+  });
+});
+
+describe("clearExistingExportData", () => {
+  it("clears exported rows in dependency-safe order", async () => {
+    const { db, deleteOrder } = mockTxDb();
+
+    await clearExistingExportData(db);
+
+    expect(deleteOrder).toEqual([
+      "recommendationItem",
+      "recommendationEvent",
+      "recommendationRun",
+      "recommendationFeedback",
+      "recommendationProfile",
+      "recommendationPreference",
+      "recommendationTuneState",
+      "recommendationPreset",
+      "possibleDuplicate",
+      "gameTag",
+      "libraryEntry",
+      "gameAvailability",
+      "externalGameId",
+      "wishlistEntry",
+      "unresolvedSteamDlc",
+      "wishlistImportReview",
+      "wishlistImportIgnore",
+      "game",
+      "alternativeSource",
+      "personalTag",
+      "appSettings",
+    ]);
   });
 });
 
@@ -194,7 +243,6 @@ describe("restoreExportDocument", () => {
         priority: "NONE",
         interest: null,
         rating: null,
-        preferredEnvironment: null,
         gameExperience: null,
         handheldSuitable: true,
         compatOverrideStatus: null,
@@ -214,7 +262,6 @@ describe("restoreExportDocument", () => {
         priority: "NONE",
         interest: null,
         rating: null,
-        preferredEnvironment: null,
         gameExperience: null,
         handheldSuitable: null,
         compatOverrideStatus: null,
@@ -260,7 +307,6 @@ describe("restoreExportDocument", () => {
         priority: "NONE",
         interest: null,
         rating: null,
-        preferredEnvironment: null,
         gameExperience: null,
         handheldSuitable: null,
         compatOverrideStatus: null,
@@ -415,7 +461,6 @@ describe("restoreExportDocument", () => {
         priority: "NONE",
         interest: null,
         rating: null,
-        preferredEnvironment: null,
         gameExperience: null,
         handheldSuitable: null,
         compatOverrideStatus: null,

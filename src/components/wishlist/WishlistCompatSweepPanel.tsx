@@ -10,6 +10,7 @@ import {
 } from "@/actions/wishlist-compatibility";
 import { Button } from "@/components/ui/button";
 import { formatMexicoTimestamp } from "@/lib/format-times";
+import { WishlistIgdbBatchEnrichmentButton } from "./WishlistIgdbBatchEnrichmentButton";
 
 export type { WishlistCompatSweepRunView } from "@/actions/wishlist-compatibility";
 
@@ -30,8 +31,10 @@ function readCounts(value: unknown): SweepCountBucket {
 
 export function WishlistCompatSweepPanel({
   initialRun,
+  entryIds,
 }: {
   initialRun: WishlistCompatSweepRunView | null;
+  entryIds: string[];
 }) {
   const router = useRouter();
   const [running, setRunning] = useState(false);
@@ -79,16 +82,19 @@ export function WishlistCompatSweepPanel({
             Refresh ProtonDB and AWAY evidence for eligible wishlist games.
           </p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => void sweep()}
-          disabled={running}
-        >
-          <ArrowClockwiseIcon aria-hidden className={running ? "animate-spin" : ""} />
-          {running ? "Updating compatibility..." : "Update compatibility"}
-        </Button>
+        <div className="flex flex-wrap justify-end gap-2">
+          <WishlistIgdbBatchEnrichmentButton entryIds={entryIds} size="sm" variant="outline" />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => void sweep()}
+            disabled={running}
+          >
+            <ArrowClockwiseIcon aria-hidden className={running ? "animate-spin" : ""} />
+            {running ? "Updating compatibility..." : "Update compatibility"}
+          </Button>
+        </div>
       </div>
       {counts && (
         <p className="mt-4 text-xs text-muted-foreground">

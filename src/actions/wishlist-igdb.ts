@@ -6,11 +6,14 @@ import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { searchIgdbCandidatePage } from "@/lib/igdb-api";
 import { enrichWishlistBaseGameFromIgdb, enrichWishlistDlcFromIgdb } from "@/lib/wishlist-igdb-enrichment";
+import { autoEnrichWishlistEntries } from "@/lib/wishlist-igdb-queue";
+import { parseIgdbMetadataPayload } from "@/lib/igdb-metadata-payload";
 
 const searchSchema = z.object({ title: z.string().trim().min(1).max(200), page: z.number().int().min(1).default(1) }).strict();
 const entrySchema = z.object({ wishlistEntryId: z.string().trim().min(1) }).strict();
 const replaceSchema = entrySchema.extend({ confirmOverwrite: z.boolean().default(false) }).strict();
 const manualSchema = replaceSchema.extend({ igdbId: z.number().int().positive() }).strict();
+const batchSchema = z.object({ wishlistEntryIds: z.array(z.string().trim().min(1)).max(500) }).strict();
 
 export async function searchWishlistIgdb(input: unknown) {
   try {
@@ -80,7 +83,7 @@ async function replaceWishlistMetadata(input: unknown, selectedIgdbId: number | 
       type: true,
       steamAppId: true,
       steamAppIdProvenance: true,
-      metadataSnapshot: { select: { fetchedAt: true } },
+      metadataSnapshot: { select: { fetchedAt: true, payload: true } },
       baseGame: {
         select: {
           metadataSnapshots: {
@@ -102,10 +105,26 @@ async function replaceWishlistMetadata(input: unknown, selectedIgdbId: number | 
       error: null,
     };
   }
+  const persistedIgdbId = entry.metadataSnapshot
+    ? parseIgdbMetadataPayload(entry.metadataSnapshot.payload)?.igdbId ?? null
+    : null;
+  const effectiveIgdbId = selectedIgdbId ?? persistedIgdbId;
   const result = entry.type === "DLC"
-    ? await enrichWishlistDlcFromIgdb({ entry, selectedIgdbId })
-    : await enrichWishlistBaseGameFromIgdb({ entry, selectedIgdbId });
+    ? await enrichWishlistDlcFromIgdb({ entry, selectedIgdbId: effectiveIgdbId })
+    : await enrichWishlistBaseGameFromIgdb({ entry, selectedIgdbId: effectiveIgdbId });
   return result;
+}
+
+export async function enrichWishlistEntries(input: unknown) {
+  try {
+    await requireUser();
+    const parsed = batchSchema.safeParse(input);
+    if (!parsed.success) return { success: false as const, data: null, error: "Invalid input" };
+    const result = await autoEnrichWishlistEntries(parsed.data.wishlistEntryIds, { refreshExisting: true });
+    return { success: true as const, data: result, error: null };
+  } catch (error) {
+    return { success: false as const, data: null, error: friendlyActionError(error, "Failed to enrich wishlist with IGDB") };
+  }
 }
 
 export async function refreshWishlistIgdbMetadata(input: unknown) {

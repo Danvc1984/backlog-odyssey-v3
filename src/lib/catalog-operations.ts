@@ -133,7 +133,6 @@ export type PersonalFieldName =
   | "priority"
   | "interest"
   | "rating"
-  | "preferredEnvironment"
   | "compatOverrideStatus"
   | "compatOverrideReason"
   | "playSoon"
@@ -147,7 +146,6 @@ export const PERSONAL_FIELDS: readonly PersonalFieldName[] = [
   "priority",
   "interest",
   "rating",
-  "preferredEnvironment",
   "compatOverrideStatus",
   "compatOverrideReason",
   "playSoon",
@@ -162,7 +160,6 @@ export type MergeSourceLibraryEntry = {
   priority: string | null;
   interest: number | null;
   rating: number | null;
-  preferredEnvironment: string | null;
   compatOverrideStatus: string | null;
   compatOverrideReason: string | null;
   playSoon: boolean | null;

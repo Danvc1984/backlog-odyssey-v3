@@ -1,6 +1,6 @@
 # Backlog Odyssey - Project Overview
 
-<!-- blueprint:source-hash c866a9b16e3274813baa2fd4c7e310b9cddae92eb12c09198b11125c4ee65239 -->
+<!-- blueprint:source-hash 6e478dfb21f2c47d4dca1df31e1e5b3fdbf783927f767029d4da4b6a8ee393c6 -->
 
 > A private, single-user gaming library and decision assistant for choosing what to play and buy across a configured PC and handheld setup, with selectable market and display-currency preferences.
 
@@ -35,18 +35,19 @@ Completed work establishes the authenticated app, catalog, Steam imports, wishli
 15. **31. Personal-data and availability simplification** - removal of notes and per-game source labels, Settings-only source administration, compact Journey/Preferences/Personal fit controls, and a clean export/import schema break.
 16. **32. Unified tags and shelves** - tag-only manual grouping, empty tag shelves, centralized create/rename/merge/delete, shelf sorting, and capped personal-tag Tune targeting.
 17. **33. Sign-in introduction demo** - completed playful, responsive sign-in panel with icon-led branding, the approved tagline, and an accessible static story from manual or Steam-imported backlog addition through personal tracking to explainable recommendation using curated recognizable games.
-18. **34. Welcome regional prices and optional Steam connection** - pending 34a regional market/currency preferences, ITAD querying, and Frankfurter v2 presentation-only FX conversion; then 34b optional Steam OpenID connect-or-skip in Welcome.
+18. **34. Welcome regional prices and optional Steam connection** - completed regional market/currency preferences, ITAD querying, Frankfurter v2 presentation-only FX conversion, and optional Steam OpenID connect-or-skip in Welcome.
 19. **35. Deployment and CI readiness** - pending Vercel/Supabase review, protected daily cron, production checks, one reproducible Verify command, and optional automatic checks.
+20. **36. Today taste setup and recommendation gating** - pending pre-deployment renewal: recommendations stay hidden until Taste Setup is saved from a library of at least ten games; random picks collect independent prior-play, stronger-interest, and play-soon signals; empty wishlists omit Buy recommendations; the outdated preferred-environment field is removed; and Today tag/shelf styling follows `blueprint/reference/today-taste-setup-reference.png`.
 
 ## Data model
 
-The shapes below describe the intended post-feature-32 model. Provider evidence remains replaceable; personal data remains authoritative.
+The shapes below describe the intended post-feature-36 model. Provider evidence remains replaceable; personal data remains authoritative.
 
 ### Identity and catalog
 
 - **User** - single authenticated owner; parent for personal data, settings, operations, and recommendation records.
 - **Game** - catalog-only entity with `id: string`, `name: string`, `type: BASE_GAME | DLC`, immutable origin, and nullable `baseGameId`. A DLC must reference a base game and has no `LibraryEntry` or play state.
-- **LibraryEntry** - one base-game profile with `gameId`, current `playState: NOT_STARTED | IN_PROGRESS | COMPLETED | ABANDONED`, `completedBefore: boolean`, `isMainGame`, `hidden`, `replay`, `playSoon`, `priority`, nullable `interest: 0..5`, rating, game experience, handheld suitability, preferred environment, and play history. Notes are removed in feature 31.
+- **LibraryEntry** - one base-game profile with `gameId`, current `playState: NOT_STARTED | IN_PROGRESS | COMPLETED | ABANDONED`, `completedBefore: boolean`, `isMainGame`, `hidden`, `replay`, `playSoon`, `priority`, nullable `interest: 0..5`, rating, game experience, handheld suitability, and play history. Notes are removed in feature 31.
 - **Availability** - many per game; built-in `STEAM | ROM` or `OTHER_PLATFORM` with an `alternativeSourceId`. Feature 31 removes the per-game display label.
 - **AlternativeSource** - reusable owner-defined source with canonical and normalized names, optional known-source key/icon metadata, and archive state. Definitions live only in Settings; archived assignments remain visible and removable but cannot be newly selected.
 - **ExternalGameId** - provider namespace, external ID, provenance, and game relation. Confirmed Steam App IDs key Steam, IGDB, compatibility, and price work.
@@ -74,7 +75,7 @@ The shapes below describe the intended post-feature-32 model. Provider evidence 
 
 - **RecommendationRun** / **RecommendationItem** - `PLAY_NEXT | BUY` run context, visible roles, factors, caveats, retained per-role candidate batches, and 12-month retention. Feature 29 allows Best Fit, You Might Also Enjoy, Out of the Box, Change of Pace, and additive Handheld roles.
 - **RecommendationEvent** - append-only exposure, start, completion, abandonment, dismissal, and taste-setup evidence with kind-specific retention.
-- **RecommendationProfile** - rebuildable learned dimensions for genre/tag, experience, duration, publisher, era, series, environment, and maturity with recency decay.
+- **RecommendationProfile** - rebuildable learned dimensions for genre/tag, experience, duration, publisher, era, series, and maturity with recency decay.
 - **RecommendationPreference** - semantic `PREFER | NEUTRAL | AVOID` override.
 - **RecommendationPreset** - persisted named Tune context; loading affects only the active tab-local Tune state.
 - **Dismissal feedback** - `Maybe some other time — show me another` records a dismissal and replaces from the same retained role batch. Three cumulative same-kind dismissals lower adjusted interest by one, floor zero.
@@ -109,7 +110,7 @@ Not in the MVP. This is a private single-owner tool, not a public service or sto
 
 Dark-first Dawn and Sunset families use light/dark/system modes, defaulting to dark Sunset until the owner chooses otherwise, with Cinzel display type, Inter body type, semantic accents, accessible overlays, a desktop sidebar, and mobile bottom navigation. Reduced motion disables carousel automation; reduced data prevents remote artwork requests.
 
-- `/` - Today: current games, recommendation spotlights, offers, activity, coverage, freshness, and operations.
+- `/` - Today: current games, Taste Setup when eligible, and only after it is saved, recommendation spotlights; offers, activity, coverage, freshness, and operations remain available. Buy recommendations are omitted with an empty wishlist.
 - `/library` - owned base-game grid/list, search, filters, pagination, card deletion, and catalog health.
 - `/games/[id]` - metadata, compact Journey/Preferences controls, availability, tags, DLC, and gated compatibility.
 - `/wishlist` - independent base/DLC wishes, search/sort, offers, targets, identity, and acquisition.
@@ -118,7 +119,7 @@ Dark-first Dawn and Sunset families use light/dark/system modes, defaulting to d
 - `/` when signed out - icon-led Backlog Odyssey sign-in with the tagline "Turn your gaming backlog into your next adventure"; a decorative reduced-motion-aware demo cycles static curated games from manual or Steam-imported backlog addition through personal tracking to an explainable recommendation. Desktop places it alongside authentication; mobile keeps authentication primary and presents it below.
 - `/welcome` - first-login setup for device context; Mexico, United States, Canada, Brazil, Colombia, or Argentina market selection; MXN, USD, CAD, BRL, COP, or ARS display currency; and an optional Steam OpenID connection with a skip path. Setup completion does not depend on Steam.
 - `/settings` - session, device setup, editable market/currency preferences with a manual price-refresh warning, theme/accessibility, source administration, provider controls, diagnostics, export, and empty-schema restore.
-- First login routes through OS/handheld/fallback setup and optionally into Taste Setup.
+- First login routes through OS/handheld/fallback setup and then may offer Taste Setup when the library has at least ten games.
 
 ## Deployment
 

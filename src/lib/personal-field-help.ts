@@ -2,7 +2,6 @@ export const PERSONAL_FIELD_HELP = {
   priority: "Short-term urgency for deciding what to play next.",
   interest: "Durable desire to play, independent of current urgency.",
   rating: "Your personal assessment after spending time with the game.",
-  preferredEnvironment: "Where you prefer to play this game.",
   gameExperience: "The session fit, not the platform or compatibility.",
   handheldSuitable: "Whether you consider this game suitable for your handheld.",
 } as const;

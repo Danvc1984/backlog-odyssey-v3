@@ -24,6 +24,7 @@ interface CompatibilitySweepPanelProps {
   initialBatch: CompatBatchView | null;
   initialIgdbBatch: IgdbBatchView | null;
   initialWishlistRun: WishlistCompatSweepRunView | null;
+  wishlistEntryIds: string[];
 }
 
 interface BatchEndpointResult {
@@ -65,6 +66,7 @@ export function CompatibilitySweepPanel({
   initialBatch,
   initialIgdbBatch,
   initialWishlistRun,
+  wishlistEntryIds,
 }: CompatibilitySweepPanelProps) {
   const router = useRouter();
   const [batch, setBatch] = useState<CompatBatchView | null>(
@@ -316,7 +318,7 @@ export function CompatibilitySweepPanel({
         {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
       </div>
       {compatibilityActive && (
-        <WishlistCompatSweepPanel initialRun={initialWishlistRun} />
+        <WishlistCompatSweepPanel initialRun={initialWishlistRun} entryIds={wishlistEntryIds} />
       )}
     </SectionCard>
   );

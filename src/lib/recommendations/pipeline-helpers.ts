@@ -28,7 +28,6 @@ export async function loadCandidates(client: Prisma.TransactionClient) {
           hidden: true,
           isMainGame: true,
           gameExperience: true,
-          preferredEnvironment: true,
           handheldSuitable: true,
           compatOverrideStatus: true,
           compatOverrideReason: true,

@@ -29,7 +29,7 @@ vi.mock("@/lib/recommendations/profile", async (importOriginal) => {
       windowEnd: "2026-01-01T00:00:00.000Z",
       evidence: { eventsConsidered: 0 },
       dimensions: {
-        GENRE: {}, TAG: {}, EXPERIENCE: {}, DURATION: {}, PUBLISHER: {}, ERA: {}, SERIES: {}, ENVIRONMENT: {}, MATURITY: {},
+        GENRE: {}, TAG: {}, EXPERIENCE: {}, DURATION: {}, PUBLISHER: {}, ERA: {}, SERIES: {}, MATURITY: {},
       },
     }),
   };
@@ -97,6 +97,7 @@ const itemUpdateMany = vi.fn();
 const itemDeleteMany = vi.fn();
 const itemFindFirst = vi.fn();
 const eventFindMany = vi.fn();
+const gameCount = vi.fn();
 const gameFindUnique = vi.fn();
 const wishlistFindUnique = vi.fn();
 const libraryFindFirst = vi.fn();
@@ -133,7 +134,6 @@ const EMPTY_DIMENSIONS = {
   PUBLISHER: {},
   ERA: {},
   SERIES: {},
-  ENVIRONMENT: {},
   MATURITY: {},
 };
 
@@ -144,7 +144,7 @@ function txFactory() {
     recommendationItem: { findFirst: itemFindFirst, updateMany: itemUpdateMany, deleteMany: itemDeleteMany },
     recommendationFeedback: { create: feedbackCreate, groupBy: feedbackGroupBy, deleteMany: feedbackDeleteMany },
     recommendationEvent: { create: eventCreate, createMany: eventCreateMany, deleteMany: eventDeleteMany, findMany: eventFindMany },
-    game: { findMany: gameFindMany, findUnique: gameFindUnique },
+    game: { count: gameCount, findMany: gameFindMany, findUnique: gameFindUnique },
     wishlistEntry: { findMany: wishlistFindMany, findUnique: wishlistFindUnique },
     recommendationProfile: { upsert: vi.fn(), deleteMany: profileDeleteMany },
     recommendationPreference: { upsert: preferenceUpsert, deleteMany: preferenceDeleteMany, findMany: preferenceFindMany },
@@ -171,7 +171,7 @@ transaction.mockImplementation(async (callback: (tx: ReturnType<typeof txFactory
     prismaMock.recommendationPreset = { upsert: presetUpsert, findMany: presetFindMany, findUnique: presetFindUnique, deleteMany: presetDeleteManyDirect };
     prismaMock.recommendationItem = { findFirst: itemFindFirst, updateMany: itemUpdateMany, deleteMany: itemDeleteMany };
     prismaMock.libraryEntry = { findFirst: libraryFindFirst, update: libraryEntryUpdate };
-    prismaMock.game = { findMany: gameFindMany, findUnique: gameFindUnique };
+    prismaMock.game = { count: gameCount, findMany: gameFindMany, findUnique: gameFindUnique };
     prismaMock.wishlistEntry = { findMany: wishlistFindMany, findUnique: wishlistFindUnique };
   runDeleteMany.mockResolvedValue({ count: 2 });
   runCreate.mockImplementation(async ({ data }: { data: { kind: string } }) => ({
@@ -221,11 +221,15 @@ transaction.mockImplementation(async (callback: (tx: ReturnType<typeof txFactory
   presetDeleteManyDirect.mockResolvedValue({ count: 1 });
   libraryEntryUpdate.mockResolvedValue({});
   gameFindMany.mockResolvedValue([]);
+  gameCount.mockResolvedValue(10);
   wishlistFindMany.mockResolvedValue([]);
   recentExposureEvents = [];
-  eventFindMany.mockImplementation(async ({ where }: { where?: { createdAt?: { gte?: Date } } }) =>
-    recentExposureEvents.filter((event) => !where?.createdAt?.gte || event.createdAt.getTime() >= where.createdAt!.gte!.getTime()),
-  );
+  eventFindMany.mockImplementation(async ({ where }: { where?: { kind?: unknown; createdAt?: { gte?: Date } } }) => {
+    if (where?.kind === "TASTE_SETUP_ANSWER") {
+      return [{ payload: { completedBefore: true, recommendMore: false, playSoon: false } }];
+    }
+    return recentExposureEvents.filter((event) => !where?.createdAt?.gte || event.createdAt.getTime() >= where.createdAt!.gte!.getTime());
+  });
 });
 
 describe("recommendation preferences", () => {
@@ -378,35 +382,34 @@ describe("saveTasteSetup", () => {
 
     const result = await saveTasteSetup({
       picks: [
-        { gameId: "game-played", answer: "PLAYED" },
-        { gameId: "game-liked", answer: "LIKED" },
-        { gameId: "game-skipped", answer: "SKIPPED" },
+        { gameId: "game-played", completedBefore: true, recommendMore: false, playSoon: false },
+        { gameId: "game-liked", completedBefore: false, recommendMore: true, playSoon: true },
+        { gameId: "game-skipped", completedBefore: false, recommendMore: false, playSoon: false },
       ],
       experience: "COUCH_GAMING",
-      environment: "STEAM_DECK",
     });
 
     expect(result.success).toBe(true);
     expect(libraryEntryUpdate).toHaveBeenNthCalledWith(1, {
       where: { gameId: "game-played" },
-      data: { completedBefore: true, gameExperience: "COUCH_GAMING", preferredEnvironment: "STEAM_DECK" },
+      data: { completedBefore: true, gameExperience: "COUCH_GAMING" },
     });
     expect(libraryEntryUpdate).toHaveBeenNthCalledWith(2, {
       where: { gameId: "game-liked" },
-      data: { interest: 5, gameExperience: "COUCH_GAMING", preferredEnvironment: "STEAM_DECK" },
+      data: { gameExperience: "COUCH_GAMING", playSoon: true },
     });
     expect(libraryEntryUpdate).toHaveBeenCalledTimes(2);
     expect(logRecommendationEvent).toHaveBeenCalledTimes(3);
     expect(logRecommendationEvent).toHaveBeenNthCalledWith(3, expect.anything(), {
       kind: "TASTE_SETUP_ANSWER",
       gameId: "game-skipped",
-      payload: { answer: "SKIPPED" },
+      payload: { completedBefore: false, recommendMore: false, playSoon: false },
     });
     expect(rebuildRecommendationProfile).toHaveBeenCalledWith(expect.objectContaining({ game: expect.anything() }), expect.any(Date));
     expect(result.data?.picks).toEqual([
-      { gameId: "game-played", name: "Played game", answer: "PLAYED", seeded: true },
-      { gameId: "game-liked", name: "Liked game", answer: "LIKED", seeded: true },
-      { gameId: "game-skipped", name: "Skipped game", answer: "SKIPPED", seeded: false },
+      { gameId: "game-played", name: "Played game", signal: { gameId: "game-played", completedBefore: true, recommendMore: false, playSoon: false }, seeded: true },
+      { gameId: "game-liked", name: "Liked game", signal: { gameId: "game-liked", completedBefore: false, recommendMore: true, playSoon: true }, seeded: true },
+      { gameId: "game-skipped", name: "Skipped game", signal: { gameId: "game-skipped", completedBefore: false, recommendMore: false, playSoon: false }, seeded: false },
     ]);
   });
 
@@ -417,28 +420,40 @@ describe("saveTasteSetup", () => {
     ]);
 
     await saveTasteSetup({
-      picks: [{ gameId: "in-progress", answer: "PLAYED" }, { gameId: "already-liked", answer: "LIKED" }],
+      picks: [
+        { gameId: "in-progress", completedBefore: true, recommendMore: false, playSoon: false },
+        { gameId: "already-liked", completedBefore: false, recommendMore: true, playSoon: false },
+      ],
       experience: "PC_GAMING",
-      environment: "LINUX",
     });
 
     expect(libraryEntryUpdate).toHaveBeenNthCalledWith(1, {
       where: { gameId: "in-progress" },
-      data: { completedBefore: true, gameExperience: "PC_GAMING", preferredEnvironment: "LINUX" },
+      data: { completedBefore: true, gameExperience: "PC_GAMING" },
     });
     expect(libraryEntryUpdate).toHaveBeenNthCalledWith(2, {
       where: { gameId: "already-liked" },
-      data: { gameExperience: "PC_GAMING", preferredEnvironment: "LINUX" },
+      data: { gameExperience: "PC_GAMING" },
     });
   });
 
   it("rejects malformed, duplicate, unowned, and unanswerable picks", async () => {
-    expect((await saveTasteSetup({ picks: [{ gameId: "game-1", answer: "LIKED" }, { gameId: "game-1", answer: "PLAYED" }] })).success).toBe(false);
-    expect((await saveTasteSetup({ picks: [{ gameId: "game-1" }] })).success).toBe(false);
+    expect((await saveTasteSetup({ picks: [
+      { gameId: "game-1", completedBefore: true, recommendMore: false, playSoon: false },
+      { gameId: "game-1", completedBefore: false, recommendMore: true, playSoon: false },
+    ] })).success).toBe(false);
+    expect((await saveTasteSetup({ picks: [{ gameId: "game-1", completedBefore: false, recommendMore: false, playSoon: false }] })).success).toBe(false);
+    gameCount.mockResolvedValue(9);
+    expect((await saveTasteSetup({ picks: [{ gameId: "game-1", completedBefore: true, recommendMore: false, playSoon: false }] })).success).toBe(false);
+    gameCount.mockResolvedValue(10);
     gameFindMany.mockResolvedValue([]);
-    expect((await saveTasteSetup({ picks: [{ gameId: "missing", answer: "LIKED" }] })).success).toBe(false);
-    gameFindMany.mockResolvedValue([{ id: "dlc-1", name: "DLC", type: "DLC", libraryEntry: { playState: "NOT_STARTED", interest: null, hidden: false, isMainGame: false } }]);
-    expect((await saveTasteSetup({ picks: [{ gameId: "dlc-1", answer: "LIKED" }] })).success).toBe(false);
+    expect((await saveTasteSetup({ picks: [{ gameId: "missing", completedBefore: false, recommendMore: true, playSoon: false }] })).success).toBe(false);
+    gameFindMany.mockResolvedValue([{ id: "dlc-1", name: "DLC", type: "DLC", libraryEntry: { completedBefore: false, interest: null, hidden: false, isMainGame: false } }]);
+    expect((await saveTasteSetup({ picks: [{ gameId: "dlc-1", completedBefore: false, recommendMore: true, playSoon: false }] })).success).toBe(false);
+    gameFindMany.mockResolvedValue([{ id: "hidden-1", name: "Hidden", type: "BASE_GAME", libraryEntry: { completedBefore: false, interest: null, hidden: true, isMainGame: false } }]);
+    expect((await saveTasteSetup({ picks: [{ gameId: "hidden-1", completedBefore: false, recommendMore: true, playSoon: false }] })).success).toBe(false);
+    gameFindMany.mockResolvedValue([{ id: "main-1", name: "Main", type: "BASE_GAME", libraryEntry: { completedBefore: false, interest: null, hidden: false, isMainGame: true } }]);
+    expect((await saveTasteSetup({ picks: [{ gameId: "main-1", completedBefore: false, recommendMore: true, playSoon: false }] })).success).toBe(false);
     expect(libraryEntryUpdate).not.toHaveBeenCalled();
   });
 
@@ -446,7 +461,7 @@ describe("saveTasteSetup", () => {
     gameFindMany.mockResolvedValue([ownedRows[0]]);
     vi.mocked(logRecommendationEvent).mockRejectedValueOnce(new Error("event unavailable"));
 
-    const result = await saveTasteSetup({ picks: [{ gameId: "game-played", answer: "PLAYED" }] });
+    const result = await saveTasteSetup({ picks: [{ gameId: "game-played", completedBefore: true, recommendMore: false, playSoon: false }] });
 
     expect(result).toMatchObject({ success: false, data: null, error: "Failed to save taste setup" });
     expect(rebuildRecommendationProfile).not.toHaveBeenCalled();
@@ -466,7 +481,6 @@ interface CandidateRowShape {
     hidden: boolean;
     isMainGame: boolean;
     gameExperience?: "PC_GAMING" | "MULTIPLAYER_COOP" | "COUCH_GAMING" | "ON_THE_GO" | null;
-    preferredEnvironment?: "LINUX" | "STEAM_DECK" | "WINDOWS" | null;
     handheldSuitable?: boolean | null;
   };
   externalIds: { externalId: string }[];
@@ -586,6 +600,15 @@ function emptyTuneForAction() {
 }
 
 describe("updateRecommendations", () => {
+  it("rejects a direct update before Taste Setup has a meaningful saved signal", async () => {
+    eventFindMany.mockResolvedValue([]);
+
+    const result = await updateRecommendations();
+
+    expect(result).toEqual({ success: false, data: null, error: "Complete Taste Setup before updating recommendations" });
+    expect(tuneStateUpsert).not.toHaveBeenCalled();
+  });
+
   it("requires authentication before touching the database", async () => {
     vi.mocked(requireUser).mockRejectedValueOnce(new Error("Unauthorized"));
 
@@ -801,6 +824,7 @@ describe("updateRecommendations", () => {
     ]);
     const recent = new Date(Date.now() - 24 * 60 * 60 * 1000);
     eventFindMany.mockResolvedValue([
+      { gameId: null, wishlistEntryId: null, payload: { completedBefore: true, recommendMore: false, playSoon: false }, createdAt: recent },
       { gameId: "game-1", wishlistEntryId: null, createdAt: recent },
       { gameId: null, wishlistEntryId: "wish-1", createdAt: recent },
     ]);
@@ -1295,7 +1319,7 @@ describe("updateRecommendations re-ranking", () => {
     gameFindMany.mockResolvedValue([
       {
         ...baseRow(),
-        libraryEntry: libraryEntry({ interest: 2, playState: "ABANDONED", replayCandidate: true, preferredEnvironment: "LINUX" }),
+        libraryEntry: libraryEntry({ interest: 2, playState: "ABANDONED", replayCandidate: true }),
         availability: [{ source: "STEAM", steamLastPlayed: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }],
         metadataSnapshots: [{ payload: igdbPayload({ name: "Portal 2", genres: ["Puzzle"], totalRating: 95 }) }],
         envCompat: [{ environment: "LINUX", status: "READY" }],

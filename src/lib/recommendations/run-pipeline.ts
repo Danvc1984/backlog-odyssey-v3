@@ -17,7 +17,6 @@ import type { CandidateSource } from "@/lib/recommendations/tune";
 import type { CompatEvidenceInput, ExplanationCaveat, ExplanationFactor, PlayNextCandidate } from "@/lib/recommendations/types";
 import { buildCompatContext } from "@/lib/recommendations/compat-context";
 import {
-  availableEnvironments,
   classifyPlayPracticality,
   resolvePlayEnvStatus,
 } from "@/lib/recommendations/environment-fit";
@@ -48,7 +47,6 @@ interface PlayRow {
     completedBefore: boolean;
     replayCandidate: boolean;
     gameExperience: GameExperience | null;
-    preferredEnvironment: Environment | null;
     handheldSuitable: boolean | null;
   } | null;
   tags?: Array<{ tag: { name: string } }>;
@@ -93,8 +91,6 @@ export function buildPlayPipeline(
     const durationHours = resolveDurationEstimate(row.playtimeEvidence, durationProfile)?.hours ?? null;
     const dimensionValues = resolveCandidateDimensionValues(payload, {
       gameExperience: row.libraryEntry?.gameExperience ?? null,
-      preferredEnvironment: row.libraryEntry?.preferredEnvironment ?? null,
-      configuredEnvironments: availableEnvironments(setup),
       durationHours,
     });
     const steamRow = row.availability.find(
@@ -117,7 +113,7 @@ export function buildPlayPipeline(
         replayCandidate: row.libraryEntry?.replayCandidate ?? false,
         steamLastPlayed: steamRow?.steamLastPlayed ?? null,
       },
-      envStatus: resolvePlayEnvStatus(setup, row.libraryEntry?.preferredEnvironment ?? null, row.envCompat),
+      envStatus: resolvePlayEnvStatus(setup, row.envCompat),
       primaryOs: setup.primaryOs,
       handheldFit: setup.handheldOs === "LINUX" && row.libraryEntry?.handheldSuitable === true,
       quality: {
@@ -187,7 +183,6 @@ export function buildBuyPipeline(
       caveats: [...item.caveats, ...rescueCaveat],
       dimensionValues: resolveCandidateDimensionValues(payload, {
         gameExperience: view?.gameExperience ?? null,
-        preferredEnvironment: null,
         durationHours: view?.durationHours ?? null,
       }),
       quality: {
@@ -201,7 +196,7 @@ export function buildBuyPipeline(
       ...getBuyDealInputs(buyCandidateById.get(item.id)!, now),
       practicality,
       envStatus: view?.compatEvidence
-        ? resolvePlayEnvStatus(setup, null, view.envCompat)
+        ? resolvePlayEnvStatus(setup, view.envCompat)
         : null,
       primaryOs: setup.primaryOs,
       handheldFit: setup.handheldOs === "LINUX" && view?.handheldSuitable === true,
@@ -382,7 +377,6 @@ export async function persistRecommendationRuns(
 export async function pruneAndRebuild(
   client: Prisma.TransactionClient,
   now: Date,
-  configuredEnvironments: readonly Environment[] = ["LINUX"],
   durationProfile: DurationProfile = "NORMALLY",
 ) {
   const pruneCutoff = new Date(now.getTime() - RUN_RETENTION_DAYS * 24 * 60 * 60 * 1000);
@@ -390,7 +384,7 @@ export async function pruneAndRebuild(
     where: { createdAt: { lt: pruneCutoff } },
   });
   const prunedEvents = await pruneRecommendationEvents(client, now);
-  const profile = await rebuildRecommendationProfile(client, now, configuredEnvironments, durationProfile);
+  const profile = await rebuildRecommendationProfile(client, now, durationProfile);
   return {
     pruned,
     prunedEvents,
@@ -420,7 +414,6 @@ export async function runRecommendationPipeline(
       const { pruned, prunedEvents, profile } = await pruneAndRebuild(
         tx,
         now,
-        availableEnvironments(setup),
         durationProfile,
       );
       const { playTune, buyTune } = tunes;

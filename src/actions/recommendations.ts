@@ -17,6 +17,7 @@ import { logRecommendationEvent } from "@/lib/recommendations/events";
 import { rebuildRecommendationProfile } from "@/lib/recommendations/profile";
 import { updatePlayState } from "@/actions/game-detail";
 import { runRecommendationPipeline } from "@/lib/recommendations/run-pipeline";
+import { hasCompletedTasteSetup } from "@/lib/recommendations/taste-setup";
 import {
   loadKnownGenreTagValues,
   loadRecommendationPresets,
@@ -65,7 +66,7 @@ const recordRunExposureSchema = z.object({
 }).strict();
 
 const recommendationPreferenceSchema = z.object({
-  dimension: z.enum(["GENRE", "TAG", "EXPERIENCE", "DURATION", "PUBLISHER", "ERA", "SERIES", "ENVIRONMENT", "MATURITY"]),
+  dimension: z.enum(["GENRE", "TAG", "EXPERIENCE", "DURATION", "PUBLISHER", "ERA", "SERIES", "MATURITY"]),
   value: z.string().trim().min(1),
   attitude: z.enum(["PREFER", "NEUTRAL", "AVOID"]),
 }).strict();
@@ -89,18 +90,19 @@ const recommendationPresetLoadSchema = z.object({ id: z.string().trim().min(1) }
 
 const tasteSetupPickSchema = z.object({
   gameId: z.string().trim().min(1),
-  answer: z.enum(["PLAYED", "LIKED", "SKIPPED"]).nullable().optional(),
+  completedBefore: z.boolean(),
+  recommendMore: z.boolean(),
+  playSoon: z.boolean(),
 }).strict();
 const saveTasteSetupSchema = z.object({
   picks: z.array(tasteSetupPickSchema).min(1).max(6),
   experience: z.enum(["PC_GAMING", "MULTIPLAYER_COOP", "COUCH_GAMING", "ON_THE_GO"]).nullable().optional(),
-  environment: z.enum(["LINUX", "STEAM_DECK", "WINDOWS"]).nullable().optional(),
 }).strict().superRefine((value, ctx) => {
   if (new Set(value.picks.map((pick) => pick.gameId)).size !== value.picks.length) {
     ctx.addIssue({ code: "custom", path: ["picks"], message: "Duplicate picks are not allowed" });
   }
-  if (!value.picks.some((pick) => pick.answer !== undefined && pick.answer !== null)) {
-    ctx.addIssue({ code: "custom", path: ["picks"], message: "At least one pick must be answered" });
+  if (!value.picks.some((pick) => pick.completedBefore || pick.recommendMore || pick.playSoon)) {
+    ctx.addIssue({ code: "custom", path: ["picks"], message: "At least one meaningful signal is required" });
   }
 });
 
@@ -132,6 +134,19 @@ export async function updateRecommendations(input: unknown = {}) {
     const parsed = recommendationUpdateSchema.safeParse(input);
     if (!parsed.success) return { success: false as const, data: null, error: "Invalid input" };
     const result = await prisma.$transaction(async (tx) => {
+      const libraryBaseGameCount = await tx.game.count({
+        where: { type: "BASE_GAME", libraryEntry: { isNot: null } },
+      });
+      if (libraryBaseGameCount < 10) {
+        throw new ActionError("Recommendations require at least ten library games");
+      }
+      const setupEvents = await tx.recommendationEvent.findMany({
+        where: { kind: "TASTE_SETUP_ANSWER" },
+        select: { payload: true },
+      });
+      if (!hasCompletedTasteSetup(setupEvents)) {
+        throw new ActionError("Complete Taste Setup before updating recommendations");
+      }
       await tx.recommendationTuneState.upsert({
         where: { id: 1 },
         create: {
@@ -717,7 +732,13 @@ export async function saveTasteSetup(input: unknown) {
     const parsed = saveTasteSetupSchema.safeParse(input);
     if (!parsed.success) return { success: false as const, data: null, error: "Invalid input" };
 
-    const data = await prisma.$transaction(async (tx) => {
+      const data = await prisma.$transaction(async (tx) => {
+      const libraryBaseGameCount = await tx.game.count({
+        where: { type: "BASE_GAME", libraryEntry: { isNot: null } },
+      });
+      if (libraryBaseGameCount < 10) {
+        throw new ActionError("Taste setup requires at least ten library games");
+      }
       const rows = await tx.game.findMany({
         where: { id: { in: parsed.data.picks.map((pick) => pick.gameId) } },
         select: {
@@ -725,7 +746,7 @@ export async function saveTasteSetup(input: unknown) {
           name: true,
           type: true,
           libraryEntry: {
-            select: { playState: true, interest: true, hidden: true, isMainGame: true },
+            select: { completedBefore: true, interest: true, hidden: true, isMainGame: true },
           },
         },
       });
@@ -741,33 +762,27 @@ export async function saveTasteSetup(input: unknown) {
       const picks = [];
       for (const pick of parsed.data.picks) {
         const row = byId.get(pick.gameId)!;
-        if (!pick.answer) {
-          picks.push({ gameId: row.id, name: row.name, answer: null, seeded: false });
-          continue;
-        }
-
         const updateData: Prisma.LibraryEntryUpdateInput = {};
-        if (pick.answer === "PLAYED") {
+        if (pick.completedBefore) {
           updateData.completedBefore = true;
         }
-        if (pick.answer === "LIKED" && row.libraryEntry!.interest === null) {
-          updateData.interest = 5;
-        }
-        if (pick.answer !== "SKIPPED" && parsed.data.experience) {
+        if (parsed.data.experience && (pick.completedBefore || pick.recommendMore || pick.playSoon)) {
           updateData.gameExperience = parsed.data.experience;
         }
-        if (pick.answer !== "SKIPPED" && parsed.data.environment) {
-          updateData.preferredEnvironment = parsed.data.environment;
-        }
-        if (Object.keys(updateData).length > 0) {
+        if (pick.playSoon || Object.keys(updateData).length > 0) {
+          if (pick.playSoon) updateData.playSoon = true;
           await tx.libraryEntry.update({ where: { gameId: row.id }, data: updateData });
         }
         await logRecommendationEvent(tx, {
           kind: "TASTE_SETUP_ANSWER",
           gameId: row.id,
-          payload: { answer: pick.answer },
+          payload: {
+            completedBefore: pick.completedBefore,
+            recommendMore: pick.recommendMore,
+            playSoon: pick.playSoon,
+          },
         });
-        picks.push({ gameId: row.id, name: row.name, answer: pick.answer, seeded: Object.keys(updateData).length > 0 });
+        picks.push({ gameId: row.id, name: row.name, signal: pick, seeded: Object.keys(updateData).length > 0 });
       }
 
       const rebuiltAt = new Date();

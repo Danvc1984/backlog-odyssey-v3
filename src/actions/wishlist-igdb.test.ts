@@ -4,12 +4,17 @@ vi.mock("@/lib/auth-guard", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 vi.mock("@/lib/igdb-api", () => ({ searchIgdbCandidatePage: vi.fn() }));
 vi.mock("@/lib/wishlist-igdb-enrichment", () => ({ enrichWishlistBaseGameFromIgdb: vi.fn() }));
+vi.mock("@/lib/wishlist-igdb-queue", () => ({ autoEnrichWishlistEntries: vi.fn() }));
+vi.mock("@/lib/igdb-metadata-payload", () => ({ parseIgdbMetadataPayload: vi.fn() }));
 
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { searchIgdbCandidatePage } from "@/lib/igdb-api";
 import { enrichWishlistBaseGameFromIgdb } from "@/lib/wishlist-igdb-enrichment";
+import { autoEnrichWishlistEntries } from "@/lib/wishlist-igdb-queue";
+import { parseIgdbMetadataPayload } from "@/lib/igdb-metadata-payload";
 import {
+  enrichWishlistEntries,
   enrichWishlistEntryWithIgdb,
   fillWishlistIgdbMetadata,
   refreshWishlistIgdbMetadata,
@@ -25,6 +30,7 @@ describe("wishlist IGDB actions", () => {
     vi.mocked(requireUser).mockResolvedValue({ user: { id: "user-1" } } as never);
     Object.assign(prisma, { wishlistEntry: { findUnique }, wishlistMetadataSnapshot: { deleteMany: vi.fn() } });
     vi.mocked(searchIgdbCandidatePage).mockResolvedValue({ ok: true, data: [], searchTerm: "Portal 2" });
+    vi.mocked(parseIgdbMetadataPayload).mockReturnValue(null);
   });
 
   it("searches IGDB with offset paging", async () => {
@@ -93,5 +99,37 @@ describe("wishlist IGDB actions", () => {
 
     await expect(removeWishlistMetadata({ wishlistEntryId: "wish-1" })).resolves.toEqual({ success: true, data: null, error: null });
     expect((prisma.wishlistMetadataSnapshot.deleteMany as ReturnType<typeof vi.fn>)).toHaveBeenCalledWith({ where: { wishlistEntryId: "wish-1" } });
+  });
+
+  it("refreshes an existing individual snapshot by its persisted IGDB id", async () => {
+    const fetchedAt = new Date("2026-09-10T19:00:00.000Z");
+    findUnique.mockResolvedValue({
+      id: "wish-1",
+      name: "Portal 2",
+      type: "BASE_GAME",
+      steamAppId: null,
+      steamAppIdProvenance: null,
+      metadataSnapshot: { fetchedAt, payload: { igdbId: 42 } },
+    });
+    vi.mocked(parseIgdbMetadataPayload).mockReturnValue({ igdbId: 42 } as never);
+    vi.mocked(enrichWishlistBaseGameFromIgdb).mockResolvedValue({
+      success: true,
+      data: { igdbId: 42, name: "Portal 2", matchMethod: "EXACT_STEAM_APP_ID", steamAppIdApplied: null, steamAppIdConflict: null },
+      error: null,
+    });
+
+    await expect(refreshWishlistIgdbMetadata({ wishlistEntryId: "wish-1", confirmOverwrite: true })).resolves.toMatchObject({ success: true });
+    expect(enrichWishlistBaseGameFromIgdb).toHaveBeenCalledWith(expect.objectContaining({ selectedIgdbId: 42 }));
+  });
+
+  it("queues wishlist-wide enrichment with existing snapshots enabled", async () => {
+    vi.mocked(autoEnrichWishlistEntries).mockResolvedValue({ enriched: 3, skipped: 1 });
+
+    await expect(enrichWishlistEntries({ wishlistEntryIds: ["wish-1", "wish-2"] })).resolves.toEqual({
+      success: true,
+      data: { enriched: 3, skipped: 1 },
+      error: null,
+    });
+    expect(autoEnrichWishlistEntries).toHaveBeenCalledWith(["wish-1", "wish-2"], { refreshExisting: true });
   });
 });

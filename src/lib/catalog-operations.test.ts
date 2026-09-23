@@ -50,7 +50,6 @@ function baseLibraryEntry(): MergeSourceLibraryEntry {
     priority: "NONE",
     interest: null,
     rating: null,
-    preferredEnvironment: null,
     compatOverrideStatus: null,
     compatOverrideReason: null,
     playSoon: false,

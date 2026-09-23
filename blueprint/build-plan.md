@@ -799,3 +799,13 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   wishlist evidence older than the 180-day window, queue overlap protection,
   production build, smoke test, one reproducible Verify command, and automatic
   checks when configured; final planned step but not an inflexible feature gate
+
+- [x] 36. **Today taste setup and recommendation gating** - pre-deployment
+  renewal of Today: hide all recommendation surfaces until a saved Taste Setup;
+  require at least ten library base games before setup can begin; randomly pick
+  setup games; independently record `Played before`, `Recommend more like
+  this`, and `Would like to play soon`; preselect and persist prior completion;
+  treat combined prior-play and recommendation interest as a strong signal;
+  replace without negative feedback; remove preferred environment; omit Buy
+  recommendations with an empty wishlist; and align the second Today row and
+  personal tag shelves with the provided visual reference.

@@ -147,7 +147,6 @@ enum RecommendationDimension {
   PUBLISHER
   ERA
   SERIES
-  ENVIRONMENT
   MATURITY
 }
 
@@ -484,7 +483,6 @@ model LibraryEntry {
   priority             Priority?            @default(NONE)
   interest             Int?
   rating               Int?
-  preferredEnvironment Environment?
   gameExperience       GameExperience?
   handheldSuitable     Boolean?
   compatOverrideStatus CompatibilityStatus?

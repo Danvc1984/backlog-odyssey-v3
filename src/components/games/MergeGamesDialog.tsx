@@ -29,7 +29,6 @@ const PERSONAL_FIELD_LABELS: Record<PersonalFieldName, string> = {
   priority: "Priority",
   interest: "Interest",
   rating: "Rating",
-  preferredEnvironment: "Preferred environment",
   compatOverrideStatus: "Compatibility override status",
   compatOverrideReason: "Compatibility override reason",
   playSoon: "Play soon",
