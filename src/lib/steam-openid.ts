@@ -4,6 +4,34 @@ const OPENID_ENDPOINT = "https://steamcommunity.com/openid/login";
 const OPENID_NS = "http://specs.openid.net/auth/2.0";
 const IDENTIFIER_SELECT = "http://specs.openid.net/auth/2.0/identifier_select";
 
+export type SteamReturnIntent = "settings" | "welcome";
+export type SteamCallbackStatus = "connected" | "cancelled" | "error";
+
+export function resolveSteamReturnIntent(
+  value: string | null | undefined,
+): SteamReturnIntent {
+  return value === "welcome" ? "welcome" : "settings";
+}
+
+export function parseSteamCallbackStatus(
+  value: string | null | undefined,
+): SteamCallbackStatus | null {
+  return value === "connected" || value === "cancelled" || value === "error"
+    ? value
+    : null;
+}
+
+export function steamReturnPath(
+  intent: SteamReturnIntent,
+  status: SteamCallbackStatus,
+): string {
+  const path = intent === "welcome" ? "/welcome" : "/settings";
+  const visibleStatus = intent === "settings" && status === "cancelled"
+    ? "error"
+    : status;
+  return `${path}?steam=${visibleStatus}`;
+}
+
 export function createStateNonce(): string {
   return randomBytes(32).toString("hex");
 }

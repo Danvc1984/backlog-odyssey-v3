@@ -776,7 +776,7 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   an explainable recommendation; sign-in remains primary and the demo follows
   it on mobile.
 
-- [ ] 34. **Welcome regional prices and optional Steam connection** - deliver
+- [x] 34. **Welcome regional prices and optional Steam connection** - deliver
   market-aware price preferences and the optional Steam connection in two
   reviewable parts.
   - [x] 34a. **Regional price preferences and presentation** - extend Welcome
@@ -789,7 +789,7 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
     visibly estimated, retains source amounts, and is unavailable rather than
     guessed when a rate cannot be fetched. Other regions and currencies are out
     of scope; no fallback market is offered.
-  - [ ] 34b. **Optional Steam connection in Welcome** - offer the existing
+  - [x] 34b. **Optional Steam connection in Welcome** - offer the existing
     Steam OpenID connection as an explicit optional Welcome action with a skip
     path. A connection attempt, cancellation, or failure never blocks setup.
 

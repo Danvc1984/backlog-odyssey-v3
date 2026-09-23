@@ -3,9 +3,35 @@ import {
   buildSteamOpenIdUrl,
   createStateNonce,
   extractSteamId64,
+  parseSteamCallbackStatus,
+  resolveSteamReturnIntent,
   statesMatch,
+  steamReturnPath,
   verifySteamOpenIdResponse,
 } from "./steam-openid";
+
+describe("Steam return intents", () => {
+  it("only allows the Welcome return intent", () => {
+    expect(resolveSteamReturnIntent("welcome")).toBe("welcome");
+    expect(resolveSteamReturnIntent(null)).toBe("settings");
+    expect(resolveSteamReturnIntent("https://attacker.test")).toBe("settings");
+  });
+
+  it("accepts only the short callback status tokens shown in Welcome", () => {
+    expect(parseSteamCallbackStatus("connected")).toBe("connected");
+    expect(parseSteamCallbackStatus("cancelled")).toBe("cancelled");
+    expect(parseSteamCallbackStatus("error")).toBe("error");
+    expect(parseSteamCallbackStatus("provider-details")).toBeNull();
+    expect(parseSteamCallbackStatus(null)).toBeNull();
+  });
+
+  it("maps callback statuses to supported local routes", () => {
+    expect(steamReturnPath("welcome", "connected")).toBe("/welcome?steam=connected");
+    expect(steamReturnPath("welcome", "cancelled")).toBe("/welcome?steam=cancelled");
+    expect(steamReturnPath("welcome", "error")).toBe("/welcome?steam=error");
+    expect(steamReturnPath("settings", "cancelled")).toBe("/settings?steam=error");
+  });
+});
 
 describe("createStateNonce", () => {
   it("creates a cryptographically random hex nonce", () => {

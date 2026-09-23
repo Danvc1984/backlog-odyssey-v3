@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import { updateOsSetup } from "@/actions/settings";
@@ -14,6 +15,7 @@ import type { ThemeFamily } from "@/lib/visual-preferences";
 import type { OsSetup } from "@/lib/os-setup";
 import type { DurationProfile } from "@/generated/prisma/client";
 import { PRICE_MARKETS, DISPLAY_CURRENCIES, type PricePreferences } from "@/lib/price-preferences";
+import { parseSteamCallbackStatus } from "@/lib/steam-openid";
 
 const durationOptions = [
   { value: "HASTILY", label: "Main story" },
@@ -32,7 +34,16 @@ const familyOptions: Option<ThemeFamily>[] = [
   { value: "sunset", label: "Sunset" },
 ];
 
-export function WelcomeSetupForm({ gameCount }: { gameCount: number }) {
+type WelcomeSteamConnection = { steamId64: string } | null;
+type SteamWelcomeStatus = NonNullable<ReturnType<typeof parseSteamCallbackStatus>>;
+
+export function WelcomeSetupForm({
+  gameCount,
+  steamConnection,
+}: {
+  gameCount: number;
+  steamConnection: WelcomeSteamConnection;
+}) {
   const [primaryOs, setPrimaryOs] = useState<OsSetup["primaryOs"]>("LINUX");
   const [hasWindowsFallback, setHasWindowsFallback] = useState(false);
   const [handheldOs, setHandheldOs] = useState<OsSetup["handheldOs"]>("NONE");
@@ -42,6 +53,12 @@ export function WelcomeSetupForm({ gameCount }: { gameCount: number }) {
   const [priceCountry, setPriceCountry] = useState<PricePreferences["priceCountry"]>("MX");
   const [displayCurrency, setDisplayCurrency] = useState<PricePreferences["displayCurrency"]>("MXN");
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [steamConnecting, setSteamConnecting] = useState(false);
+  const [steamStatus] = useState<SteamWelcomeStatus | null>(() =>
+    parseSteamCallbackStatus(searchParams.get("steam")),
+  );
   const { theme, setTheme } = useTheme();
   const { family, setFamily } = useVisualPreferences();
 
@@ -49,6 +66,14 @@ export function WelcomeSetupForm({ gameCount }: { gameCount: number }) {
     const timer = window.setTimeout(() => setMounted(true), 0);
     return () => window.clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (!steamStatus) {
+      return;
+    }
+
+    router.replace("/welcome");
+  }, [router, steamStatus]);
 
   const save = async () => {
     setSaving(true);
@@ -60,6 +85,10 @@ export function WelcomeSetupForm({ gameCount }: { gameCount: number }) {
     }
     setCompleted(true);
     toast.success("Setup saved");
+  };
+
+  const startSteamConnection = () => {
+    setSteamConnecting(true);
   };
 
   if (completed) {
@@ -169,6 +198,54 @@ export function WelcomeSetupForm({ gameCount }: { gameCount: number }) {
           />
         </div>
       </div>
+      <section className="grid gap-3 rounded-lg border border-border p-4" aria-labelledby="welcome-steam-heading">
+        <div>
+          <p id="welcome-steam-heading" className="text-sm font-medium">Optional Steam connection</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Link Steam now to make your library available later. Welcome remains complete without it, and no games are imported automatically.
+          </p>
+        </div>
+        {steamConnection ? (
+          <div className="rounded-md border border-signal/30 bg-signal/10 p-3 text-sm" role="status" aria-live="polite">
+            Steam is connected{steamConnection.steamId64 ? ` (${steamConnection.steamId64})` : ""}.
+          </div>
+        ) : (
+          <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-center">
+            <Button asChild>
+              <Link
+                href="/api/steam/connect?returnTo=welcome"
+                prefetch={false}
+                onClick={(event) => {
+                  if (steamConnecting || saving) {
+                    event.preventDefault();
+                    return;
+                  }
+                  startSteamConnection();
+                }}
+                aria-disabled={steamConnecting || saving}
+                tabIndex={steamConnecting || saving ? -1 : undefined}
+              >
+                {steamConnecting ? "Opening Steam..." : "Connect Steam"}
+              </Link>
+            </Button>
+            <p className="text-xs text-muted-foreground">You can connect it later from Settings.</p>
+          </div>
+        )}
+        {steamStatus && (
+          <div
+            className={steamStatus === "error" ? "rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm" : "rounded-md border border-border bg-muted/40 p-3 text-sm"}
+            role={steamStatus === "error" ? "alert" : "status"}
+            aria-live="polite"
+          >
+            {steamStatus === "connected" && "Steam account linked. Review your choices, then save setup when ready."}
+            {steamStatus === "cancelled" && "Steam connection was cancelled. Your setup choices are still available."}
+            {steamStatus === "error" && "Steam could not be connected. Your setup choices are still available; you can try again or continue without Steam."}
+          </div>
+        )}
+        <Button type="button" variant="outline" onClick={() => void save()} disabled={saving || steamConnecting}>
+          {saving ? "Saving..." : "Continue without Steam"}
+        </Button>
+      </section>
       <Button type="button" onClick={() => void save()} disabled={saving}>{saving ? "Saving..." : "Save setup"}</Button>
     </div>
   );
