@@ -75,7 +75,7 @@ export function PersonalDataCard({
 
   return (
     <SectionCard
-        title="Personal data"
+        title="Data export and restore"
       description="Download your catalog, wishlist, and platform decisions as a JSON file, or restore them from one."
     >
       <div className="grid gap-4">

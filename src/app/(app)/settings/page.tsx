@@ -84,7 +84,6 @@ export default async function SettingsPage() {
         onboardingCompleted: true,
         priceCountry: true,
         displayCurrency: true,
-        timeZone: true,
         durationProfile: true,
       },
     }),
@@ -174,11 +173,6 @@ export default async function SettingsPage() {
           connected={Boolean(steamConnection)}
           steamId64={steamConnection?.steamId64 ?? null}
         />
-        <WishlistImportStatusCard
-          openReviews={openWishlistImportReviews}
-          ignored={ignoredWishlistImports}
-        />
-        <UnresolvedDlcReviewCard items={unresolvedDlcs} baseGames={baseGames} />
         <AlternativeSourcesCard sources={sources} />
       </CollapsibleSettingsSection>
       <CollapsibleSettingsSection title="Recommendations">
@@ -188,7 +182,16 @@ export default async function SettingsPage() {
           preferences={preferences}
         />
       </CollapsibleSettingsSection>
-      <CollapsibleSettingsSection title="Provider queues">
+      <CollapsibleSettingsSection title="Provider workers and services">
+        {openWishlistImportReviews > 0 && (
+          <WishlistImportStatusCard
+            openReviews={openWishlistImportReviews}
+            ignored={ignoredWishlistImports}
+          />
+        )}
+        {unresolvedDlcs.length > 0 && (
+          <UnresolvedDlcReviewCard items={unresolvedDlcs} baseGames={baseGames} />
+        )}
         <PriceStatusCard lastRun={latestPriceRefresh} />
         <CompatibilitySweepPanel
           compatibilityActive={appSettings ? isCompatibilityActive(appSettings) : false}
@@ -210,7 +213,7 @@ export default async function SettingsPage() {
           wishlistEntryIds={wishlistEnrichmentEntries.map((entry) => entry.id)}
         />
       </CollapsibleSettingsSection>
-      <CollapsibleSettingsSection title="Personal data">
+      <CollapsibleSettingsSection title="Data export and restore">
         <PersonalDataCard
           gameCount={exportGameCount}
           wishlistCount={exportWishlistCount}

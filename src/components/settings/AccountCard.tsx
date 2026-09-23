@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { SignOutIcon } from "@phosphor-icons/react";
 import { updateOsSetup, updatePricePreferences } from "@/actions/settings";
 import { buildOsSetupConsequenceSummary, type OsSetup } from "@/lib/os-setup";
-import { DEFAULT_PRICE_PREFERENCES, type PricePreferences } from "@/lib/price-preferences";
+import { DEFAULT_PRICE_PREFERENCES, marketForCountry, type PricePreferences } from "@/lib/price-preferences";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -31,7 +31,6 @@ interface EnvironmentSettings {
   hasWindowsFallback: boolean;
   handheldOs: OsSetup["handheldOs"];
   onboardingCompleted: boolean;
-  timeZone: string | null;
 }
 
 function setupFromSettings(settings: EnvironmentSettings | null, pricePreferences: PricePreferences): OsSetup {
@@ -81,7 +80,7 @@ export function AccountCard({
     { label: "Handheld OS", value: environmentLabel(savedSetup.handheldOs) },
     { label: "Price country", value: savedSetup.priceCountry ?? DEFAULT_PRICE_PREFERENCES.priceCountry },
     { label: "Display currency", value: savedSetup.displayCurrency ?? DEFAULT_PRICE_PREFERENCES.displayCurrency },
-    { label: "Time zone", value: settings?.timeZone ?? "America/Mexico_City" },
+    { label: "Region", value: marketForCountry(savedSetup.priceCountry).label },
   ];
 
   const beginEdit = () => {
@@ -163,7 +162,7 @@ export function AccountCard({
             </div>
             <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen) { setDraft(savedSetup); setConfirming(false); } setOpen(nextOpen); }}>
               <DialogTrigger asChild>
-                <Button type="button" variant="outline" size="sm" onClick={beginEdit}>Edit</Button>
+                <Button type="button" variant="default" size="sm" onClick={beginEdit}>Edit</Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-lg">
                 {!confirming ? (
