@@ -5,9 +5,8 @@ import { prisma } from "@/lib/prisma";
 
 export default async function WelcomePage() {
   await requireUser();
-  const [settings, gameCount, steamConnection] = await Promise.all([
+  const [settings, steamConnection] = await Promise.all([
     prisma.appSettings.findUnique({ where: { id: 1 }, select: { onboardingCompleted: true } }),
-    prisma.game.count({ where: { type: "BASE_GAME" } }),
     prisma.steamConnection.findUnique({
       where: { id: 1 },
       select: { steamId64: true },
@@ -27,10 +26,7 @@ export default async function WelcomePage() {
           Examples: Linux includes Bazzite or Ubuntu, while Windows includes Windows 10 or 11. A Steam Deck is a Linux handheld; a ROG Ally is a Windows handheld.
         </p>
         <div className="mt-6">
-          <WelcomeSetupForm
-            gameCount={gameCount}
-            steamConnection={steamConnection}
-          />
+          <WelcomeSetupForm steamConnection={steamConnection} />
         </div>
       </section>
     </main>

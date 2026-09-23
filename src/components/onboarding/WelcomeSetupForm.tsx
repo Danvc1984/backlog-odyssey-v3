@@ -38,17 +38,14 @@ type WelcomeSteamConnection = { steamId64: string } | null;
 type SteamWelcomeStatus = NonNullable<ReturnType<typeof parseSteamCallbackStatus>>;
 
 export function WelcomeSetupForm({
-  gameCount,
   steamConnection,
 }: {
-  gameCount: number;
   steamConnection: WelcomeSteamConnection;
 }) {
   const [primaryOs, setPrimaryOs] = useState<OsSetup["primaryOs"]>("LINUX");
   const [hasWindowsFallback, setHasWindowsFallback] = useState(false);
   const [handheldOs, setHandheldOs] = useState<OsSetup["handheldOs"]>("NONE");
   const [saving, setSaving] = useState(false);
-  const [completed, setCompleted] = useState(false);
   const [durationProfile, setDurationProfile] = useState<DurationProfile>("NORMALLY");
   const [priceCountry, setPriceCountry] = useState<PricePreferences["priceCountry"]>("MX");
   const [displayCurrency, setDisplayCurrency] = useState<PricePreferences["displayCurrency"]>("MXN");
@@ -83,43 +80,13 @@ export function WelcomeSetupForm({
       toast.error(result.error ?? "Could not save setup");
       return;
     }
-    setCompleted(true);
     toast.success("Setup saved");
+    router.push("/today");
   };
 
   const startSteamConnection = () => {
     setSteamConnecting(true);
   };
-
-  if (completed) {
-    return (
-      <div className="grid gap-4">
-        <div className="rounded-lg border border-signal/30 bg-signal/10 p-4 text-sm">
-          Your environment is ready. You can change it later in Settings.
-        </div>
-        {gameCount >= 5 ? (
-          <div className="grid gap-3 rounded-lg border border-border p-4">
-            <div>
-              <h2 className="font-medium">Set up your taste?</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Answer a few questions to give recommendations a starting point.</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button asChild><Link href="/today#taste-setup">Start now</Link></Button>
-              <Button asChild variant="outline"><Link href="/today">Not now</Link></Button>
-            </div>
-          </div>
-        ) : (
-          <div className="grid gap-3 rounded-lg border border-border p-4">
-            <p className="text-sm text-muted-foreground">Import or add games in your Library before setting up your taste.</p>
-            <div className="flex flex-wrap gap-2">
-              <Button asChild><Link href="/library">Go to Library</Link></Button>
-              <Button asChild variant="outline"><Link href="/today">Continue to Today</Link></Button>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
 
   return (
     <div className="grid gap-5">
