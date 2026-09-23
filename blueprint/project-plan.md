@@ -103,6 +103,12 @@ registration, and collaboration are outside the MVP.
   display label or catalog/wishlist notes; reusable alternative-source
   definitions are managed only in Settings, while games select from saved
   sources.
+- Library and Game Detail renewal before deployment: a hero with links to each
+  actionable detail section; ordered game details, personal data, tags,
+  platforms, DLC, compatibility, artwork, and delete sections; richer personal
+  data controls with `Planned for my handheld`; combined title and IGDB
+  maintenance; duplicate-review and merge-platform correctness; Library ProtonDB
+  detail links; and accurate completed-game backlog progress.
 - Deployment and CI readiness as the final planned milestone, after the
   sign-in introduction, without making it an inflexible MVP gate.
 
@@ -358,9 +364,10 @@ The merge flow has two phases:
    - Starts a short Undo window.
 
 Relations use conservative union behavior. Compatible relations are merged and
-deduplicated. Unresolvable relations become explicit conflicts. DLC from the
-discarded base is reassigned to the survivor; equivalent DLC is not deleted
-automatically.
+deduplicated, including semantically identical platform assignments created by
+system-added and manually added Steam records. Unresolvable relations become
+explicit conflicts. DLC from the discarded base is reassigned to the survivor;
+equivalent DLC is not deleted automatically.
 
 Delete is available for games and individual DLC. Deleting a base game cascades
 to its DLC and clearly lists those DLC in the final confirmation. No second

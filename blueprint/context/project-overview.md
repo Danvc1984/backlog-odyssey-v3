@@ -1,6 +1,6 @@
 # Backlog Odyssey - Project Overview
 
-<!-- blueprint:source-hash 6e478dfb21f2c47d4dca1df31e1e5b3fdbf783927f767029d4da4b6a8ee393c6 -->
+<!-- blueprint:source-hash 973f24d8f0c47f8df322ea7fdfe550a7bb6e2ca9b25a3978887136af1de7b3d0 -->
 
 > A private, single-user gaming library and decision assistant for choosing what to play and buy across a configured PC and handheld setup, with selectable market and display-currency preferences.
 
@@ -36,8 +36,9 @@ Completed work establishes the authenticated app, catalog, Steam imports, wishli
 16. **32. Unified tags and shelves** - tag-only manual grouping, empty tag shelves, centralized create/rename/merge/delete, shelf sorting, and capped personal-tag Tune targeting.
 17. **33. Sign-in introduction demo** - completed playful, responsive sign-in panel with icon-led branding, the approved tagline, and an accessible static story from manual or Steam-imported backlog addition through personal tracking to explainable recommendation using curated recognizable games.
 18. **34. Welcome regional prices and optional Steam connection** - completed regional market/currency preferences, ITAD querying, Frankfurter v2 presentation-only FX conversion, and optional Steam OpenID connect-or-skip in Welcome.
-19. **35. Deployment and CI readiness** - pending Vercel/Supabase review, protected daily cron, production checks, one reproducible Verify command, and optional automatic checks.
-20. **36. Today taste setup and recommendation gating** - pending pre-deployment renewal: recommendations stay hidden until Taste Setup is saved from a library of at least ten games; random picks collect independent prior-play, stronger-interest, and play-soon signals; empty wishlists omit Buy recommendations; the outdated preferred-environment field is removed; and Today tag/shelf styling follows `blueprint/reference/today-taste-setup-reference.png`.
+19. **36. Today taste setup and recommendation gating** - completed required Taste Setup with a ten-game library threshold, random independent prior-play, stronger-interest, and play-soon signals, recommendation gating, empty-wishlist Buy omission, preferred-environment removal, and Today tag/shelf styling.
+20. **37. Library and game-detail renewal** - pending detail-page reorganization and personal-data presentation, merged title/IGDB maintenance, section links and feedback cleanup, duplicate-review and platform-merge fixes, ProtonDB deep links, and completed-game backlog progress correction.
+21. **35. Deployment and CI readiness** - pending Vercel/Supabase review, protected daily cron, production checks, one reproducible Verify command, and optional automatic checks. This is the final planned step.
 
 ## Data model
 
@@ -91,6 +92,7 @@ The shapes below describe the intended post-feature-36 model. Provider evidence 
 - Source definitions are managed in Settings; game surfaces assign existing active sources and use canonical names.
 - Recommendations are deterministic and explain their factors. Compatibility is normally soft evidence; Linux without a Windows fallback may hard-exclude fallback-needing play candidates, subject to the Windows-handheld rescue.
 - Provider work is asynchronous, persistent, rate-limited, and must not destroy valid personal or prior provider data on failure.
+- A duplicate merge unions compatible platform assignments and deduplicates semantically identical records, including system-added and manually added Steam availability.
 
 ## Tech stack
 

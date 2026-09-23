@@ -793,13 +793,6 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
     Steam OpenID connection as an explicit optional Welcome action with a skip
     path. A connection attempt, cancellation, or failure never blocks setup.
 
-- [ ] 35. **Deployment and CI readiness** - Vercel/Supabase environment
-  review, Vercel Cron daily run at 06:00 UTC-6 with `CRON_SECRET` enqueueing
-  the price refresh plus a compatibility freshness sweep for catalog and
-  wishlist evidence older than the 180-day window, queue overlap protection,
-  production build, smoke test, one reproducible Verify command, and automatic
-  checks when configured; final planned step but not an inflexible feature gate
-
 - [x] 36. **Today taste setup and recommendation gating** - pre-deployment
   renewal of Today: hide all recommendation surfaces until a saved Taste Setup;
   require at least ten library base games before setup can begin; randomly pick
@@ -809,3 +802,19 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   replace without negative feedback; remove preferred environment; omit Buy
   recommendations with an empty wishlist; and align the second Today row and
   personal tag shelves with the provided visual reference.
+
+- [ ] 37. **Library and game-detail renewal** - reorganize Game Detail around
+  hero, details, personal data, tags, platforms, DLC, compatibility, artwork,
+  and delete; improve personal-data presentation and relocate/rename controls;
+  consolidate title editing with IGDB enrichment; add hero links to actionable
+  sections; remove duplicate success feedback; refresh duplicate-review
+  compatibility and merge platform deduplication; link Library ProtonDB badges
+  to Game Detail compatibility; and correct Library backlog progress for
+  completed games.
+
+- [ ] 35. **Deployment and CI readiness** - Vercel/Supabase environment
+  review, Vercel Cron daily run at 06:00 UTC-6 with `CRON_SECRET` enqueueing
+  the price refresh plus a compatibility freshness sweep for catalog and
+  wishlist evidence older than the 180-day window, queue overlap protection,
+  production build, smoke test, one reproducible Verify command, and automatic
+  checks when configured; final planned step but not an inflexible feature gate
