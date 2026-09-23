@@ -26,9 +26,10 @@ import { GAME_EXPERIENCE_LABELS, PERSONAL_FIELD_HELP } from "@/lib/personal-fiel
 interface EditWishlistDialogProps {
   entry: { id: string; name: string; type: string; baseGameId: string | null; interest: number | null; gameExperience: string | null; handheldSuitable: boolean | null };
   baseGames: { id: string; name: string }[];
+  compactTrigger?: boolean;
 }
 
-export function EditWishlistDialog({ entry, baseGames }: EditWishlistDialogProps) {
+export function EditWishlistDialog({ entry, baseGames, compactTrigger = false }: EditWishlistDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(entry.name);
@@ -121,7 +122,14 @@ export function EditWishlistDialog({ entry, baseGames }: EditWishlistDialogProps
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button type="button" variant="secondary" size="lg">Edit</Button>
+        <Button
+          type="button"
+          variant={compactTrigger ? "outline" : "secondary"}
+          size="lg"
+          className={compactTrigger ? "w-full" : undefined}
+        >
+          Edit
+        </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>

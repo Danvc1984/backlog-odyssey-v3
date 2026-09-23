@@ -19,6 +19,8 @@ const INTEREST_OPTIONS = [
   })),
 ];
 
+const FILTER_KEYS = ["q", "type", "interest", "sort"] as const;
+
 export function WishlistFilterBar() {
   const router = useRouter();
   const pathname = usePathname();
@@ -30,6 +32,7 @@ export function WishlistFilterBar() {
       const params = new URLSearchParams(searchParams.toString());
       if (!value || value === "ALL") params.delete(key);
       else params.set(key, value);
+      params.delete("page");
       router.replace(`${pathname}${params.size > 0 ? `?${params}` : ""}`);
     },
     [pathname, router, searchParams],
@@ -42,6 +45,16 @@ export function WishlistFilterBar() {
     params.delete("page");
     router.replace(`${pathname}${params.size > 0 ? `?${params}` : ""}`);
   };
+
+  const resetFilters = () => {
+    setQuery("");
+    const params = new URLSearchParams(searchParams.toString());
+    FILTER_KEYS.forEach((key) => params.delete(key));
+    params.delete("page");
+    router.replace(`${pathname}${params.size > 0 ? `?${params}` : ""}`);
+  };
+
+  const hasActiveFilters = FILTER_KEYS.some((key) => searchParams.has(key));
 
   return (
     <div className="flex flex-wrap items-center gap-2" aria-label="Wishlist filters">
@@ -112,6 +125,14 @@ export function WishlistFilterBar() {
         )}
       >
         Biggest discount
+      </button>
+      <button
+        type="button"
+        onClick={resetFilters}
+        disabled={!hasActiveFilters}
+        className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        Reset filters
       </button>
     </div>
   );

@@ -194,7 +194,7 @@ export function IgdbEnrichmentPanel({ gameId, catalogName, initialJob, hasIgdbSn
 
   const canStart = !job || job.status === "SUCCEEDED" || job.status === "FAILED";
   return (
-    <SectionCard title="Title and IGDB" id="igdb-enrichment-heading" sectionId="maintenance" description="Keep the catalog title and matched game information together." status={<StatusPill tone={job?.status === "FAILED" ? "danger" : job?.status === "SUCCEEDED" ? "ok" : job ? "warning" : "neutral"}>{job?.status?.replaceAll("_", " ") ?? "Ready"}</StatusPill>}>
+    <SectionCard title="IGDB enrichment" id="igdb-enrichment-heading" sectionId="maintenance" description="Keep the catalog title and matched game information together." status={<StatusPill tone={job?.status === "FAILED" ? "danger" : job?.status === "SUCCEEDED" ? "ok" : job ? "warning" : "neutral"}>{job?.status?.replaceAll("_", " ") ?? "Ready"}</StatusPill>}>
       <div className="mb-5 grid gap-3 border-b border-border pb-5">
         <h3 className="text-sm font-semibold">Catalog title</h3>
         <GameNameForm gameId={gameId} initialName={catalogName} />

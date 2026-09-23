@@ -235,6 +235,16 @@ export default async function WishlistDetailPage({
           handheldSuitable={entry.handheldSuitable}
           selectedOffer={offerView.selected}
           alternativeSources={sourceOptions}
+          compatibilityActive={compatibilityGate.active}
+          compatibilityEligible={eligibility.eligible}
+          hasArtwork={Boolean(
+            metadata && (
+              metadata.coverUrl ||
+              metadata.artworkUrls.length > 0 ||
+              (metadata.conceptArtUrls?.length ?? 0) > 0 ||
+              screenshots.length > 0
+            ),
+          )}
         />
 
         {metadata ? (
@@ -266,6 +276,7 @@ export default async function WishlistDetailPage({
             </span>
           }
           id="offers"
+          sectionId="offers"
           description={
             <>
               Cheapest valid offers via{" "}
@@ -305,6 +316,7 @@ export default async function WishlistDetailPage({
         <SectionCard
           title="Personal fit"
           id="personal-fit"
+          sectionId="personal-fit"
           description="Keep personal fit and store identity together."
           status={
             <StatusPill>

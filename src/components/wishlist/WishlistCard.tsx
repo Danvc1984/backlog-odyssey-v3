@@ -96,7 +96,15 @@ export function WishlistCard({
                 entryName={entry.name}
                 interest={entry.interest}
               />
-              {entry.compatTag && <ProtonDbTag tag={entry.compatTag} />}
+              {entry.compatTag && (
+                <Link
+                  href={`/wishlist/${entry.id}#compatibility`}
+                  aria-label={`View compatibility for ${entry.name}`}
+                  className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                >
+                  <ProtonDbTag tag={entry.compatTag} />
+                </Link>
+              )}
             </div>
             <div className="shrink-0">
               <WishlistEntryActions
@@ -179,7 +187,15 @@ export function WishlistCard({
               entryName={entry.name}
               interest={entry.interest}
             />
-            {entry.compatTag && <ProtonDbTag tag={entry.compatTag} />}
+            {entry.compatTag && (
+              <Link
+                href={`/wishlist/${entry.id}#compatibility`}
+                aria-label={`View compatibility for ${entry.name}`}
+                className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+              >
+                <ProtonDbTag tag={entry.compatTag} />
+              </Link>
+            )}
           </div>
           <WishlistEntryActions
             entry={entry}

@@ -157,10 +157,10 @@ export default async function WishlistPage({
   const orderedEntries = sort === "discount"
     ? sortWishlistEntries(matchedEntries)
     : matchedEntries;
-  const baseGameCount = orderedEntries.filter((entry) => entry.type === "BASE_GAME").length;
-  const dlcCount = orderedEntries.filter((entry) => entry.type === "DLC").length;
-  const discountedCount = orderedEntries.filter((entry) => (entry.offerView.selected?.discount ?? 0) > 0).length;
-  const needsAttentionCount = orderedEntries.filter((entry) => entry.steamAppId === null).length;
+  const baseGameCount = entriesWithOfferViews.filter((entry) => entry.type === "BASE_GAME").length;
+  const dlcCount = entriesWithOfferViews.filter((entry) => entry.type === "DLC").length;
+  const discountedCount = entriesWithOfferViews.filter((entry) => (entry.offerView.selected?.discount ?? 0) > 0).length;
+  const needsAttentionCount = entriesWithOfferViews.filter((entry) => entry.steamAppId === null).length;
   const range = resolveRange(orderedEntries.length, rawPage, size);
   const paginatedEntries = orderedEntries.slice(
     (range.page - 1) * size,

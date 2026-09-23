@@ -44,7 +44,9 @@ export function DeleteWishlistEntrySection({
 
   return (
     <SectionCard
-        title="Remove from wishlist"
+      title="Remove from wishlist"
+      id="delete-heading"
+      sectionId="delete"
       description="Permanently remove this entry and its locally stored wishlist data."
       tone="danger"
       aside={
