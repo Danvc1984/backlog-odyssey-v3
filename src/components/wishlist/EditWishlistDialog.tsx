@@ -124,11 +124,11 @@ export function EditWishlistDialog({ entry, baseGames, compactTrigger = false }:
       <DialogTrigger asChild>
         <Button
           type="button"
-          variant={compactTrigger ? "outline" : "secondary"}
+          variant="secondary"
           size="lg"
-          className={compactTrigger ? "w-full" : undefined}
+          className={compactTrigger ? "bg-card-alt px-3 text-xs hover:bg-muted" : undefined}
         >
-          Edit
+          {compactTrigger ? `Edit ${entry.type === "DLC" ? "DLC" : "game"}` : "Edit"}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">

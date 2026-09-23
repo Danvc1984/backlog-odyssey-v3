@@ -10,6 +10,7 @@ import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { silentlyRefreshWishlistCompatibility } from "@/lib/wishlist-compatibility-runner";
 import {
+  deleteUnresolvedDlc,
   discardUnresolvedDlc,
   getUnresolvedSteamDlcs,
   linkUnresolvedDlc,
@@ -214,6 +215,13 @@ describe("unresolved DLC actions", () => {
       where: { id: "queue-1" },
       data: { status: "PENDING", discardedAt: null },
     });
+  });
+
+  it("permanently removes a discarded DLC", async () => {
+    const result = await deleteUnresolvedDlc({ unresolvedId: "queue-1" });
+
+    expect(result).toEqual({ success: true, data: {}, error: null });
+    expect(deleteQueue).toHaveBeenCalledWith({ where: { id: "queue-1" } });
   });
 
   it("rejects invalid input before database access", async () => {

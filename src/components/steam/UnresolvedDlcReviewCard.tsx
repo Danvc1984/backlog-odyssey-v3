@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckIcon, LinkSimpleIcon, ArrowCounterClockwiseIcon, TrashIcon, MagicWandIcon } from "@phosphor-icons/react";
+import { CheckIcon, LinkSimpleIcon, ArrowCounterClockwiseIcon, TrashIcon, XIcon, MagicWandIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import {
+  deleteUnresolvedDlc,
   discardUnresolvedDlc,
   linkUnresolvedDlc,
   restoreUnresolvedDlc,
@@ -139,6 +140,18 @@ export function UnresolvedDlcReviewCard({
     router.refresh();
   };
 
+  const deleteItem = async (item: UnresolvedDlcItem) => {
+    setWorkingId(item.id);
+    const result = await deleteUnresolvedDlc({ unresolvedId: item.id });
+    setWorkingId(null);
+    if (!result.success) {
+      setError(result.error ?? "Failed to remove DLC");
+      return;
+    }
+    toast.success(`Removed "${item.name}"`);
+    router.refresh();
+  };
+
   return (
     <SectionCard
         title="Unresolved Steam DLC"
@@ -198,16 +211,30 @@ export function UnresolvedDlcReviewCard({
                 {discardedItems.map((item) => (
                   <li key={item.id} className="flex flex-wrap items-center justify-between gap-3 text-sm">
                     <span>{item.name}</span>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={workingId === item.id}
-                      onClick={() => void updateStatus(item, "RESTORE")}
-                    >
-                      <ArrowCounterClockwiseIcon />
-                      Restore
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={workingId === item.id}
+                        onClick={() => void updateStatus(item, "RESTORE")}
+                      >
+                        <ArrowCounterClockwiseIcon />
+                        Restore
+                      </Button>
+                      <Button
+                        type="button"
+                        size="icon-sm"
+                        variant="ghost"
+                        className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        disabled={workingId === item.id}
+                        onClick={() => void deleteItem(item)}
+                        aria-label={`Remove ${item.name}`}
+                        title="Remove from this list"
+                      >
+                        <XIcon />
+                      </Button>
+                    </div>
                   </li>
                 ))}
               </ul>

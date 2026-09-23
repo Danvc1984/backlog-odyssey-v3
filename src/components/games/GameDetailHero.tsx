@@ -32,7 +32,7 @@ export function GameDetailHero({
 
   return (
     <section
-      className="game-detail-hero grid overflow-visible rounded-lg border border-border bg-card shadow-card lg:grid-cols-[minmax(15rem,0.8fr)_minmax(0,1.4fr)]"
+      className="game-detail-hero overflow-hidden rounded-lg border border-border bg-card shadow-card"
       aria-labelledby="game-detail-title"
     >
       <DetailHeroArt
@@ -41,16 +41,16 @@ export function GameDetailHero({
         imageUrl={imageUrl}
         hideLabel
         fit="cover"
-        className="aspect-[16/10] min-h-64 self-start rounded-t-lg lg:rounded-l-lg lg:rounded-tr-none"
+        className="aspect-[24/10] min-h-44 rounded-t-lg"
       />
-      <div className="game-detail-hero__content flex min-w-0 flex-col justify-between gap-5 rounded-b-lg p-6 md:p-8 lg:rounded-r-lg lg:rounded-bl-none">
+      <div className="game-detail-hero__content flex min-w-0 flex-col justify-between gap-5 rounded-b-lg p-6 md:p-8">
         <h1
           id="game-detail-title"
           className="text-[clamp(2rem,4.5vw,4rem)] font-extrabold leading-[0.92] tracking-[-0.08em]"
         >
           {name}
         </h1>
-        <div className="mt-2 flex flex-wrap items-center gap-3">
+        <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
           {!isDlc && (isInLibrary ? (
             <LibraryInterestRating gameId={id} gameName={name} interest={interest} />
           ) : (
@@ -58,15 +58,12 @@ export function GameDetailHero({
               {interest ? `${"★".repeat(interest)}${"☆".repeat(5 - interest)}` : "☆☆☆☆☆"}
             </span>
           ))}
-          <span className="technical-label text-muted-foreground">Added {addedAt}</span>
-        </div>
-        <div className="game-detail-hero__meta flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
+          <span className="technical-label">Added {addedAt}</span>
           <span>
             <strong className="text-foreground">Type</strong> {type === "DLC" ? "DLC" : "Base game"}
           </span>
           <span>
-            <strong className="text-foreground">Origin</strong>
-            {origin.replaceAll("_", " ").toLowerCase()}
+            <strong className="text-foreground">Origin</strong> {origin.replaceAll("_", " ").toLowerCase()}
           </span>
         </div>
 
@@ -87,7 +84,21 @@ export function GameDetailHero({
             </Link>
           )}
 
-          <details className="group relative min-w-64 flex-1">
+          <div className="hidden flex-wrap items-start gap-2 lg:flex">
+            {!isDlc && (
+              <>
+                <Link href="#maintenance" className="inline-flex h-9 items-center justify-center rounded-[8px] border border-border-strong bg-card-alt px-3 text-xs font-bold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30">IGDB enrichment</Link>
+                <Link href="#tags" className="inline-flex h-9 items-center justify-center rounded-[8px] border border-border-strong bg-card-alt px-3 text-xs font-bold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30">Manage tags</Link>
+                <Link href="#availability" className="inline-flex h-9 items-center justify-center rounded-[8px] border border-border-strong bg-card-alt px-3 text-xs font-bold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30">Change platform</Link>
+                <Link href="#dlc" className="inline-flex h-9 items-center justify-center rounded-[8px] border border-border-strong bg-card-alt px-3 text-xs font-bold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30">DLC</Link>
+                {compatibilityActive && <Link href="#compatibility" className="inline-flex h-9 items-center justify-center rounded-[8px] border border-border-strong bg-card-alt px-3 text-xs font-bold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30">Compatibility</Link>}
+              </>
+            )}
+            {hasArtwork && <Link href="#artwork" className="inline-flex h-9 items-center justify-center rounded-[8px] border border-border-strong bg-card-alt px-3 text-xs font-bold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30">Artwork</Link>}
+            <Link href="#delete" className="inline-flex h-9 items-center justify-center rounded-[8px] border border-red-500/40 bg-red-500/10 px-3 text-xs font-bold text-red-700 transition-colors hover:bg-red-500/20 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-red-500/40 dark:text-red-300">Delete</Link>
+          </div>
+
+          <details className="group relative min-w-64 flex-1 lg:hidden">
             <summary className="relative flex h-9 w-full cursor-pointer list-none items-center justify-center rounded-lg border border-border bg-input px-2.5 text-sm font-bold text-foreground outline-none transition-colors focus-visible:border-signal focus-visible:ring-3 focus-visible:ring-signal/30 [&::-webkit-details-marker]:hidden">
               <span>More actions</span>
               <CaretDownIcon aria-hidden="true" className="absolute right-2 size-4 transition-transform group-open:rotate-180" />

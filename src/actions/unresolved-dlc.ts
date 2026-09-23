@@ -229,3 +229,24 @@ export async function restoreUnresolvedDlc(input: unknown) {
     };
   }
 }
+
+export async function deleteUnresolvedDlc(input: unknown) {
+  try {
+    await requireUser();
+    const parsed = unresolvedIdSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false as const, data: null, error: "Invalid input" };
+    }
+
+    const deleted = await prisma.unresolvedSteamDlc.delete({
+      where: { id: parsed.data.unresolvedId },
+    });
+    return { success: true as const, data: deleted, error: null };
+  } catch (err) {
+    return {
+      success: false as const,
+      data: null,
+      error: friendlyActionError(err, "Failed to remove unresolved DLC"),
+    };
+  }
+}
