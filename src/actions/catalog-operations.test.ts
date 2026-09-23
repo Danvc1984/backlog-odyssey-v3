@@ -584,6 +584,62 @@ describe("planMergeMutations", () => {
     expect(mutations.tagMoves.map((m) => m.key)).toEqual(["tag-1"]);
   });
 
+  it("deduplicates identical ROM and saved alternative-source rows", () => {
+    const gameA = makeGraphGame({
+      id: "game-a",
+      availability: [
+        {
+          id: "rom-a",
+          gameId: "game-a",
+          source: "ROM",
+          alternativeSourceId: null,
+          steamAppId: null,
+          steamPlaytimeTotal: null,
+          steamLastPlayed: null,
+        },
+        {
+          id: "source-a",
+          gameId: "game-a",
+          source: "OTHER_PLATFORM",
+          alternativeSourceId: "source-1",
+          steamAppId: null,
+          steamPlaytimeTotal: null,
+          steamLastPlayed: null,
+        },
+      ],
+    });
+    const gameB = makeGraphGame({
+      id: "game-b",
+      origin: "STEAM_IMPORT",
+      availability: [
+        {
+          id: "rom-b",
+          gameId: "game-b",
+          source: "ROM",
+          alternativeSourceId: null,
+          steamAppId: null,
+          steamPlaytimeTotal: null,
+          steamLastPlayed: null,
+        },
+        {
+          id: "source-b",
+          gameId: "game-b",
+          source: "OTHER_PLATFORM",
+          alternativeSourceId: "source-1",
+          steamAppId: null,
+          steamPlaytimeTotal: null,
+          steamLastPlayed: null,
+        },
+      ],
+    });
+
+    const mutations = run(gameA, gameB);
+
+    expect(mutations.availabilityMoves).toEqual([]);
+    expect(mutations.availabilityDeletes.map((move) => move.id)).toEqual(["rom-a", "source-a"]);
+    expect(mutations.availabilityMerges).toEqual([]);
+  });
+
   it("keeps the newest metadata snapshot per provider", () => {
     const newer = new Date("2026-02-01T00:00:00.000Z");
     const older = new Date("2025-01-01T00:00:00.000Z");

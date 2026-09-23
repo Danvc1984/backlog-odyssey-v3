@@ -7,7 +7,6 @@ import { TagsSection } from "@/components/games/TagsSection";
 import { DuplicateWarning } from "@/components/games/DuplicateWarning";
 import { DeleteGameDialog } from "@/components/games/DeleteGameDialog";
 import { AvailabilityEditor } from "@/components/games/AvailabilityEditor";
-import { GameNameForm } from "@/components/games/GameNameForm";
 import { MetadataSection } from "@/components/games/MetadataSection";
 import { IgdbEnrichmentPanel } from "@/components/games/IgdbEnrichmentPanel";
 import { HashScrollTarget } from "@/components/ui/HashScrollTarget";
@@ -251,6 +250,15 @@ export default async function GameDetailPage({
               ? (igdbPayload.artworkUrls[0] ?? igdbPayload.screenshots[0]?.image ?? igdbPayload.coverUrl ?? null)
             : null
         }
+        compatibilityActive={compatibilityGate.active}
+        hasArtwork={Boolean(
+          igdbPayload && (
+            igdbPayload.coverUrl ||
+            igdbPayload.artworkUrls.length > 0 ||
+            (igdbPayload.conceptArtUrls?.length ?? 0) > 0 ||
+            igdbPayload.screenshots.length > 0
+          ),
+        )}
       />
 
       
@@ -263,20 +271,11 @@ export default async function GameDetailPage({
         durationProfile={durationProfile}
       />
 
-      <SectionCard
-        title="Update Game Title"
-      >
-        {game.type === "DLC" && (
-          <div className="mb-4">
-            <ParentBaseGameBanner baseGame={game.baseGame} />
-          </div>
-        )}
-        <GameNameForm
-          key={game.name}
-          gameId={game.id}
-          initialName={game.name}
-        />
-      </SectionCard>
+      {game.type === "DLC" && (
+        <div>
+          <ParentBaseGameBanner baseGame={game.baseGame} />
+        </div>
+      )}
 
       <IgdbEnrichmentPanel
         gameId={game.id}
@@ -295,17 +294,13 @@ export default async function GameDetailPage({
           sectionId="personal-data"
           className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
           description="Keep your journey and preferences together."
-          status={
-            <StatusPill>
-              {game.libraryEntry ? "Saved" : "Not in library"}
-            </StatusPill>
-          }
         >
           <div
             id="play-state"
-            className="scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
+            aria-labelledby="journey-heading"
+            className="scroll-mt-6 rounded-lg border border-border bg-muted/20 p-4 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
           >
-            <h3 className="mb-3 text-base font-semibold">Journey</h3>
+            <h3 id="journey-heading" className="mb-3 text-base font-semibold">Journey</h3>
             <PlayStateSection
               gameId={game.id}
               libraryEntry={
@@ -317,6 +312,7 @@ export default async function GameDetailPage({
                       playSoon: game.libraryEntry.playSoon,
                       replayCandidate: game.libraryEntry.replayCandidate,
                       hidden: game.libraryEntry.hidden,
+                      handheldSuitable: game.libraryEntry.handheldSuitable,
                     }
                   : null
               }
@@ -324,9 +320,10 @@ export default async function GameDetailPage({
           </div>
           <div
             id="personal-fields"
-            className="mt-6 border-t border-border pt-6 scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
+            aria-labelledby="preferences-heading"
+            className="mt-4 rounded-lg border border-border bg-muted/20 p-4 scroll-mt-6 outline-none target:ring-2 target:ring-primary/30 target:ring-offset-2 target:ring-offset-background"
           >
-            <h3 className="mb-3 text-base font-semibold">Preferences</h3>
+            <h3 id="preferences-heading" className="mb-3 text-base font-semibold">Preferences</h3>
             <PersonalFieldsForm
               gameId={game.id}
               libraryEntry={
@@ -336,7 +333,6 @@ export default async function GameDetailPage({
                       interest: game.libraryEntry.interest,
                       rating: game.libraryEntry.rating,
                       gameExperience: game.libraryEntry.gameExperience,
-                      handheldSuitable: game.libraryEntry.handheldSuitable,
                     }
                   : null
               }
@@ -347,6 +343,76 @@ export default async function GameDetailPage({
             />
           </div>
         </SectionCard>
+      )}
+
+      {game.type === "BASE_GAME" && (
+      <SectionCard
+        title="Tags"
+        id="tags-heading"
+        sectionId="tags"
+        description="Personal markers for finding your way back to this game."
+        status={
+          <StatusPill>
+            {game.tags.length} tag{game.tags.length === 1 ? "" : "s"}
+          </StatusPill>
+        }
+      >
+        <TagsSection
+          gameId={game.id}
+          initialTags={game.tags.map((gt) => ({
+            id: gt.tag.id,
+            name: gt.tag.name,
+          }))}
+        />
+      </SectionCard>
+      )}
+
+      {game.type === "BASE_GAME" && (
+      <SectionCard
+        title="Platforms"
+        id="availability-heading"
+        sectionId="availability"
+        description={
+          <span>
+            Platforms where you can find this game. Manage reusable platform names in{" "}
+            <Link href="/settings#alternative-sources-heading" className="underline underline-offset-2">
+              Settings
+            </Link>.
+          </span>
+        }
+        status={
+          <StatusPill>
+            {game.availability.length} platform
+            {game.availability.length === 1 ? "" : "s"}
+          </StatusPill>
+        }
+      >
+        {game.externalIds[0] ? (
+          <p className="mb-3 inline-flex rounded-md border border-border px-2 py-1 text-xs text-muted-foreground">
+            Steam App {game.externalIds[0].externalId} confirmed
+          </p>
+        ) : (
+          <div className="mb-3">
+            <CatalogSteamIdentityForm gameId={game.id} gameName={game.name} />
+          </div>
+        )}
+        <AvailabilityEditor
+          gameId={game.id}
+          rows={game.availability}
+          savedSources={savedSources}
+        />
+      </SectionCard>
+      )}
+
+      {game.type === "BASE_GAME" && (
+        <DlcSection
+          baseGameId={game.id}
+          baseGameName={game.name}
+          baseGames={baseGames}
+          hasSteamAppId={hasSteamIdentity}
+          dlcs={dlcCards}
+          wishlistDlcs={wishlistDlcCards}
+        />
       )}
 
       {compatibilityGate.active && game.type === "BASE_GAME" && (
@@ -393,74 +459,6 @@ export default async function GameDetailPage({
         />
       )}
 
-      {game.type === "BASE_GAME" && (
-      <>
-      <SectionCard
-        title="Platforms"
-        id="availability"
-        description={
-          <span>
-            Platforms where you can find this game. Manage reusable platform names in{" "}
-            <Link href="/settings#alternative-sources-heading" className="underline underline-offset-2">
-              Settings
-            </Link>.
-          </span>
-        }
-        status={
-          <StatusPill>
-            {game.availability.length} platform
-            {game.availability.length === 1 ? "" : "s"}
-          </StatusPill>
-        }
-      >
-        {game.externalIds[0] ? (
-          <p className="mb-3 inline-flex rounded-md border border-border px-2 py-1 text-xs text-muted-foreground">
-            Steam App {game.externalIds[0].externalId} confirmed
-          </p>
-        ) : (
-          <div className="mb-3">
-            <CatalogSteamIdentityForm gameId={game.id} gameName={game.name} />
-          </div>
-        )}
-        <AvailabilityEditor
-          gameId={game.id}
-          rows={game.availability}
-          savedSources={savedSources}
-        />
-      </SectionCard>
-
-      <SectionCard
-        title="Tags"
-        description="Personal markers for finding your way back to this game."
-        status={
-          <StatusPill>
-            {game.tags.length} tag{game.tags.length === 1 ? "" : "s"}
-          </StatusPill>
-        }
-      >
-        <TagsSection
-          gameId={game.id}
-          initialTags={game.tags.map((gt) => ({
-            id: gt.tag.id,
-            name: gt.tag.name,
-          }))}
-        />
-      </SectionCard>
-
-      </>
-      )}
-
-      {game.type === "BASE_GAME" && (
-        <DlcSection
-          baseGameId={game.id}
-          baseGameName={game.name}
-          baseGames={baseGames}
-          hasSteamAppId={hasSteamIdentity}
-          dlcs={dlcCards}
-          wishlistDlcs={wishlistDlcCards}
-        />
-      )}
-
       <ScreenshotsSection
         id={game.id}
         title={game.name}
@@ -474,6 +472,8 @@ export default async function GameDetailPage({
 
       <SectionCard
         title={`Delete ${game.name}`}
+        id="delete-heading"
+        sectionId="delete"
         description="Removes this game and its attached records."
         tone="danger"
       >

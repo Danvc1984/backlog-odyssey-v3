@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { ArrowClockwiseIcon } from "@phosphor-icons/react";
 import {
   applyIgdbTitle,
@@ -12,6 +13,7 @@ import {
   selectIgdbMatch,
 } from "@/actions/igdb-enrichment";
 import { Button } from "@/components/ui/button";
+import { GameNameForm } from "@/components/games/GameNameForm";
 import { SectionCard, StatusPill } from "@/components/ui/detail-card";
 import type { IgdbEnrichmentJobView } from "@/lib/igdb-job-view";
 
@@ -32,13 +34,13 @@ interface JobEndpointResult {
 const ACTIVE_STATUSES = new Set(["QUEUED", "RUNNING", "RETRY_WAIT"]);
 const CANDIDATES_PER_PAGE = 10;
 
-function jobMessage(job: IgdbEnrichmentJobView): string {
+function jobMessage(job: IgdbEnrichmentJobView): string | null {
   switch (job.status) {
     case "QUEUED": return "Queued to contact IGDB.";
     case "RUNNING": return job.stage === "PERSISTING" ? "Saving matched IGDB metadata." : "Matching this game with IGDB.";
     case "RETRY_WAIT": return job.lastErrorMessage ?? "Waiting to retry IGDB.";
     case "AWAITING_MATCH": return "Choose the correct IGDB result to continue.";
-    case "SUCCEEDED": return "IGDB metadata is up to date.";
+    case "SUCCEEDED": return null;
     case "FAILED": return job.lastErrorMessage ?? "IGDB enrichment could not finish.";
   }
 }
@@ -184,6 +186,7 @@ export function IgdbEnrichmentPanel({ gameId, catalogName, initialJob, hasIgdbSn
     try {
       const result = await applyIgdbTitle({ gameId });
       if (!result.success) throw new Error(result.error ?? "Failed to apply IGDB title");
+      toast.success("Game title updated from IGDB");
       router.refresh();
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Failed to apply IGDB title"); }
     finally { setRunning(false); }
@@ -191,7 +194,11 @@ export function IgdbEnrichmentPanel({ gameId, catalogName, initialJob, hasIgdbSn
 
   const canStart = !job || job.status === "SUCCEEDED" || job.status === "FAILED";
   return (
-    <SectionCard title="Enrichment" id="igdb-enrichment-heading" description="Refresh matched game information." status={<StatusPill tone={job?.status === "FAILED" ? "danger" : job ? "warning" : "neutral"}>{job?.status?.replaceAll("_", " ") ?? "Ready"}</StatusPill>}>
+    <SectionCard title="Title and IGDB" id="igdb-enrichment-heading" sectionId="maintenance" description="Keep the catalog title and matched game information together." status={<StatusPill tone={job?.status === "FAILED" ? "danger" : job?.status === "SUCCEEDED" ? "ok" : job ? "warning" : "neutral"}>{job?.status?.replaceAll("_", " ") ?? "Ready"}</StatusPill>}>
+      <div className="mb-5 grid gap-3 border-b border-border pb-5">
+        <h3 className="text-sm font-semibold">Catalog title</h3>
+        <GameNameForm gameId={gameId} initialName={catalogName} />
+      </div>
       <div className="flex flex-wrap items-center justify-between gap-2"><div className="flex flex-wrap gap-2">
         {canStart && !pendingOverwrite && !hasIgdbSnapshot && <Button type="button" size="sm" disabled={running} onClick={() => void startEnrichment(false)}>{running ? "Starting..." : "Load IGDB metadata"}</Button>}
         {canStart && !pendingOverwrite && hasIgdbSnapshot && <Button type="button" size="sm" variant="outline" disabled={running} onClick={() => void startMatchReview()}>{running ? "Searching..." : "Choose another match"}</Button>}
@@ -201,7 +208,7 @@ export function IgdbEnrichmentPanel({ gameId, catalogName, initialJob, hasIgdbSn
       {igdbTitle && igdbTitle !== catalogName && <div className="mt-4 rounded-md border border-border p-3 text-sm"><p className="font-medium">IGDB title: {igdbTitle}</p><p className="mt-1 text-muted-foreground">Use it only if it is a better catalog name for this game.</p><Button type="button" size="sm" variant="outline" className="mt-3" disabled={running} onClick={() => void applyTitle()}>Use IGDB title</Button></div>}
       {pendingOverwrite && <div className="mt-4 rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm"><p className="font-medium">Replace the current IGDB metadata?</p><p className="mt-1 text-muted-foreground">The current snapshot stays visible unless the replacement is successfully saved.</p><div className="mt-3 flex flex-wrap gap-2"><Button type="button" size="sm" disabled={running} onClick={() => void startEnrichment(true)}>{running ? "Starting..." : "Replace metadata"}</Button><Button type="button" size="sm" variant="outline" disabled={running} onClick={() => setPendingOverwrite(false)}>Cancel</Button></div></div>}
 
-      {job && <div className="mt-4 space-y-3 text-sm"><div className="flex items-center justify-between gap-3"><p>{jobMessage(job)}</p><span className="rounded-md border border-border px-2 py-0.5 text-xs font-medium">{job.status.replaceAll("_", " ")}</span></div>
+      {job && <div className="mt-4 space-y-3 text-sm"><div className="flex items-center justify-between gap-3">{jobMessage(job) && <p>{jobMessage(job)}</p>}<span className="rounded-md border border-border px-2 py-0.5 text-xs font-medium">{job.status.replaceAll("_", " ")}</span></div>
         {(job.status === "QUEUED" || job.status === "RUNNING" || job.status === "RETRY_WAIT") && <><progress className="h-2 w-full overflow-hidden rounded-full" value={job.progress} max={100} aria-label="IGDB enrichment progress" /><div className="flex justify-between text-xs text-muted-foreground"><span>{job.progress}% complete</span>{countdown && <span>{countdown}</span>}</div></>}
         {job.status === "AWAITING_MATCH" && <div className="grid gap-2">{visibleCandidates.map((candidate) => <button key={candidate.id} type="button" disabled={running} onClick={() => void chooseMatch(candidate.id)} className="flex gap-3 rounded-md border border-border p-3 text-left transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"><span className="size-16 shrink-0 rounded bg-muted bg-cover bg-center" style={candidate.coverUrl ? { backgroundImage: `url(${candidate.coverUrl})` } : undefined} aria-hidden="true" /><span className="min-w-0"><span className="block font-medium">{candidate.name}</span><span className="block text-xs text-muted-foreground">{releaseDate(candidate.firstReleaseDate)}</span></span></button>)}<div className="flex items-center justify-between gap-2 pt-1"><Button type="button" size="sm" variant="outline" disabled={running || !hasPreviousCandidatePage} onClick={() => setCandidatePageIndex(Math.max(0, visibleCandidatePageIndex - 1))}>Previous results</Button>{(hasNextCandidatePage || job.hasMoreCandidates) && <Button type="button" size="sm" variant="outline" disabled={running} onClick={() => void nextCandidatePage()}>{hasNextCandidatePage ? "Next results" : "Load more results"}</Button>}</div><Button type="button" size="sm" variant="outline" disabled={running} onClick={() => void cancelMatchReview()}>None of these match</Button></div>}
         {selectedCandidateId !== null && job.status !== "AWAITING_MATCH" && job.status !== "SUCCEEDED" && <p className="text-xs text-muted-foreground">Manual IGDB selection submitted; the match is being verified.</p>}

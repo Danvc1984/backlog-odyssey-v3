@@ -21,7 +21,6 @@ type LibraryEntryData = {
   interest: number | null;
   rating: number | null;
   gameExperience: string | null;
-  handheldSuitable: boolean | null;
 };
 
 const PRIORITY_OPTIONS = [
@@ -55,9 +54,6 @@ export function PersonalFieldsForm({
   const [gameExperience, setGameExperience] = useState(
     libraryEntry?.gameExperience ?? "",
   );
-  const [handheldSuitable, setHandheldSuitable] = useState(
-    libraryEntry?.handheldSuitable === true,
-  );
   if (!libraryEntry) {
     return <p className="text-sm text-muted-foreground">Not in library</p>;
   }
@@ -76,7 +72,6 @@ export function PersonalFieldsForm({
         | "MULTIPLAYER_COOP"
         | "COUCH_GAMING"
         | "ON_THE_GO",
-      handheldSuitable: handheldSuitable ? true : null,
     });
 
     setSaving(false);
@@ -162,20 +157,9 @@ export function PersonalFieldsForm({
 
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
-        <Label className="flex items-center gap-2 text-sm font-medium">
-          <input
-            type="checkbox"
-            checked={handheldSuitable}
-            disabled={saving}
-            onChange={(event) => setHandheldSuitable(event.target.checked)}
-            className="size-4 accent-primary disabled:cursor-not-allowed disabled:opacity-50"
-          />
-          Handheld suitability
-          <InfoPopover label="Handheld suitability" content={PERSONAL_FIELD_HELP.handheldSuitable} />
-        </Label>
+      <div className="flex justify-end border-t border-border pt-3">
         <Button type="submit" disabled={saving} className="w-fit">
-          {saving ? "Saving..." : "Save"}
+          {saving ? "Saving..." : "Save preferences"}
         </Button>
       </div>
 

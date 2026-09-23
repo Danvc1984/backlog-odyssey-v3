@@ -27,6 +27,14 @@ function row(overrides: Partial<TodayDataHealthGameRow> = {}): TodayDataHealthGa
 }
 
 describe("computeActiveBacklogProgress", () => {
+  it("counts a currently completed game in the completed numerator", () => {
+    expect(
+      computeActiveBacklogProgress([
+        row({ libraryEntry: { playState: "COMPLETED", interest: 3, priority: "NONE", gameExperience: null } }),
+      ]),
+    ).toEqual({ completed: 1, inProgress: 0, notStarted: 0, total: 1 });
+  });
+
   it("excludes abandoned games from both the numerator and the denominator", () => {
     const rows = [
       row({ id: "a", libraryEntry: { playState: "ABANDONED", interest: 3, priority: "NONE", gameExperience: null } }),

@@ -227,7 +227,15 @@ function CardBody({
               gameName={entry.game.name}
               interest={entry.interest}
             />
-            {entry.compatTag && <ProtonDbTag tag={entry.compatTag} />}
+            {entry.compatTag && (
+              <Link
+                href={`/games/${entry.game.id}#compatibility`}
+                aria-label={`View compatibility for ${entry.game.name}`}
+                className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+              >
+                <ProtonDbTag tag={entry.compatTag} />
+              </Link>
+            )}
           </div>
           <MockActions gameId={entry.game.id} />
         </div>
@@ -280,7 +288,15 @@ export function LibraryGameCard({
                   gameName={entry.game.name}
                   interest={entry.interest}
                 />
-                {entry.compatTag && <ProtonDbTag tag={entry.compatTag} />}
+                {entry.compatTag && (
+                  <Link
+                    href={`/games/${entry.game.id}#compatibility`}
+                    aria-label={`View compatibility for ${entry.game.name}`}
+                    className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                  >
+                    <ProtonDbTag tag={entry.compatTag} />
+                  </Link>
+                )}
               </div>
             </div>
             <div className="shrink-0">

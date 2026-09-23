@@ -71,7 +71,7 @@ export function MetadataSection({
   };
 
   return (
-    <SectionCard title="Game details" id="igdb-metadata-heading">
+    <SectionCard title="Game details" id="igdb-metadata-heading" sectionId="details">
       {!payload ? (
         <div className="rounded-lg border border-dashed border-border p-4">
           <p className="text-sm font-medium">No metadata yet.</p>

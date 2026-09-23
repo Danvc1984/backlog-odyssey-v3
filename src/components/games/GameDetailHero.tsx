@@ -11,6 +11,8 @@ interface GameDetailHeroProps {
   interest: number | null;
   isInLibrary: boolean;
   imageUrl: string | null;
+  compatibilityActive: boolean;
+  hasArtwork: boolean;
 }
 
 export function GameDetailHero({
@@ -22,6 +24,8 @@ export function GameDetailHero({
   interest,
   isInLibrary,
   imageUrl,
+  compatibilityActive,
+  hasArtwork,
 }: GameDetailHeroProps) {
   const isDlc = type === "DLC";
 
@@ -65,28 +69,81 @@ export function GameDetailHero({
           </span>
         </div>
 
-        {!isDlc && (
-          <div className="flex flex-wrap gap-2">
+        <nav aria-label="Game detail actions" className="flex flex-wrap items-start gap-2">
+          {!isDlc ? (
             <Link
-              href="#play-state"
+              href="#personal-data"
               className="inline-flex h-9 items-center justify-center rounded-[8px] bg-primary px-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30"
             >
-              Change play state
+              Update play state / edit data
             </Link>
+          ) : (
             <Link
-              href="#personal-fields"
-              className="inline-flex h-9 items-center justify-center rounded-[8px] border border-border-strong bg-card px-3 text-sm font-bold transition-colors hover:bg-card-alt focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30"
+              href="#maintenance"
+              className="inline-flex h-9 items-center justify-center rounded-[8px] bg-primary px-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30"
             >
-              Edit personal fields
+              Edit title
             </Link>
-            <Link
-              href="#availability"
-              className="inline-flex h-9 items-center justify-center rounded-[8px] border border-border-strong bg-card px-3 text-sm font-bold transition-colors hover:bg-card-alt focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30"
-            >
-              Change platform
-            </Link>
-          </div>
-        )}
+          )}
+
+          <details className="relative">
+            <summary className="flex h-9 cursor-pointer list-none items-center justify-center rounded-[8px] border border-border-strong bg-card px-3 text-sm font-bold transition-colors hover:bg-card-alt focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30 [&::-webkit-details-marker]:hidden">
+              More actions
+            </summary>
+            <div className="mt-2 grid min-w-64 grid-cols-2 gap-2 rounded-lg border border-border bg-card p-2 shadow-lg sm:min-w-80 sm:grid-cols-3">
+              {!isDlc && (
+                <>
+                  <Link
+                    href="#maintenance"
+                    className="inline-flex h-9 items-center justify-center rounded-[8px] border border-border-strong bg-card-alt px-2 text-center text-xs font-bold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30"
+                  >
+                    Edit title
+                  </Link>
+                  <Link
+                    href="#tags"
+                    className="inline-flex h-9 items-center justify-center rounded-[8px] border border-border-strong bg-card-alt px-2 text-center text-xs font-bold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30"
+                  >
+                    Manage tags
+                  </Link>
+                  <Link
+                    href="#availability"
+                    className="inline-flex h-9 items-center justify-center rounded-[8px] border border-border-strong bg-card-alt px-2 text-center text-xs font-bold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30"
+                  >
+                    Change platform
+                  </Link>
+                  <Link
+                    href="#dlc"
+                    className="inline-flex h-9 items-center justify-center rounded-[8px] border border-border-strong bg-card-alt px-2 text-center text-xs font-bold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30"
+                  >
+                    DLC
+                  </Link>
+                  {compatibilityActive && (
+                    <Link
+                      href="#compatibility"
+                      className="inline-flex h-9 items-center justify-center rounded-[8px] border border-border-strong bg-card-alt px-2 text-center text-xs font-bold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30"
+                    >
+                      Compatibility
+                    </Link>
+                  )}
+                </>
+              )}
+              {hasArtwork && (
+                <Link
+                  href="#artwork"
+                  className="inline-flex h-9 items-center justify-center rounded-[8px] border border-border-strong bg-card-alt px-2 text-center text-xs font-bold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30"
+                >
+                  Artwork
+                </Link>
+              )}
+              <Link
+                href="#delete"
+                className="inline-flex h-9 items-center justify-center rounded-[8px] border border-red-500/40 bg-red-500/10 px-2 text-center text-xs font-bold text-red-700 transition-colors hover:bg-red-500/20 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-red-500/40 dark:text-red-300"
+              >
+                Delete
+              </Link>
+            </div>
+          </details>
+        </nav>
       </div>
     </section>
   );

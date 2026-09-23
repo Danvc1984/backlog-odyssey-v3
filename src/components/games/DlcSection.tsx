@@ -39,6 +39,8 @@ export function DlcSection({
   return (
     <SectionCard
         title="DLC & expansions"
+      id="dlc-heading"
+      sectionId="dlc"
       description="Acquired and wishlisted DLC."
       status={<StatusPill>{dlcs.length + wishlistDlcs.length} linked</StatusPill>}
     >

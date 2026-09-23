@@ -82,7 +82,7 @@ export function ScreenshotsSection({
   });
 
   return (
-    <SectionCard title="Artwork and screenshots">
+    <SectionCard title="Artwork and screenshots" id="artwork-heading" sectionId="artwork">
       <Carousel
         label="Artwork and screenshots"
         slides={slides}

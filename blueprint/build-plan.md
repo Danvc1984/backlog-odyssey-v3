@@ -803,7 +803,7 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   recommendations with an empty wishlist; and align the second Today row and
   personal tag shelves with the provided visual reference.
 
-- [ ] 37. **Library and game-detail renewal** - reorganize Game Detail around
+- [x] 37. **Library and game-detail renewal** - reorganize Game Detail around
   hero, details, personal data, tags, platforms, DLC, compatibility, artwork,
   and delete; improve personal-data presentation and relocate/rename controls;
   consolidate title editing with IGDB enrichment; add hero links to actionable

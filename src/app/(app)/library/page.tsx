@@ -19,6 +19,7 @@ import {
 } from "@/lib/system-collections"
 import { availabilitySourcePresentation } from "@/lib/sources/known-sources";
 import { deriveCompatTag } from "@/lib/protondb-tags";
+import { parseProtonDbSummary } from "@/lib/protondb-api";
 import { getCompatibilityGate } from "@/lib/compat-gate";
 import { igdbLibraryCardMetadataView } from "@/lib/card-metadata-view";
 import { ListPaginationControls } from "@/components/list/ListPaginationControls";
@@ -68,11 +69,54 @@ export default async function LibraryPage({
         gameBId: true,
         confidence: true,
         evidence: true,
-        gameA: { select: { id: true, name: true } },
-        gameB: { select: { id: true, name: true } },
+        gameA: {
+          select: {
+            id: true,
+            name: true,
+            externalIds: {
+              where: { namespace: "STEAM_APP" },
+              select: { externalId: true },
+            },
+            compatSnapshots: {
+              where: { provider: "PROTONDB" },
+              orderBy: { fetchedAt: "desc" },
+              take: 1,
+              select: { result: true },
+            },
+          },
+        },
+        gameB: {
+          select: {
+            id: true,
+            name: true,
+            externalIds: {
+              where: { namespace: "STEAM_APP" },
+              select: { externalId: true },
+            },
+            compatSnapshots: {
+              where: { provider: "PROTONDB" },
+              orderBy: { fetchedAt: "desc" },
+              take: 1,
+              select: { result: true },
+            },
+          },
+        },
       },
       orderBy: { id: "asc" },
     });
+
+    const compatibilityLabel = (game: (typeof openDuplicates)[number]["gameA"]): string => {
+      const appId = game.externalIds[0]?.externalId;
+      if (!appId) return "No Steam App ID";
+      const snapshot = game.compatSnapshots[0];
+      const summary = snapshot ? parseProtonDbSummary(appId, snapshot.result) : null;
+      return summary ? `ProtonDB ${summary.tier}` : "Not checked";
+    };
+    const duplicateRows = openDuplicates.map((duplicate) => ({
+      ...duplicate,
+      gameA: { ...duplicate.gameA, compatibility: compatibilityLabel(duplicate.gameA) },
+      gameB: { ...duplicate.gameB, compatibility: compatibilityLabel(duplicate.gameB) },
+    }));
 
     return (
       <div>
@@ -85,7 +129,7 @@ export default async function LibraryPage({
           </div>
           <CreateGameDialog />
         </div>
-        <DuplicatesList duplicates={openDuplicates} />
+        <DuplicatesList duplicates={duplicateRows} />
       </div>
     );
   }

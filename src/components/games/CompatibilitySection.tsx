@@ -170,6 +170,7 @@ export function CompatibilitySection({
     <SectionCard
         title="Compatibility"
       id="compatibility-heading"
+      sectionId="compatibility"
       aside={
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           {hasSteamIdentity && <span className={age !== null && age > 150 ? "text-warning-text" : undefined}>

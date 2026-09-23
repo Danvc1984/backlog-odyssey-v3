@@ -8,8 +8,8 @@ interface DuplicateReviewItem {
   gameBId: string;
   confidence: number | null;
   evidence: unknown;
-  gameA: { id: string; name: string };
-  gameB: { id: string; name: string };
+  gameA: { id: string; name: string; compatibility: string };
+  gameB: { id: string; name: string; compatibility: string };
 }
 
 function getEvidenceMethod(evidence: unknown): string {
@@ -47,12 +47,14 @@ export function DuplicatesList({ duplicates }: { duplicates: DuplicateReviewItem
       ) : (
         <div className="mt-6 overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-sm">
+            <caption className="sr-only">Possible duplicate games and their review evidence</caption>
             <thead>
               <tr className="border-b border-border text-left text-xs uppercase text-muted-foreground">
-                <th className="px-4 py-3 font-medium">Games</th>
-                <th className="px-4 py-3 font-medium">Confidence</th>
-                <th className="px-4 py-3 font-medium">Evidence</th>
-                <th className="px-4 py-3 font-medium" />
+                <th scope="col" className="px-4 py-3 font-medium">Games</th>
+                <th scope="col" className="px-4 py-3 font-medium">Compatibility</th>
+                <th scope="col" className="px-4 py-3 font-medium">Confidence</th>
+                <th scope="col" className="px-4 py-3 font-medium">Evidence</th>
+                <th scope="col" className="px-4 py-3 font-medium"><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
             <tbody>
@@ -68,12 +70,18 @@ export function DuplicatesList({ duplicates }: { duplicates: DuplicateReviewItem
                       </Link>
                     </div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 align-top">
+                    <div className="grid gap-2 text-xs">
+                      <span><span className="font-medium">{duplicate.gameA.name}:</span> {duplicate.gameA.compatibility}</span>
+                      <span><span className="font-medium">{duplicate.gameB.name}:</span> {duplicate.gameB.compatibility}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 align-top">
                     {duplicate.confidence === null
                       ? "-"
                       : `${Math.round(duplicate.confidence * 100)}%`}
                   </td>
-                  <td className="px-4 py-3">{getEvidenceMethod(duplicate.evidence)}</td>
+                  <td className="px-4 py-3 align-top">{getEvidenceMethod(duplicate.evidence)}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-2">
                       <MergeGamesDialog duplicateId={duplicate.id} />
