@@ -42,6 +42,7 @@ export type AppSettingsMinAggregateOutputType = {
   handheldOs: $Enums.HandheldOs | null
   onboardingCompleted: boolean | null
   priceCountry: string | null
+  displayCurrency: string | null
   timeZone: string | null
   wallpaperEnabled: boolean | null
   reducedData: boolean | null
@@ -60,6 +61,7 @@ export type AppSettingsMaxAggregateOutputType = {
   handheldOs: $Enums.HandheldOs | null
   onboardingCompleted: boolean | null
   priceCountry: string | null
+  displayCurrency: string | null
   timeZone: string | null
   wallpaperEnabled: boolean | null
   reducedData: boolean | null
@@ -78,6 +80,7 @@ export type AppSettingsCountAggregateOutputType = {
   handheldOs: number
   onboardingCompleted: number
   priceCountry: number
+  displayCurrency: number
   timeZone: number
   wallpaperEnabled: number
   reducedData: number
@@ -106,6 +109,7 @@ export type AppSettingsMinAggregateInputType = {
   handheldOs?: true
   onboardingCompleted?: true
   priceCountry?: true
+  displayCurrency?: true
   timeZone?: true
   wallpaperEnabled?: true
   reducedData?: true
@@ -124,6 +128,7 @@ export type AppSettingsMaxAggregateInputType = {
   handheldOs?: true
   onboardingCompleted?: true
   priceCountry?: true
+  displayCurrency?: true
   timeZone?: true
   wallpaperEnabled?: true
   reducedData?: true
@@ -142,6 +147,7 @@ export type AppSettingsCountAggregateInputType = {
   handheldOs?: true
   onboardingCompleted?: true
   priceCountry?: true
+  displayCurrency?: true
   timeZone?: true
   wallpaperEnabled?: true
   reducedData?: true
@@ -247,6 +253,7 @@ export type AppSettingsGroupByOutputType = {
   handheldOs: $Enums.HandheldOs
   onboardingCompleted: boolean
   priceCountry: string
+  displayCurrency: string
   timeZone: string
   wallpaperEnabled: boolean
   reducedData: boolean
@@ -288,6 +295,7 @@ export type AppSettingsWhereInput = {
   handheldOs?: Prisma.EnumHandheldOsFilter<"AppSettings"> | $Enums.HandheldOs
   onboardingCompleted?: Prisma.BoolFilter<"AppSettings"> | boolean
   priceCountry?: Prisma.StringFilter<"AppSettings"> | string
+  displayCurrency?: Prisma.StringFilter<"AppSettings"> | string
   timeZone?: Prisma.StringFilter<"AppSettings"> | string
   wallpaperEnabled?: Prisma.BoolFilter<"AppSettings"> | boolean
   reducedData?: Prisma.BoolFilter<"AppSettings"> | boolean
@@ -306,6 +314,7 @@ export type AppSettingsOrderByWithRelationInput = {
   handheldOs?: Prisma.SortOrder
   onboardingCompleted?: Prisma.SortOrder
   priceCountry?: Prisma.SortOrder
+  displayCurrency?: Prisma.SortOrder
   timeZone?: Prisma.SortOrder
   wallpaperEnabled?: Prisma.SortOrder
   reducedData?: Prisma.SortOrder
@@ -327,6 +336,7 @@ export type AppSettingsWhereUniqueInput = Prisma.AtLeast<{
   handheldOs?: Prisma.EnumHandheldOsFilter<"AppSettings"> | $Enums.HandheldOs
   onboardingCompleted?: Prisma.BoolFilter<"AppSettings"> | boolean
   priceCountry?: Prisma.StringFilter<"AppSettings"> | string
+  displayCurrency?: Prisma.StringFilter<"AppSettings"> | string
   timeZone?: Prisma.StringFilter<"AppSettings"> | string
   wallpaperEnabled?: Prisma.BoolFilter<"AppSettings"> | boolean
   reducedData?: Prisma.BoolFilter<"AppSettings"> | boolean
@@ -345,6 +355,7 @@ export type AppSettingsOrderByWithAggregationInput = {
   handheldOs?: Prisma.SortOrder
   onboardingCompleted?: Prisma.SortOrder
   priceCountry?: Prisma.SortOrder
+  displayCurrency?: Prisma.SortOrder
   timeZone?: Prisma.SortOrder
   wallpaperEnabled?: Prisma.SortOrder
   reducedData?: Prisma.SortOrder
@@ -371,6 +382,7 @@ export type AppSettingsScalarWhereWithAggregatesInput = {
   handheldOs?: Prisma.EnumHandheldOsWithAggregatesFilter<"AppSettings"> | $Enums.HandheldOs
   onboardingCompleted?: Prisma.BoolWithAggregatesFilter<"AppSettings"> | boolean
   priceCountry?: Prisma.StringWithAggregatesFilter<"AppSettings"> | string
+  displayCurrency?: Prisma.StringWithAggregatesFilter<"AppSettings"> | string
   timeZone?: Prisma.StringWithAggregatesFilter<"AppSettings"> | string
   wallpaperEnabled?: Prisma.BoolWithAggregatesFilter<"AppSettings"> | boolean
   reducedData?: Prisma.BoolWithAggregatesFilter<"AppSettings"> | boolean
@@ -389,6 +401,7 @@ export type AppSettingsCreateInput = {
   handheldOs?: $Enums.HandheldOs
   onboardingCompleted?: boolean
   priceCountry?: string
+  displayCurrency?: string
   timeZone?: string
   wallpaperEnabled?: boolean
   reducedData?: boolean
@@ -407,6 +420,7 @@ export type AppSettingsUncheckedCreateInput = {
   handheldOs?: $Enums.HandheldOs
   onboardingCompleted?: boolean
   priceCountry?: string
+  displayCurrency?: string
   timeZone?: string
   wallpaperEnabled?: boolean
   reducedData?: boolean
@@ -425,6 +439,7 @@ export type AppSettingsUpdateInput = {
   handheldOs?: Prisma.EnumHandheldOsFieldUpdateOperationsInput | $Enums.HandheldOs
   onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   priceCountry?: Prisma.StringFieldUpdateOperationsInput | string
+  displayCurrency?: Prisma.StringFieldUpdateOperationsInput | string
   timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   wallpaperEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reducedData?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -443,6 +458,7 @@ export type AppSettingsUncheckedUpdateInput = {
   handheldOs?: Prisma.EnumHandheldOsFieldUpdateOperationsInput | $Enums.HandheldOs
   onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   priceCountry?: Prisma.StringFieldUpdateOperationsInput | string
+  displayCurrency?: Prisma.StringFieldUpdateOperationsInput | string
   timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   wallpaperEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reducedData?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -461,6 +477,7 @@ export type AppSettingsCreateManyInput = {
   handheldOs?: $Enums.HandheldOs
   onboardingCompleted?: boolean
   priceCountry?: string
+  displayCurrency?: string
   timeZone?: string
   wallpaperEnabled?: boolean
   reducedData?: boolean
@@ -479,6 +496,7 @@ export type AppSettingsUpdateManyMutationInput = {
   handheldOs?: Prisma.EnumHandheldOsFieldUpdateOperationsInput | $Enums.HandheldOs
   onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   priceCountry?: Prisma.StringFieldUpdateOperationsInput | string
+  displayCurrency?: Prisma.StringFieldUpdateOperationsInput | string
   timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   wallpaperEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reducedData?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -497,6 +515,7 @@ export type AppSettingsUncheckedUpdateManyInput = {
   handheldOs?: Prisma.EnumHandheldOsFieldUpdateOperationsInput | $Enums.HandheldOs
   onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   priceCountry?: Prisma.StringFieldUpdateOperationsInput | string
+  displayCurrency?: Prisma.StringFieldUpdateOperationsInput | string
   timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   wallpaperEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reducedData?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -515,6 +534,7 @@ export type AppSettingsCountOrderByAggregateInput = {
   handheldOs?: Prisma.SortOrder
   onboardingCompleted?: Prisma.SortOrder
   priceCountry?: Prisma.SortOrder
+  displayCurrency?: Prisma.SortOrder
   timeZone?: Prisma.SortOrder
   wallpaperEnabled?: Prisma.SortOrder
   reducedData?: Prisma.SortOrder
@@ -537,6 +557,7 @@ export type AppSettingsMaxOrderByAggregateInput = {
   handheldOs?: Prisma.SortOrder
   onboardingCompleted?: Prisma.SortOrder
   priceCountry?: Prisma.SortOrder
+  displayCurrency?: Prisma.SortOrder
   timeZone?: Prisma.SortOrder
   wallpaperEnabled?: Prisma.SortOrder
   reducedData?: Prisma.SortOrder
@@ -555,6 +576,7 @@ export type AppSettingsMinOrderByAggregateInput = {
   handheldOs?: Prisma.SortOrder
   onboardingCompleted?: Prisma.SortOrder
   priceCountry?: Prisma.SortOrder
+  displayCurrency?: Prisma.SortOrder
   timeZone?: Prisma.SortOrder
   wallpaperEnabled?: Prisma.SortOrder
   reducedData?: Prisma.SortOrder
@@ -599,6 +621,7 @@ export type AppSettingsSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   handheldOs?: boolean
   onboardingCompleted?: boolean
   priceCountry?: boolean
+  displayCurrency?: boolean
   timeZone?: boolean
   wallpaperEnabled?: boolean
   reducedData?: boolean
@@ -617,6 +640,7 @@ export type AppSettingsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   handheldOs?: boolean
   onboardingCompleted?: boolean
   priceCountry?: boolean
+  displayCurrency?: boolean
   timeZone?: boolean
   wallpaperEnabled?: boolean
   reducedData?: boolean
@@ -635,6 +659,7 @@ export type AppSettingsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   handheldOs?: boolean
   onboardingCompleted?: boolean
   priceCountry?: boolean
+  displayCurrency?: boolean
   timeZone?: boolean
   wallpaperEnabled?: boolean
   reducedData?: boolean
@@ -653,6 +678,7 @@ export type AppSettingsSelectScalar = {
   handheldOs?: boolean
   onboardingCompleted?: boolean
   priceCountry?: boolean
+  displayCurrency?: boolean
   timeZone?: boolean
   wallpaperEnabled?: boolean
   reducedData?: boolean
@@ -663,7 +689,7 @@ export type AppSettingsSelectScalar = {
   updatedAt?: boolean
 }
 
-export type AppSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "theme" | "primaryOs" | "hasWindowsFallback" | "handheldOs" | "onboardingCompleted" | "priceCountry" | "timeZone" | "wallpaperEnabled" | "reducedData" | "durationProfile" | "steamDailySyncEnabled" | "itadDailyRefresh" | "createdAt" | "updatedAt", ExtArgs["result"]["appSettings"]>
+export type AppSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "theme" | "primaryOs" | "hasWindowsFallback" | "handheldOs" | "onboardingCompleted" | "priceCountry" | "displayCurrency" | "timeZone" | "wallpaperEnabled" | "reducedData" | "durationProfile" | "steamDailySyncEnabled" | "itadDailyRefresh" | "createdAt" | "updatedAt", ExtArgs["result"]["appSettings"]>
 
 export type $AppSettingsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "AppSettings"
@@ -676,6 +702,7 @@ export type $AppSettingsPayload<ExtArgs extends runtime.Types.Extensions.Interna
     handheldOs: $Enums.HandheldOs
     onboardingCompleted: boolean
     priceCountry: string
+    displayCurrency: string
     timeZone: string
     wallpaperEnabled: boolean
     reducedData: boolean
@@ -1114,6 +1141,7 @@ export interface AppSettingsFieldRefs {
   readonly handheldOs: Prisma.FieldRef<"AppSettings", 'HandheldOs'>
   readonly onboardingCompleted: Prisma.FieldRef<"AppSettings", 'Boolean'>
   readonly priceCountry: Prisma.FieldRef<"AppSettings", 'String'>
+  readonly displayCurrency: Prisma.FieldRef<"AppSettings", 'String'>
   readonly timeZone: Prisma.FieldRef<"AppSettings", 'String'>
   readonly wallpaperEnabled: Prisma.FieldRef<"AppSettings", 'Boolean'>
   readonly reducedData: Prisma.FieldRef<"AppSettings", 'Boolean'>

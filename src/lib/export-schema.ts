@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { EXPORT_VERSION } from "./export-data";
 import { normalizePersonalTagName } from "./personal-tag";
+import { displayCurrencySchema, priceCountrySchema } from "./price-preferences";
 
 const isoDateTime = z.iso.datetime();
 
@@ -11,7 +12,8 @@ const appSettingsSchema = z.strictObject({
   hasWindowsFallback: z.boolean(),
   handheldOs: z.enum(["NONE", "LINUX", "WINDOWS"]),
   onboardingCompleted: z.boolean(),
-  priceCountry: z.string(),
+  priceCountry: priceCountrySchema,
+  displayCurrency: displayCurrencySchema.default("MXN"),
   timeZone: z.string(),
   wallpaperEnabled: z.boolean(),
   reducedData: z.boolean(),

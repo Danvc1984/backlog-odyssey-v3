@@ -2,27 +2,27 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import { fetchUsdToMxnRate } from "./exchange-rate";
+import { fetchExchangeRate } from "./exchange-rate";
 
 function response(payload: unknown, init: ResponseInit = {}): Response {
   return new Response(JSON.stringify(payload), { status: 200, ...init });
 }
 
-describe("fetchUsdToMxnRate", () => {
+describe("fetchExchangeRate", () => {
   it("parses a positive MXN rate from the provider", async () => {
-    const fetchFn = vi.fn().mockResolvedValue(response({ rates: { MXN: 16.9282 } }));
+    const fetchFn = vi.fn().mockResolvedValue(response({ date: "2026-08-21", base: "USD", quote: "MXN", rate: 16.9282 }));
 
-    await expect(fetchUsdToMxnRate({ fetchFn })).resolves.toMatchObject({ ok: true, rate: 16.9282 });
+    await expect(fetchExchangeRate("USD", "MXN", { fetchFn })).resolves.toMatchObject({ ok: true, rate: 16.9282 });
     expect(fetchFn).toHaveBeenCalledWith(
-      "https://api.frankfurter.dev/v1/latest?base=USD&symbols=MXN",
+      "https://api.frankfurter.dev/v2/rate/usd/mxn",
       { cache: "no-store" },
     );
   });
 
   it("rejects malformed or non-positive rates", async () => {
-    for (const payload of [{ rates: {} }, { rates: { MXN: 0 } }, { rates: { MXN: Number.NaN } }]) {
+    for (const payload of [{}, { rate: 0 }, { rate: Number.NaN }]) {
       const fetchFn = vi.fn().mockResolvedValue(response(payload));
-      await expect(fetchUsdToMxnRate({ fetchFn })).resolves.toMatchObject({
+      await expect(fetchExchangeRate("USD", "MXN", { fetchFn })).resolves.toMatchObject({
         ok: false,
         error: { category: "MALFORMED_RESPONSE" },
       });
@@ -30,9 +30,9 @@ describe("fetchUsdToMxnRate", () => {
   });
 
   it("surfaces network and HTTP failures", async () => {
-    await expect(fetchUsdToMxnRate({ fetchFn: vi.fn().mockRejectedValue(new Error("offline")) }))
+    await expect(fetchExchangeRate("USD", "MXN", { fetchFn: vi.fn().mockRejectedValue(new Error("offline")) }))
       .resolves.toMatchObject({ ok: false, error: { category: "NETWORK" } });
-    await expect(fetchUsdToMxnRate({ fetchFn: vi.fn().mockResolvedValue(response({}, { status: 503 })) }))
+    await expect(fetchExchangeRate("USD", "MXN", { fetchFn: vi.fn().mockResolvedValue(response({}, { status: 503 })) }))
       .resolves.toMatchObject({ ok: false, error: { category: "HTTP", status: 503 } });
   });
 });

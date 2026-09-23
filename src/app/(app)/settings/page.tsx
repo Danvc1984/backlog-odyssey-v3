@@ -16,6 +16,7 @@ import { type IgdbBatchView, getLatestIgdbBatchStatus } from "@/lib/igdb-batch-r
 import { getLatestWishlistCompatSweep } from "@/actions/wishlist-compatibility";
 import { isCompatibilityActive } from "@/lib/os-setup";
 import { DurationProfileCard } from "@/components/settings/DurationProfileCard";
+import { DEFAULT_PRICE_PREFERENCES, pricePreferencesSchema } from "@/lib/price-preferences";
 
 function CollapsibleSettingsSection({
   title,
@@ -81,6 +82,7 @@ export default async function SettingsPage() {
         handheldOs: true,
         onboardingCompleted: true,
         priceCountry: true,
+        displayCurrency: true,
         timeZone: true,
         durationProfile: true,
       },
@@ -123,12 +125,16 @@ export default async function SettingsPage() {
     }),
     prisma.priceRefresh.findFirst({
       orderBy: { requestedAt: "desc" },
-      select: { id: true, status: true, counts: true, requestedAt: true, finishedAt: true },
+      select: { id: true, status: true, country: true, displayCurrency: true, counts: true, requestedAt: true, finishedAt: true },
     }),
     prisma.game.count(),
     prisma.wishlistEntry.count(),
     prisma.recommendationRun.count(),
   ]);
+  const pricePreferences = pricePreferencesSchema.parse({
+    priceCountry: appSettings?.priceCountry ?? DEFAULT_PRICE_PREFERENCES.priceCountry,
+    displayCurrency: appSettings?.displayCurrency ?? DEFAULT_PRICE_PREFERENCES.displayCurrency,
+  });
 
   return (
     <div className="space-y-6">
@@ -147,6 +153,7 @@ export default async function SettingsPage() {
             await signOut();
           }}
           settings={appSettings}
+          pricePreferences={pricePreferences}
         />
       </CollapsibleSettingsSection>
       <CollapsibleSettingsSection title="Appearance">

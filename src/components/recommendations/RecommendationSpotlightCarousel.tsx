@@ -25,15 +25,6 @@ export function RecommendationSpotlightCarousel({
   const activeSlide = slides[activeIndex];
 
   useEffect(() => {
-    setSlides(initialSlides);
-    setIndex(0);
-  }, [initialSlides]);
-
-  useEffect(() => {
-    setIndex((current) => slides.length === 0 ? 0 : current % slides.length);
-  }, [slides.length]);
-
-  useEffect(() => {
     if (!activeSlide?.runId) return;
     const target = activeSlide.target.kind === "PLAY_NEXT"
       ? { gameId: activeSlide.target.gameId }

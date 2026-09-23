@@ -281,6 +281,7 @@ model AppSettings {
   handheldOs            HandheldOs @default(NONE)
   onboardingCompleted   Boolean  @default(false)
   priceCountry          String   @default("MX")
+  displayCurrency       String   @default("MXN")
   timeZone              String   @default("America/Mexico_City") // IANA; Mexico eliminated DST in 2023, permanently UTC-6
   wallpaperEnabled      Boolean  @default(true)
   reducedData           Boolean  @default(false)
@@ -575,6 +576,7 @@ model DealOffer {
   wishlistEntryId String
   shop            String
   country         String?
+  displayCurrency String?
   currency        String?
   price           Decimal?  @db.Decimal(10, 2)
   regularPrice    Decimal?  @db.Decimal(10, 2)
@@ -585,6 +587,7 @@ model DealOffer {
   sourceRegularPrice Decimal? @db.Decimal(10, 2)
   sourceHistoricalLow Decimal? @db.Decimal(10, 2)
   exchangeRateToMxn Decimal? @db.Decimal(14, 6)
+  exchangeRateToDisplayCurrency Decimal? @db.Decimal(14, 6)
   exchangeRateFetchedAt DateTime?
   voucher         String?
   itadFlag        String?
@@ -610,6 +613,7 @@ model PriceRefresh {
   wishlistEntryId String?
   status          SyncStatus
   country         String?
+  displayCurrency String?
   requestedAt     DateTime   @default(now())
   finishedAt      DateTime?
   counts          Json?

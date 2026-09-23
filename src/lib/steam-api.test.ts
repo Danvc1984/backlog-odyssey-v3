@@ -358,6 +358,16 @@ describe("fetchSteamStorePrices", () => {
     expect(requestUrl.searchParams.get("cc")).toBe("MX");
     expect(requestUrl.searchParams.get("filters")).toBe("price_overview");
   });
+
+  it("sends the selected market to Steam Store", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({}), { status: 200 }),
+    );
+
+    await fetchSteamStorePrices(["620"], "CA", fetchMock);
+
+    expect(new URL(fetchMock.mock.calls[0][0] as string).searchParams.get("cc")).toBe("CA");
+  });
 });
 
 describe("fetchRecentlyPlayedGames", () => {

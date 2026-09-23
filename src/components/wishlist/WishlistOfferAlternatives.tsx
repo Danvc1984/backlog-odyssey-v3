@@ -29,6 +29,12 @@ function sourcePriceLabel(offer: WishlistOfferView): string | null {
   return `Source: ${formatCurrency(offer.sourcePrice, offer.sourceCurrency)}`;
 }
 
+function conversionLabel(offer: WishlistOfferView): string | null {
+  if (offer.conversionUnavailable) return `Conversion unavailable; ${offer.currency ?? "source currency"} shown.`;
+  if (offer.isEstimated) return `Estimated ${offer.displayCurrency ?? "display currency"} value.`;
+  return null;
+}
+
 export function WishlistOfferAlternatives({
   alternatives,
 }: {
@@ -76,10 +82,10 @@ export function WishlistOfferAlternatives({
                 {offer.isKeyshop && (
                   <span
                     className="mt-1 flex items-center gap-1 text-amber-300"
-                    title="Keyshop - activation not guaranteed in Mexico"
+                    title="Keyshop - activation may vary by selected market"
                   >
                     <WarningIcon className="size-3" aria-hidden="true" />
-                    Keyshop - activation not guaranteed in Mexico
+                    Keyshop - activation may vary by selected market
                   </span>
                 )}
               </div>
@@ -88,6 +94,7 @@ export function WishlistOfferAlternatives({
                 {sourcePriceLabel(offer) && (
                   <p className="text-muted-foreground">{sourcePriceLabel(offer)}</p>
                 )}
+                {conversionLabel(offer) && <p className="text-muted-foreground">{conversionLabel(offer)}</p>}
                 {offer.discount !== null && offer.discount > 0 && (
                   <span className="ml-1 text-emerald-400">-{offer.discount}%</span>
                 )}

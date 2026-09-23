@@ -13,6 +13,7 @@ export interface PriceRefreshRunSummary {
   id: string;
   status: string;
   counts: unknown;
+  displayCurrency: string | null;
   requestedAt: string | Date;
   finishedAt: string | Date | null;
 }
@@ -45,7 +46,7 @@ export function PriceRefreshPanel() {
       ].filter((detail): detail is string => Boolean(detail)).join(", ");
       toast.success("Price refresh finished", {
         description: nextCounts.conversionUnavailable
-          ? `${details}. Some prices could not be converted to MXN.`
+          ? `${details}. Some prices could not be converted to ${nextRun.displayCurrency?.trim().toUpperCase() ?? "the selected display currency"}.`
           : details,
       });
     } else {

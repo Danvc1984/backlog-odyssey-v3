@@ -13,6 +13,7 @@ import { useVisualPreferences } from "@/components/preferences/VisualPreferences
 import type { ThemeFamily } from "@/lib/visual-preferences";
 import type { OsSetup } from "@/lib/os-setup";
 import type { DurationProfile } from "@/generated/prisma/client";
+import { PRICE_MARKETS, DISPLAY_CURRENCIES, type PricePreferences } from "@/lib/price-preferences";
 
 const durationOptions = [
   { value: "HASTILY", label: "Main story" },
@@ -38,6 +39,8 @@ export function WelcomeSetupForm({ gameCount }: { gameCount: number }) {
   const [saving, setSaving] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [durationProfile, setDurationProfile] = useState<DurationProfile>("NORMALLY");
+  const [priceCountry, setPriceCountry] = useState<PricePreferences["priceCountry"]>("MX");
+  const [displayCurrency, setDisplayCurrency] = useState<PricePreferences["displayCurrency"]>("MXN");
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
   const { family, setFamily } = useVisualPreferences();
@@ -49,7 +52,7 @@ export function WelcomeSetupForm({ gameCount }: { gameCount: number }) {
 
   const save = async () => {
     setSaving(true);
-    const result = await updateOsSetup({ primaryOs, hasWindowsFallback, handheldOs, onboardingCompleted: true, durationProfile });
+    const result = await updateOsSetup({ primaryOs, hasWindowsFallback, handheldOs, onboardingCompleted: true, durationProfile, priceCountry, displayCurrency });
     setSaving(false);
     if (!result.success) {
       toast.error(result.error ?? "Could not save setup");
@@ -127,6 +130,28 @@ export function WelcomeSetupForm({ gameCount }: { gameCount: number }) {
             <SelectItem value="WINDOWS">Windows</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+      <div className="grid gap-4 rounded-lg border border-border p-4">
+        <div>
+          <p className="text-sm font-medium">Regional prices</p>
+          <p className="mt-1 text-xs text-muted-foreground">Choose where prices are requested and how optional display estimates are shown.</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-2">
+            <Label htmlFor="welcome-price-country">Price market</Label>
+            <Select value={priceCountry} onValueChange={(value) => setPriceCountry(value as PricePreferences["priceCountry"])}>
+              <SelectTrigger id="welcome-price-country"><SelectValue /></SelectTrigger>
+              <SelectContent>{PRICE_MARKETS.map((market) => <SelectItem key={market.country} value={market.country}>{market.label} ({market.country})</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="welcome-display-currency">Display currency</Label>
+            <Select value={displayCurrency} onValueChange={(value) => setDisplayCurrency(value as PricePreferences["displayCurrency"])}>
+              <SelectTrigger id="welcome-display-currency"><SelectValue /></SelectTrigger>
+              <SelectContent>{DISPLAY_CURRENCIES.map((currency) => <SelectItem key={currency} value={currency}>{currency}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
       <div className="grid gap-4 rounded-lg border border-border p-4">
         <p className="text-sm font-medium">App theme</p>

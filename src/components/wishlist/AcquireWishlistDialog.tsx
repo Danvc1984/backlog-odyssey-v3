@@ -201,6 +201,8 @@ export function AcquireWishlistDialog({
                         <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-xs font-bold text-emerald-300">-{selectedOffer.discount}%</span>
                       )}
                       <span className="w-full text-xs text-muted-foreground">Main offer from {selectedOffer.shop}</span>
+                      {selectedOffer.isEstimated && <span className="w-full text-xs text-muted-foreground">Estimated display value</span>}
+                      {selectedOffer.conversionUnavailable && <span className="w-full text-xs text-muted-foreground">Display conversion unavailable; source price shown</span>}
                     </div>
                   ) : (
                     <p className="mt-3 text-sm text-muted-foreground">No current offer is available.</p>

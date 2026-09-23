@@ -116,9 +116,19 @@ export function WishlistDetailHero({
                   </span>
                 )}
               </div>
+              {selectedOffer.isEstimated && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Estimated {selectedOffer.displayCurrency ?? "display currency"} value; source price retained below.
+                </p>
+              )}
+              {selectedOffer.conversionUnavailable && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Display conversion unavailable; showing the authoritative source price.
+                </p>
+              )}
               {selectedOffer.isKeyshop && (
                 <p className="mt-2 text-xs font-medium text-amber-300">
-                  Keyshop activation is not guaranteed in Mexico.
+                  Keyshop activation may vary by selected market.
                 </p>
               )}
             </div>

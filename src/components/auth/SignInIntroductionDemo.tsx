@@ -105,11 +105,8 @@ function SignInDemoGameCard({ game }: { game: DemoGame }) {
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
-    setImageFailed(false);
-  }, [game.id]);
-
-  useEffect(() => {
-    setHasMounted(true);
+    const timer = window.setTimeout(() => setHasMounted(true), 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   return (
@@ -241,7 +238,7 @@ export function SignInIntroductionDemo() {
               Your choices, personal tags, backlog history and IGDB provided
               metadata all factor in to guide your next adventure.
             </p>
-            <SignInDemoGameCard game={activeGame} />
+            <SignInDemoGameCard key={activeGame.id} game={activeGame} />
           </li>
         </ol>
 

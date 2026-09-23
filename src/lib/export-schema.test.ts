@@ -22,6 +22,7 @@ describe("export schema: settings and catalog", () => {
       handheldOs: "LINUX",
       onboardingCompleted: true,
       priceCountry: "MX",
+      displayCurrency: "MXN",
       timeZone: "America/Mexico_City",
       wallpaperEnabled: true,
       reducedData: false,

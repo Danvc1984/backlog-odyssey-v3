@@ -29,6 +29,7 @@ export type PriceRefreshMinAggregateOutputType = {
   wishlistEntryId: string | null
   status: $Enums.SyncStatus | null
   country: string | null
+  displayCurrency: string | null
   requestedAt: Date | null
   finishedAt: Date | null
 }
@@ -38,6 +39,7 @@ export type PriceRefreshMaxAggregateOutputType = {
   wishlistEntryId: string | null
   status: $Enums.SyncStatus | null
   country: string | null
+  displayCurrency: string | null
   requestedAt: Date | null
   finishedAt: Date | null
 }
@@ -47,6 +49,7 @@ export type PriceRefreshCountAggregateOutputType = {
   wishlistEntryId: number
   status: number
   country: number
+  displayCurrency: number
   requestedAt: number
   finishedAt: number
   counts: number
@@ -59,6 +62,7 @@ export type PriceRefreshMinAggregateInputType = {
   wishlistEntryId?: true
   status?: true
   country?: true
+  displayCurrency?: true
   requestedAt?: true
   finishedAt?: true
 }
@@ -68,6 +72,7 @@ export type PriceRefreshMaxAggregateInputType = {
   wishlistEntryId?: true
   status?: true
   country?: true
+  displayCurrency?: true
   requestedAt?: true
   finishedAt?: true
 }
@@ -77,6 +82,7 @@ export type PriceRefreshCountAggregateInputType = {
   wishlistEntryId?: true
   status?: true
   country?: true
+  displayCurrency?: true
   requestedAt?: true
   finishedAt?: true
   counts?: true
@@ -160,6 +166,7 @@ export type PriceRefreshGroupByOutputType = {
   wishlistEntryId: string | null
   status: $Enums.SyncStatus
   country: string | null
+  displayCurrency: string | null
   requestedAt: Date
   finishedAt: Date | null
   counts: runtime.JsonValue | null
@@ -191,6 +198,7 @@ export type PriceRefreshWhereInput = {
   wishlistEntryId?: Prisma.StringNullableFilter<"PriceRefresh"> | string | null
   status?: Prisma.EnumSyncStatusFilter<"PriceRefresh"> | $Enums.SyncStatus
   country?: Prisma.StringNullableFilter<"PriceRefresh"> | string | null
+  displayCurrency?: Prisma.StringNullableFilter<"PriceRefresh"> | string | null
   requestedAt?: Prisma.DateTimeFilter<"PriceRefresh"> | Date | string
   finishedAt?: Prisma.DateTimeNullableFilter<"PriceRefresh"> | Date | string | null
   counts?: Prisma.JsonNullableFilter<"PriceRefresh">
@@ -202,6 +210,7 @@ export type PriceRefreshOrderByWithRelationInput = {
   wishlistEntryId?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   country?: Prisma.SortOrderInput | Prisma.SortOrder
+  displayCurrency?: Prisma.SortOrderInput | Prisma.SortOrder
   requestedAt?: Prisma.SortOrder
   finishedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   counts?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -216,6 +225,7 @@ export type PriceRefreshWhereUniqueInput = Prisma.AtLeast<{
   wishlistEntryId?: Prisma.StringNullableFilter<"PriceRefresh"> | string | null
   status?: Prisma.EnumSyncStatusFilter<"PriceRefresh"> | $Enums.SyncStatus
   country?: Prisma.StringNullableFilter<"PriceRefresh"> | string | null
+  displayCurrency?: Prisma.StringNullableFilter<"PriceRefresh"> | string | null
   requestedAt?: Prisma.DateTimeFilter<"PriceRefresh"> | Date | string
   finishedAt?: Prisma.DateTimeNullableFilter<"PriceRefresh"> | Date | string | null
   counts?: Prisma.JsonNullableFilter<"PriceRefresh">
@@ -227,6 +237,7 @@ export type PriceRefreshOrderByWithAggregationInput = {
   wishlistEntryId?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   country?: Prisma.SortOrderInput | Prisma.SortOrder
+  displayCurrency?: Prisma.SortOrderInput | Prisma.SortOrder
   requestedAt?: Prisma.SortOrder
   finishedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   counts?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -243,6 +254,7 @@ export type PriceRefreshScalarWhereWithAggregatesInput = {
   wishlistEntryId?: Prisma.StringNullableWithAggregatesFilter<"PriceRefresh"> | string | null
   status?: Prisma.EnumSyncStatusWithAggregatesFilter<"PriceRefresh"> | $Enums.SyncStatus
   country?: Prisma.StringNullableWithAggregatesFilter<"PriceRefresh"> | string | null
+  displayCurrency?: Prisma.StringNullableWithAggregatesFilter<"PriceRefresh"> | string | null
   requestedAt?: Prisma.DateTimeWithAggregatesFilter<"PriceRefresh"> | Date | string
   finishedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"PriceRefresh"> | Date | string | null
   counts?: Prisma.JsonNullableWithAggregatesFilter<"PriceRefresh">
@@ -252,6 +264,7 @@ export type PriceRefreshCreateInput = {
   id?: string
   status: $Enums.SyncStatus
   country?: string | null
+  displayCurrency?: string | null
   requestedAt?: Date | string
   finishedAt?: Date | string | null
   counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -263,6 +276,7 @@ export type PriceRefreshUncheckedCreateInput = {
   wishlistEntryId?: string | null
   status: $Enums.SyncStatus
   country?: string | null
+  displayCurrency?: string | null
   requestedAt?: Date | string
   finishedAt?: Date | string | null
   counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -272,6 +286,7 @@ export type PriceRefreshUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumSyncStatusFieldUpdateOperationsInput | $Enums.SyncStatus
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayCurrency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -283,6 +298,7 @@ export type PriceRefreshUncheckedUpdateInput = {
   wishlistEntryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSyncStatusFieldUpdateOperationsInput | $Enums.SyncStatus
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayCurrency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -293,6 +309,7 @@ export type PriceRefreshCreateManyInput = {
   wishlistEntryId?: string | null
   status: $Enums.SyncStatus
   country?: string | null
+  displayCurrency?: string | null
   requestedAt?: Date | string
   finishedAt?: Date | string | null
   counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -302,6 +319,7 @@ export type PriceRefreshUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumSyncStatusFieldUpdateOperationsInput | $Enums.SyncStatus
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayCurrency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -312,6 +330,7 @@ export type PriceRefreshUncheckedUpdateManyInput = {
   wishlistEntryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSyncStatusFieldUpdateOperationsInput | $Enums.SyncStatus
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayCurrency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -332,6 +351,7 @@ export type PriceRefreshCountOrderByAggregateInput = {
   wishlistEntryId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   country?: Prisma.SortOrder
+  displayCurrency?: Prisma.SortOrder
   requestedAt?: Prisma.SortOrder
   finishedAt?: Prisma.SortOrder
   counts?: Prisma.SortOrder
@@ -342,6 +362,7 @@ export type PriceRefreshMaxOrderByAggregateInput = {
   wishlistEntryId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   country?: Prisma.SortOrder
+  displayCurrency?: Prisma.SortOrder
   requestedAt?: Prisma.SortOrder
   finishedAt?: Prisma.SortOrder
 }
@@ -351,6 +372,7 @@ export type PriceRefreshMinOrderByAggregateInput = {
   wishlistEntryId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   country?: Prisma.SortOrder
+  displayCurrency?: Prisma.SortOrder
   requestedAt?: Prisma.SortOrder
   finishedAt?: Prisma.SortOrder
 }
@@ -405,6 +427,7 @@ export type PriceRefreshCreateWithoutWishlistEntryInput = {
   id?: string
   status: $Enums.SyncStatus
   country?: string | null
+  displayCurrency?: string | null
   requestedAt?: Date | string
   finishedAt?: Date | string | null
   counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -414,6 +437,7 @@ export type PriceRefreshUncheckedCreateWithoutWishlistEntryInput = {
   id?: string
   status: $Enums.SyncStatus
   country?: string | null
+  displayCurrency?: string | null
   requestedAt?: Date | string
   finishedAt?: Date | string | null
   counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -453,6 +477,7 @@ export type PriceRefreshScalarWhereInput = {
   wishlistEntryId?: Prisma.StringNullableFilter<"PriceRefresh"> | string | null
   status?: Prisma.EnumSyncStatusFilter<"PriceRefresh"> | $Enums.SyncStatus
   country?: Prisma.StringNullableFilter<"PriceRefresh"> | string | null
+  displayCurrency?: Prisma.StringNullableFilter<"PriceRefresh"> | string | null
   requestedAt?: Prisma.DateTimeFilter<"PriceRefresh"> | Date | string
   finishedAt?: Prisma.DateTimeNullableFilter<"PriceRefresh"> | Date | string | null
   counts?: Prisma.JsonNullableFilter<"PriceRefresh">
@@ -462,6 +487,7 @@ export type PriceRefreshCreateManyWishlistEntryInput = {
   id?: string
   status: $Enums.SyncStatus
   country?: string | null
+  displayCurrency?: string | null
   requestedAt?: Date | string
   finishedAt?: Date | string | null
   counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -471,6 +497,7 @@ export type PriceRefreshUpdateWithoutWishlistEntryInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumSyncStatusFieldUpdateOperationsInput | $Enums.SyncStatus
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayCurrency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -480,6 +507,7 @@ export type PriceRefreshUncheckedUpdateWithoutWishlistEntryInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumSyncStatusFieldUpdateOperationsInput | $Enums.SyncStatus
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayCurrency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -489,6 +517,7 @@ export type PriceRefreshUncheckedUpdateManyWithoutWishlistEntryInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumSyncStatusFieldUpdateOperationsInput | $Enums.SyncStatus
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayCurrency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   counts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -501,6 +530,7 @@ export type PriceRefreshSelect<ExtArgs extends runtime.Types.Extensions.Internal
   wishlistEntryId?: boolean
   status?: boolean
   country?: boolean
+  displayCurrency?: boolean
   requestedAt?: boolean
   finishedAt?: boolean
   counts?: boolean
@@ -512,6 +542,7 @@ export type PriceRefreshSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   wishlistEntryId?: boolean
   status?: boolean
   country?: boolean
+  displayCurrency?: boolean
   requestedAt?: boolean
   finishedAt?: boolean
   counts?: boolean
@@ -523,6 +554,7 @@ export type PriceRefreshSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   wishlistEntryId?: boolean
   status?: boolean
   country?: boolean
+  displayCurrency?: boolean
   requestedAt?: boolean
   finishedAt?: boolean
   counts?: boolean
@@ -534,12 +566,13 @@ export type PriceRefreshSelectScalar = {
   wishlistEntryId?: boolean
   status?: boolean
   country?: boolean
+  displayCurrency?: boolean
   requestedAt?: boolean
   finishedAt?: boolean
   counts?: boolean
 }
 
-export type PriceRefreshOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "wishlistEntryId" | "status" | "country" | "requestedAt" | "finishedAt" | "counts", ExtArgs["result"]["priceRefresh"]>
+export type PriceRefreshOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "wishlistEntryId" | "status" | "country" | "displayCurrency" | "requestedAt" | "finishedAt" | "counts", ExtArgs["result"]["priceRefresh"]>
 export type PriceRefreshInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   wishlistEntry?: boolean | Prisma.PriceRefresh$wishlistEntryArgs<ExtArgs>
 }
@@ -560,6 +593,7 @@ export type $PriceRefreshPayload<ExtArgs extends runtime.Types.Extensions.Intern
     wishlistEntryId: string | null
     status: $Enums.SyncStatus
     country: string | null
+    displayCurrency: string | null
     requestedAt: Date
     finishedAt: Date | null
     counts: runtime.JsonValue | null
@@ -991,6 +1025,7 @@ export interface PriceRefreshFieldRefs {
   readonly wishlistEntryId: Prisma.FieldRef<"PriceRefresh", 'String'>
   readonly status: Prisma.FieldRef<"PriceRefresh", 'SyncStatus'>
   readonly country: Prisma.FieldRef<"PriceRefresh", 'String'>
+  readonly displayCurrency: Prisma.FieldRef<"PriceRefresh", 'String'>
   readonly requestedAt: Prisma.FieldRef<"PriceRefresh", 'DateTime'>
   readonly finishedAt: Prisma.FieldRef<"PriceRefresh", 'DateTime'>
   readonly counts: Prisma.FieldRef<"PriceRefresh", 'Json'>

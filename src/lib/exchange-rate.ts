@@ -1,7 +1,7 @@
 import "server-only";
+import { DISPLAY_CURRENCIES, type DisplayCurrency } from "./price-preferences";
 
-const EXCHANGE_RATE_URL =
-  "https://api.frankfurter.dev/v1/latest?base=USD&symbols=MXN";
+const EXCHANGE_RATE_URL = "https://api.frankfurter.dev/v2/rate";
 
 export interface ExchangeRateProviderError {
   category: "NETWORK" | "HTTP" | "MALFORMED_RESPONSE";
@@ -17,13 +17,33 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-export async function fetchUsdToMxnRate(
+export async function fetchExchangeRate(
+  sourceCurrency: string,
+  displayCurrency: string,
   options: ExchangeRateFetchOptions = {},
 ): Promise<{ ok: true; rate: number; fetchedAt: Date } | { ok: false; error: ExchangeRateProviderError }> {
+  const source = sourceCurrency.trim().toUpperCase();
+  const display = displayCurrency.trim().toUpperCase();
+  if (
+    source === display &&
+    DISPLAY_CURRENCIES.includes(source as DisplayCurrency)
+  ) {
+    return { ok: true, rate: 1, fetchedAt: new Date() };
+  }
+  if (
+    !DISPLAY_CURRENCIES.includes(source as DisplayCurrency) ||
+    !DISPLAY_CURRENCIES.includes(display as DisplayCurrency)
+  ) {
+    return {
+      ok: false,
+      error: { category: "MALFORMED_RESPONSE", message: "Exchange rate pair is not supported" },
+    };
+  }
   const fetchFn = options.fetchFn ?? fetch;
+  const url = `${EXCHANGE_RATE_URL}/${source.toLowerCase()}/${display.toLowerCase()}`;
   let response: Response;
   try {
-    response = await fetchFn(EXCHANGE_RATE_URL, { cache: "no-store" });
+    response = await fetchFn(url, { cache: "no-store" });
   } catch {
     return { ok: false, error: { category: "NETWORK", message: "Exchange rate provider could not be reached" } };
   }
@@ -42,11 +62,16 @@ export async function fetchUsdToMxnRate(
     return { ok: false, error: { category: "MALFORMED_RESPONSE", message: "Exchange rate response was not valid JSON" } };
   }
 
-  const rates = isRecord(payload) && isRecord(payload.rates) ? payload.rates : null;
-  const rate = rates?.MXN;
+  const rate = isRecord(payload) ? payload.rate : null;
   if (typeof rate !== "number" || !Number.isFinite(rate) || rate <= 0) {
-    return { ok: false, error: { category: "MALFORMED_RESPONSE", message: "Exchange rate response did not contain a valid USD/MXN rate" } };
+    return { ok: false, error: { category: "MALFORMED_RESPONSE", message: "Exchange rate response did not contain a valid rate" } };
   }
 
   return { ok: true, rate, fetchedAt: new Date() };
+}
+
+export async function fetchUsdToMxnRate(
+  options: ExchangeRateFetchOptions = {},
+) {
+  return fetchExchangeRate("USD", "MXN", options);
 }

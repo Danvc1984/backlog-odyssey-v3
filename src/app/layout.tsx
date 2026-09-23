@@ -39,12 +39,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       suppressHydrationWarning
       className={`${inter.variable} ${cinzel.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <head>
+      <body className="min-h-full flex flex-col">
         <Script id="pre-paint-visual-preferences" strategy="beforeInteractive">
           {prePaintVisualPreferences}
         </Script>
-      </head>
-      <body className="min-h-full flex flex-col">
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

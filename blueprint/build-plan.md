@@ -779,7 +779,7 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
 - [ ] 34. **Welcome regional prices and optional Steam connection** - deliver
   market-aware price preferences and the optional Steam connection in two
   reviewable parts.
-  - [ ] 34a. **Regional price preferences and presentation** - extend Welcome
+  - [x] 34a. **Regional price preferences and presentation** - extend Welcome
     and Settings with Mexico, United States, Canada, Brazil, Colombia, and
     Argentina markets plus MXN, USD, CAD, BRL, COP, and ARS display currencies.
     Persist validated preferences; warn in Settings that a change requires a

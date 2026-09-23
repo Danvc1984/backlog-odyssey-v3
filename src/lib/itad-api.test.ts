@@ -164,4 +164,12 @@ describe("fetchItadPrices", () => {
     expect(result).toEqual([]);
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it("sends the selected market to ITAD", async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify([]), { status: 200 }));
+
+    await fetchItadPrices("key", ["uuid-a"], "CA", { fetchFn: fetchMock });
+
+    expect(new URL(fetchMock.mock.calls[0][0] as string).searchParams.get("country")).toBe("CA");
+  });
 });

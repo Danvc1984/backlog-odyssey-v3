@@ -27,6 +27,16 @@ function sourcePriceLabel(offer: { sourcePrice: number | null; sourceCurrency: s
   return `Source: ${formatCurrency(offer.sourcePrice, offer.sourceCurrency)}`;
 }
 
+function conversionLabel(offer: { displayCurrency?: string | null; currency: string | null; isEstimated?: boolean; conversionUnavailable?: boolean }): string | null {
+  if (offer.conversionUnavailable) {
+    return `Display conversion unavailable; showing ${offer.currency?.trim().toUpperCase() ?? "source currency"}.`;
+  }
+  if (offer.isEstimated) {
+    return `Estimated ${offer.displayCurrency?.trim().toUpperCase() ?? "display currency"} value.`;
+  }
+  return null;
+}
+
 export function WishlistOfferSection({
   offerView,
   hasConfirmedIdentity,
@@ -52,6 +62,9 @@ export function WishlistOfferSection({
   );
   const hasDifferentRegularPrice =
     offer.regularPrice !== null && offer.regularPrice !== offer.price;
+  const isMxnComparable =
+    offer.currency?.trim().toUpperCase() === "MXN" &&
+    (offer.sourceCurrency?.trim().toUpperCase() ?? offer.currency?.trim().toUpperCase()) === "MXN";
 
   return (
     <div className="space-y-2 border-t border-border pt-3 text-sm">
@@ -75,12 +88,13 @@ export function WishlistOfferSection({
       {offer.isKeyshop && (
         <p className="flex items-center gap-1 text-xs font-medium text-amber-300">
           <WarningIcon className="size-3" aria-hidden="true" />
-          Keyshop activation is not guaranteed in Mexico.
+          Keyshop activation may vary by selected market.
         </p>
       )}
       {sourcePriceLabel(offer) && (
         <p className="text-xs text-muted-foreground">{sourcePriceLabel(offer)}</p>
       )}
+      {conversionLabel(offer) && <p className="text-xs text-muted-foreground">{conversionLabel(offer)}</p>}
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
         {offer.discount !== null && offer.discount > 0 && (
           <span className={cn("rounded bg-emerald-500/15 px-2 py-1 text-sm font-bold text-emerald-300", shouldGlowOffer(offer.discount) && "shadow-glow")}>
@@ -96,7 +110,7 @@ export function WishlistOfferSection({
           </span>
         )}
       </div>
-      {offerView.targetPriceMxn !== null && offer.currency?.toUpperCase() === "MXN" && (
+      {offerView.targetPriceMxn !== null && isMxnComparable && (
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="text-muted-foreground">
             Target: {formatCurrency(offerView.targetPriceMxn, "MXN")}

@@ -23,6 +23,8 @@ function OfferSlide({ offer, rank }: { offer: TodayOfferView; rank: number }) {
           </Link>
           <div className="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-2">
             <span className="text-2xl font-semibold">{offer.price.toFixed(2)} {offer.currency}</span>
+            {offer.isEstimated && <span className="text-xs text-muted-foreground">estimated {offer.displayCurrency}</span>}
+            {offer.conversionUnavailable && <span className="text-xs text-muted-foreground">conversion unavailable</span>}
             <span className="text-sm text-muted-foreground">
               {offer.discountPercent === null ? "No discount" : `${offer.discountPercent}% off`}
             </span>

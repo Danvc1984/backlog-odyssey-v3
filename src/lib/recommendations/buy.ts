@@ -145,7 +145,9 @@ export function scoreBuyCandidate(
     }
 
     const currency = selected.currency?.trim().toUpperCase() ?? null;
-    const comparableMxn = currency === "MXN";
+    const comparableMxn =
+      currency === "MXN" &&
+      (!selected.sourceCurrency || selected.sourceCurrency.trim().toUpperCase() === "MXN");
     if (
       comparableMxn &&
       candidate.targetPriceMxn != null

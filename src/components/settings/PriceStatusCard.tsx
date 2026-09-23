@@ -6,6 +6,8 @@ import { readCounts } from "@/lib/price-counts";
 export interface PriceRefreshView {
   id: string;
   status: string;
+  country: string | null;
+  displayCurrency: string | null;
   counts: unknown;
   requestedAt: Date;
   finishedAt: Date | null;
@@ -56,6 +58,7 @@ export function PriceStatusCard({ lastRun }: { lastRun: PriceRefreshView | null 
             </span>
           </p>
           <p className="text-xs text-muted-foreground">
+            Market {lastRun.country ?? "unknown"} · Display {lastRun.displayCurrency ?? "source currency"} ·{" "}
             Requested {formatMexicoTimestamp(lastRun.requestedAt)}
             {lastRun.finishedAt
               ? ` · Finished ${formatMexicoTimestamp(lastRun.finishedAt)}`

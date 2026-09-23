@@ -1546,7 +1546,9 @@ describe("dismissAndReplaceRecommendation", () => {
       where: { id: "item-1", runId: "run-play", role: "BEST_FIT_1" },
       data: expect.objectContaining({ gameId: "game-next" }),
     }));
-    const context = (runUpdate.mock.calls[0][0] as any).data.context;
+    const context = (runUpdate.mock.calls[0][0] as {
+      data: { context: { roles: { batches: Record<string, unknown[]> } } };
+    }).data.context;
     expect(context.roles.batches.BEST_FIT_1).toEqual([]);
     expect(context.roles.batches.BEST_FIT_2).toEqual([]);
   });

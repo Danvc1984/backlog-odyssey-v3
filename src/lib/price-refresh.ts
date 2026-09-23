@@ -11,7 +11,8 @@ import {
 } from "./itad-api";
 import { resolveItadIds } from "./itad-identity";
 import { fetchSteamStorePrices, type SteamStorePrice } from "./steam-api";
-import { fetchUsdToMxnRate } from "./exchange-rate";
+import { fetchExchangeRate } from "./exchange-rate";
+import { DEFAULT_PRICE_PREFERENCES, pricePreferencesSchema, type PricePreferences } from "./price-preferences";
 import {
   finalizeRun,
   recoverAbandonedRun,
@@ -41,7 +42,7 @@ export interface EligibleEntry {
 }
 
 export type StartPriceRefreshResult =
-  | { ok: true; runId: string; entries: EligibleEntry[] }
+  | { ok: true; runId: string; entries: EligibleEntry[]; preferences: PricePreferences }
   | { ok: false; reason: "already-running"; runId: string };
 
 export async function startPriceRefresh(
@@ -57,12 +58,21 @@ export async function startPriceRefresh(
   const eligible: EligibleEntry[] = entries.flatMap((entry) =>
     entry.steamAppId ? [{ id: entry.id, name: entry.name, steamAppId: entry.steamAppId }] : [],
   );
+  const settings = await prisma.appSettings.findUnique({
+    where: { id: 1 },
+    select: { priceCountry: true, displayCurrency: true },
+  });
+  const parsedPreferences = pricePreferencesSchema.safeParse(settings);
+  const preferences: PricePreferences = parsedPreferences.success
+    ? parsedPreferences.data
+    : DEFAULT_PRICE_PREFERENCES;
 
   const started = await startSingleRun(
     prisma.priceRefresh,
     {
       status: "RUNNING",
-      country: "MX",
+      country: preferences.priceCountry,
+      displayCurrency: preferences.displayCurrency,
       counts: emptyCounts(eligible.length) as unknown as Prisma.InputJsonValue,
     },
     { status: "RUNNING" },
@@ -70,7 +80,7 @@ export async function startPriceRefresh(
   if (!started.ok) {
     return started;
   }
-  return { ok: true, runId: started.runId, entries: eligible };
+  return { ok: true, runId: started.runId, entries: eligible, preferences };
 }
 
 export function refreshStatusFromCounts(counts: PriceRefreshCounts) {
@@ -122,25 +132,31 @@ function dealToRow(
   historyLow: number | null,
   now: Date,
   exchangeRate: ExchangeRateSnapshot | null,
+  country: string,
+  displayCurrency: string,
 ): DealOfferRow {
   const drm = deal.drm ?? [];
   const platforms = deal.platforms ?? [];
   const sourceCurrency = deal.currency?.trim().toUpperCase() ?? null;
-  const shouldConvert = sourceCurrency === "USD" && exchangeRate !== null;
+  const shouldConvert = exchangeRate !== null;
+  const sourcePrice = deal.price != null ? new Prisma.Decimal(deal.price) : null;
+  const sourceRegularPrice = deal.regular != null ? new Prisma.Decimal(deal.regular) : null;
   return {
     wishlistEntryId: entryId,
     shop: deal.shopName ?? "Unknown shop",
-    country: "MX",
-    currency: shouldConvert ? "MXN" : deal.currency,
+    country,
+    displayCurrency,
+    currency: shouldConvert ? displayCurrency : deal.currency,
     price: convertedDecimal(deal.price, shouldConvert ? exchangeRate : null),
     regularPrice: convertedDecimal(deal.regular, shouldConvert ? exchangeRate : null),
     discount: deal.cut != null && Number.isFinite(deal.cut) ? Math.round(deal.cut) : null,
     historicalLow: convertedDecimal(historyLow, shouldConvert ? exchangeRate : null),
     sourceCurrency: sourceCurrency,
-    sourcePrice: deal.price != null ? new Prisma.Decimal(deal.price) : null,
-    sourceRegularPrice: deal.regular != null ? new Prisma.Decimal(deal.regular) : null,
+    sourcePrice,
+    sourceRegularPrice,
     sourceHistoricalLow: historyLow != null ? new Prisma.Decimal(historyLow) : null,
-    exchangeRateToMxn: shouldConvert ? new Prisma.Decimal(exchangeRate.rate) : null,
+    exchangeRateToMxn: displayCurrency === "MXN" && shouldConvert ? new Prisma.Decimal(exchangeRate.rate) : null,
+    exchangeRateToDisplayCurrency: shouldConvert ? new Prisma.Decimal(exchangeRate.rate) : null,
     exchangeRateFetchedAt: shouldConvert ? exchangeRate.fetchedAt : null,
     voucher: deal.voucher,
     itadFlag: deal.flag,
@@ -152,16 +168,30 @@ function dealToRow(
   };
 }
 
-function steamPriceToRow(entryId: string, price: SteamStorePrice, now: Date): DealOfferRow {
+function steamPriceToRow(
+  entryId: string,
+  price: SteamStorePrice,
+  now: Date,
+  country: string,
+  displayCurrency: string,
+  exchangeRate: ExchangeRateSnapshot | null,
+): DealOfferRow {
   return {
     wishlistEntryId: entryId,
     shop: "Steam Store",
-    country: "MX",
-    currency: price.currency,
-    price: new Prisma.Decimal(price.price),
-    regularPrice: new Prisma.Decimal(price.regularPrice),
+    country,
+    displayCurrency,
+    currency: exchangeRate ? displayCurrency : price.currency,
+    price: convertedDecimal(price.price, exchangeRate),
+    regularPrice: convertedDecimal(price.regularPrice, exchangeRate),
     discount: price.discount,
     historicalLow: null,
+    sourceCurrency: price.currency,
+    sourcePrice: new Prisma.Decimal(price.price),
+    sourceRegularPrice: new Prisma.Decimal(price.regularPrice),
+    sourceHistoricalLow: null,
+    exchangeRateToMxn: displayCurrency === "MXN" && exchangeRate ? new Prisma.Decimal(exchangeRate.rate) : null,
+    exchangeRateToDisplayCurrency: exchangeRate ? new Prisma.Decimal(exchangeRate.rate) : null,
     voucher: null,
     itadFlag: null,
     drm: "Steam",
@@ -184,6 +214,7 @@ async function replaceOffers(entryIds: string[], rows: DealOfferRow[]): Promise<
 export async function processPriceRefreshEntries(
   apiKey: string,
   entries: EligibleEntry[],
+  preferences: PricePreferences = DEFAULT_PRICE_PREFERENCES,
 ): Promise<PriceRefreshCounts> {
   const allCount = await prisma.wishlistEntry.count();
   const counts: PriceRefreshCounts = {
@@ -195,15 +226,25 @@ export async function processPriceRefreshEntries(
     return counts;
   }
 
-  let exchangeRate: ExchangeRateSnapshot | null = null;
-  const exchangeRateResult = await fetchUsdToMxnRate();
-  if (exchangeRateResult.ok) {
-    exchangeRate = exchangeRateResult;
-  } else {
-    counts.conversionUnavailable = true;
-  }
+  const exchangeRates = new Map<string, ExchangeRateSnapshot | null>();
+  const exchangeRateFor = async (
+    sourceCurrency: string | null | undefined,
+    displayCurrency: string,
+  ): Promise<ExchangeRateSnapshot | null> => {
+    const source = sourceCurrency?.trim().toUpperCase();
+    if (!source) return null;
+    if (source === displayCurrency.trim().toUpperCase()) {
+      return { rate: 1, fetchedAt: new Date() };
+    }
+    const key = `${source}:${displayCurrency}`;
+    if (exchangeRates.has(key)) return exchangeRates.get(key) ?? null;
+    const result = await fetchExchangeRate(source, displayCurrency);
+    const exchangeRate = result.ok ? result : null;
+    exchangeRates.set(key, exchangeRate);
+    return exchangeRate;
+  };
 
-  const steamPrices = await fetchSteamStorePrices(entries.map((entry) => entry.steamAppId));
+  const steamPrices = await fetchSteamStorePrices(entries.map((entry) => entry.steamAppId), preferences.priceCountry);
 
   const identityLookup = await resolveItadIds(
     apiKey,
@@ -217,7 +258,9 @@ export async function processPriceRefreshEntries(
         continue;
       }
       try {
-        await replaceOffers([entry.id], [steamPriceToRow(entry.id, steamPrice, new Date())]);
+        const exchangeRate = await exchangeRateFor(steamPrice.currency, preferences.displayCurrency);
+        if (!exchangeRate) counts.conversionUnavailable = true;
+        await replaceOffers([entry.id], [steamPriceToRow(entry.id, steamPrice, new Date(), preferences.priceCountry, preferences.displayCurrency, exchangeRate)]);
         counts.refreshed += 1;
       } catch {
         counts.failed += 1;
@@ -243,6 +286,7 @@ export async function processPriceRefreshEntries(
       outcome = await fetchItadPrices(
         apiKey,
         chunk.map(({ itadId }) => itadId),
+        preferences.priceCountry,
       );
     } catch {
       outcome = { category: "NETWORK", message: "ITAD prices could not be fetched" };
@@ -265,7 +309,9 @@ export async function processPriceRefreshEntries(
       entryIds.push(entry.id);
       const steamPrice = steamPrices.get(entry.steamAppId);
       if (steamPrice) {
-        rows.push(steamPriceToRow(entry.id, steamPrice, now));
+        const exchangeRate = await exchangeRateFor(steamPrice.currency, preferences.displayCurrency);
+        if (!exchangeRate) counts.conversionUnavailable = true;
+        rows.push(steamPriceToRow(entry.id, steamPrice, now, preferences.priceCountry, preferences.displayCurrency, exchangeRate));
         dealtEntryIds.push(entry.id);
       }
       if (game.deals.length === 0) {
@@ -274,7 +320,13 @@ export async function processPriceRefreshEntries(
       if (!steamPrice) {
         dealtEntryIds.push(entry.id);
       }
-      rows.push(...game.deals.map((deal) => dealToRow(entry.id, deal, game.historyLow, now, exchangeRate)));
+      for (const deal of game.deals) {
+        const exchangeRate = await exchangeRateFor(deal.currency, preferences.displayCurrency);
+        if (deal.currency && !exchangeRate && deal.currency.toUpperCase() !== preferences.displayCurrency) {
+          counts.conversionUnavailable = true;
+        }
+        rows.push(dealToRow(entry.id, deal, game.historyLow, now, exchangeRate, preferences.priceCountry, preferences.displayCurrency));
+      }
     }
     try {
       await replaceOffers(entryIds, rows);
@@ -296,7 +348,9 @@ export async function processPriceRefreshEntries(
       continue;
     }
     try {
-      await replaceOffers([entry.id], [steamPriceToRow(entry.id, steamPrice, new Date())]);
+      const exchangeRate = await exchangeRateFor(steamPrice.currency, preferences.displayCurrency);
+      if (!exchangeRate) counts.conversionUnavailable = true;
+      await replaceOffers([entry.id], [steamPriceToRow(entry.id, steamPrice, new Date(), preferences.priceCountry, preferences.displayCurrency, exchangeRate)]);
       counts.refreshed += 1;
       counts.notFound -= 1;
     } catch {
@@ -318,7 +372,7 @@ export async function runPriceRefresh(apiKey: string): Promise<RunPriceRefreshRe
   }
 
   try {
-    const counts = await processPriceRefreshEntries(apiKey, started.entries);
+    const counts = await processPriceRefreshEntries(apiKey, started.entries, started.preferences);
     await finalizePriceRefresh(started.runId, counts);
     return { ok: true, runId: started.runId };
   } catch {

@@ -3,13 +3,15 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { SignOutIcon } from "@phosphor-icons/react";
-import { updateOsSetup } from "@/actions/settings";
+import { updateOsSetup, updatePricePreferences } from "@/actions/settings";
 import { buildOsSetupConsequenceSummary, type OsSetup } from "@/lib/os-setup";
+import { DEFAULT_PRICE_PREFERENCES, type PricePreferences } from "@/lib/price-preferences";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SectionCard, StatusPill } from "@/components/ui/detail-card";
+import { PricePreferencesFields } from "./PricePreferencesFields";
 
 const DEFAULT_SETUP: OsSetup = {
   primaryOs: "LINUX",
@@ -24,18 +26,22 @@ const ENVIRONMENT_LABELS = {
   NONE: "None",
 } as const;
 
-interface EnvironmentSettings extends OsSetup {
-  priceCountry: string | null;
+interface EnvironmentSettings {
+  primaryOs: OsSetup["primaryOs"];
+  hasWindowsFallback: boolean;
+  handheldOs: OsSetup["handheldOs"];
+  onboardingCompleted: boolean;
   timeZone: string | null;
 }
 
-function setupFromSettings(settings: EnvironmentSettings | null): OsSetup {
-  if (!settings) return DEFAULT_SETUP;
+function setupFromSettings(settings: EnvironmentSettings | null, pricePreferences: PricePreferences): OsSetup {
+  if (!settings) return { ...DEFAULT_SETUP, ...pricePreferences };
   return {
     primaryOs: settings.primaryOs,
     hasWindowsFallback: settings.hasWindowsFallback,
     handheldOs: settings.handheldOs,
     onboardingCompleted: settings.onboardingCompleted,
+    ...pricePreferences,
   };
 }
 
@@ -47,23 +53,34 @@ export function AccountCard({
   email,
   signOutAction,
   settings,
+  pricePreferences,
 }: {
   email: string | null;
   signOutAction: () => Promise<void>;
   settings: EnvironmentSettings | null;
+  pricePreferences: PricePreferences;
 }) {
-  const [savedSetup, setSavedSetup] = useState(() => setupFromSettings(settings));
+  const [savedSetup, setSavedSetup] = useState(() => setupFromSettings(settings, pricePreferences));
   const [draft, setDraft] = useState(savedSetup);
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [saving, setSaving] = useState(false);
   const consequence = buildOsSetupConsequenceSummary(draft);
+  const environmentChanged =
+    draft.primaryOs !== savedSetup.primaryOs ||
+    draft.hasWindowsFallback !== savedSetup.hasWindowsFallback ||
+    draft.handheldOs !== savedSetup.handheldOs ||
+    draft.onboardingCompleted !== savedSetup.onboardingCompleted;
+  const pricePreferencesChanged =
+    draft.priceCountry !== savedSetup.priceCountry ||
+    draft.displayCurrency !== savedSetup.displayCurrency;
 
   const rows = [
     { label: "Primary OS", value: environmentLabel(savedSetup.primaryOs) },
     { label: "Windows fallback", value: savedSetup.hasWindowsFallback ? "Yes" : "No" },
     { label: "Handheld OS", value: environmentLabel(savedSetup.handheldOs) },
-    { label: "Price country", value: settings?.priceCountry ?? "MX" },
+    { label: "Price country", value: savedSetup.priceCountry ?? DEFAULT_PRICE_PREFERENCES.priceCountry },
+    { label: "Display currency", value: savedSetup.displayCurrency ?? DEFAULT_PRICE_PREFERENCES.displayCurrency },
     { label: "Time zone", value: settings?.timeZone ?? "America/Mexico_City" },
   ];
 
@@ -75,16 +92,35 @@ export function AccountCard({
 
   const save = async () => {
     setSaving(true);
-    const result = await updateOsSetup(draft);
-    setSaving(false);
-    if (!result.success) {
-      toast.error(result.error ?? "Failed to update OS setup");
-      return;
+    if (environmentChanged) {
+      const result = await updateOsSetup({
+        primaryOs: draft.primaryOs,
+        hasWindowsFallback: draft.hasWindowsFallback,
+        handheldOs: draft.handheldOs,
+        onboardingCompleted: draft.onboardingCompleted,
+      });
+      if (!result.success) {
+        setSaving(false);
+        toast.error(result.error ?? "Failed to update OS setup");
+        return;
+      }
     }
+    if (pricePreferencesChanged) {
+      const result = await updatePricePreferences({
+        priceCountry: draft.priceCountry ?? DEFAULT_PRICE_PREFERENCES.priceCountry,
+        displayCurrency: draft.displayCurrency ?? DEFAULT_PRICE_PREFERENCES.displayCurrency,
+      });
+      if (!result.success) {
+        setSaving(false);
+        toast.error(result.error ?? "Failed to update price preferences");
+        return;
+      }
+    }
+    setSaving(false);
     setSavedSetup(draft);
     setOpen(false);
     setConfirming(false);
-    toast.success("OS setup updated");
+    toast.success("Environment and price preferences updated");
   };
 
   return (
@@ -164,6 +200,24 @@ export function AccountCard({
                           </SelectContent>
                         </Select>
                       </div>
+                      <div className="border-t border-border pt-4">
+                        <h3 className="text-sm font-medium">Regional prices</h3>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                          Choose the market used for refreshes and the currency used for optional display estimates.
+                        </p>
+                        <div className="mt-3">
+                          <PricePreferencesFields
+                            value={{
+                              priceCountry: draft.priceCountry ?? DEFAULT_PRICE_PREFERENCES.priceCountry,
+                              displayCurrency: draft.displayCurrency ?? DEFAULT_PRICE_PREFERENCES.displayCurrency,
+                            }}
+                            onChange={(pricePreferences) => setDraft((current) => ({ ...current, ...pricePreferences }))}
+                          />
+                        </div>
+                        <p className="mt-3 text-xs text-muted-foreground">
+                          Changing either choice does not refresh prices automatically. Run a manual price refresh before expecting offers to use the new market.
+                        </p>
+                      </div>
                     </div>
                     <DialogFooter>
                       <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
@@ -174,11 +228,20 @@ export function AccountCard({
                   <>
                     <DialogHeader>
                       <DialogTitle>Apply environment changes?</DialogTitle>
-                      <DialogDescription>Saving this setup immediately updates derived compatibility and regenerates recommendation runs.</DialogDescription>
+                      <DialogDescription>
+                        {environmentChanged
+                          ? "Saving this setup immediately updates derived compatibility and regenerates recommendation runs."
+                          : "Saving these price preferences changes future refreshes only. Existing offers stay unchanged until you run a manual refresh."}
+                      </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-2 rounded-md border border-border bg-muted/30 p-3 text-sm">
-                      <p>{consequence.compatibility}</p>
-                      <p>{consequence.recommendations}</p>
+                      {environmentChanged && (
+                        <>
+                          <p>{consequence.compatibility}</p>
+                          <p>{consequence.recommendations}</p>
+                        </>
+                      )}
+                      <p>Price refreshes will use {draft.priceCountry} and display {draft.displayCurrency} after the next manual refresh.</p>
                     </div>
                     <DialogFooter>
                       <Button type="button" variant="outline" onClick={() => setConfirming(false)} disabled={saving}>Back</Button>

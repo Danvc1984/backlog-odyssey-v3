@@ -8,7 +8,7 @@ vi.mock("@/lib/recommendations/run-pipeline", () => ({ runRecommendationPipeline
 import { requireUser } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { runRecommendationPipeline } from "@/lib/recommendations/run-pipeline";
-import { updateDurationProfile, updateOsSetup } from "./settings";
+import { updateDurationProfile, updateOsSetup, updatePricePreferences } from "./settings";
 
 const transaction = vi.fn();
 const settingsUpsert = vi.fn();
@@ -149,5 +149,25 @@ describe("updateOsSetup", () => {
       create: { id: 1, ...validSetup },
       update: validSetup,
     });
+  });
+});
+
+describe("updatePricePreferences", () => {
+  it("persists supported market and display currency after authentication", async () => {
+    const result = await updatePricePreferences({ priceCountry: "CA", displayCurrency: "USD" });
+
+    expect(result.success).toBe(true);
+    expect(settingsUpsert).toHaveBeenCalledWith({
+      where: { id: 1 },
+      create: { id: 1, priceCountry: "CA", displayCurrency: "USD" },
+      update: { priceCountry: "CA", displayCurrency: "USD" },
+    });
+  });
+
+  it("rejects unsupported values before persistence", async () => {
+    const result = await updatePricePreferences({ priceCountry: "FR", displayCurrency: "EUR" });
+
+    expect(result).toEqual({ success: false, data: null, error: "Invalid price preferences" });
+    expect(settingsUpsert).not.toHaveBeenCalled();
   });
 });

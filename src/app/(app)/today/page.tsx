@@ -324,6 +324,7 @@ export default async function TodayPage() {
           </p>
         ) : (
           <RecommendationSpotlightCarousel
+            key={latestPlayNextRun.id}
             label="Play Next recommendations"
             slides={(hasPlayRoles
               ? PLAY_ROLE_ORDER.flatMap((role) => items.filter((item) => item.role === role))
@@ -365,6 +366,7 @@ export default async function TodayPage() {
           </p>
         ) : (
           <RecommendationSpotlightCarousel
+            key={latestBuyRun.id}
             label="Purchase recommendations"
             slides={(hasBuyRoles
               ? BUY_ROLE_ORDER.flatMap((role) => buyItems.filter((item) => item.role === role))

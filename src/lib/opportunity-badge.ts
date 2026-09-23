@@ -22,6 +22,13 @@ export function evaluateOpportunityBadge(
     return { hasBadge: false, reason: "non-mxn-currency" };
   }
 
+  if (
+    selectedOffer.sourceCurrency &&
+    selectedOffer.sourceCurrency.trim().toUpperCase() !== "MXN"
+  ) {
+    return { hasBadge: false, reason: "converted-source-currency" };
+  }
+
   if (selectedOffer.price == null || !Number.isFinite(toOfferNumber(selectedOffer.price))) {
     return { hasBadge: false, reason: "invalid-price" };
   }

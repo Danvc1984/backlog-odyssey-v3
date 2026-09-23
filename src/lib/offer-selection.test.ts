@@ -69,6 +69,27 @@ describe("selectCheapestOffers", () => {
     expect(result.alternatives).toEqual([usd]);
   });
 
+  it("keeps source-currency selection stable when display conversion changes", () => {
+    const cad = offer({
+      price: 10,
+      currency: "USD",
+      sourceCurrency: "CAD",
+      sourcePrice: 14,
+    });
+    const usd = offer({
+      price: 8,
+      currency: "USD",
+      sourceCurrency: "USD",
+      sourcePrice: 12,
+    });
+
+    expect(selectCheapestOffers([cad, usd], now).selected?.sourceCurrency).toBe("CAD");
+    expect(selectCheapestOffers([
+      { ...cad, price: 7 },
+      { ...usd, price: 8 },
+    ], now).selected?.sourceCurrency).toBe("CAD");
+  });
+
   it("ignores null, non-finite, zero-price, and expired offers appropriately", () => {
     const result = selectCheapestOffers([
       offer({ price: null }),
@@ -134,5 +155,58 @@ describe("buildEntryOfferView", () => {
         isKeyshop: true,
       },
     });
+  });
+
+  it("labels converted values and never treats them as MXN target comparisons", () => {
+    const converted = buildEntryOfferView([
+      {
+        shop: "US Store",
+        currency: "MXN",
+        price: 200,
+        regularPrice: 300,
+        sourceCurrency: "USD",
+        sourcePrice: 10,
+        sourceRegularPrice: 15,
+        sourceHistoricalLow: null,
+        exchangeRateToMxn: null,
+        displayCurrency: "MXN",
+        exchangeRateToDisplayCurrency: 20,
+        discount: null,
+        historicalLow: null,
+        url: null,
+        itadFlag: null,
+        drm: null,
+        fetchedAt: now,
+        expiresAt: null,
+      },
+    ], 250, now);
+
+    expect(converted.selected).toMatchObject({ isEstimated: true, conversionUnavailable: false });
+    expect(converted.opportunity.hasBadge).toBe(false);
+
+    const unavailable = buildEntryOfferView([
+      {
+        shop: "US Store",
+        currency: "USD",
+        price: 10,
+        regularPrice: null,
+        sourceCurrency: "USD",
+        sourcePrice: 10,
+        sourceRegularPrice: null,
+        sourceHistoricalLow: null,
+        exchangeRateToMxn: null,
+        displayCurrency: "MXN",
+        exchangeRateToDisplayCurrency: null,
+        discount: null,
+        historicalLow: null,
+        url: null,
+        itadFlag: null,
+        drm: null,
+        fetchedAt: now,
+        expiresAt: null,
+      },
+    ], 250, now);
+
+    expect(unavailable.selected).toMatchObject({ conversionUnavailable: true, currency: "USD" });
   });
 });

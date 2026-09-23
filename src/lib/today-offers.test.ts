@@ -31,4 +31,18 @@ describe("rankTodayOffers", () => {
     const target = entry("target", "Target", 30, { targetPriceMxn: 40, offers: [{ ...entry("x", "x", 30).offers[0], discount: null }] });
     expect(rankTodayOffers([nullable, target], now).map((offer) => offer.gameName)).toEqual(["Target", "Null discount"]);
   });
+
+  it("does not compare a converted offer with the MXN target", () => {
+    const converted = entry("converted", "Converted", 200, {
+      targetPriceMxn: 250,
+      offers: [{
+        ...entry("x", "x", 200).offers[0],
+        currency: "MXN",
+        sourceCurrency: "USD",
+        sourcePrice: 10,
+      }],
+    });
+
+    expect(rankTodayOffers([converted], now)[0]?.targetMet).toBe(false);
+  });
 });

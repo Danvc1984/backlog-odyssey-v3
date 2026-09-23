@@ -23,6 +23,9 @@ export interface TodayOfferView {
   fetchedAt: string;
   targetMet: boolean;
   sellerUrl: string | null;
+  displayCurrency: string | null;
+  isEstimated: boolean;
+  conversionUnavailable: boolean;
 }
 
 export function rankTodayOffers(entries: readonly TodayOfferEntry[], now: Date): TodayOfferView[] {
@@ -40,8 +43,15 @@ export function rankTodayOffers(entries: readonly TodayOfferEntry[], now: Date):
         currency: offer.currency,
         store: offer.shop,
         fetchedAt: offer.fetchedAt.toISOString(),
-        targetMet: entry.targetPriceMxn !== null && offer.price <= toOfferNumber(entry.targetPriceMxn),
+        targetMet:
+          entry.targetPriceMxn !== null &&
+          offer.currency.trim().toUpperCase() === "MXN" &&
+          (offer.sourceCurrency?.trim().toUpperCase() ?? offer.currency.trim().toUpperCase()) === "MXN" &&
+          offer.price <= toOfferNumber(entry.targetPriceMxn),
         sellerUrl: offer.url,
+        displayCurrency: offer.displayCurrency ?? null,
+        isEstimated: offer.isEstimated ?? false,
+        conversionUnavailable: offer.conversionUnavailable ?? false,
       };
     })
     .filter((offer): offer is TodayOfferView => offer !== null)

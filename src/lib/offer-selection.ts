@@ -15,6 +15,8 @@ export interface OfferSelectionInput {
   sourceRegularPrice?: OfferNumericValue | null;
   sourceHistoricalLow?: OfferNumericValue | null;
   exchangeRateToMxn?: OfferNumericValue | null;
+  displayCurrency?: string | null;
+  exchangeRateToDisplayCurrency?: OfferNumericValue | null;
   expiresAt: Date | null;
   fetchedAt: Date | null;
   itadFlag: string | null;
@@ -41,7 +43,8 @@ export function toOfferNumber(value: OfferNumericValue): number {
 }
 
 function hasValidPrice<T extends OfferSelectionInput>(offer: T): boolean {
-  return offer.price != null && Number.isFinite(toOfferNumber(offer.price));
+  const price = comparisonPrice(offer);
+  return price != null && Number.isFinite(toOfferNumber(price));
 }
 
 function isNotExpired<T extends OfferSelectionInput>(offer: T, now: Date): boolean {
@@ -62,17 +65,28 @@ function normalizedCurrency(currency: string | null | undefined): string | null 
   return value ? value : null;
 }
 
+function comparisonCurrency<T extends OfferSelectionInput>(offer: T): string | null {
+  if (!offer) {
+    return null;
+  }
+  return normalizedCurrency(offer.sourceCurrency) ?? normalizedCurrency(offer.currency);
+}
+
+function comparisonPrice<T extends OfferSelectionInput>(offer: T): OfferNumericValue | null {
+  return offer.sourcePrice ?? offer.price ?? null;
+}
+
 function sameCurrency<T extends OfferSelectionInput>(offer: T, currency: string | null): boolean {
-  return normalizedCurrency(offer.currency) === currency;
+  return comparisonCurrency(offer) === currency;
 }
 
 function comparableOffers<T extends OfferSelectionInput>(offers: T[]): T[] {
-  const hasMxn = offers.some((offer) => normalizedCurrency(offer.currency) === "MXN");
+  const hasMxn = offers.some((offer) => comparisonCurrency(offer) === "MXN");
   if (hasMxn) {
     return offers.filter((offer) => sameCurrency(offer, "MXN"));
   }
 
-  const firstCurrency = normalizedCurrency(offers[0]?.currency);
+  const firstCurrency = comparisonCurrency(offers[0]);
   return offers.filter((offer) => sameCurrency(offer, firstCurrency));
 }
 
@@ -80,7 +94,7 @@ function sortByPrice<T extends OfferSelectionInput>(offers: T[]): T[] {
   return offers
     .map((offer, index) => ({ offer, index }))
     .sort((left, right) => {
-      const priceDifference = toOfferNumber(left.offer.price!) - toOfferNumber(right.offer.price!);
+      const priceDifference = toOfferNumber(comparisonPrice(left.offer)!) - toOfferNumber(comparisonPrice(right.offer)!);
       return priceDifference || left.index - right.index;
     })
     .map(({ offer }) => offer);
@@ -105,7 +119,7 @@ export function selectCheapestOffers<T extends OfferSelectionInput>(
     ? sortByPrice(comparable).filter((offer) => offer !== selected)
     : [];
   const otherCurrencyOffers = selected
-    ? validOffers.filter((offer) => !sameCurrency(offer, normalizedCurrency(selected.currency)))
+    ? validOffers.filter((offer) => !sameCurrency(offer, comparisonCurrency(selected)))
     : [];
   const alternatives = selected
     ? [...rankedAlternatives, ...otherCurrencyOffers].slice(0, 9)
@@ -133,6 +147,16 @@ function toWishlistOfferView(offer: WishlistOfferSource): WishlistOfferView {
     sourceRegularPrice: toNullableNumber(offer.sourceRegularPrice ?? null),
     sourceHistoricalLow: toNullableNumber(offer.sourceHistoricalLow ?? null),
     exchangeRateToMxn: toNullableNumber(offer.exchangeRateToMxn ?? null),
+    displayCurrency: offer.displayCurrency ?? null,
+    exchangeRateToDisplayCurrency: toNullableNumber(offer.exchangeRateToDisplayCurrency ?? null),
+    isEstimated:
+      offer.displayCurrency != null &&
+      normalizedCurrency(offer.sourceCurrency) !== normalizedCurrency(offer.displayCurrency) &&
+      offer.exchangeRateToDisplayCurrency != null,
+    conversionUnavailable:
+      offer.displayCurrency != null &&
+      normalizedCurrency(offer.sourceCurrency) !== normalizedCurrency(offer.displayCurrency) &&
+      offer.exchangeRateToDisplayCurrency == null,
     discount: offer.discount,
     historicalLow: toNullableNumber(offer.historicalLow),
     url: offer.url,

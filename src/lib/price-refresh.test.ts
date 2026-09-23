@@ -19,7 +19,7 @@ vi.mock("./steam-api", () => ({
   fetchSteamStorePrices: vi.fn(),
 }));
 vi.mock("./exchange-rate", () => ({
-  fetchUsdToMxnRate: vi.fn(),
+  fetchExchangeRate: vi.fn(),
 }));
 
 import { Prisma } from "@/generated/prisma/client";
@@ -27,7 +27,7 @@ import { prisma } from "@/lib/prisma";
 import { fetchItadPrices } from "./itad-api";
 import { resolveItadIds } from "./itad-identity";
 import { fetchSteamStorePrices } from "./steam-api";
-import { fetchUsdToMxnRate } from "./exchange-rate";
+import { fetchExchangeRate } from "./exchange-rate";
 import {
   emptyCounts,
   finalizePriceRefresh,
@@ -45,6 +45,7 @@ const mockRunCreate = vi.fn();
 const mockRunUpdate = vi.fn();
 const mockWishlistCount = vi.fn();
 const mockTransaction = vi.fn();
+const mockSettingsFindUnique = vi.fn();
 const txDealDelete = vi.fn();
 const txDealCreate = vi.fn();
 
@@ -67,6 +68,9 @@ function configurePrisma() {
     findMany: mockEntryFindMany,
     count: mockWishlistCount,
   };
+  (prisma as unknown as Record<string, unknown>).appSettings = {
+    findUnique: mockSettingsFindUnique,
+  };
   (prisma as unknown as { $transaction: typeof mockTransaction }).$transaction =
     mockTransaction;
   mockTransaction.mockImplementation(async (callback: (tx: unknown) => unknown) =>
@@ -88,11 +92,12 @@ beforeEach(() => {
   mockRunCreate.mockResolvedValue({ id: "run-1" });
   mockRunFindFirst.mockResolvedValue({ id: "run-active" });
   mockRunUpdate.mockResolvedValue({ id: "run-1" });
-  vi.mocked(fetchUsdToMxnRate).mockResolvedValue({
+  mockSettingsFindUnique.mockResolvedValue(null);
+  vi.mocked(fetchExchangeRate).mockImplementation(async (source, target) => ({
     ok: true,
-    rate: 20,
+    rate: source === target ? 1 : 20,
     fetchedAt: new Date("2026-08-21T18:00:00.000Z"),
-  });
+  }));
 });
 
 const now = new Date("2026-08-21T18:00:00.000Z");
@@ -110,6 +115,7 @@ describe("startPriceRefresh", () => {
       ok: true,
       runId: "run-1",
       entries: [{ id: "w1", name: "Portal 2", steamAppId: "620" }],
+      preferences: { priceCountry: "MX", displayCurrency: "MXN" },
     });
     expect(mockEntryFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -117,7 +123,14 @@ describe("startPriceRefresh", () => {
       }),
     );
     expect(mockRunCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { status: "RUNNING", country: "MX", counts: emptyCounts(1) } }),
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: "RUNNING",
+          country: "MX",
+          displayCurrency: "MXN",
+          counts: emptyCounts(1),
+        }),
+      }),
     );
   });
 
@@ -276,12 +289,13 @@ describe("processPriceRefreshEntries", () => {
       sourceRegularPrice: expect.objectContaining({ toNumber: expect.any(Function) }),
       sourceHistoricalLow: expect.objectContaining({ toNumber: expect.any(Function) }),
       exchangeRateToMxn: expect.objectContaining({ toNumber: expect.any(Function) }),
+      exchangeRateToDisplayCurrency: expect.objectContaining({ toNumber: expect.any(Function) }),
       exchangeRateFetchedAt: new Date("2026-08-21T18:00:00.000Z"),
     });
     expect((created[0].price as Prisma.Decimal).toNumber()).toBe(199.8);
     expect((created[0].regularPrice as Prisma.Decimal).toNumber()).toBe(399.8);
     expect((created[0].historicalLow as Prisma.Decimal).toNumber()).toBe(100);
-    expect(fetchUsdToMxnRate).toHaveBeenCalledTimes(1);
+    expect(fetchExchangeRate).toHaveBeenCalledTimes(1);
   });
 
   it("keeps source-currency offers when the exchange rate is unavailable", async () => {
@@ -290,7 +304,7 @@ describe("processPriceRefreshEntries", () => {
     vi.mocked(fetchItadPrices).mockResolvedValue([
       { itadId: "uuid-620", historyLow: null, deals: [{ shop: { id: 62, name: "Store" }, price: 9.99, currency: "USD" } as never] },
     ]);
-    vi.mocked(fetchUsdToMxnRate).mockResolvedValue({
+    vi.mocked(fetchExchangeRate).mockResolvedValue({
       ok: false,
       error: { category: "NETWORK", message: "offline" },
     });
@@ -304,6 +318,7 @@ describe("processPriceRefreshEntries", () => {
       sourceCurrency: "USD",
       sourcePrice: expect.objectContaining({ toNumber: expect.any(Function) }),
       exchangeRateToMxn: null,
+      exchangeRateToDisplayCurrency: null,
     });
     expect((created[0].price as Prisma.Decimal).toNumber()).toBe(9.99);
   });

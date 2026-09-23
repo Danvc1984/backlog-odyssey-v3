@@ -129,18 +129,6 @@ export default async function WishlistDetailPage({
     ...resolveSourcePresentation(source.name),
   }));
 
-  const latestBuyRun = await prisma.recommendationRun.findFirst({
-    where: { kind: "BUY" },
-    orderBy: { createdAt: "desc" },
-    include: {
-      items: {
-        where: { wishlistEntryId: id },
-        orderBy: { rank: "asc" },
-        take: 1,
-      },
-    },
-  });
-  const buyItem = latestBuyRun?.items[0] ?? null;
   const configuredLinuxDevicePhrase = linuxDevicePhrase(
     compatibilityGate.setup ?? { primaryOs: "LINUX", handheldOs: "NONE" },
   );

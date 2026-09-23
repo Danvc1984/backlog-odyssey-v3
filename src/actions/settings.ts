@@ -10,6 +10,7 @@ import { osSetupSchema } from "@/lib/os-setup";
 import { runRecommendationPipeline } from "@/lib/recommendations/run-pipeline";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { pricePreferencesSchema } from "@/lib/price-preferences";
 
 const durationProfileSchema = z.enum(["HASTILY", "NORMALLY", "COMPLETELY"]);
 
@@ -124,5 +125,21 @@ export async function updateDurationProfile(input: unknown) {
     return { success: true as const, data: settings, error: null };
   } catch (error) {
     return { success: false as const, data: null, error: friendlyActionError(error, "Failed to update duration profile") };
+  }
+}
+
+export async function updatePricePreferences(input: unknown) {
+  try {
+    await requireUser();
+    const parsed = pricePreferencesSchema.safeParse(input);
+    if (!parsed.success) return { success: false as const, data: null, error: "Invalid price preferences" };
+    const settings = await prisma.appSettings.upsert({
+      where: { id: 1 },
+      create: { id: 1, ...parsed.data },
+      update: parsed.data,
+    });
+    return { success: true as const, data: settings, error: null };
+  } catch (error) {
+    return { success: false as const, data: null, error: friendlyActionError(error, "Failed to update price preferences") };
   }
 }

@@ -293,18 +293,21 @@ async function postJson(
 export async function fetchItadPrices(
   apiKey: string,
   itadIds: string[],
+  countryOrOptions: string | ItadFetchOptions = "MX",
   options: ItadFetchOptions = {},
 ): Promise<ItadGamePrices[] | ItadProviderError> {
   if (!apiKey || itadIds.length === 0) {
     return [];
   }
 
-  const fetchFn = options.fetchFn ?? fetch;
+  const country = typeof countryOrOptions === "string" ? countryOrOptions : "MX";
+  const fetchOptions = typeof countryOrOptions === "string" ? options : countryOrOptions;
+  const fetchFn = fetchOptions.fetchFn ?? fetch;
   const results: ItadGamePrices[] = [];
 
   for (const chunk of chunkItadIds(itadIds)) {
     // No deals filter: full-price games must still yield their current price.
-    const url = `${ITAD_API_BASE_URL}/games/prices/v3?country=MX&key=${encodeURIComponent(apiKey)}`;
+    const url = `${ITAD_API_BASE_URL}/games/prices/v3?country=${encodeURIComponent(country)}&key=${encodeURIComponent(apiKey)}`;
     const outcome = await postJson(fetchFn, url, JSON.stringify(chunk));
     if (!outcome.ok) {
       return outcome.error;

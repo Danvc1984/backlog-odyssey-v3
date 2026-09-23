@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { displayCurrencySchema, priceCountrySchema } from "./price-preferences";
 
 export const primaryOsSchema = z.enum(["LINUX", "WINDOWS"]);
 export const handheldOsSchema = z.enum(["NONE", "LINUX", "WINDOWS"]);
@@ -11,6 +12,8 @@ export const osSetupSchema = z
     handheldOs: handheldOsSchema,
     onboardingCompleted: z.boolean(),
     durationProfile: durationProfileSchema.optional(),
+    priceCountry: priceCountrySchema.optional(),
+    displayCurrency: displayCurrencySchema.optional(),
   })
   .strict()
   .superRefine((setup, context) => {

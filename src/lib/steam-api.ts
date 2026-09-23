@@ -282,8 +282,11 @@ export async function fetchSteamWishlist(
 
 export async function fetchSteamStorePrices(
   appids: readonly string[],
+  countryOrFetchFn: string | typeof fetch = "MX",
   fetchFn: typeof fetch = fetch,
 ): Promise<Map<string, SteamStorePrice>> {
+  const country = typeof countryOrFetchFn === "string" ? countryOrFetchFn : "MX";
+  const requestFetch = typeof countryOrFetchFn === "string" ? fetchFn : countryOrFetchFn;
   const prices = new Map<string, SteamStorePrice>();
   const validAppids = [...new Set(appids)]
     .map((value) => parseSteamAppId(value))
@@ -295,12 +298,12 @@ export async function fetchSteamStorePrices(
         try {
           const params = new URLSearchParams({
             appids: String(appid),
-            cc: "MX",
+            cc: country.toUpperCase(),
             l: "spanish",
             filters: "price_overview",
           });
           const response = await fetchWithTimeout(
-            fetchFn,
+            requestFetch,
             `https://store.steampowered.com/api/appdetails?${params}`,
           );
           if (!response.ok) return;
@@ -324,7 +327,7 @@ export async function fetchSteamStorePrices(
             regularPrice: regularMinor / 100,
             price: priceMinor / 100,
             discount: Math.round(discount),
-            url: `https://store.steampowered.com/app/${appid}/?cc=mx`,
+            url: `https://store.steampowered.com/app/${appid}/?cc=${country.toLowerCase()}`,
           });
         } catch {
           // Direct Store prices are optional. ITAD can still provide offers.

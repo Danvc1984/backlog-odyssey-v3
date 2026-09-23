@@ -134,18 +134,22 @@ export function WishlistCard({
               </div>
             )}
             {entry.steamAppId !== null && (
-              <Link
-                href={`/wishlist/${entry.id}#offers`}
-                className="mt-3 inline-flex items-center gap-2 text-sm font-semibold hover:text-primary"
-                aria-label={`Open offers for ${entry.name}`}
-              >
-                {formatPrice(selectedOffer?.price ?? null, selectedOffer?.currency ?? null)}
-                {selectedOffer?.discount !== null && selectedOffer?.discount !== undefined && selectedOffer.discount > 0 && (
-                  <span className={cn("rounded bg-emerald-500/15 px-1.5 py-0.5 text-xs font-medium text-emerald-400", shouldGlowOffer(selectedOffer.discount) && "shadow-glow")}>
-                    -{selectedOffer.discount}%
-                  </span>
-                )}
-              </Link>
+              <>
+                <Link
+                  href={`/wishlist/${entry.id}#offers`}
+                  className="mt-3 inline-flex items-center gap-2 text-sm font-semibold hover:text-primary"
+                  aria-label={`Open offers for ${entry.name}`}
+                >
+                  {formatPrice(selectedOffer?.price ?? null, selectedOffer?.currency ?? null)}
+                  {selectedOffer?.discount !== null && selectedOffer?.discount !== undefined && selectedOffer.discount > 0 && (
+                    <span className={cn("rounded bg-emerald-500/15 px-1.5 py-0.5 text-xs font-medium text-emerald-400", shouldGlowOffer(selectedOffer.discount) && "shadow-glow")}>
+                      -{selectedOffer.discount}%
+                    </span>
+                  )}
+                </Link>
+                {selectedOffer?.isEstimated && <p className="mt-1 text-xs text-muted-foreground">Estimated display value</p>}
+                {selectedOffer?.conversionUnavailable && <p className="mt-1 text-xs text-muted-foreground">Conversion unavailable; source price shown</p>}
+              </>
             )}
           </div>
         </div>
@@ -193,20 +197,24 @@ export function WishlistCard({
         )}
 
         {entry.steamAppId !== null && (
-          <Link
-            href={`/wishlist/${entry.id}#offers`}
-            className="mt-auto flex items-center justify-between gap-3 border-t border-border pt-3 text-sm hover:text-primary"
-            aria-label={`Open offers for ${entry.name}`}
-          >
-            <span className="flex items-center gap-2 font-semibold">
-              {formatPrice(selectedOffer?.price ?? null, selectedOffer?.currency ?? null)}
-              {selectedOffer?.discount !== null && selectedOffer?.discount !== undefined && selectedOffer.discount > 0 && (
-                <span className={cn("rounded bg-emerald-500/15 px-1.5 py-0.5 text-xs font-medium text-emerald-400", shouldGlowOffer(selectedOffer.discount) && "shadow-glow")}>
-                  -{selectedOffer.discount}%
-                </span>
-              )}
-            </span>
-          </Link>
+          <>
+            <Link
+              href={`/wishlist/${entry.id}#offers`}
+              className="mt-auto flex items-center justify-between gap-3 border-t border-border pt-3 text-sm hover:text-primary"
+              aria-label={`Open offers for ${entry.name}`}
+            >
+              <span className="flex items-center gap-2 font-semibold">
+                {formatPrice(selectedOffer?.price ?? null, selectedOffer?.currency ?? null)}
+                {selectedOffer?.discount !== null && selectedOffer?.discount !== undefined && selectedOffer.discount > 0 && (
+                  <span className={cn("rounded bg-emerald-500/15 px-1.5 py-0.5 text-xs font-medium text-emerald-400", shouldGlowOffer(selectedOffer.discount) && "shadow-glow")}>
+                    -{selectedOffer.discount}%
+                  </span>
+                )}
+              </span>
+            </Link>
+            {selectedOffer?.isEstimated && <p className="mt-1 text-xs text-muted-foreground">Estimated display value</p>}
+            {selectedOffer?.conversionUnavailable && <p className="mt-1 text-xs text-muted-foreground">Conversion unavailable; source price shown</p>}
+          </>
         )}
 
         {entry.metadata && (
