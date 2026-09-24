@@ -54,16 +54,6 @@ export const PlayState = {
 export type PlayState = (typeof PlayState)[keyof typeof PlayState]
 
 
-export const Priority = {
-  NONE: 'NONE',
-  LOW: 'LOW',
-  MEDIUM: 'MEDIUM',
-  HIGH: 'HIGH'
-} as const
-
-export type Priority = (typeof Priority)[keyof typeof Priority]
-
-
 export const Environment = {
   LINUX: 'LINUX',
   STEAM_DECK: 'STEAM_DECK',

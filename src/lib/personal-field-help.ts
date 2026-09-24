@@ -1,5 +1,5 @@
 export const PERSONAL_FIELD_HELP = {
-  priority: "Short-term urgency for deciding what to play next.",
+  playPriority: "How strongly you want to play this game",
   interest: "Durable desire to play, independent of current urgency.",
   rating: "Your personal assessment after spending time with the game.",
   gameExperience: "The session fit, not the platform or compatibility.",

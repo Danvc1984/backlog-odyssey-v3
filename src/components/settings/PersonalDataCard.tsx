@@ -76,7 +76,7 @@ export function PersonalDataCard({
   return (
     <SectionCard
         title="Data export and restore"
-      description="Download your catalog, wishlist, and platform decisions as a JSON file, or restore them from one."
+      description="Download your catalog, wishlist, and platform decisions as a JSON file, or restore them from one. Older exports containing the retired library priority field may require a fresh export."
     >
       <div className="grid gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">

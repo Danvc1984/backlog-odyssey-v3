@@ -43,7 +43,7 @@ export function CreateGameDialog({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [interest, setInterest] = useState("3");
+  const [interest, setInterest] = useState("UNSET");
   const [candidates, setCandidates] = useState<IgdbSearchCandidate[]>([]);
   const [selectedIgdbId, setSelectedIgdbId] = useState<number | null>(null);
   const [igdbPage, setIgdbPage] = useState(1);
@@ -55,7 +55,7 @@ export function CreateGameDialog({
 
   const reset = () => {
     setName("");
-    setInterest("3");
+    setInterest("UNSET");
     setCandidates([]);
     setSelectedIgdbId(null);
     setIgdbPage(1);
@@ -95,7 +95,7 @@ export function CreateGameDialog({
       name,
       availabilitySource,
       ...(alternativeSourceId && { alternativeSourceId }),
-      interest: Number(interest),
+      ...(interest !== "UNSET" && { interest: Number(interest) }),
       selectedIgdbId: selectedIgdbId ?? undefined,
     });
 
@@ -181,12 +181,13 @@ export function CreateGameDialog({
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
-              <Label htmlFor="interest">Interest</Label>
+              <Label htmlFor="interest">Play priority (1-5 stars)</Label>
               <Select value={interest} onValueChange={setInterest} disabled={submitting}>
-                <SelectTrigger id="interest" aria-label="Interest" className="w-full">
-                  <SelectValue />
+                <SelectTrigger id="interest" aria-label="Play priority" className="w-full">
+                  <SelectValue placeholder="Not set" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="UNSET">Not set</SelectItem>
                   {[5, 4, 3, 2, 1].map((value) => (
                     <SelectItem key={value} value={String(value)}>
                       {value} star{value === 1 ? "" : "s"}

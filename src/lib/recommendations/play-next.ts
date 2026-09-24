@@ -1,13 +1,5 @@
 import type { PlayNextCandidate } from "./types";
 import type { ExplanationFactor } from "./types";
-import { interestLabel } from "./play-factor-labels";
-
-const PRIORITY_POINTS = {
-  NONE: 0,
-  LOW: 2,
-  MEDIUM: 4,
-  HIGH: 6,
-} as const;
 
 export const PLAY_NEXT_LIMIT = 3;
 
@@ -42,16 +34,10 @@ export function scorePlayNextCandidate(
     if (entry.interest != null && entry.interest * 10 !== 0) {
       const points = entry.interest * 10;
       score += points;
-      positive.push({ factor: "interest", label: interestLabel(entry.interest), points });
-    }
-    const priority = entry.priority ?? "NONE";
-    const priorityPoints = PRIORITY_POINTS[priority];
-    if (priority !== "NONE" && priorityPoints !== 0) {
-      score += priorityPoints;
       positive.push({
-        factor: "priority",
-        label: `${priority[0]}${priority.slice(1).toLowerCase()} priority in your backlog`,
-        points: priorityPoints,
+        factor: "interest",
+        label: `Play priority: ${entry.interest} of 5 stars`,
+        points,
       });
     }
     if (entry.playSoon) {

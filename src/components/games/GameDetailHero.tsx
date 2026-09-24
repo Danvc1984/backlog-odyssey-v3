@@ -54,7 +54,7 @@ export function GameDetailHero({
           {!isDlc && (isInLibrary ? (
             <LibraryInterestRating gameId={id} gameName={name} interest={interest} />
           ) : (
-            <span className="text-sm text-warning" aria-label={`${interest ?? 0} of 5 stars`}>
+            <span className="text-sm text-warning" aria-label={`Play priority: ${interest ?? 0} of 5 stars`}>
               {interest ? `${"★".repeat(interest)}${"☆".repeat(5 - interest)}` : "☆☆☆☆☆"}
             </span>
           ))}

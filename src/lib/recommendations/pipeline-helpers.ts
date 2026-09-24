@@ -21,7 +21,6 @@ export async function loadCandidates(client: Prisma.TransactionClient) {
         select: {
           playState: true,
           completedBefore: true,
-          priority: true,
           interest: true,
           playSoon: true,
           replayCandidate: true,

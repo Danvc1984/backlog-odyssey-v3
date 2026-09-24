@@ -31,7 +31,6 @@ function baseLibraryEntry(): MergeSourceLibraryEntry {
   return {
     playState: "NOT_STARTED",
     isMainGame: false,
-    priority: "NONE",
     interest: null,
     rating: null,
     compatOverrideStatus: null,
@@ -306,7 +305,6 @@ function makeResolvedPlan(overrides: Partial<ResolvedMergePlan> = {}): ResolvedM
     personalValues: {
       playState: "NOT_STARTED",
       isMainGame: false,
-      priority: "NONE",
       interest: null,
       rating: null,
       compatOverrideStatus: null,
@@ -334,7 +332,7 @@ describe("resolveMergePlan", () => {
     finalName: "Hades",
     blocked: true,
     library: {
-      defaults: { playState: "NOT_STARTED", isMainGame: false, priority: "NONE" },
+      defaults: {},
       conflicts: [
         {
           field: "rating",
@@ -1291,7 +1289,6 @@ function makeMergeSnapshotEnvelope(
             gameId: "game-b",
             playState: "NOT_STARTED",
             isMainGame: false,
-            priority: "NONE",
             interest: null,
             rating: null,
             compatOverrideStatus: null,
@@ -1503,7 +1500,6 @@ describe("undoOperation", () => {
                   gameId: "game-a",
                   playState: "NOT_STARTED",
                   isMainGame: false,
-                  priority: "NONE",
                   interest: null,
                   rating: null,
                   compatOverrideStatus: null,

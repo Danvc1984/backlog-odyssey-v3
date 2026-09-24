@@ -15,7 +15,6 @@ function candidate(overrides: Partial<PlayNextCandidate> = {}): PlayNextCandidat
     type: "BASE_GAME",
     libraryEntry: {
       playState: "NOT_STARTED",
-      priority: "NONE",
       interest: null,
       playSoon: false,
       replayCandidate: false,
@@ -105,14 +104,14 @@ describe("isEligibleForPlayNext", () => {
 });
 
 describe("scorePlayNextCandidate", () => {
-  it("scores interest at ten points per level", () => {
+  it("scores Play priority at ten points per star", () => {
     const scored = scorePlayNextCandidate(
       candidate({ libraryEntry: { ...candidate().libraryEntry!, interest: 4 } }),
     );
 
     expect(scored.score).toBe(40);
     expect(scored.positive).toEqual([
-      { factor: "interest", label: "You have strong interest in this game", points: 40 },
+      { factor: "interest", label: "Play priority: 4 of 5 stars", points: 40 },
     ]);
     expect(scored.negative).toEqual([]);
   });
@@ -125,16 +124,7 @@ describe("scorePlayNextCandidate", () => {
     expect(scored.negative).toEqual([]);
   });
 
-  it("awards two, four, and six priority points for LOW, MEDIUM, HIGH", () => {
-    const base = candidate().libraryEntry!;
-    expect(scorePlayNextCandidate(candidate({ libraryEntry: { ...base, priority: "LOW" } })).score).toBe(2);
-    expect(scorePlayNextCandidate(candidate({ libraryEntry: { ...base, priority: "MEDIUM" } })).score).toBe(4);
-    expect(scorePlayNextCandidate(candidate({ libraryEntry: { ...base, priority: "HIGH" } })).score).toBe(6);
 
-    const noneScored = scorePlayNextCandidate(candidate());
-    expect(noneScored.score).toBe(0);
-    expect(noneScored.positive).toEqual([]);
-  });
 
   it("adds three points for the play soon flag", () => {
     const scored = scorePlayNextCandidate(
@@ -176,7 +166,6 @@ describe("scorePlayNextCandidate", () => {
       candidate({
         libraryEntry: {
           playState: "ABANDONED",
-          priority: "HIGH",
           interest: 5,
           playSoon: true,
           replayCandidate: true,
@@ -186,10 +175,9 @@ describe("scorePlayNextCandidate", () => {
       }),
     );
 
-    expect(scored.score).toBe(50 + 6 + 3 + 2 - 2);
+    expect(scored.score).toBe(50 + 3 + 2 - 2);
     expect(scored.positive.map((factor) => factor.factor)).toEqual([
       "interest",
-      "priority",
       "play_soon",
       "replay",
     ]);

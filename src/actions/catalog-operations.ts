@@ -131,7 +131,6 @@ export async function proposeMerge(input: { duplicateId: string }) {
           select: {
             playState: true,
             isMainGame: true,
-            priority: true,
             interest: true,
             rating: true,
             compatOverrideStatus: true,
@@ -664,6 +663,7 @@ const MODEL_BIGINT_FIELDS: Partial<Record<SnapshotModel, string[]>> = {
 function reviveRow(model: SnapshotModel, row: Record<string, unknown>): Record<string, unknown> {
   const revived: Record<string, unknown> = { ...row };
   delete revived.updatedAt;
+  if (model === "LibraryEntry") delete revived.priority;
   for (const field of MODEL_DATE_FIELDS[model] ?? []) {
     if (typeof revived[field] === "string") revived[field] = new Date(revived[field] as string);
   }

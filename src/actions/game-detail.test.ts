@@ -407,7 +407,6 @@ describe("updatePersonalFields", () => {
 
   it("updates all provided fields", async () => {
     await updatePersonalFields("game-1", {
-      priority: "HIGH",
       interest: 4,
       rating: 8,
       gameExperience: "PC_GAMING",
@@ -416,7 +415,6 @@ describe("updatePersonalFields", () => {
     expect(mockUpdate).toHaveBeenCalledWith({
       where: { gameId: "game-1" },
       data: {
-        priority: "HIGH",
         interest: 4,
         rating: 8,
         gameExperience: "PC_GAMING",
@@ -425,11 +423,11 @@ describe("updatePersonalFields", () => {
   });
 
   it("ignores undefined fields (partial update)", async () => {
-    await updatePersonalFields("game-1", { priority: "LOW" });
+    await updatePersonalFields("game-1", { interest: 2 });
 
     expect(mockUpdate).toHaveBeenCalledWith({
       where: { gameId: "game-1" },
-      data: { priority: "LOW" },
+      data: { interest: 2 },
     });
   });
 
@@ -455,11 +453,6 @@ describe("updatePersonalFields", () => {
       data: { gameExperience: null },
     });
 
-    await updatePersonalFields("game-1", { priority: "LOW" });
-    expect(mockUpdate).toHaveBeenLastCalledWith({
-      where: { gameId: "game-1" },
-      data: { priority: "LOW" },
-    });
   });
 
   it("rejects an invalid game experience", async () => {
@@ -500,14 +493,6 @@ describe("updatePersonalFields", () => {
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 
-  it("rejects unknown priority value", async () => {
-    const result = await updatePersonalFields("game-1", {
-      priority: "URGENT" as never,
-    });
-
-    expect(result.success).toBe(false);
-    expect(mockUpdate).not.toHaveBeenCalled();
-  });
 });
 
 describe("updatePlayState", () => {

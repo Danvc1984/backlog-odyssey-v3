@@ -42,7 +42,7 @@ describe("prepareRecommendationFactors", () => {
       [
         { factor: "interest", label: "Interest", points: 2 },
         { factor: "quality", label: "Quality", points: 5 },
-        { factor: "priority", label: "Priority", points: 5 },
+        { factor: "offer_discount", label: "Discount", points: 5 },
       ],
       [
         { factor: "calibration", label: "Dismissed often", points: -20 },
@@ -54,7 +54,7 @@ describe("prepareRecommendationFactors", () => {
       ],
     );
 
-    expect(result.positive.map((factor) => factor.factor)).toEqual(["quality", "priority", "interest"]);
+    expect(result.positive.map((factor) => factor.factor)).toEqual(["quality", "offer_discount", "interest"]);
     expect(result.negative.map((factor) => factor.factor)).toEqual(["abandoned", "calibration"]);
     expect(result.caveats.map((caveat) => caveat.factor)).toEqual(["compat_unknown", "stale_offer"]);
   });

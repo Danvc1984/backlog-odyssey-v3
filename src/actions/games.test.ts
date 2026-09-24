@@ -54,13 +54,20 @@ describe("createGame", () => {
           availability: {
             create: { source: "STEAM", alternativeSourceId: null },
           },
-          libraryEntry: { create: { interest: 3 } },
+          libraryEntry: { create: {} },
         }),
       }),
     );
   });
 
-  it("persists the requested interest and queues a selected IGDB match", async () => {
+  it("leaves Play priority unset by default", async () => {
+    await createGame({ name: "Unset game", availabilitySource: "STEAM" });
+    expect(tx.game.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ libraryEntry: { create: {} } }),
+    }));
+  });
+
+  it("persists the requested Play priority and queues a selected IGDB match", async () => {
     await createGame({
       name: "Portal 2",
       availabilitySource: "STEAM",

@@ -474,7 +474,6 @@ interface CandidateRowShape {
   type: "BASE_GAME";
   libraryEntry: {
     playState: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "ABANDONED";
-    priority: "NONE" | "LOW" | "MEDIUM" | "HIGH";
     interest: number | null;
     playSoon: boolean;
     replayCandidate: boolean;
@@ -500,7 +499,6 @@ function libraryEntry(
 ): CandidateRowShape["libraryEntry"] {
   return {
     playState: "NOT_STARTED",
-    priority: "NONE",
     interest: null,
     playSoon: false,
     replayCandidate: false,
@@ -779,7 +777,7 @@ describe("updateRecommendations", () => {
     const playCall = runCreate.mock.calls.find((call) => (call[0] as { data: { kind: string } }).data.kind === "PLAY_NEXT")!;
     const buyCall = runCreate.mock.calls.find((call) => (call[0] as { data: { kind: string } }).data.kind === "BUY")!;
     expect(playCall[0].data.items.create[0]).toMatchObject({ score: 40, negative: [{ factor: "calibration", label: "Dismissed 3 times", points: -10 }] });
-    expect(playCall[0].data.items.create[0].positive).toContainEqual({ factor: "interest", label: "You have strong interest in this game", points: 40 });
+    expect(playCall[0].data.items.create[0].positive).toContainEqual({ factor: "interest", label: "Play priority: 4 of 5 stars", points: 40 });
     expect(buyCall[0].data.items.create[0]).toMatchObject({ score: 30, negative: [{ factor: "calibration", label: "Dismissed 6 times", points: -20 }] });
     expect(buyCall[0].data.items.create[0].positive).toContainEqual({ factor: "interest", label: "You have some interest in this game", points: 30 });
     expect(feedbackGroupBy).toHaveBeenCalledTimes(1);
@@ -885,7 +883,7 @@ describe("updateRecommendations", () => {
       score: 50,
     });
     expect(items[0].positive).toEqual([
-      { factor: "interest", label: "You have huge interest in this game", points: 50 },
+      { factor: "interest", label: "Play priority: 5 of 5 stars", points: 50 },
       { factor: "compat_bazzite", label: "Runs well on your Linux devices", points: 0 },
     ]);
     expect(items[0].caveats).toEqual([

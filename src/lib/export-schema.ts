@@ -41,7 +41,6 @@ const libraryEntrySchema = z.strictObject({
   playState: z.enum(["NOT_STARTED", "IN_PROGRESS", "COMPLETED", "ABANDONED"]),
   completedBefore: z.boolean(),
   isMainGame: z.boolean(),
-  priority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH"]).nullable(),
   interest: z.number().int().nullable(),
   rating: z.number().int().nullable(),
   gameExperience: z.enum(["PC_GAMING", "MULTIPLAYER_COOP", "COUCH_GAMING", "ON_THE_GO"]).nullable(),

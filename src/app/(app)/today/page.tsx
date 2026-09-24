@@ -459,7 +459,7 @@ export default async function TodayPage() {
             />
             <CoverageDialog
               label="games with incomplete recommendation profiles"
-              basis="Based on local personal fields: interest plus priority, preferred environment, or game experience."
+              basis="A visible game is complete when its Play priority is set."
               titles={dataHealth.recommendationProfile.incomplete}
             />
           </div>

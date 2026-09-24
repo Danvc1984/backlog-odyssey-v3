@@ -1,4 +1,4 @@
-import type { CompatibilityStatus, GameExperience, GameType, PlayState, Priority } from "@/generated/prisma/client";
+import type { CompatibilityStatus, GameExperience, GameType, PlayState } from "@/generated/prisma/client";
 import { z } from "zod";
 import type { AwayStatus } from "@/lib/away-api";
 
@@ -6,7 +6,6 @@ export const RUN_RETENTION_DAYS = 365;
 
 export type ExplanationFactorKey =
   | "interest"
-  | "priority"
   | "play_soon"
   | "replay"
   | "abandoned"
@@ -181,7 +180,6 @@ export interface RotatableCandidate {
 export interface PlayNextLibraryView {
   playState: PlayState;
   completedBefore?: boolean;
-  priority: Priority | null;
   interest: number | null;
   playSoon: boolean;
   replayCandidate: boolean;

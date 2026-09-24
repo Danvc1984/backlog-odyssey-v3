@@ -47,7 +47,6 @@ function baseLibraryEntry(): MergeSourceLibraryEntry {
   return {
     playState: "NOT_STARTED",
     isMainGame: false,
-    priority: "NONE",
     interest: null,
     rating: null,
     compatOverrideStatus: null,
@@ -89,7 +88,6 @@ describe("resolvePersonalFields", () => {
 
     expect(result.conflicts).toEqual([]);
     expect(result.defaults.interest).toBe(3);
-    expect(result.defaults.priority).toBe("NONE");
   });
 
   it("keeps null defaults when both sides are null", () => {
@@ -122,14 +120,14 @@ describe("resolvePersonalFields", () => {
 
   it("treats an equal value on both sides as a default, not a conflict", () => {
     const result = resolvePersonalFields(
-      { ...baseLibraryEntry(), priority: "HIGH" },
-      { ...baseLibraryEntry(), priority: "HIGH" },
+      { ...baseLibraryEntry(), interest: 4 },
+      { ...baseLibraryEntry(), interest: 4 },
       "game-a",
       "game-b",
     );
 
     expect(result.conflicts).toEqual([]);
-    expect(result.defaults.priority).toBe("HIGH");
+    expect(result.defaults.interest).toBe(4);
   });
 
   it("treats a missing library entry as all-null values", () => {

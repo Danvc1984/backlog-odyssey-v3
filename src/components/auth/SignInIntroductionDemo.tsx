@@ -27,13 +27,13 @@ const DEMO_GAMES: readonly DemoGame[] = [
     coverUrl:
       "https://images.igdb.com/igdb/image/upload/t_720p/ar6kbi.jpg",
     entryMethod: "Imported from Steam",
-    tracking: ["Interest 4/5", "High priority"],
+    tracking: ["Play priority 4/5"],
     genres: ["Shooter", "Science fiction"],
     personalTags: ["Classics"],
     compatibility: "ProtonDB tier: Platinum",
     recommendationLabel: "Play next",
     recommendationReason:
-      "Your high priority and Platinum ProtonDB tier make it a strong choice for Linux.",
+      "Your Play priority and Platinum ProtonDB tier make it a strong choice for Linux.",
   },
   {
     id: "cult-of-the-lamb",
@@ -58,7 +58,7 @@ const DEMO_GAMES: readonly DemoGame[] = [
     coverUrl:
       "https://images.igdb.com/igdb/image/upload/t_720p/ar1481.jpg",
     entryMethod: "Imported from Steam",
-    tracking: ["Interest 5/5", "High priority", "Play soon"],
+    tracking: ["Play priority 5/5", "Play soon"],
     genres: ["Action RPG", "Open world"],
     personalTags: ["Long adventures"],
     recommendationLabel: "Play next",

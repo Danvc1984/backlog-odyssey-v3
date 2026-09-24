@@ -130,7 +130,6 @@ export type PersonalFieldName =
   | "playState"
   | "completedBefore"
   | "isMainGame"
-  | "priority"
   | "interest"
   | "rating"
   | "compatOverrideStatus"
@@ -143,7 +142,6 @@ export const PERSONAL_FIELDS: readonly PersonalFieldName[] = [
   "playState",
   "completedBefore",
   "isMainGame",
-  "priority",
   "interest",
   "rating",
   "compatOverrideStatus",
@@ -157,7 +155,6 @@ export type MergeSourceLibraryEntry = {
   playState: string | null;
   completedBefore?: boolean | null;
   isMainGame: boolean | null;
-  priority: string | null;
   interest: number | null;
   rating: number | null;
   compatOverrideStatus: string | null;

@@ -326,10 +326,10 @@ export default async function GameDetailPage({
             <h3 id="preferences-heading" className="mb-3 text-base font-semibold">Preferences</h3>
             <PersonalFieldsForm
               gameId={game.id}
+              gameName={game.name}
               libraryEntry={
                 game.libraryEntry
                   ? {
-                      priority: game.libraryEntry.priority,
                       interest: game.libraryEntry.interest,
                       rating: game.libraryEntry.rating,
                       gameExperience: game.libraryEntry.gameExperience,

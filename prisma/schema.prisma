@@ -47,13 +47,6 @@ enum PlayState {
   ABANDONED
 }
 
-enum Priority {
-  NONE
-  LOW
-  MEDIUM
-  HIGH
-}
-
 enum Environment {
   LINUX
   STEAM_DECK
@@ -480,7 +473,6 @@ model LibraryEntry {
   playState            PlayState            @default(NOT_STARTED)
   completedBefore      Boolean              @default(false)
   isMainGame           Boolean              @default(false)
-  priority             Priority?            @default(NONE)
   interest             Int?
   rating               Int?
   gameExperience       GameExperience?

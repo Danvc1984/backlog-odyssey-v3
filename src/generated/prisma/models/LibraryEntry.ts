@@ -42,7 +42,6 @@ export type LibraryEntryMinAggregateOutputType = {
   playState: $Enums.PlayState | null
   completedBefore: boolean | null
   isMainGame: boolean | null
-  priority: $Enums.Priority | null
   interest: number | null
   rating: number | null
   gameExperience: $Enums.GameExperience | null
@@ -62,7 +61,6 @@ export type LibraryEntryMaxAggregateOutputType = {
   playState: $Enums.PlayState | null
   completedBefore: boolean | null
   isMainGame: boolean | null
-  priority: $Enums.Priority | null
   interest: number | null
   rating: number | null
   gameExperience: $Enums.GameExperience | null
@@ -82,7 +80,6 @@ export type LibraryEntryCountAggregateOutputType = {
   playState: number
   completedBefore: number
   isMainGame: number
-  priority: number
   interest: number
   rating: number
   gameExperience: number
@@ -114,7 +111,6 @@ export type LibraryEntryMinAggregateInputType = {
   playState?: true
   completedBefore?: true
   isMainGame?: true
-  priority?: true
   interest?: true
   rating?: true
   gameExperience?: true
@@ -134,7 +130,6 @@ export type LibraryEntryMaxAggregateInputType = {
   playState?: true
   completedBefore?: true
   isMainGame?: true
-  priority?: true
   interest?: true
   rating?: true
   gameExperience?: true
@@ -154,7 +149,6 @@ export type LibraryEntryCountAggregateInputType = {
   playState?: true
   completedBefore?: true
   isMainGame?: true
-  priority?: true
   interest?: true
   rating?: true
   gameExperience?: true
@@ -261,7 +255,6 @@ export type LibraryEntryGroupByOutputType = {
   playState: $Enums.PlayState
   completedBefore: boolean
   isMainGame: boolean
-  priority: $Enums.Priority | null
   interest: number | null
   rating: number | null
   gameExperience: $Enums.GameExperience | null
@@ -304,7 +297,6 @@ export type LibraryEntryWhereInput = {
   playState?: Prisma.EnumPlayStateFilter<"LibraryEntry"> | $Enums.PlayState
   completedBefore?: Prisma.BoolFilter<"LibraryEntry"> | boolean
   isMainGame?: Prisma.BoolFilter<"LibraryEntry"> | boolean
-  priority?: Prisma.EnumPriorityNullableFilter<"LibraryEntry"> | $Enums.Priority | null
   interest?: Prisma.IntNullableFilter<"LibraryEntry"> | number | null
   rating?: Prisma.IntNullableFilter<"LibraryEntry"> | number | null
   gameExperience?: Prisma.EnumGameExperienceNullableFilter<"LibraryEntry"> | $Enums.GameExperience | null
@@ -325,7 +317,6 @@ export type LibraryEntryOrderByWithRelationInput = {
   playState?: Prisma.SortOrder
   completedBefore?: Prisma.SortOrder
   isMainGame?: Prisma.SortOrder
-  priority?: Prisma.SortOrderInput | Prisma.SortOrder
   interest?: Prisma.SortOrderInput | Prisma.SortOrder
   rating?: Prisma.SortOrderInput | Prisma.SortOrder
   gameExperience?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -349,7 +340,6 @@ export type LibraryEntryWhereUniqueInput = Prisma.AtLeast<{
   playState?: Prisma.EnumPlayStateFilter<"LibraryEntry"> | $Enums.PlayState
   completedBefore?: Prisma.BoolFilter<"LibraryEntry"> | boolean
   isMainGame?: Prisma.BoolFilter<"LibraryEntry"> | boolean
-  priority?: Prisma.EnumPriorityNullableFilter<"LibraryEntry"> | $Enums.Priority | null
   interest?: Prisma.IntNullableFilter<"LibraryEntry"> | number | null
   rating?: Prisma.IntNullableFilter<"LibraryEntry"> | number | null
   gameExperience?: Prisma.EnumGameExperienceNullableFilter<"LibraryEntry"> | $Enums.GameExperience | null
@@ -370,7 +360,6 @@ export type LibraryEntryOrderByWithAggregationInput = {
   playState?: Prisma.SortOrder
   completedBefore?: Prisma.SortOrder
   isMainGame?: Prisma.SortOrder
-  priority?: Prisma.SortOrderInput | Prisma.SortOrder
   interest?: Prisma.SortOrderInput | Prisma.SortOrder
   rating?: Prisma.SortOrderInput | Prisma.SortOrder
   gameExperience?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -398,7 +387,6 @@ export type LibraryEntryScalarWhereWithAggregatesInput = {
   playState?: Prisma.EnumPlayStateWithAggregatesFilter<"LibraryEntry"> | $Enums.PlayState
   completedBefore?: Prisma.BoolWithAggregatesFilter<"LibraryEntry"> | boolean
   isMainGame?: Prisma.BoolWithAggregatesFilter<"LibraryEntry"> | boolean
-  priority?: Prisma.EnumPriorityNullableWithAggregatesFilter<"LibraryEntry"> | $Enums.Priority | null
   interest?: Prisma.IntNullableWithAggregatesFilter<"LibraryEntry"> | number | null
   rating?: Prisma.IntNullableWithAggregatesFilter<"LibraryEntry"> | number | null
   gameExperience?: Prisma.EnumGameExperienceNullableWithAggregatesFilter<"LibraryEntry"> | $Enums.GameExperience | null
@@ -417,7 +405,6 @@ export type LibraryEntryCreateInput = {
   playState?: $Enums.PlayState
   completedBefore?: boolean
   isMainGame?: boolean
-  priority?: $Enums.Priority | null
   interest?: number | null
   rating?: number | null
   gameExperience?: $Enums.GameExperience | null
@@ -438,7 +425,6 @@ export type LibraryEntryUncheckedCreateInput = {
   playState?: $Enums.PlayState
   completedBefore?: boolean
   isMainGame?: boolean
-  priority?: $Enums.Priority | null
   interest?: number | null
   rating?: number | null
   gameExperience?: $Enums.GameExperience | null
@@ -457,7 +443,6 @@ export type LibraryEntryUpdateInput = {
   playState?: Prisma.EnumPlayStateFieldUpdateOperationsInput | $Enums.PlayState
   completedBefore?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isMainGame?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  priority?: Prisma.NullableEnumPriorityFieldUpdateOperationsInput | $Enums.Priority | null
   interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
@@ -478,7 +463,6 @@ export type LibraryEntryUncheckedUpdateInput = {
   playState?: Prisma.EnumPlayStateFieldUpdateOperationsInput | $Enums.PlayState
   completedBefore?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isMainGame?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  priority?: Prisma.NullableEnumPriorityFieldUpdateOperationsInput | $Enums.Priority | null
   interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
@@ -498,7 +482,6 @@ export type LibraryEntryCreateManyInput = {
   playState?: $Enums.PlayState
   completedBefore?: boolean
   isMainGame?: boolean
-  priority?: $Enums.Priority | null
   interest?: number | null
   rating?: number | null
   gameExperience?: $Enums.GameExperience | null
@@ -517,7 +500,6 @@ export type LibraryEntryUpdateManyMutationInput = {
   playState?: Prisma.EnumPlayStateFieldUpdateOperationsInput | $Enums.PlayState
   completedBefore?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isMainGame?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  priority?: Prisma.NullableEnumPriorityFieldUpdateOperationsInput | $Enums.Priority | null
   interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
@@ -537,7 +519,6 @@ export type LibraryEntryUncheckedUpdateManyInput = {
   playState?: Prisma.EnumPlayStateFieldUpdateOperationsInput | $Enums.PlayState
   completedBefore?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isMainGame?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  priority?: Prisma.NullableEnumPriorityFieldUpdateOperationsInput | $Enums.Priority | null
   interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
@@ -562,7 +543,6 @@ export type LibraryEntryCountOrderByAggregateInput = {
   playState?: Prisma.SortOrder
   completedBefore?: Prisma.SortOrder
   isMainGame?: Prisma.SortOrder
-  priority?: Prisma.SortOrder
   interest?: Prisma.SortOrder
   rating?: Prisma.SortOrder
   gameExperience?: Prisma.SortOrder
@@ -587,7 +567,6 @@ export type LibraryEntryMaxOrderByAggregateInput = {
   playState?: Prisma.SortOrder
   completedBefore?: Prisma.SortOrder
   isMainGame?: Prisma.SortOrder
-  priority?: Prisma.SortOrder
   interest?: Prisma.SortOrder
   rating?: Prisma.SortOrder
   gameExperience?: Prisma.SortOrder
@@ -607,7 +586,6 @@ export type LibraryEntryMinOrderByAggregateInput = {
   playState?: Prisma.SortOrder
   completedBefore?: Prisma.SortOrder
   isMainGame?: Prisma.SortOrder
-  priority?: Prisma.SortOrder
   interest?: Prisma.SortOrder
   rating?: Prisma.SortOrder
   gameExperience?: Prisma.SortOrder
@@ -662,10 +640,6 @@ export type EnumPlayStateFieldUpdateOperationsInput = {
   set?: $Enums.PlayState
 }
 
-export type NullableEnumPriorityFieldUpdateOperationsInput = {
-  set?: $Enums.Priority | null
-}
-
 export type NullableEnumGameExperienceFieldUpdateOperationsInput = {
   set?: $Enums.GameExperience | null
 }
@@ -683,7 +657,6 @@ export type LibraryEntryCreateWithoutGameInput = {
   playState?: $Enums.PlayState
   completedBefore?: boolean
   isMainGame?: boolean
-  priority?: $Enums.Priority | null
   interest?: number | null
   rating?: number | null
   gameExperience?: $Enums.GameExperience | null
@@ -702,7 +675,6 @@ export type LibraryEntryUncheckedCreateWithoutGameInput = {
   playState?: $Enums.PlayState
   completedBefore?: boolean
   isMainGame?: boolean
-  priority?: $Enums.Priority | null
   interest?: number | null
   rating?: number | null
   gameExperience?: $Enums.GameExperience | null
@@ -737,7 +709,6 @@ export type LibraryEntryUpdateWithoutGameInput = {
   playState?: Prisma.EnumPlayStateFieldUpdateOperationsInput | $Enums.PlayState
   completedBefore?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isMainGame?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  priority?: Prisma.NullableEnumPriorityFieldUpdateOperationsInput | $Enums.Priority | null
   interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
@@ -756,7 +727,6 @@ export type LibraryEntryUncheckedUpdateWithoutGameInput = {
   playState?: Prisma.EnumPlayStateFieldUpdateOperationsInput | $Enums.PlayState
   completedBefore?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isMainGame?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  priority?: Prisma.NullableEnumPriorityFieldUpdateOperationsInput | $Enums.Priority | null
   interest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gameExperience?: Prisma.NullableEnumGameExperienceFieldUpdateOperationsInput | $Enums.GameExperience | null
@@ -778,7 +748,6 @@ export type LibraryEntrySelect<ExtArgs extends runtime.Types.Extensions.Internal
   playState?: boolean
   completedBefore?: boolean
   isMainGame?: boolean
-  priority?: boolean
   interest?: boolean
   rating?: boolean
   gameExperience?: boolean
@@ -799,7 +768,6 @@ export type LibraryEntrySelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   playState?: boolean
   completedBefore?: boolean
   isMainGame?: boolean
-  priority?: boolean
   interest?: boolean
   rating?: boolean
   gameExperience?: boolean
@@ -820,7 +788,6 @@ export type LibraryEntrySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   playState?: boolean
   completedBefore?: boolean
   isMainGame?: boolean
-  priority?: boolean
   interest?: boolean
   rating?: boolean
   gameExperience?: boolean
@@ -841,7 +808,6 @@ export type LibraryEntrySelectScalar = {
   playState?: boolean
   completedBefore?: boolean
   isMainGame?: boolean
-  priority?: boolean
   interest?: boolean
   rating?: boolean
   gameExperience?: boolean
@@ -855,7 +821,7 @@ export type LibraryEntrySelectScalar = {
   updatedAt?: boolean
 }
 
-export type LibraryEntryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "gameId" | "playState" | "completedBefore" | "isMainGame" | "priority" | "interest" | "rating" | "gameExperience" | "handheldSuitable" | "compatOverrideStatus" | "compatOverrideReason" | "playSoon" | "replayCandidate" | "hidden" | "createdAt" | "updatedAt", ExtArgs["result"]["libraryEntry"]>
+export type LibraryEntryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "gameId" | "playState" | "completedBefore" | "isMainGame" | "interest" | "rating" | "gameExperience" | "handheldSuitable" | "compatOverrideStatus" | "compatOverrideReason" | "playSoon" | "replayCandidate" | "hidden" | "createdAt" | "updatedAt", ExtArgs["result"]["libraryEntry"]>
 export type LibraryEntryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   game?: boolean | Prisma.GameDefaultArgs<ExtArgs>
 }
@@ -877,7 +843,6 @@ export type $LibraryEntryPayload<ExtArgs extends runtime.Types.Extensions.Intern
     playState: $Enums.PlayState
     completedBefore: boolean
     isMainGame: boolean
-    priority: $Enums.Priority | null
     interest: number | null
     rating: number | null
     gameExperience: $Enums.GameExperience | null
@@ -1318,7 +1283,6 @@ export interface LibraryEntryFieldRefs {
   readonly playState: Prisma.FieldRef<"LibraryEntry", 'PlayState'>
   readonly completedBefore: Prisma.FieldRef<"LibraryEntry", 'Boolean'>
   readonly isMainGame: Prisma.FieldRef<"LibraryEntry", 'Boolean'>
-  readonly priority: Prisma.FieldRef<"LibraryEntry", 'Priority'>
   readonly interest: Prisma.FieldRef<"LibraryEntry", 'Int'>
   readonly rating: Prisma.FieldRef<"LibraryEntry", 'Int'>
   readonly gameExperience: Prisma.FieldRef<"LibraryEntry", 'GameExperience'>

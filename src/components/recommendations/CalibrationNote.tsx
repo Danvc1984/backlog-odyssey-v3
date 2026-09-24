@@ -14,7 +14,7 @@ export function CalibrationNote({ interest, dismissalCount }: CalibrationNotePro
 
   return (
     <p className="text-xs text-muted-foreground">
-      Interest shown as adjusted: you dismissed this recommendation {dismissalCount} times ({interest} -&gt; {adjustedInterest}).
+      Play priority shown as adjusted: you dismissed this recommendation {dismissalCount} times ({interest} -&gt; {adjustedInterest}).
     </p>
   );
 }

@@ -12,7 +12,6 @@ import { preparePersonalTagName } from "@/lib/personal-tag";
 import { resetKnownGenreTagValuesCache } from "@/lib/recommendations/queries";
 
 const updatePersonalFieldsSchema = z.object({
-  priority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH"]).optional(),
   interest: z.number().int().min(1).max(5).optional().nullable(),
   rating: z.number().int().min(1).max(10).optional().nullable(),
   gameExperience: z
@@ -41,7 +40,6 @@ export async function updatePersonalFields(
     const entry = await prisma.libraryEntry.update({
       where: { gameId },
       data: {
-        ...(data.priority !== undefined && { priority: data.priority }),
         ...(data.interest !== undefined && { interest: data.interest }),
         ...(data.rating !== undefined && { rating: data.rating }),
         ...(data.gameExperience !== undefined && { gameExperience: data.gameExperience }),

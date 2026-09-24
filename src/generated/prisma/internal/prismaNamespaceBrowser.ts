@@ -346,7 +346,6 @@ export const LibraryEntryScalarFieldEnum = {
   playState: 'playState',
   completedBefore: 'completedBefore',
   isMainGame: 'isMainGame',
-  priority: 'priority',
   interest: 'interest',
   rating: 'rating',
   gameExperience: 'gameExperience',

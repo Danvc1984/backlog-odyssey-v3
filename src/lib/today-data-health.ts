@@ -29,7 +29,6 @@ export const todayDataHealthGameSelect = {
     select: {
       playState: true,
       interest: true,
-      priority: true,
       gameExperience: true,
       completedBefore: true,
     },
@@ -100,13 +99,7 @@ export function computeProfileCoverage(
       incomplete.push({ id: row.id, name: row.name });
       continue;
     }
-    const hasNonNonePriority =
-      entry.priority !== null && entry.priority !== "NONE";
-    const hasGameExperience = entry.gameExperience !== null;
-    if (
-      entry.interest !== null &&
-      (hasNonNonePriority || hasGameExperience)
-    ) {
+    if (entry.interest !== null) {
       complete += 1;
     } else {
       incomplete.push({ id: row.id, name: row.name });

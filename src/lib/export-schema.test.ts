@@ -94,7 +94,6 @@ describe("export schema: settings and catalog", () => {
       playState: "IN_PROGRESS",
       completedBefore: false,
       isMainGame: true,
-      priority: "HIGH",
       interest: 4,
       rating: 4,
       gameExperience: "PC_GAMING",
@@ -138,7 +137,6 @@ describe("export schema: settings and catalog", () => {
       playState: "IN_PROGRESS",
       completedBefore: false,
       isMainGame: true,
-      priority: "HIGH",
       interest: 4,
       rating: 4,
       gameExperience: "PC_GAMING",
@@ -165,6 +163,8 @@ describe("export schema: settings and catalog", () => {
     };
 
     expect(() => libraryEntriesSchema.parse([library])).toThrow();
+    const { notes: _notes, ...validLibrary } = library;
+    expect(() => libraryEntriesSchema.parse([{ ...validLibrary, priority: "HIGH" }])).toThrow();
     expect(() => availabilitySchema.parse([availability])).toThrow();
   });
 
@@ -181,7 +181,6 @@ describe("export schema: settings and catalog", () => {
           gameId: "g1",
           playState: "NEVER",
           isMainGame: false,
-          priority: "NONE",
           interest: null,
           rating: null,
           gameExperience: null,

@@ -14,21 +14,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { updatePersonalFields } from "@/actions/game-detail";
+import { LibraryInterestRating } from "@/components/games/LibraryInterestRating";
 import { PERSONAL_FIELD_HELP } from "@/lib/personal-field-help";
 
 type LibraryEntryData = {
-  priority: string | null;
   interest: number | null;
   rating: number | null;
   gameExperience: string | null;
 };
-
-const PRIORITY_OPTIONS = [
-  { value: "NONE", label: "None" },
-  { value: "LOW", label: "Low" },
-  { value: "MEDIUM", label: "Medium" },
-  { value: "HIGH", label: "High" },
-];
 
 const EXPERIENCE_OPTIONS = [
   { value: "PC_GAMING", label: "PC gaming" },
@@ -39,17 +32,15 @@ const EXPERIENCE_OPTIONS = [
 
 export function PersonalFieldsForm({
   gameId,
+  gameName,
   libraryEntry,
 }: {
   gameId: string;
+  gameName: string;
   libraryEntry: LibraryEntryData | null;
 }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [priority, setPriority] = useState(libraryEntry?.priority ?? "NONE");
-  const [interest, setInterest] = useState(
-    libraryEntry?.interest?.toString() ?? "",
-  );
   const [rating, setRating] = useState(libraryEntry?.rating?.toString() ?? "");
   const [gameExperience, setGameExperience] = useState(
     libraryEntry?.gameExperience ?? "",
@@ -64,8 +55,6 @@ export function PersonalFieldsForm({
     setError(null);
 
     const result = await updatePersonalFields(gameId, {
-      priority: priority as "NONE" | "LOW" | "MEDIUM" | "HIGH",
-      interest: interest === "" ? null : Number(interest),
       rating: rating === "" ? null : Number(rating),
       gameExperience: gameExperience === "" ? null : gameExperience as
         | "PC_GAMING"
@@ -86,75 +75,51 @@ export function PersonalFieldsForm({
   return (
     <form onSubmit={handleSubmit} className="grid gap-4">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      <div className="grid gap-2">
-        <Label htmlFor="priority" className="flex items-center gap-1">
-          Priority <InfoPopover label="Priority" content={PERSONAL_FIELD_HELP.priority} />
-        </Label>
-        <Select value={priority} onValueChange={setPriority}>
-          <SelectTrigger id="priority" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {PRIORITY_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+        <div className="grid gap-2">
+          <Label htmlFor="game-experience" className="flex items-center gap-1">
+            Game experience <InfoPopover label="Game experience" content={PERSONAL_FIELD_HELP.gameExperience} />
+          </Label>
+          <Select
+            value={gameExperience || "UNSET"}
+            onValueChange={(value) => setGameExperience(value === "UNSET" ? "" : value)}
+          >
+            <SelectTrigger id="game-experience" className="w-full">
+              <SelectValue placeholder="Not set" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="UNSET">Not set</SelectItem>
+              {EXPERIENCE_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="interest" className="flex items-center gap-1">
-          Interest <span className="text-muted-foreground">(1-5)</span>
-          <InfoPopover label="Interest" content={PERSONAL_FIELD_HELP.interest} />
-        </Label>
-        <Input
-          id="interest"
-          type="number"
-          min={1}
-          max={5}
-          value={interest}
-          onChange={(e) => setInterest(e.target.value)}
-          placeholder="Leave blank to unset"
-        />
-      </div>
+        <div className="grid gap-2">
+          <Label className="flex items-center gap-1">
+            Play priority <span className="text-muted-foreground">(1-5 stars)</span>
+            <InfoPopover label="Play priority" content={PERSONAL_FIELD_HELP.playPriority} />
+          </Label>
+          <LibraryInterestRating gameId={gameId} gameName={gameName} interest={libraryEntry.interest} />
+        </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="rating" className="flex items-center gap-1">
-          Rating <span className="text-muted-foreground">(1-10)</span>
-          <InfoPopover label="Rating" content={PERSONAL_FIELD_HELP.rating} />
-        </Label>
-        <Input
-          id="rating"
-          type="number"
-          min={1}
-          max={10}
-          value={rating}
-          onChange={(e) => setRating(e.target.value)}
-          placeholder="Leave blank to unset"
-        />
-      </div>
-
-      <div className="grid gap-2">
-        <Label htmlFor="game-experience" className="flex items-center gap-1">
-          Game experience <InfoPopover label="Game experience" content={PERSONAL_FIELD_HELP.gameExperience} />
-        </Label>
-        <Select value={gameExperience} onValueChange={setGameExperience}>
-          <SelectTrigger id="game-experience" className="w-full">
-            <SelectValue placeholder="Not set" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">Not set</SelectItem>
-            {EXPERIENCE_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
+        <div className="grid gap-2">
+          <Label htmlFor="rating" className="flex items-center gap-1">
+            Rating <span className="text-muted-foreground">(1-10)</span>
+            <InfoPopover label="Rating" content={PERSONAL_FIELD_HELP.rating} />
+          </Label>
+          <Input
+            id="rating"
+            type="number"
+            min={1}
+            max={10}
+            value={rating}
+            onChange={(e) => setRating(e.target.value)}
+            placeholder="Leave blank to unset"
+          />
+        </div>
       </div>
 
       <div className="flex justify-end border-t border-border pt-3">
