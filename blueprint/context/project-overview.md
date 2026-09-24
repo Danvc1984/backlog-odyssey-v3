@@ -1,6 +1,6 @@
 # Backlog Odyssey - Project Overview
 
-<!-- blueprint:source-hash 095df1d17aac89ea0a6364b516099a38891fc469708775624ec97a7141d3a2bd -->
+<!-- blueprint:source-hash fa0b89245ebf38405bc054f4a06646ec1d14005df15266a407d35428d4bc3c9e -->
 
 > A private, single-user gaming library and decision assistant for choosing what to play and buy across a configured PC and handheld setup, with selectable market and display-currency preferences.
 
@@ -38,18 +38,20 @@ Completed work establishes the authenticated app, catalog, Steam imports, wishli
 18. **34. Welcome regional prices and optional Steam connection** - completed regional market/currency preferences, ITAD querying, Frankfurter v2 presentation-only FX conversion, and optional Steam OpenID connect-or-skip in Welcome.
 19. **36. Today taste setup and recommendation gating** - completed required Taste Setup with a ten-game library threshold, random independent prior-play, stronger-interest, and play-soon signals, recommendation gating, empty-wishlist Buy omission, preferred-environment removal, and Today tag/shelf styling.
 20. **37. Library and game-detail renewal** - completed detail-page reorganization and personal-data presentation, merged title/IGDB maintenance, section links and feedback cleanup, duplicate-review and platform-merge fixes, ProtonDB deep links, and completed-game backlog progress correction.
-21. **35. Mobile responsiveness pass** - pending pre-deployment mobile review and fixes for overflow, viewport-fitting titles, buttons, and sections, detail-page actions, collapsible Library and Wishlist health strips, grid-only narrow-screen Library and Wishlist browsing plus Collection detail grids, Today worthy-bargain game art, and mobile Wallhaven availability subject to visual preferences.
+21. **35. Mobile responsiveness pass** - completed pre-deployment mobile review and fixes for overflow, viewport-fitting titles, buttons, and sections, detail-page actions, collapsible Library and Wishlist health strips, grid-only narrow-screen Library and Wishlist browsing plus Collection detail grids, Today worthy-bargain game art, and mobile Wallhaven availability subject to visual preferences.
 22. **38. Deployment and CI readiness** - pending Vercel/Supabase review, protected daily cron, production checks, one reproducible Verify command, and optional automatic checks. This is the final planned step.
+
+The active ad-hoc fix before feature 38 merges owned-game Interest and enum Priority into one Play priority; it is tracked in `current-feature.md`, not as another build-plan item. Checked items above record their original delivery.
 
 ## Data model
 
-The shapes below describe the intended post-feature-36 model. Provider evidence remains replaceable; personal data remains authoritative.
+The shapes below describe the intended model, including the pending Play priority fix. Provider evidence remains replaceable; personal data remains authoritative.
 
 ### Identity and catalog
 
 - **User** - single authenticated owner; parent for personal data, settings, operations, and recommendation records.
 - **Game** - catalog-only entity with `id: string`, `name: string`, `type: BASE_GAME | DLC`, immutable origin, and nullable `baseGameId`. A DLC must reference a base game and has no `LibraryEntry` or play state.
-- **LibraryEntry** - one base-game profile with `gameId`, current `playState: NOT_STARTED | IN_PROGRESS | COMPLETED | ABANDONED`, `completedBefore: boolean`, `isMainGame`, `hidden`, `replay`, `playSoon`, `priority`, nullable `interest: 0..5`, rating, game experience, handheld suitability, and play history. Notes are removed in feature 31.
+- **LibraryEntry** - one base-game profile with `gameId`, current `playState: NOT_STARTED | IN_PROGRESS | COMPLETED | ABANDONED`, `completedBefore: boolean`, `isMainGame`, `hidden`, `replay`, `playSoon`, nullable numeric `interest: 1..5` stored as **Play priority** (unset allowed), rating, game experience, handheld suitability, and play history. The separate enum `priority` will be dropped without backfill; the three development entries remain and keep their numeric values.
 - **Availability** - many per game; built-in `STEAM | ROM` or `OTHER_PLATFORM` with an `alternativeSourceId`. Feature 31 removes the per-game display label.
 - **AlternativeSource** - reusable owner-defined source with canonical and normalized names, optional known-source key/icon metadata, and archive state. Definitions live only in Settings; archived assignments remain visible and removable but cannot be newly selected.
 - **ExternalGameId** - provider namespace, external ID, provenance, and game relation. Confirmed Steam App IDs key Steam, IGDB, compatibility, and price work.
@@ -63,7 +65,7 @@ The shapes below describe the intended post-feature-36 model. Provider evidence 
 - **PlaytimeEvidence** - replaceable attributed IGDB `game_time_to_beats` values; SteamSpy median is fallback only when IGDB has no row and a confirmed Steam App ID exists.
 - **PriceOffer** - wishlist relation, store/source, selected market country, exact ITAD source currency and amount, optional presentation-only converted display amount/rate, discount, seller URL, freshness, optional region-activation warning, and historical-low context. Up to 8-10 valid offers persist; the selected offer is the cheapest comparable regional offer and becomes stale after 48 hours.
 - **Price identity mapping** - confirmed Steam App ID to cached ITAD ID with provenance; seller preference never overrides cheapest-valid selection.
-- Acquiring a base-game wish creates a real catalog game, transfers applicable IGDB metadata and interest, adds availability, and removes the wish. Acquiring a DLC creates a linked catalog DLC and may update the base game's play intent.
+- Acquiring a base-game wish creates a real catalog game, transfers applicable IGDB metadata and Wishlist Interest as library Play priority, adds availability, and removes the wish. Acquiring a DLC creates a linked catalog DLC and may update the base game's play intent.
 
 ### Compatibility and operations
 
@@ -80,13 +82,13 @@ The shapes below describe the intended post-feature-36 model. Provider evidence 
 - **RecommendationProfile** - rebuildable learned dimensions for genre/tag, experience, duration, publisher, era, series, and maturity with recency decay.
 - **RecommendationPreference** - semantic `PREFER | NEUTRAL | AVOID` override.
 - **RecommendationPreset** - persisted named Tune context; loading affects only the active tab-local Tune state.
-- **Dismissal feedback** - `Maybe some other time — show me another` records a dismissal and replaces from the same retained role batch. Three cumulative same-kind dismissals lower adjusted interest by one, floor zero.
+- **Dismissal feedback** - `Maybe some other time — show me another` records a dismissal and replaces from the same retained role batch. Three cumulative same-kind dismissals lower adjusted Play priority (Play Next) or Wishlist Interest (Buy) by one, floor zero.
 - **AppSettings** - primary OS, optional handheld and valid Windows fallback, onboarding state, supported price country and display currency, duration profile, theme family/mode, reduced-motion/data choices, and provider-related settings.
 - **WallpaperState** - cached SFW Wallhaven candidate URLs and deterministic daily selection; reduced-data mode disables all image fetching.
 
 ## Product rules
 
-- Catalog and wishlist remain separate; ROMs are excluded from wishlist and buy recommendations.
+- Catalog and wishlist remain separate; ROMs are excluded from wishlist and buy recommendations. After the pending fix, Play Next scores owned-game Play priority once, while Buy continues using Wishlist Interest. Library cards and game-detail stars all edit the same Play priority; `playSoon` stays independent. Today considers a visible game's recommendation profile incomplete when Play priority is unset.
 - Steam owned sync never implies DLC ownership. DLC stays outside Library, play state, and play-next recommendations.
 - Current state and prior completion are independent after feature 30. Leaving `COMPLETED` preserves `completedBefore`; starting that replay also clears `replay`. Current and prior completion count as one positive profile signal.
 - Active-backlog progress uses current state only. Previously completed may overlap In Progress or Backlog.

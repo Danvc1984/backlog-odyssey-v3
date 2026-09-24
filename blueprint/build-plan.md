@@ -822,6 +822,19 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   artwork in the Today worthy-bargain panel, and enable the existing Wallhaven
   background on mobile when allowed by visual preferences.
 
+> **Active ad-hoc fix before feature 38:** Unify owned-game Interest and
+> Priority as one 1-5 Play priority (or unset), using the existing numeric
+> `LibraryEntry.interest` storage. All library card and detail stars rate Play
+> priority; Play Next scores and explains it once, with dismissal calibration
+> on that single value. Drop the redundant `LibraryEntry.priority` enum field
+> through a normal Prisma schema migration without backfill; the three
+> development library entries remain and keep their numeric values. Wishlist
+> Interest and Buy scoring remain separate, and `playSoon` remains independent.
+> Update owned-game write paths, export/restore schema, and labels. The checked
+> entries above describe work as originally delivered; this fix supersedes their
+> two-field language when implemented. Track its steps and review in
+> `blueprint/context/current-feature.md`, not as a numbered feature here.
+
 - [ ] 38. **Deployment and CI readiness** - Vercel/Supabase environment
   review, Vercel Cron daily run at 06:00 UTC-6 with `CRON_SECRET` enqueueing
   the price refresh plus a compatibility freshness sweep for catalog and

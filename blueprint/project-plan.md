@@ -68,9 +68,10 @@ registration, and collaboration are outside the MVP.
   compatibility UI anywhere. Changing the OS setup in Settings asks for
   confirmation and then immediately re-derives compatibility synthesis
   and synchronously regenerates recommendation runs.
-- Ingestion-path interest defaults: Steam imports start at 2/5, manual
-  entries at 3/5, and wishlist acquisition carries the wish's interest into
-  the catalog.
+- Ingestion-path defaults: Steam library imports start at 2/5 Play priority
+  and Steam wishlist imports at 2/5 Interest; manual entries start at 3/5
+  for the corresponding field, and wishlist acquisition carries the wish's
+  Interest into the catalog as Play priority.
 - Deterministic explainable play-next and buy recommendations with a
   handheld play role when the setup has one, and DLC affinity weighting.
 - Before recommendations are shown, Taste Setup requires at least ten library
@@ -159,6 +160,15 @@ or On the go. It describes the session the game best suits, not its provider
 platform or compatibility. It is optional, editable, and deliberately
 single-value for the MVP; unclassified games remain eligible with less
 experience-fit evidence.
+
+An owned base game's single 1-5 Play priority (or unset) expresses its
+personal play intent. It is stored in `LibraryEntry.interest` and shown as
+Play priority on every library card, game-detail star picker/readout,
+creation form, and personal-field control. `LibraryEntry.priority` is removed;
+its old enum values on the three development entries are discarded without
+backfill, while the entries and existing numeric values remain. `playSoon`
+is a separate near-term plan flag. Wishlist entries keep their separate
+Interest field and Buy semantics.
 
 A library entry separates current status from prior completion. Current
 `playState` uses `NOT_STARTED`, `IN_PROGRESS`, `COMPLETED`, or `ABANDONED`.
@@ -793,7 +803,7 @@ factors such as:
 
 - Play state.
 - Main-game and hidden flags.
-- Priority and declared interest.
+- Play priority for owned base games, or Interest for wishlist entries.
 - Availability sources and any active play-next source tune.
 - Game experience / intention and compatibility.
 - Handheld-suitability personal flag on catalog and wishlist entries.
@@ -826,16 +836,16 @@ factors such as:
 
 **Ranking semantics**
 
-- Manual fields remain authoritative. **Interest** (`0-5`) is durable personal
-  desire or expected enjoyment and is the core taste signal for play and buy.
-  Interest defaults by ingestion path: Steam library and wishlist imports
-  start at 2/5, manual entries start at 3/5, and acquiring a wishlist entry
-  into the catalog carries its interest over, falling back to 3/5 when absent.
-  **Priority** (`NONE`/`LOW`/`MEDIUM`/`HIGH`) is a catalog-only, short-term
-  urgency signal for play-next; it never means the user likes a game more.
-  Detail, quick-create, and bulk-edit surfaces explain retained personal fields
-  with accessible information controls instead of permanent descriptions, and
-  group compact controls on the same row where they remain readable.
+- Manual fields remain authoritative. **Play priority** (1-5 or unset) is the
+  sole owned-game play-intent score and explanation in Play Next; it uses the
+  existing numeric `LibraryEntry.interest` storage, not a second priority enum.
+  **Interest** remains the separate wishlist desire/Buy signal. Steam imports
+  default the corresponding value to 2/5, manual entries to 3/5, and acquiring
+  a base-game wish carries its Interest into the catalog as Play priority,
+  falling back to 3/5 when absent. The independent `playSoon` flag marks a
+  near-term plan. Detail and creation controls explain Play priority with
+  accessible information controls. Library card and game-detail star pickers
+  label, save, and display that same Play priority.
 - Play-next source tuning is a modest, inclusive boost—not a filter or a
   launch requirement. It can prefer Steam, ROMs, any alternative source, or
   selected alternative sources. A multi-source game matches every selected
@@ -939,12 +949,13 @@ a run.
 
 A persistent dismissal counter remains separate for play-next and buy
 recommendations. After three cumulative dismissals of the same recommendation
-type, adjusted interest decreases by one point, with a floor of zero.
+type, adjusted Play priority (for Play Next) or Interest (for Buy) decreases by
+one point, with a floor of zero.
 
-The user-entered interest remains manually editable. When automatic calibration
-has changed it, the detail view explains that the value was adjusted because of
-repeated recommendation dismissals. The technical counter remains an internal
-implementation detail. Starting a catalog recommendation is an explicit action:
+The user-entered Play priority or wishlist Interest remains manually editable.
+When automatic calibration has changed the effective value, the detail view
+explains that repeated recommendation dismissals caused the adjustment. The
+technical counter remains an internal implementation detail. Starting a catalog recommendation is an explicit action:
 it marks the game `IN_PROGRESS`; when no other game is in progress it also
 makes it the main game, otherwise it asks before replacing the main game. When
 starting from `COMPLETED`, it also activates `completedBefore` and clears the
@@ -1016,10 +1027,10 @@ It displays:
 - Two independent, actionable coverage counts:
   - catalog base games without an IGDB metadata snapshot;
   - visible catalog games with an incomplete recommendation profile.
-- A recommendation profile is incomplete when `interest` is absent, or when
-  interest is present but neither priority other than `NONE` nor game
-  experience/intention is present. Hidden games are excluded. Rating and the
-  default play state do not satisfy this signal.
+- A recommendation profile is incomplete when owned-game Play priority is
+  unset. Hidden games are excluded. Game experience remains an optional
+  additional fit signal; rating and the default play state do not replace
+  Play priority.
 - Clickable coverage counts open accessible dialogs with up to ten affected
   game titles linking to their game details. The dialog can expand into a
   paginated list for additional games.
@@ -1212,7 +1223,7 @@ one compact personal-data surface:
 
 - **Journey:** current state, previously completed, main game, play soon,
   replay, and hidden.
-- **Preferences:** interest, rating, priority, game experience, preferred
+- **Preferences:** Play priority, rating, game experience, preferred
   environment, and handheld suitability.
 
 Wishlist Detail groups interest, game experience, and handheld suitability
@@ -1333,8 +1344,9 @@ Settings includes:
 
 Manual export includes catalog and wishlist records, availability and
 alternative sources, all external IDs regardless of provenance, current play
-states, prior-completion history, interest, ratings, personal tags, settings
-(including duration profile), manual overrides, and recommendation-related
+states, prior-completion history, owned-game Play priority, wishlist Interest,
+ratings, personal tags, settings (including duration profile), manual overrides,
+and recommendation-related
 personal decisions. Removed notes and per-game availability display labels are
 not exported or restored. The new schema is introduced directly and older
 export versions are rejected clearly rather than normalized, because the app
