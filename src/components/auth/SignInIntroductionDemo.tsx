@@ -188,7 +188,7 @@ export function SignInIntroductionDemo() {
       }}
     >
       <div className="border-b border-border bg-card-alt px-5 py-4 lg:px-5 lg:py-3">
-        <p className="technical-label text-signal">See what awaits</p>
+        <p className="technical-label text-opportunity">See what awaits</p>
         <p className="mt-2 text-sm leading-5 text-muted-foreground">
           A quick preview of how Backlog Odyssey helps you choose what to play
           next.

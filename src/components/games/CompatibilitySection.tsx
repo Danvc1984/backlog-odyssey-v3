@@ -209,7 +209,7 @@ export function CompatibilitySection({
               </a>
             )}
             {antiCheat ? (
-              <Badge label={`AWAY: ${antiCheat.status}`} className={AWAY_CLASSES[antiCheat.status]} />
+              <Badge label={`Anticheat: ${antiCheat.status}`} className={AWAY_CLASSES[antiCheat.status]} />
             ) : (
               <Badge label="No anti-cheat evidence" className="border-border bg-muted/40 text-muted-foreground" />
             )}
@@ -222,7 +222,7 @@ export function CompatibilitySection({
               {antiCheat ? (
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   {antiCheat.anticheats.length > 0 && <span>{antiCheat.anticheats.join(", ")}</span>}
-                  {awayUrl && <a className="text-primary underline-offset-4 hover:underline" href={awayUrl} target="_blank" rel="noreferrer">View AWAY game page</a>}
+                  {awayUrl && <a className="text-primary underline-offset-4 hover:underline" href={awayUrl} target="_blank" rel="noreferrer">View Anticheat game page</a>}
                 </div>
               ) : null}
             </div>

@@ -150,7 +150,7 @@ export default async function SettingsPage() {
           Keep the ship&apos;s connections, appearance, provider upkeep, and recommendation course in your hands.
         </p>
       </div>
-      <CollapsibleSettingsSection title="Account">
+      <CollapsibleSettingsSection title="Account and environment">
         <AccountCard
           email={session.user?.email ?? null}
           signOutAction={async () => {
@@ -161,28 +161,28 @@ export default async function SettingsPage() {
           pricePreferences={pricePreferences}
         />
       </CollapsibleSettingsSection>
-      <CollapsibleSettingsSection title="Appearance">
+      <CollapsibleSettingsSection title="Appearance and wallpapers">
         <AppearanceSection
           initialWallpaperEnabled={appSettings?.wallpaperEnabled ?? true}
           poolCachedAt={wallpaperState?.cachedAt ?? null}
           lastError={wallpaperState?.lastError ?? null}
         />
       </CollapsibleSettingsSection>
-      <CollapsibleSettingsSection title="Steam and catalog sources">
+      <CollapsibleSettingsSection title="Steam and other catalog sources">
         <SteamConnectionCard
           connected={Boolean(steamConnection)}
           steamId64={steamConnection?.steamId64 ?? null}
         />
         <AlternativeSourcesCard sources={sources} />
       </CollapsibleSettingsSection>
-      <CollapsibleSettingsSection title="Recommendations">
+      <CollapsibleSettingsSection title="Duration and recommendations profile">
         <DurationProfileCard initialProfile={appSettings?.durationProfile ?? "NORMALLY"} />
         <RecommendationProfileSection
           profile={profile}
           preferences={preferences}
         />
       </CollapsibleSettingsSection>
-      <CollapsibleSettingsSection title="Provider workers and services">
+      <CollapsibleSettingsSection title="Global actions and status">
         {openWishlistImportReviews > 0 && (
           <WishlistImportStatusCard
             openReviews={openWishlistImportReviews}

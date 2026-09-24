@@ -97,11 +97,6 @@ export function SteamConnectionCard({
       status={<StatusPill tone={connected ? "ok" : "warning"}>{connected ? "Connected" : "Not connected"}</StatusPill>}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted-foreground">
-            Steam actions stay explicit and never run automatically.
-          </p>
-        </div>
         {connected ? (
           <div className="flex w-full min-w-0 flex-wrap items-center justify-start gap-2 sm:w-auto sm:justify-end">
             <Button

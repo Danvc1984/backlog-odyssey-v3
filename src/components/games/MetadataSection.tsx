@@ -124,7 +124,6 @@ export function MetadataSection({
                   </dl>
                 </details>
               )}
-              {durationEvidence.sourceUrl && <a className="mt-3 inline-flex items-center gap-1 text-xs underline-offset-4 hover:underline" href={durationEvidence.sourceUrl} target="_blank" rel="noreferrer">Source <ArrowSquareOutIcon aria-hidden="true" className="size-3" /></a>}
             </div>
           )}
 

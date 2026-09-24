@@ -211,7 +211,7 @@ export function CompatibilitySweepPanel({
       id="compatibility-sweep-heading"
       description={
         compatibilityActive
-          ? "Enrich IGDB metadata and refresh ProtonDB and AWAY evidence by library domain."
+          ? "Enrich IGDB metadata and refresh ProtonDB and Anticheat evidence by library domain."
           : "Enrich IGDB metadata for eligible catalog games."
       }
     >

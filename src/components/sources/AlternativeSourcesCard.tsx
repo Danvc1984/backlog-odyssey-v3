@@ -138,7 +138,7 @@ export function AlternativeSourcesCard({ sources }: AlternativeSourcesCardProps)
     <SectionCard
         title="Alternative sources"
       id="alternative-sources-heading"
-      description="Reusable stores behind Other platform rows. Archived sources keep their references but stop appearing in platform quick picks."
+      description="Add and manage alternative platforms. These can be used to track games that you have on platforms other than Steam."
     >
       <div className="flex flex-wrap items-end gap-2">
         <label className="text-xs">

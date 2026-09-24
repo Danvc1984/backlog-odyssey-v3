@@ -79,7 +79,7 @@ export function WishlistCompatSweepPanel({
             Wishlist games
           </h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Refresh ProtonDB and AWAY evidence for eligible wishlist games.
+            Refresh ProtonDB and Anticheat evidence for eligible wishlist games.
           </p>
         </div>
         <div className="flex flex-wrap justify-end gap-2">

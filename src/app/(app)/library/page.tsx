@@ -361,7 +361,7 @@ export default async function LibraryPage({
         <div>
           <p className="technical-label text-muted-foreground">Library</p>
           <h1 className="mt-2">
-            Your voyage, <span className="text-signal-strong">charted</span>
+            Your catalog, <span className="text-signal-strong">charted</span>
           </h1>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground">
             Keep your catalog organized, track your progress, and choose which games deserve to be the next step of your voyage.
