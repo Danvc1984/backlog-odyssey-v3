@@ -38,7 +38,7 @@ export function ViewSwitch({
   };
 
   return (
-    <div role="group" aria-label={label} className="inline-flex items-center gap-1 rounded-lg border border-border bg-input p-1">
+    <div role="group" aria-label={label} className="hidden items-center gap-1 rounded-lg border border-border bg-input p-1 md:inline-flex">
       {modes.map((mode) => (
         <button
           key={mode.value}

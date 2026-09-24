@@ -41,6 +41,40 @@ function normalizeWishlistView(value: string | undefined): WishlistView {
   return value === "list" ? "list" : "focus";
 }
 
+function WishlistSignals({
+  total,
+  baseGames,
+  dlcs,
+  discounted,
+  needsAttention,
+}: {
+  total: number;
+  baseGames: number;
+  dlcs: number;
+  discounted: number;
+  needsAttention: number;
+}) {
+  return (
+    <>
+      <article className="rounded-lg border border-signal/40 bg-signal/5 p-3 md:p-4">
+        <p className="technical-label text-muted-foreground">Active wishes</p>
+        <p className="mt-1 text-2xl font-bold tracking-tight md:mt-2 md:text-3xl">{total.toString().padStart(2, "0")}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{baseGames} base games · {dlcs} DLC</p>
+      </article>
+      <article className="rounded-lg border border-opportunity/40 bg-opportunity/5 p-3 md:p-4">
+        <p className="technical-label text-muted-foreground">Discounted games</p>
+        <p className="mt-1 text-2xl font-bold tracking-tight md:mt-2 md:text-3xl">{discounted.toString().padStart(2, "0")}</p>
+        <p className="mt-1 text-xs text-muted-foreground">cheapest offers discounted now</p>
+      </article>
+      <article className="rounded-lg border border-warning/40 bg-warning/5 p-3 md:p-4">
+        <p className="technical-label text-muted-foreground">Needs your review</p>
+        <p className="mt-1 text-2xl font-bold tracking-tight md:mt-2 md:text-3xl">{needsAttention.toString().padStart(2, "0")}</p>
+        <p className="mt-1 text-xs text-muted-foreground">Steam identity pending</p>
+      </article>
+    </>
+  );
+}
+
 export default async function WishlistPage({
   searchParams,
 }: {
@@ -186,22 +220,29 @@ export default async function WishlistPage({
           <AddWishlistDialog baseGames={baseGames} triggerSize="lg" />
         </div>
       </div>
-      <div className="mt-6 grid gap-3 md:grid-cols-3" aria-label="Wishlist signals">
-        <article className="rounded-lg border border-signal/40 bg-signal/5 p-4">
-          <p className="technical-label text-muted-foreground">Active wishes</p>
-          <p className="mt-2 text-3xl font-bold tracking-tight">{entriesWithOfferViews.length.toString().padStart(2, "0")}</p>
-          <p className="mt-1 text-xs text-muted-foreground">{baseGameCount} base games · {dlcCount} DLC</p>
-        </article>
-        <article className="rounded-lg border border-opportunity/40 bg-opportunity/5 p-4">
-          <p className="technical-label text-muted-foreground">Discounted games</p>
-          <p className="mt-2 text-3xl font-bold tracking-tight">{discountedCount.toString().padStart(2, "0")}</p>
-          <p className="mt-1 text-xs text-muted-foreground">cheapest offers discounted now</p>
-        </article>
-        <article className="rounded-lg border border-warning/40 bg-warning/5 p-4">
-          <p className="technical-label text-muted-foreground">Needs your review</p>
-          <p className="mt-2 text-3xl font-bold tracking-tight">{needsAttentionCount.toString().padStart(2, "0")}</p>
-          <p className="mt-1 text-xs text-muted-foreground">Steam identity pending</p>
-        </article>
+      <details className="group mt-6 rounded-lg border border-border bg-card md:hidden">
+        <summary className="cursor-pointer p-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30 md:p-4 md:text-base">
+          <span className="ml-2">Wishlist signals</span>
+          <span className="ml-2 text-xs text-muted-foreground">{entriesWithOfferViews.length} active</span>
+        </summary>
+        <div className="grid gap-2 border-t border-border p-3 md:gap-3 md:p-4" aria-label="Wishlist signals">
+          <WishlistSignals
+            total={entriesWithOfferViews.length}
+            baseGames={baseGameCount}
+            dlcs={dlcCount}
+            discounted={discountedCount}
+            needsAttention={needsAttentionCount}
+          />
+        </div>
+      </details>
+      <div className="mt-6 hidden gap-3 md:grid md:grid-cols-3" aria-label="Wishlist signals">
+        <WishlistSignals
+          total={entriesWithOfferViews.length}
+          baseGames={baseGameCount}
+          dlcs={dlcCount}
+          discounted={discountedCount}
+          needsAttention={needsAttentionCount}
+        />
       </div>
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
         <WishlistFilterBar />

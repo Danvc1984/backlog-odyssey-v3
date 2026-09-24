@@ -42,13 +42,13 @@ export function WelcomeSetupForm({
 }: {
   steamConnection: WelcomeSteamConnection;
 }) {
-  const [primaryOs, setPrimaryOs] = useState<OsSetup["primaryOs"]>("LINUX");
+  const [primaryOs, setPrimaryOs] = useState<OsSetup["primaryOs"]>("WINDOWS");
   const [hasWindowsFallback, setHasWindowsFallback] = useState(false);
   const [handheldOs, setHandheldOs] = useState<OsSetup["handheldOs"]>("NONE");
   const [saving, setSaving] = useState(false);
   const [durationProfile, setDurationProfile] = useState<DurationProfile>("NORMALLY");
-  const [priceCountry, setPriceCountry] = useState<PricePreferences["priceCountry"]>("MX");
-  const [displayCurrency, setDisplayCurrency] = useState<PricePreferences["displayCurrency"]>("MXN");
+  const [priceCountry, setPriceCountry] = useState<PricePreferences["priceCountry"]>("US");
+  const [displayCurrency, setDisplayCurrency] = useState<PricePreferences["displayCurrency"]>("USD");
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -148,6 +148,9 @@ export function WelcomeSetupForm({
             </Select>
           </div>
         </div>
+        <p className="text-xs text-muted-foreground">
+          Displayed prices can be estimates converted from the store&apos;s price. If conversion is unavailable, Backlog Odyssey shows the store&apos;s source currency.
+        </p>
       </div>
       <div className="grid gap-4 rounded-lg border border-border p-4">
         <p className="text-sm font-medium">App theme</p>

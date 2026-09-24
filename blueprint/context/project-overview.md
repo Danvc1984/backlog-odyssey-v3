@@ -1,6 +1,6 @@
 # Backlog Odyssey - Project Overview
 
-<!-- blueprint:source-hash 973f24d8f0c47f8df322ea7fdfe550a7bb6e2ca9b25a3978887136af1de7b3d0 -->
+<!-- blueprint:source-hash 095df1d17aac89ea0a6364b516099a38891fc469708775624ec97a7141d3a2bd -->
 
 > A private, single-user gaming library and decision assistant for choosing what to play and buy across a configured PC and handheld setup, with selectable market and display-currency preferences.
 
@@ -37,8 +37,9 @@ Completed work establishes the authenticated app, catalog, Steam imports, wishli
 17. **33. Sign-in introduction demo** - completed playful, responsive sign-in panel with icon-led branding, the approved tagline, and an accessible static story from manual or Steam-imported backlog addition through personal tracking to explainable recommendation using curated recognizable games.
 18. **34. Welcome regional prices and optional Steam connection** - completed regional market/currency preferences, ITAD querying, Frankfurter v2 presentation-only FX conversion, and optional Steam OpenID connect-or-skip in Welcome.
 19. **36. Today taste setup and recommendation gating** - completed required Taste Setup with a ten-game library threshold, random independent prior-play, stronger-interest, and play-soon signals, recommendation gating, empty-wishlist Buy omission, preferred-environment removal, and Today tag/shelf styling.
-20. **37. Library and game-detail renewal** - pending detail-page reorganization and personal-data presentation, merged title/IGDB maintenance, section links and feedback cleanup, duplicate-review and platform-merge fixes, ProtonDB deep links, and completed-game backlog progress correction.
-21. **35. Deployment and CI readiness** - pending Vercel/Supabase review, protected daily cron, production checks, one reproducible Verify command, and optional automatic checks. This is the final planned step.
+20. **37. Library and game-detail renewal** - completed detail-page reorganization and personal-data presentation, merged title/IGDB maintenance, section links and feedback cleanup, duplicate-review and platform-merge fixes, ProtonDB deep links, and completed-game backlog progress correction.
+21. **35. Mobile responsiveness pass** - pending pre-deployment mobile review and fixes for overflow, viewport-fitting titles, buttons, and sections, detail-page actions, collapsible Library and Wishlist health strips, grid-only narrow-screen Library and Wishlist browsing plus Collection detail grids, Today worthy-bargain game art, and mobile Wallhaven availability subject to visual preferences.
+22. **38. Deployment and CI readiness** - pending Vercel/Supabase review, protected daily cron, production checks, one reproducible Verify command, and optional automatic checks. This is the final planned step.
 
 ## Data model
 
@@ -110,7 +111,7 @@ Not in the MVP. This is a private single-owner tool, not a public service or sto
 
 ## UI/UX
 
-Dark-first Dawn and Sunset families use light/dark/system modes, defaulting to dark Sunset until the owner chooses otherwise, with Cinzel display type, Inter body type, semantic accents, accessible overlays, a desktop sidebar, and mobile bottom navigation. Reduced motion disables carousel automation; reduced data prevents remote artwork requests.
+Dark-first Dawn and Sunset families use light/dark/system modes, defaulting to dark Sunset until the owner chooses otherwise, with Cinzel display type, Inter body type, semantic accents, accessible overlays, a desktop sidebar, and mobile bottom navigation. Reduced motion disables carousel automation; reduced data prevents remote artwork requests. Before deployment, a mobile pass eliminates clipped text and actions, constrains titles and controls, supplies scrolling where content needs it, keeps detail-page More actions reachable, allows dense Library and Wishlist health strips to collapse on mobile, uses their grid presentation at narrow widths and grid cards in Collection detail, gives the Today worthy-bargain panel a blurred offer-game-art background when available, and allows the existing decorative Wallhaven background on mobile when enabled and reduced data is off.
 
 - `/` - Today: current games, Taste Setup when eligible, and only after it is saved, recommendation spotlights; offers, activity, coverage, freshness, and operations remain available. Buy recommendations are omitted with an empty wishlist.
 - `/library` - owned base-game grid/list, search, filters, pagination, card deletion, and catalog health.
@@ -129,7 +130,7 @@ Dark-first Dawn and Sunset families use light/dark/system modes, defaulting to d
 - **Scheduled work:** Vercel Cron daily at 06:00 UTC-6, protected by `CRON_SECRET`, enqueues price refresh plus catalog/wishlist compatibility evidence older than 180 days. Claims and overlapping invocations must be idempotent; compatibility work is a no-op when inactive.
 - **Runtime:** server-side provider credentials; persistent PostgreSQL queue and retry history.
 - **Regional prices:** ITAD receives the configured supported country. Its returned amount and currency remain authoritative; a Frankfurter v2 value is optional display-only context, must remain labeled as an estimate, and cannot silently change offer selection or regional warning semantics.
-- **Still pending feature 35:** exact production environment-variable inventory beyond `CRON_SECRET`, health path, domain, production smoke-test contract, one reproducible Verify command, and final CI configuration.
+- **Still pending feature 38:** exact production environment-variable inventory beyond `CRON_SECRET`, health path, domain, production smoke-test contract, one reproducible Verify command, and final CI configuration.
 
 ## Open questions
 

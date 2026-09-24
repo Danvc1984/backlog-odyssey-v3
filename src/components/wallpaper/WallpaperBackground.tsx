@@ -25,8 +25,9 @@ export function WallpaperBackground({ enabled, hasSources, selection }: Wallpape
   const [isRefreshing, startRefresh] = useTransition();
   const activeSelection = selectionOverride ?? selection;
   const imageUrl = activeSelection?.candidate.imageUrl ?? null;
-  const showBar = enabled && hasSources && resolvedData !== "on" && isDesktop;
-  const showBackground = showBar && activeSelection && failedUrl !== imageUrl;
+  const canShowWallpaper = enabled && hasSources && resolvedData !== "on";
+  const showBar = canShowWallpaper && isDesktop;
+  const showBackground = canShowWallpaper && activeSelection && failedUrl !== imageUrl;
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 768px)");
@@ -36,7 +37,7 @@ export function WallpaperBackground({ enabled, hasSources, selection }: Wallpape
     return () => mediaQuery.removeEventListener("change", update);
   }, []);
 
-  if (!showBar) {
+  if (!showBar && !showBackground) {
     return null;
   }
 
@@ -88,7 +89,8 @@ export function WallpaperBackground({ enabled, hasSources, selection }: Wallpape
         <div className="absolute inset-0 bg-background/65" aria-hidden="true" />
         </div>
       )}
-      <div className="pointer-events-auto fixed right-4 bottom-4 z-30 flex max-w-[calc(100vw-2rem)] items-center gap-2 rounded-md border border-border/60 bg-background/70 px-2 py-1 text-muted-foreground shadow-card backdrop-blur-sm">
+      {showBar && (
+        <div className="pointer-events-auto fixed right-4 bottom-4 z-30 flex max-w-[calc(100vw-2rem)] items-center gap-2 rounded-md border border-border/60 bg-background/70 px-2 py-1 text-muted-foreground shadow-card backdrop-blur-sm">
         {candidate ? (
           <>
             <span className="technical-label truncate">
@@ -123,7 +125,8 @@ export function WallpaperBackground({ enabled, hasSources, selection }: Wallpape
             {isRefreshing ? "Refreshing wallpapers..." : "Refresh wallpapers"}
           </button>
         )}
-      </div>
+        </div>
+      )}
     </>
   );
 }

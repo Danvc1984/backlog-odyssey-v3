@@ -43,10 +43,10 @@ export function GameDetailHero({
         fit="cover"
         className="aspect-[24/10] min-h-44 rounded-t-lg"
       />
-      <div className="game-detail-hero__content flex min-w-0 flex-col justify-between gap-5 rounded-b-lg p-6 md:p-8">
+      <div className="game-detail-hero__content flex min-w-0 flex-col justify-between gap-4 rounded-b-lg p-4 sm:p-6 md:p-8">
         <h1
           id="game-detail-title"
-          className="text-[clamp(2rem,4.5vw,4rem)] font-extrabold leading-[0.92] tracking-[-0.08em]"
+          className="text-[clamp(1.875rem,8vw,4rem)] font-extrabold leading-[0.96] tracking-[-0.05em] sm:leading-[0.92] sm:tracking-[-0.08em]"
         >
           {name}
         </h1>
@@ -71,14 +71,14 @@ export function GameDetailHero({
           {!isDlc ? (
             <Link
               href="#personal-data"
-              className="inline-flex h-9 items-center justify-center rounded-[8px] bg-primary px-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30"
+              className="inline-flex h-9 w-full items-center justify-center rounded-[8px] bg-primary px-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30 sm:w-auto"
             >
               Update play state data
             </Link>
           ) : (
             <Link
               href="#maintenance"
-              className="inline-flex h-9 items-center justify-center rounded-[8px] bg-primary px-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30"
+              className="inline-flex h-9 w-full items-center justify-center rounded-[8px] bg-primary px-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30 sm:w-auto"
             >
               IDGB Enrichment
             </Link>
@@ -98,12 +98,12 @@ export function GameDetailHero({
             <Link href="#delete" className="inline-flex h-9 items-center justify-center rounded-[8px] border border-red-500/40 bg-red-500/10 px-3 text-xs font-bold text-red-700 transition-colors hover:bg-red-500/20 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-red-500/40 dark:text-red-300">Delete</Link>
           </div>
 
-          <details className="group relative min-w-64 flex-1 lg:hidden">
+          <details className="group min-w-0 basis-full lg:hidden">
             <summary className="relative flex h-9 w-full cursor-pointer list-none items-center justify-center rounded-lg border border-border bg-input px-2.5 text-sm font-bold text-foreground outline-none transition-colors focus-visible:border-signal focus-visible:ring-3 focus-visible:ring-signal/30 [&::-webkit-details-marker]:hidden">
               <span>More actions</span>
               <CaretDownIcon aria-hidden="true" className="absolute right-2 size-4 transition-transform group-open:rotate-180" />
             </summary>
-            <div className="absolute right-0 z-50 mt-1 grid w-full min-w-64 grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] gap-2 rounded-lg bg-popover p-2 text-popover-foreground shadow-md ring-1 ring-foreground/10">
+            <div className="mt-2 grid w-full grid-cols-1 gap-2 rounded-lg bg-popover p-2 text-popover-foreground shadow-md ring-1 ring-foreground/10 sm:grid-cols-2">
               {!isDlc && (
                 <>
                   <Link

@@ -32,7 +32,7 @@ export function PageSizeControl({
   };
 
   return (
-    <div role="group" aria-label={ariaLabel} className="flex items-center gap-1 text-sm">
+    <div role="group" aria-label={ariaLabel} className="flex items-center gap-0.5 text-xs">
       <span className="text-muted-foreground">{label}:</span>
       {PAGE_SIZES.map((pageSize, index) => (
         <span key={pageSize} className="inline-flex items-center">
@@ -42,7 +42,7 @@ export function PageSizeControl({
             aria-pressed={size === pageSize}
             onClick={() => changeSize(String(pageSize))}
             className={cn(
-              "rounded px-1.5 py-1 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/40",
+              "rounded px-1 py-0.5 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/40",
               size === pageSize
                 ? "bg-card-alt text-signal-strong"
                 : "text-muted-foreground hover:text-foreground",

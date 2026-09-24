@@ -28,6 +28,8 @@ interface WishlistEntryActionsProps {
   alternativeSources?: { id: string; name: string; iconName: string; brandIcon?: string }[];
 }
 
+const CARD_ACTION_COMPACT_CLASS = "max-[1300px]:h-6 max-[1300px]:px-1.5 max-[1300px]:text-[11px]";
+
 export function WishlistEntryActions({ entry, baseGames, showDelete = true, imageUrl, selectedOffer, alternativeSources }: WishlistEntryActionsProps) {
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -49,14 +51,15 @@ export function WishlistEntryActions({ entry, baseGames, showDelete = true, imag
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 max-[1300px]:gap-1">
       <AcquireWishlistDialog
         entry={entry}
         imageUrl={imageUrl}
         selectedOffer={selectedOffer}
         alternativeSources={alternativeSources}
+        triggerClassName={CARD_ACTION_COMPACT_CLASS}
       />
-      <EditWishlistDialog entry={entry} baseGames={baseGames} />
+      <EditWishlistDialog entry={entry} baseGames={baseGames} triggerClassName={CARD_ACTION_COMPACT_CLASS} />
       {showDelete && (
         <Dialog
           open={confirmOpen}
@@ -70,7 +73,7 @@ export function WishlistEntryActions({ entry, baseGames, showDelete = true, imag
               type="button"
               variant="destructive"
               size="icon-sm"
-              className="bg-red-950/80 text-red-200 hover:bg-red-900/90 hover:text-red-100"
+              className="bg-red-950/80 text-red-200 hover:bg-red-900/90 hover:text-red-100 max-[1300px]:size-6 max-[1300px]:[&_svg]:size-3"
               disabled={deleting}
               aria-label={`Delete ${entry.name}`}
               title="Delete wishlist entry"

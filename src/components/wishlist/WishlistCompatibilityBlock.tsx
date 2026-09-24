@@ -135,7 +135,7 @@ export function WishlistCompatibilityBlock({
       sectionId="compatibility"
       description="Compatibility evidence for this wishlist entry."
       aside={
-        <div className="flex items-center gap-1.5">
+        <div className="flex w-full flex-wrap items-center gap-1.5 sm:w-auto sm:justify-end">
           {age !== null && (
             <span
               className={`text-xs ${stale ? "text-amber-300" : "text-muted-foreground"}`}

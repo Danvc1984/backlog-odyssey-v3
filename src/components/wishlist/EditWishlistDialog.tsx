@@ -27,9 +27,10 @@ interface EditWishlistDialogProps {
   entry: { id: string; name: string; type: string; baseGameId: string | null; interest: number | null; gameExperience: string | null; handheldSuitable: boolean | null };
   baseGames: { id: string; name: string }[];
   compactTrigger?: boolean;
+  triggerClassName?: string;
 }
 
-export function EditWishlistDialog({ entry, baseGames, compactTrigger = false }: EditWishlistDialogProps) {
+export function EditWishlistDialog({ entry, baseGames, compactTrigger = false, triggerClassName }: EditWishlistDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(entry.name);
@@ -126,7 +127,7 @@ export function EditWishlistDialog({ entry, baseGames, compactTrigger = false }:
           type="button"
           variant="secondary"
           size="lg"
-          className={compactTrigger ? "bg-card-alt px-3 text-xs hover:bg-muted" : undefined}
+          className={[compactTrigger ? "bg-card-alt px-3 text-xs hover:bg-muted" : "", triggerClassName].filter(Boolean).join(" ")}
         >
           {compactTrigger ? `Edit ${entry.type === "DLC" ? "DLC" : "game"}` : "Edit"}
         </Button>

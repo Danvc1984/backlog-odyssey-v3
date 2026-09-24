@@ -156,7 +156,7 @@ export function PlayStateSection({
         <p className="text-xs leading-5 text-muted-foreground">
           Shape how this game fits into your backlog without changing its current play state.
         </p>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {TOGGLES.map((toggleOption) => (
             <label key={toggleOption.key} className="block cursor-pointer">
               <input
@@ -166,12 +166,12 @@ export function PlayStateSection({
                 onChange={() => toggle(toggleOption.key)}
                 className="peer sr-only"
               />
-              <span className="flex min-h-20 flex-col justify-between rounded-lg border border-border bg-card/60 p-2 transition-colors peer-checked:border-primary peer-checked:bg-primary/10 peer-focus-visible:ring-2 peer-focus-visible:ring-primary/50">
+              <span className="flex items-start justify-between gap-3 rounded-lg border border-border bg-card/60 p-3 transition-colors peer-checked:border-primary peer-checked:bg-primary/10 peer-focus-visible:ring-2 peer-focus-visible:ring-primary/50 sm:min-h-20 sm:flex-col sm:justify-between sm:p-2">
                 <span>
                   <span className="block text-xs font-semibold sm:text-sm">{toggleOption.label}</span>
                   <span className="mt-1 block text-[11px] leading-4 text-muted-foreground">{toggleOption.description}</span>
                 </span>
-                <span className="mt-2 text-[9px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                <span className="shrink-0 text-right text-[9px] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:mt-2 sm:text-left">
                   {values[toggleOption.key] ? "Marked" : "Not marked"}
                 </span>
               </span>

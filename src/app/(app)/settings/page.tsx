@@ -27,9 +27,9 @@ function CollapsibleSettingsSection({
 }) {
   return (
     <section>
-      <details className="group space-y-6">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-md [&::-webkit-details-marker]:hidden">
-          <h2 className="section-label text-muted-foreground transition-colors group-open:text-foreground hover:text-foreground">
+      <details className="group min-w-0 space-y-6">
+        <summary className="flex min-w-0 cursor-pointer list-none items-center justify-between gap-2 rounded-md [&::-webkit-details-marker]:hidden">
+          <h2 className="min-w-0 break-words section-label text-muted-foreground transition-colors group-open:text-foreground hover:text-foreground">
             {title}
           </h2>
           <svg
@@ -45,7 +45,7 @@ function CollapsibleSettingsSection({
             <path d="m4 6 4 4 4-4" />
           </svg>
         </summary>
-        {children}
+        <div className="min-w-0 break-words">{children}</div>
       </details>
     </section>
   );
@@ -142,7 +142,7 @@ export default async function SettingsPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6 break-words">
       <div>
         <p className="technical-label text-muted-foreground">Platform settings</p>
         <h1 className="mt-2">Settings</h1>

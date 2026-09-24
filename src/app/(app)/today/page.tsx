@@ -150,6 +150,17 @@ export default async function TodayPage() {
         name: true,
         targetPriceMxn: true,
         offers: { orderBy: [{ price: { sort: "asc", nulls: "last" } }] },
+        metadataSnapshot: { select: { payload: true } },
+        baseGame: {
+          select: {
+            metadataSnapshots: {
+              where: { provider: "IGDB" },
+              orderBy: { fetchedAt: "desc" },
+              take: 1,
+              select: { payload: true },
+            },
+          },
+        },
       },
     }),
     loadTodayOperations(prisma),
@@ -176,12 +187,19 @@ export default async function TodayPage() {
     metadata: igdbLibraryCardMetadataView(game.metadataSnapshots[0]?.payload),
   }));
   const todayOffers = rankTodayOffers(
-    wishlistEntries.map(({ id, name, targetPriceMxn, offers }) => ({
-      wishlistEntryId: id,
-      gameName: name,
-      targetPriceMxn,
-      offers,
-    })),
+    wishlistEntries.map(({ id, name, targetPriceMxn, offers, metadataSnapshot, baseGame }) => {
+      const ownMetadata = parseIgdbMetadataPayload(metadataSnapshot?.payload);
+      const inheritedMetadata = parseIgdbMetadataPayload(baseGame?.metadataSnapshots[0]?.payload);
+      return {
+        wishlistEntryId: id,
+        gameName: name,
+        imageUrl:
+          ownMetadata?.artworkUrls[0] ?? ownMetadata?.coverUrl ??
+          inheritedMetadata?.artworkUrls[0] ?? inheritedMetadata?.coverUrl ?? null,
+        targetPriceMxn,
+        offers,
+      };
+    }),
     new Date(),
   );
   const selectedOfferDiscountByWishlistId = new Map(

@@ -812,7 +812,17 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   to Game Detail compatibility; and correct Library backlog progress for
   completed games.
 
-- [ ] 35. **Deployment and CI readiness** - Vercel/Supabase environment
+- [x] 35. **Mobile responsiveness pass** - complete pre-deployment mobile
+  review and fixes across the app: eliminate text and action overflows, keep
+  titles, buttons, and sections within the viewport, make overflowing sections
+  scrollable where needed, ensure detail-page More actions are reachable,
+  allow mobile-only collapsing of dense health strips in Library and Wishlist,
+  use grid-only Library and Wishlist browsing on small screens and grid cards in
+  Collection detail, use offer-game
+  artwork in the Today worthy-bargain panel, and enable the existing Wallhaven
+  background on mobile when allowed by visual preferences.
+
+- [ ] 38. **Deployment and CI readiness** - Vercel/Supabase environment
   review, Vercel Cron daily run at 06:00 UTC-6 with `CRON_SECRET` enqueueing
   the price refresh plus a compatibility freshness sweep for catalog and
   wishlist evidence older than the 180-day window, queue overlap protection,

@@ -9,6 +9,7 @@ import type { WishlistOfferSource } from "@/types/wishlist-offers";
 export interface TodayOfferEntry {
   wishlistEntryId: string;
   gameName: string;
+  imageUrl: string | null;
   targetPriceMxn: OfferNumericValue | null;
   offers: WishlistOfferSource[];
 }
@@ -16,6 +17,7 @@ export interface TodayOfferEntry {
 export interface TodayOfferView {
   wishlistEntryId: string;
   gameName: string;
+  imageUrl: string | null;
   discountPercent: number | null;
   price: number;
   currency: string;
@@ -38,6 +40,7 @@ export function rankTodayOffers(entries: readonly TodayOfferEntry[], now: Date):
       return {
         wishlistEntryId: entry.wishlistEntryId,
         gameName: entry.gameName,
+        imageUrl: entry.imageUrl,
         discountPercent: offer.discount,
         price: offer.price,
         currency: offer.currency,

@@ -39,9 +39,9 @@ function Tile({
   detail: string;
 }) {
   return (
-    <article className={`rounded-lg border p-4 ${TILE_CLASSES[kind]}`}>
+    <article className={`rounded-lg border p-3 md:p-4 ${TILE_CLASSES[kind]}`}>
       <div className="technical-label text-muted-foreground">{eyebrow}</div>
-      <div className="mt-1.5 text-2xl font-bold tracking-tight">{value}</div>
+      <div className="mt-1 text-xl font-bold tracking-tight md:mt-1.5 md:text-2xl">{value}</div>
       <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
     </article>
   );
@@ -77,7 +77,7 @@ function MainGamePicker({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button type="button" variant="secondary" className="mt-1.5 w-full justify-between" disabled={busy}>
+        <Button type="button" variant="secondary" className="mt-1 w-full justify-between text-xs md:mt-1.5 md:text-sm" disabled={busy}>
           <span className="truncate">{selectedGame?.name ?? "Choose main game"}</span>
         </Button>
       </DialogTrigger>
@@ -156,8 +156,8 @@ export function LibraryHealthStrip({
 
   const inProgress = games.filter((game) => game.id !== mainGame?.id);
 
-  return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+  const tiles = (
+    <>
       <Tile
         kind="signal"
         eyebrow="Backlog progress"
@@ -176,7 +176,7 @@ export function LibraryHealthStrip({
         value={health.recommendationProfile.incomplete.length}
         detail="games in need of personalization"
       />
-      <article className="rounded-lg border border-signal/60 bg-signal/10 p-4">
+      <article className="rounded-lg border border-signal/60 bg-signal/10 p-3 md:p-4">
         <div className="technical-label text-muted-foreground">Main game</div>
         {mainGame || inProgress.length > 0 ? (
           <>
@@ -194,6 +194,21 @@ export function LibraryHealthStrip({
           </p>
         )}
       </article>
-    </div>
+    </>
+  );
+
+  return (
+    <>
+      <details className="group rounded-lg border border-border bg-card md:hidden">
+        <summary className="cursor-pointer p-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-signal/30 md:p-4 md:text-base">
+          <span className="ml-2">Library health</span>
+          <span className="ml-2 text-xs text-muted-foreground">
+            Backlog {health.activeBacklog.completed} / {health.activeBacklog.total}
+          </span>
+        </summary>
+        <div className="grid gap-2 border-t border-border p-3 md:gap-3 md:p-4">{tiles}</div>
+      </details>
+      <div className="hidden gap-3 md:grid md:grid-cols-2 xl:grid-cols-4">{tiles}</div>
+    </>
   );
 }

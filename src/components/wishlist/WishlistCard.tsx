@@ -69,10 +69,10 @@ export function WishlistCard({
     const imageUrl = entry.metadata?.wideImageUrl ?? entry.metadata?.imageUrl ?? null;
     return (
       <article className={cn(
-        "flex min-h-44 overflow-hidden rounded-lg border border-border bg-primary/5 shadow-card",
+        "flex min-h-44 flex-col overflow-hidden rounded-lg border border-border bg-primary/5 shadow-card sm:flex-row",
         shouldGlowBuyHeading(selectedOffer?.discount) && "shadow-glow",
       )}>
-        <div className="w-40 shrink-0 sm:w-48 lg:w-64 xl:w-80 min-[1600px]:w-96">
+        <div className="h-40 w-full shrink-0 sm:h-auto sm:w-48 lg:w-64 xl:w-80 min-[1600px]:w-96">
           <WishlistCover
             id={entry.id}
             title={coverTitle}
@@ -84,7 +84,7 @@ export function WishlistCard({
           />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-3 p-4 pb-2">
+          <div className="flex flex-col items-start gap-3 p-4 pb-2 sm:flex-row sm:justify-between">
             <div className="flex min-w-0 flex-col items-start gap-1">
               <h2 className="min-w-0 text-base font-bold leading-snug tracking-[-0.02em]">
                 <Link href={`/wishlist/${entry.id}`} className="hover:underline">
@@ -106,7 +106,7 @@ export function WishlistCard({
                 </Link>
               )}
             </div>
-            <div className="shrink-0">
+            <div className="w-full sm:w-auto sm:shrink-0">
               <WishlistEntryActions
                 entry={entry}
                 baseGames={baseGames}
@@ -124,7 +124,7 @@ export function WishlistCard({
             )}
             {entry.metadata && (
               <div className="mt-2 space-y-2 text-sm">
-                {descriptionPreview && <p className="line-clamp-2 overflow-hidden leading-6 text-muted-foreground">{descriptionPreview}</p>}
+                {descriptionPreview && <p className="hidden line-clamp-2 overflow-hidden leading-6 text-muted-foreground sm:block">{descriptionPreview}</p>}
                 {(entry.metadataGenres.length > 0 || entry.metadata.durationHours !== null || entry.metadataDevelopers.length > 0 || entry.metadataReleaseDate || entry.metadataRating !== null) && (
                   <div className="flex flex-wrap items-center gap-1.5">
                     {entry.metadataGenres.slice(0, 3).map((genre) => (
@@ -155,8 +155,6 @@ export function WishlistCard({
                     </span>
                   )}
                 </Link>
-                {selectedOffer?.isEstimated && <p className="mt-1 text-xs text-muted-foreground">Estimated display value</p>}
-                {selectedOffer?.conversionUnavailable && <p className="mt-1 text-xs text-muted-foreground">Conversion unavailable; source price shown</p>}
               </>
             )}
           </div>
@@ -187,15 +185,17 @@ export function WishlistCard({
               entryName={entry.name}
               interest={entry.interest}
             />
-            {entry.compatTag && (
-              <Link
-                href={`/wishlist/${entry.id}#compatibility`}
-                aria-label={`View compatibility for ${entry.name}`}
-                className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-              >
-                <ProtonDbTag tag={entry.compatTag} />
-              </Link>
-            )}
+            <div className="flex h-6 items-center">
+              {entry.compatTag && (
+                <Link
+                  href={`/wishlist/${entry.id}#compatibility`}
+                  aria-label={`View compatibility for ${entry.name}`}
+                  className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                >
+                  <ProtonDbTag tag={entry.compatTag} />
+                </Link>
+              )}
+            </div>
           </div>
           <WishlistEntryActions
             entry={entry}
@@ -206,43 +206,35 @@ export function WishlistCard({
           />
         </div>
 
-        {entry.type === "BASE_GAME" && !entry.hasOwnMetadata && !entry.hasInheritedMetadata && (
-          <p className="text-xs text-warning-text">
-            IGDB metadata is not available yet. Use Edit to search and choose a match.
-          </p>
+        {entry.steamAppId !== null && (
+          <Link
+            href={`/wishlist/${entry.id}#offers`}
+            className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3 text-sm hover:text-primary"
+            aria-label={`Open offers for ${entry.name}`}
+          >
+            <span className="flex items-center gap-2 font-semibold">
+              {formatPrice(selectedOffer?.price ?? null, selectedOffer?.currency ?? null)}
+              {selectedOffer?.discount !== null && selectedOffer?.discount !== undefined && selectedOffer.discount > 0 && (
+                <span className={cn("rounded bg-emerald-500/15 px-1.5 py-0.5 text-xs font-medium text-emerald-400", shouldGlowOffer(selectedOffer.discount) && "shadow-glow")}>
+                  -{selectedOffer.discount}%
+                </span>
+              )}
+            </span>
+          </Link>
         )}
 
-        {entry.steamAppId !== null && (
-          <>
-            <Link
-              href={`/wishlist/${entry.id}#offers`}
-              className="mt-auto flex items-center justify-between gap-3 border-t border-border pt-3 text-sm hover:text-primary"
-              aria-label={`Open offers for ${entry.name}`}
-            >
-              <span className="flex items-center gap-2 font-semibold">
-                {formatPrice(selectedOffer?.price ?? null, selectedOffer?.currency ?? null)}
-                {selectedOffer?.discount !== null && selectedOffer?.discount !== undefined && selectedOffer.discount > 0 && (
-                  <span className={cn("rounded bg-emerald-500/15 px-1.5 py-0.5 text-xs font-medium text-emerald-400", shouldGlowOffer(selectedOffer.discount) && "shadow-glow")}>
-                    -{selectedOffer.discount}%
-                  </span>
-                )}
-              </span>
-            </Link>
-            {selectedOffer?.isEstimated && <p className="mt-1 text-xs text-muted-foreground">Estimated display value</p>}
-            {selectedOffer?.conversionUnavailable && <p className="mt-1 text-xs text-muted-foreground">Conversion unavailable; source price shown</p>}
-          </>
+        {entry.type === "BASE_GAME" && !entry.hasOwnMetadata && !entry.hasInheritedMetadata && (
+          <p className="mt-2 text-sm leading-6 text-warning-text">
+            IGDB metadata is not available yet. Use Edit to search and choose a match.
+          </p>
         )}
 
         {entry.metadata && (
           <div className="space-y-2 text-sm">
             {descriptionPreview && (
-              <div className="hidden sm:block">
-                <p
-                  className="line-clamp-3 overflow-hidden leading-6 text-muted-foreground"
-                >
-                  {descriptionPreview}
-                </p>
-              </div>
+              <p className="line-clamp-3 overflow-hidden leading-6 text-muted-foreground">
+                {descriptionPreview}
+              </p>
             )}
             {entry.metadataGenres.length > 0 && (
               <div className="flex flex-wrap gap-1.5">

@@ -81,7 +81,7 @@ export function WishlistOfferSection({
         ) : (
           <span className="font-semibold">{offer.shop}</span>
         )}
-        <span className={cn("text-xl font-bold", offer.discount && offer.discount > 0 ? "text-emerald-300" : "text-foreground")}>
+        <span className="text-xl font-bold text-primary">
           {formatCurrency(offer.price, offer.currency)}
         </span>
       </div>

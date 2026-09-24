@@ -7,6 +7,7 @@ function entry(id: string, name: string, price: number, overrides: Partial<Today
   return {
     wishlistEntryId: id,
     gameName: name,
+    imageUrl: null,
     targetPriceMxn: null,
     offers: [{ shop: "Store", currency: "MXN", price, regularPrice: 100, sourceCurrency: null, sourcePrice: null, sourceRegularPrice: null, sourceHistoricalLow: null, exchangeRateToMxn: null, discount: 10, historicalLow: null, url: `https://store.test/${id}`, itadFlag: null, drm: null, fetchedAt: now, expiresAt: null }],
     ...overrides,
@@ -24,6 +25,11 @@ describe("rankTodayOffers", () => {
       entry("stale", "Stale", 1, { offers: [{ ...entry("x", "x", 1).offers[0], fetchedAt: new Date(now.getTime() - 49 * 60 * 60 * 1000) }] }),
     ];
     expect(rankTodayOffers(entries, now).map((offer) => offer.gameName)).toEqual(["Discount", "Target", "Alpha"]);
+  });
+
+  it("preserves the offered game's artwork for display", () => {
+    const imageUrl = "https://images.test/offer.jpg";
+    expect(rankTodayOffers([entry("art", "Art", 20, { imageUrl })], now)[0]?.imageUrl).toBe(imageUrl);
   });
 
   it("treats null discounts as zero and absent targets as not met", () => {

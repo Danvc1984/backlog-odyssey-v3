@@ -109,8 +109,15 @@ registration, and collaboration are outside the MVP.
   data controls with `Planned for my handheld`; combined title and IGDB
   maintenance; duplicate-review and merge-platform correctness; Library ProtonDB
   detail links; and accurate completed-game backlog progress.
-- Deployment and CI readiness as the final planned milestone, after the
-  sign-in introduction, without making it an inflexible MVP gate.
+- A pre-deployment mobile responsiveness pass: eliminate overflows, reduce
+  oversized titles and buttons, make constrained sections scrollable, keep
+  detail-page actions reachable, permit mobile-only collapsing of Library and
+  Wishlist health strips, use grid-only Library and Wishlist browsing on small
+  screens and grid cards in Collection detail, use offer-game artwork in the
+  Today worthy-bargain panel, and enable the existing
+  Wallhaven background on mobile when allowed by visual preferences.
+- Deployment and CI readiness as the final planned milestone, after the mobile
+  responsiveness pass, without making it an inflexible MVP gate.
 
 The following are explicitly outside the MVP:
 
@@ -1185,6 +1192,18 @@ states, alongside the existing automated checks. Feature 14 remains
 presentation and interaction composition only: it does not add providers,
 migrations, queues, background work, recommendation changes, price changes, or
 new catalog, wishlist, compatibility, or provider-data boundaries.
+
+### Pre-deployment mobile responsiveness
+
+Before deployment, review the app's mobile layouts and correct every observed
+case where text, actions, titles, buttons, or sections exceed the viewport.
+
+- Detail-page More actions must stay fully reachable.
+- Sections that cannot fit their available space need the appropriate scrolling
+  behavior instead of clipping their content.
+- Dense health strips in Library and Wishlist may collapse only on mobile.
+- Library and Wishlist list views are simplified for narrow screens while
+  preserving their existing information and actions.
 
 ### Personal-data composition
 

@@ -172,7 +172,7 @@ export function CompatibilitySection({
       id="compatibility-heading"
       sectionId="compatibility"
       aside={
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="flex w-full flex-wrap items-center gap-3 text-xs text-muted-foreground sm:w-auto sm:justify-end">
           {hasSteamIdentity && <span className={age !== null && age > 150 ? "text-warning-text" : undefined}>
             Evidence updated {age === null ? "never" : `${age} days ago`}
           </span>}

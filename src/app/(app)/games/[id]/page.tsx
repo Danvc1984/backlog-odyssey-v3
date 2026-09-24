@@ -476,10 +476,8 @@ export default async function GameDetailPage({
         sectionId="delete"
         description="Removes this game and its attached records."
         tone="danger"
+        aside={<DeleteGameDialog gameId={game.id} />}
       >
-        <div className="flex justify-end">
-          <DeleteGameDialog gameId={game.id} />
-        </div>
       </SectionCard>
       </div>
     </GameThemeScope>

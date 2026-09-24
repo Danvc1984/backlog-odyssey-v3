@@ -22,11 +22,12 @@ interface CarouselProps {
   slides: readonly ReactNode[];
   label: string;
   fullscreenImages?: readonly CarouselFullscreenImage[];
+  controlsBelowOnDesktop?: boolean;
 }
 
 const AUTO_ADVANCE_MS = 6_000;
 
-export function Carousel({ slides, label, fullscreenImages = [] }: CarouselProps) {
+export function Carousel({ slides, label, fullscreenImages = [], controlsBelowOnDesktop = false }: CarouselProps) {
   const { resolvedMotion } = useVisualPreferences();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [fullscreenOpen, setFullscreenOpen] = useState(false);
@@ -72,6 +73,7 @@ export function Carousel({ slides, label, fullscreenImages = [] }: CarouselProps
   return (
     <section
       aria-label={label}
+      className={controlsBelowOnDesktop && hasControls ? "lg:relative" : undefined}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onFocus={() => setIsFocused(true)}
@@ -98,7 +100,7 @@ export function Carousel({ slides, label, fullscreenImages = [] }: CarouselProps
         <div>{slides[activeIndex]}</div>
       )}
       {hasControls ? (
-        <div className="mt-3 flex h-5 items-center justify-between gap-3 text-[11px]">
+        <div className={controlsBelowOnDesktop ? "mt-3 flex h-5 items-center justify-between gap-3 text-[11px] lg:absolute lg:inset-x-0 lg:top-full lg:mt-3" : "mt-3 flex h-5 items-center justify-between gap-3 text-[11px]"}>
           <button
             type="button"
             className="h-full rounded-md px-1.5 font-medium text-muted-foreground hover:bg-muted hover:text-foreground"

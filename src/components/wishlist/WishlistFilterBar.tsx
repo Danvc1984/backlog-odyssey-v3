@@ -2,7 +2,10 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
+import { Popover } from "radix-ui";
+import { SlidersHorizontalIcon } from "@phosphor-icons/react";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 const TYPE_OPTIONS = [
@@ -58,7 +61,7 @@ export function WishlistFilterBar() {
 
   return (
     <div className="flex flex-wrap items-center gap-2" aria-label="Wishlist filters">
-      <div className="min-w-64 flex-1">
+      <div className="w-full min-w-0 md:min-w-64 md:flex-1">
         <Input
           type="search"
           value={query}
@@ -71,7 +74,42 @@ export function WishlistFilterBar() {
           aria-label="Search wishlist"
         />
       </div>
-      <div className="flex flex-wrap gap-1.5" aria-label="Wishlist type filters">
+      <Popover.Root>
+        <Popover.Trigger asChild>
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground md:hidden"
+          >
+            <SlidersHorizontalIcon className="size-3.5" />
+            Filters
+          </button>
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content align="start" side="bottom" sideOffset={6} className="z-50 w-72 space-y-4 rounded-lg border border-border bg-popover p-4 text-popover-foreground shadow-card">
+            <div>
+              <p className="technical-label mb-1.5 text-muted-foreground">Type</p>
+              <Select value={searchParams.get("type") ?? "ALL"} onValueChange={(value) => update("type", value)}>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                <SelectContent position="popper" align="start" className="w-56">
+                  {TYPE_OPTIONS.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <p className="technical-label mb-1.5 text-muted-foreground">Interest</p>
+              <Select value={searchParams.get("interest") ?? "ALL"} onValueChange={(value) => update("interest", value)}>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                <SelectContent position="popper" align="start" className="w-56">
+                  {INTEREST_OPTIONS.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <button type="button" aria-pressed={searchParams.get("sort") === "discount"} onClick={toggleDiscountSort} className={cn("w-full rounded-md border px-3 py-2 text-left text-sm font-medium transition-colors", searchParams.get("sort") === "discount" ? "border-opportunity/40 bg-opportunity/10 text-opportunity-text" : "border-border text-muted-foreground hover:bg-muted hover:text-foreground")}>Biggest discount</button>
+            {hasActiveFilters && <button type="button" onClick={resetFilters} className="w-full rounded-md border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">Reset filters</button>}
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
+      <div className="hidden flex-wrap gap-1.5 md:flex" aria-label="Wishlist type filters">
         {TYPE_OPTIONS.map((option) => {
           const active = (searchParams.get("type") ?? "ALL") === option.value;
           return (
@@ -92,7 +130,7 @@ export function WishlistFilterBar() {
           );
         })}
       </div>
-      <div className="flex flex-wrap gap-1.5" aria-label="Wishlist interest filters">
+      <div className="hidden flex-wrap gap-1.5 md:flex" aria-label="Wishlist interest filters">
         {INTEREST_OPTIONS.map((option) => {
           const active = (searchParams.get("interest") ?? "ALL") === option.value;
           return (
@@ -118,7 +156,7 @@ export function WishlistFilterBar() {
         aria-pressed={searchParams.get("sort") === "discount"}
         onClick={toggleDiscountSort}
         className={cn(
-          "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+          "hidden rounded-full border px-3 py-1 text-xs font-medium transition-colors md:inline-flex",
           searchParams.get("sort") === "discount"
             ? "border-opportunity/40 bg-opportunity/10 text-opportunity-text"
             : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -130,7 +168,7 @@ export function WishlistFilterBar() {
         type="button"
         onClick={resetFilters}
         disabled={!hasActiveFilters}
-        className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+        className="hidden rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 md:inline-flex"
       >
         Reset filters
       </button>

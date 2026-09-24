@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Carousel } from "@/components/ui/Carousel";
 import { DetailHeroArt } from "@/components/ui/detail-hero-art";
+import { BlurredArtworkBackdrop } from "@/components/ui/BlurredArtworkBackdrop";
 import { buttonVariants } from "@/components/ui/button";
 import { MakeMainGameButton } from "@/components/today/MakeMainGameButton";
 import { LibraryInterestRating } from "@/components/games/LibraryInterestRating";
@@ -153,39 +154,41 @@ function BuySignal({ offer }: { offer: TodayOfferView }) {
     <aside
       aria-labelledby="today-buy-heading"
       className={cn(
-        "rounded-2xl border border-opportunity/40 bg-gradient-to-br from-opportunity/10 via-card to-card p-6 shadow-card",
+        "relative overflow-hidden rounded-2xl border border-opportunity/40 bg-gradient-to-br from-opportunity/10 via-card to-card p-6 shadow-card",
         shouldGlowBuyHeading(offer.discountPercent) && "shadow-glow",
       )}
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="rounded-full bg-opportunity/15 px-2.5 py-1 text-xs font-medium text-opportunity-text">
+      <BlurredArtworkBackdrop src={offer.imageUrl} />
+      <div className="relative z-20">
+        <div className="flex items-center justify-between gap-2">
+          <span className="rounded-full bg-opportunity/15 px-2.5 py-1 text-xs font-medium text-opportunity-text">
           A worthy bargain has surfaced!
-        </span>
-      </div>
-      <h2
+          </span>
+        </div>
+        <h2
         id="today-buy-heading"
         className="mt-4 text-lg font-bold tracking-[-0.03em]"
       >
         {offer.gameName}
-      </h2>
-      <p className="mt-2 font-medium"></p>
-      <p className="mt-1 text-3xl font-bold tracking-tight">
+        </h2>
+        <p className="mt-1 text-3xl font-bold tracking-tight">
         {offer.price.toFixed(2)} {offer.currency}
-      </p>
-      <p className="mt-1 text-xs text-muted-foreground">
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
         {offer.store} ·{" "}
         {offer.discountPercent === null
           ? "no discount"
           : `${offer.discountPercent}% off`}{" "}
         · fetched {formatFetchedAgo(offer.fetchedAt, new Date())}
-      </p>
-      <div className="mt-4 border-t border-border pt-4">
+        </p>
+        <div className="mt-4 border-t border-border pt-4">
         <Link
           href={`/wishlist/${offer.wishlistEntryId}`}
           className={buttonVariants({ variant: "secondary", size: "sm" })}
         >
           View wishlist offer
-        </Link>
+          </Link>
+        </div>
       </div>
     </aside>
   );
@@ -237,9 +240,9 @@ export function TodayHeroGrid({
   ));
 
   return (
-    <div className={cn("grid gap-4", showBuySignal && "lg:grid-cols-[minmax(0,1.4fr)_minmax(300px,0.6fr)]")}>
+    <div className={cn("grid gap-4", showBuySignal && "lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]", focusSlides.length > 1 && "lg:pb-8")}>
       {focusSlides.length > 0 ? (
-        <Carousel label="Today focus" slides={focusSlides} />
+        <Carousel label="Today focus" slides={focusSlides} controlsBelowOnDesktop />
       ) : (
         <SpotlightEmpty />
       )}

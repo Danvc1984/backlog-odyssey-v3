@@ -457,19 +457,26 @@ export default async function LibraryPage({
         )
       ) : (
         <div className="mt-6">
-          <div
-            className={view === "list"
-              ? "space-y-3"
-              : "grid gap-4 sm:grid-cols-2 lg:grid-cols-3"}
-          >
-            {entriesWithTiers.map((entry) => (
-              <LibraryGameCard
-                key={entry.id}
-                entry={entry}
-                variant={view}
-              />
-            ))}
-          </div>
+          {view === "list" ? (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2 md:hidden">
+                {entriesWithTiers.map((entry) => (
+                  <LibraryGameCard key={entry.id} entry={entry} variant="grid" />
+                ))}
+              </div>
+              <div className="hidden space-y-3 md:block">
+                {entriesWithTiers.map((entry) => (
+                  <LibraryGameCard key={entry.id} entry={entry} variant="list" />
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {entriesWithTiers.map((entry) => (
+                <LibraryGameCard key={entry.id} entry={entry} variant="grid" />
+              ))}
+            </div>
+          )}
           {entries.length > 0 && (
             <ListPaginationControls
               ariaLabel="Library pages"

@@ -31,10 +31,27 @@ export function WishlistList({ entries, baseGames, alternativeSources, view = "f
     );
   }
 
+  if (view === "list") {
+    return (
+      <>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 md:hidden">
+          {entries.map((entry) => (
+            <WishlistCard key={entry.id} entry={entry} baseGames={baseGames} alternativeSources={alternativeSources} variant="focus" />
+          ))}
+        </div>
+        <div className="mt-6 hidden grid-cols-1 gap-3 md:grid">
+          {entries.map((entry) => (
+            <WishlistCard key={entry.id} entry={entry} baseGames={baseGames} alternativeSources={alternativeSources} variant="list" />
+          ))}
+        </div>
+      </>
+    );
+  }
+
   return (
-    <div className={view === "list" ? "mt-6 grid gap-3" : "mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"}>
+    <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {entries.map((entry) => (
-        <WishlistCard key={entry.id} entry={entry} baseGames={baseGames} alternativeSources={alternativeSources} variant={view} />
+        <WishlistCard key={entry.id} entry={entry} baseGames={baseGames} alternativeSources={alternativeSources} variant="focus" />
       ))}
     </div>
   );

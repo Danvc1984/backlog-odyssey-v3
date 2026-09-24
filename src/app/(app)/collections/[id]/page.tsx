@@ -215,9 +215,9 @@ export default async function CollectionDetailPage({
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredRows.map((entry) => (
-            <LibraryGameCard key={entry.id} entry={entry} variant="list" />
+            <LibraryGameCard key={entry.id} entry={entry} variant="grid" />
           ))}
         </div>
       )}

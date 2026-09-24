@@ -75,20 +75,21 @@ function Cover({ entry, variant }: { entry: LibraryGameCardEntry; variant: "grid
 
 function MockActions({ gameId }: { gameId: string }) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2 max-[1300px]:gap-1 max-[1300px]:[&_[data-slot=button]]:size-6 max-[1300px]:[&_[data-slot=button]_svg]:size-3">
       <Link
         href={`/games/${gameId}#personal-fields`}
-        className="inline-flex h-7 items-center rounded-[8px] border border-border-strong bg-card px-2.5 text-xs font-bold text-foreground hover:bg-card-alt"
+        className="inline-flex h-7 items-center rounded-[8px] border border-border-strong bg-card px-2.5 text-xs font-bold text-foreground hover:bg-card-alt max-[1300px]:h-6 max-[1300px]:px-1.5 max-[1300px]:text-[11px]"
       >
         Edit
       </Link>
       <Link
         href={`/games/${gameId}#play-state`}
-        className="inline-flex h-7 items-center rounded-[8px] border border-border-strong bg-card px-2.5 text-xs font-bold text-foreground hover:bg-card-alt"
+        className="inline-flex h-7 items-center rounded-[8px] border border-border-strong bg-card px-2.5 text-xs font-bold text-foreground hover:bg-card-alt max-[1300px]:h-6 max-[1300px]:px-1.5 max-[1300px]:text-[11px]"
       >
-        Change state
+        <span className="max-[1100px]:hidden">Change state</span>
+        <span className="hidden max-[1100px]:inline">State</span>
       </Link>
-      <DeleteGameDialog gameId={gameId} />
+      <DeleteGameDialog gameId={gameId} trigger="icon" />
     </div>
   );
 }
@@ -144,13 +145,9 @@ function CardDetails({
   return (
     <div className={listView ? "mt-2 flex flex-wrap items-center gap-x-2 gap-y-1" : "mt-4 space-y-3"}>
       {descriptionPreview && (
-        <div className={listView ? "block" : "hidden sm:block"}>
-          <p
-            className="line-clamp-3 overflow-hidden leading-6 text-muted-foreground"
-          >
-            {descriptionPreview}
-          </p>
-        </div>
+        <p className="line-clamp-3 overflow-hidden text-sm leading-6 text-muted-foreground">
+          {descriptionPreview}
+        </p>
       )}
       {missingDescription && (
         <p className="text-xs text-warning-text">
@@ -183,7 +180,7 @@ function CardDetails({
         </div>
       )}
       {listView && (developers.length > 0 || releaseYear || stats.length > 0) && (
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="hidden flex-wrap items-center gap-1.5 sm:flex">
           {developers[0] && <span className="rounded-md border border-border px-2 py-0.5 text-xs">{developers[0]}</span>}
           {releaseYear && <span className="rounded-md border border-border px-2 py-0.5 text-xs">{releaseYear}</span>}
           {stats.map((stat) => (
@@ -227,15 +224,17 @@ function CardBody({
               gameName={entry.game.name}
               interest={entry.interest}
             />
-            {entry.compatTag && (
-              <Link
-                href={`/games/${entry.game.id}#compatibility`}
-                aria-label={`View compatibility for ${entry.game.name}`}
-                className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-              >
-                <ProtonDbTag tag={entry.compatTag} />
-              </Link>
-            )}
+            <div className="flex h-6 items-center">
+              {entry.compatTag && (
+                <Link
+                  href={`/games/${entry.game.id}#compatibility`}
+                  aria-label={`View compatibility for ${entry.game.name}`}
+                  className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                >
+                  <ProtonDbTag tag={entry.compatTag} />
+                </Link>
+              )}
+            </div>
           </div>
           <MockActions gameId={entry.game.id} />
         </div>
@@ -270,12 +269,12 @@ export function LibraryGameCard({
 }) {
   if (variant === "list") {
     return (
-      <article className="flex min-h-44 overflow-hidden rounded-lg border border-border bg-primary/5 shadow-card">
-        <div className="w-40 shrink-0 sm:w-48 lg:w-64 xl:w-80 min-[1600px]:w-96">
+      <article className="flex min-h-44 flex-col overflow-hidden rounded-lg border border-border bg-primary/5 shadow-card sm:flex-row">
+        <div className="h-40 w-full shrink-0 sm:h-auto sm:w-48 lg:w-64 xl:w-80 min-[1600px]:w-96">
           <Cover entry={entry} variant="list" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-3 p-4 pb-2">
+          <div className="flex flex-col items-start gap-3 p-4 pb-2 sm:flex-row sm:justify-between">
             <div className="flex min-w-0 flex-wrap items-center gap-3">
               <h3 className="min-w-0 text-base font-bold leading-snug tracking-[-0.02em]">
                 <Link href={`/games/${entry.game.id}`} className="hover:underline">
@@ -288,18 +287,20 @@ export function LibraryGameCard({
                   gameName={entry.game.name}
                   interest={entry.interest}
                 />
-                {entry.compatTag && (
-                  <Link
-                    href={`/games/${entry.game.id}#compatibility`}
-                    aria-label={`View compatibility for ${entry.game.name}`}
-                    className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-                  >
-                    <ProtonDbTag tag={entry.compatTag} />
-                  </Link>
-                )}
+                <div className="flex h-6 items-center">
+                  {entry.compatTag && (
+                    <Link
+                      href={`/games/${entry.game.id}#compatibility`}
+                      aria-label={`View compatibility for ${entry.game.name}`}
+                      className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                    >
+                      <ProtonDbTag tag={entry.compatTag} />
+                    </Link>
+                  )}
+                </div>
               </div>
             </div>
-            <div className="shrink-0">
+            <div className="w-full sm:w-auto sm:shrink-0">
               <MockActions gameId={entry.game.id} />
             </div>
           </div>

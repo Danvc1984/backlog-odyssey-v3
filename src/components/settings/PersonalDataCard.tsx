@@ -108,14 +108,24 @@ export function PersonalDataCard({
               Restores into an empty catalog and wishlist. Existing settings, sources, and recommendation state are replaced during restore.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
             <input
               ref={inputRef}
+              id="personal-data-import"
               type="file"
               accept=".json,application/json"
               onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-              className="block w-full max-w-xs text-sm text-muted-foreground file:mr-3 file:rounded-md file:border file:border-border file:bg-input file:px-3 file:py-1.5 file:text-sm file:text-foreground hover:file:bg-muted"
+              className="peer sr-only"
             />
+            <label
+              htmlFor="personal-data-import"
+              className="inline-flex h-7 shrink-0 cursor-pointer items-center rounded-[8px] border border-border bg-input px-2.5 text-[0.8rem] font-bold text-foreground transition-colors hover:bg-muted peer-focus-visible:border-signal peer-focus-visible:ring-3 peer-focus-visible:ring-signal/30"
+            >
+              Choose file
+            </label>
+            <span className="min-w-0 max-w-full truncate text-sm text-muted-foreground" title={file?.name}>
+              {file ? file.name : <><span className="md:hidden">No file</span><span className="hidden md:inline">No file selected</span></>}
+            </span>
             <Button
               type="button"
               variant="outline"

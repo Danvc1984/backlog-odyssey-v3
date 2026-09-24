@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
+import { Popover } from "radix-ui";
+import { SlidersHorizontalIcon } from "@phosphor-icons/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import {
@@ -39,16 +41,36 @@ export function CollectionListControls() {
   );
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">
       <Input
         value={query}
         onChange={(event) => update("q", event.target.value)}
         placeholder="Search this collection"
         aria-label="Search this collection"
-        className="w-full sm:w-64"
+        className="w-full md:w-64"
       />
+      <Popover.Root>
+        <Popover.Trigger asChild>
+          <button type="button" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground md:hidden">
+            <SlidersHorizontalIcon className="size-3.5" />
+            Sort
+          </button>
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content align="start" side="bottom" sideOffset={6} className="z-50 w-72 rounded-lg border border-border bg-popover p-4 text-popover-foreground shadow-card">
+            <p className="technical-label mb-1.5 text-muted-foreground">Sort</p>
+            <Select value={sort} onValueChange={(value) => update("sort", value)}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent position="popper" align="start" className="w-56">
+                {SORT_OPTIONS.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
+      <div className="hidden md:block">
       <Select value={sort} onValueChange={(value) => update("sort", value)}>
-        <SelectTrigger className="w-full sm:w-44">
+        <SelectTrigger className="w-44">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -59,6 +81,7 @@ export function CollectionListControls() {
           ))}
         </SelectContent>
       </Select>
+      </div>
     </div>
   );
 }

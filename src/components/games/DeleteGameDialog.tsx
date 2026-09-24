@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useRouter } from "next/navigation";
 import { TrashIcon } from "@phosphor-icons/react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { showCatalogActionToast } from "@/components/ui/sonner";
 import {
@@ -41,7 +41,13 @@ const RELATION_LABELS: [keyof DeletePreview["relations"], string][] = [
   ["envCompat", "environment record"],
 ];
 
-export function DeleteGameDialog({ gameId }: { gameId: string }) {
+export function DeleteGameDialog({
+  gameId,
+  trigger = "label",
+}: {
+  gameId: string;
+  trigger?: "icon" | "label";
+}) {
   const router = useRouter();
   const undo = useUndoOperation();
   const [open, setOpen] = useState(false);
@@ -114,12 +120,12 @@ export function DeleteGameDialog({ gameId }: { gameId: string }) {
         <Button
           type="button"
           variant="destructive"
-          size="icon-sm"
+          size={trigger === "icon" ? "icon-sm" : "sm"}
           className="bg-red-950/80 text-red-200 hover:bg-red-900/90 hover:text-red-100"
-          aria-label="Delete game"
-          title="Delete game"
+          aria-label="Remove entry"
+          title="Remove entry"
         >
-          <TrashIcon />
+          {trigger === "icon" ? <TrashIcon aria-hidden /> : "Remove entry"}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">

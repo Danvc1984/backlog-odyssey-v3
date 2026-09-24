@@ -214,6 +214,9 @@ export function AccountCard({
                           />
                         </div>
                         <p className="mt-3 text-xs text-muted-foreground">
+                          Displayed prices can be estimates converted from the store&apos;s price. If conversion is unavailable, Backlog Odyssey shows the store&apos;s source currency.
+                        </p>
+                        <p className="mt-2 text-xs text-muted-foreground">
                           Changing either choice does not refresh prices automatically. Run a manual price refresh before expecting offers to use the new market.
                         </p>
                       </div>

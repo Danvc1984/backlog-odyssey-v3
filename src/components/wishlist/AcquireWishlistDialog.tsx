@@ -49,11 +49,13 @@ export function AcquireWishlistDialog({
   imageUrl,
   selectedOffer = null,
   alternativeSources = [],
+  triggerClassName,
 }: {
   entry: { id: string; name: string; type: string };
   imageUrl?: string | null;
   selectedOffer?: WishlistOfferView | null;
   alternativeSources?: AlternativeSource[];
+  triggerClassName?: string;
 }) {
   const router = useRouter();
   const { resolvedMotion, resolvedData } = useVisualPreferences();
@@ -128,7 +130,7 @@ export function AcquireWishlistDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button type="button" size="lg">Acquire</Button>
+        <Button type="button" size="lg" className={triggerClassName}>Acquire</Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         {completed ? (
@@ -201,8 +203,16 @@ export function AcquireWishlistDialog({
                         <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-xs font-bold text-emerald-300">-{selectedOffer.discount}%</span>
                       )}
                       <span className="w-full text-xs text-muted-foreground">Main offer from {selectedOffer.shop}</span>
-                      {selectedOffer.isEstimated && <span className="w-full text-xs text-muted-foreground">Estimated display value</span>}
-                      {selectedOffer.conversionUnavailable && <span className="w-full text-xs text-muted-foreground">Display conversion unavailable; source price shown</span>}
+                      {selectedOffer.conversionUnavailable && (
+                        <span className="w-full text-xs text-muted-foreground">
+                          This price could not be converted, so it is shown in the store&apos;s source currency.
+                        </span>
+                      )}
+                      {selectedOffer.isEstimated && !selectedOffer.conversionUnavailable && (
+                        <span className="w-full text-xs text-muted-foreground">
+                          This is an estimated {selectedOffer.displayCurrency ?? "display currency"} value. The store charges in its source currency.
+                        </span>
+                      )}
                     </div>
                   ) : (
                     <p className="mt-3 text-sm text-muted-foreground">No current offer is available.</p>
