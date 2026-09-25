@@ -1119,12 +1119,15 @@ completion: leaving the former retains the latter, replay may be in progress,
 and a past completion is not current backlog progress or proof of enjoyment.
 Offer a non-blocking prompt to use the existing personal 1-10 rating when a
 game is newly marked completed. Do not double-count current and prior
-completion or treat legacy ambiguous Taste Setup / dismissal events as certain
+completion or treat ambiguous Taste Setup / dismissal events as certain
 new evidence. Do not rewrite uncertain personal history automatically; make
-corrections possible. Transition and version recommendation-derived records
-and export/restore contracts so old runs, ambiguous rejection calibration,
-and newly meaningful feedback cannot silently mix. Do not drop other personal
-catalog / wishlist data in this transition.
+corrections possible. Version recommendation-derived records and export/restore
+contracts so different signal meanings cannot silently mix. Feature 38 uses
+an owner-managed clean development database restart for testing from scratch:
+no legacy-data migration, old-run preservation, historical backfill, or support
+for previous export versions is required. Implementation must not reset or
+wipe the database automatically. Current-version export/restore must round-trip
+personal catalog and wishlist data, including the new signal provenance.
 
 Update recommendations rebuilds the derived profile and runs. 'Rebuild
 profile' is not another routine user action; if retained, move it to
@@ -1486,7 +1489,8 @@ alternative sources, all external IDs regardless of provenance, current play
 states, prior-completion history, owned-game Play priority, wishlist Interest,
 ratings, personal tags, settings (including duration profile), manual overrides,
 and recommendation-related
-personal decisions. Removed notes and per-game availability display labels are
+personal decisions, including known signal provenance and dates introduced by
+feature 38. Removed notes and per-game availability display labels are
 not exported or restored. The new schema is introduced directly and older
 export versions are rejected clearly rather than normalized, because the app
 has not reached staging and the database will be rebuilt.

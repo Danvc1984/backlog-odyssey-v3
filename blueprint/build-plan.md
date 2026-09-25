@@ -847,8 +847,29 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
   invitation, simplify current versus prior completion presentation, and
   replace ambiguous rebuild/reset controls with a clearly confirmed total
   recommendation-data reset that preserves personal catalog and wishlist
-  fields. Transition legacy signals and export/restore safely, then verify
-  ranking properties, real UI flows, and comparison scenarios before shipping.
+  fields. Use an owner-managed clean development database restart, with no
+  legacy-data migration or previous-export support, then verify ranking
+  properties, real UI flows, and comparison scenarios before shipping.
+  - [ ] 38a. **Signal provenance and clean-start contracts** - record known
+    new signal origins and dates without guessing missing provenance; version
+    the recommendation-derived data boundary and current-only export/restore.
+    The owner will restart the development database to test from scratch;
+    implementation must not reset or wipe it automatically.
+  - [ ] 38b. **Contextual ranking** - balance stable taste, recent play,
+    explicit priority, and backlog-aware Buy; diversify relevant picks without
+    weak filler, with ranking-property tests.
+  - [ ] 38c. **Stable runs and reversible feedback** - neutral rotation,
+    per-engine 15-day pauses and persistent exclusions, Undo and management,
+    stable selections, eligibility revalidation, and race-safe actions.
+  - [ ] 38d. **Optional Taste Setup and truthful Tune** - remove setup gating,
+    distinguish played from completed history, offer flexible duration and
+    accurate counts, and present natural evidence-backed explanations.
+  - [ ] 38e. **Completion and reset flows** - optional completion-rating
+    invitation, clearer current versus prior completion, and a confirmed total
+    recommendation-data reset that preserves personal fields.
+  - [ ] 38f. **Acceptance** - compare ranking and rationale outcomes on reviewed
+    and reserved scenarios, and verify real UI flows, reload stability,
+    reversible feedback, and reset/restore before shipping.
 
 - [ ] 39. **Deployment and CI readiness** - Vercel/Supabase environment
   review, Vercel Cron daily run at 06:00 UTC-6 with `CRON_SECRET` enqueueing
