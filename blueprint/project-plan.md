@@ -72,14 +72,16 @@ registration, and collaboration are outside the MVP.
   and Steam wishlist imports at 2/5 Interest; manual entries start at 3/5
   for the corresponding field, and wishlist acquisition carries the wish's
   Interest into the catalog as Play priority.
-- Deterministic explainable play-next and buy recommendations with a
-  handheld play role when the setup has one, and DLC affinity weighting.
-- Before recommendations are shown, Taste Setup requires at least ten library
-  games. It samples library games randomly and records independent prior-play,
-  stronger taste, and play-soon signals; recommendation surfaces stay hidden
-  until setup is saved. Buy recommendations are omitted when the wishlist is
-  empty.
-- Recommendation runs with temporary dismissal and persistent calibration signals.
+- Local, explainable play-next and buy recommendations with a handheld play
+  role when the setup has one and DLC affinity weighting. The pre-deployment
+  recommendation renewal balances stable taste, recent context, play intent,
+  backlog progress, and controlled diversity without an external model.
+- Taste Setup is optional, with no ten-game threshold or recommendation gate;
+  the engine uses available evidence, including sparse libraries. Its prior-play
+  wording must not silently mark a game completed. Buy is omitted when the
+  wishlist is empty.
+- Recommendation runs stay stable until an explicit update or invalidation;
+  asking for another option is neutral, not a dismissal or star adjustment.
 - Today dashboard with active-backlog progress, data-coverage prompts, daily-cached
   recent Steam activity (including unimported titles), latest explicit recommendations,
   wishlist offers, and provider-operation status.
@@ -1010,6 +1012,144 @@ After Taste Setup is saved, the `Update recommendations` action lives on the
 Today dashboard header and empty state, and is reachable from the Library and
 Wishlist headers.
 
+### Pre-deployment recommendation renewal (feature 38)
+
+This section supersedes conflicting recommendation rules above without changing
+what the completed features originally delivered. The engine remains local,
+explainable, and reproducible; do not introduce an LLM, a hosted recommender,
+per-session play tracking, mood inference, or a claimed probability of finishing.
+Keep owned base games and wishlist base games / eligible DLC separate, along
+with existing compatibility safety and price-provider boundaries.
+
+**Choosing what to play.** Default to enjoyment and likely follow-through,
+not a blanket preference for short games or a race to clear the backlog.
+Balance stable taste, recently played games, explicit Play priority, play-soon
+intent, Tune, compatibility, and the available library. A higher manual Play
+priority remains strong but is not an absolute ordering rule: a better match
+for the current context may outrank it. Distinguish known user-chosen priority
+or Wishlist Interest from ingestion defaults going forward, including the date
+and provenance of new signals; never guess the origin of historical values
+from their number or `updatedAt`. Missing provenance stays unknown. Historical
+completion does not establish recent activity. A start or Steam playtime is
+not proof of enjoyment; completion is moderate evidence; personal rating
+(1-10) and an explicit 'more like this' answer are stronger evidence. Deduplicate
+signals from the same game. Changing personal fields or metadata should affect
+new runs without silently replacing the current run.
+
+Use attributed IGDB genres, themes, keywords, series, modes, rating and count,
+and completion-time estimates with the existing SteamSpy fallback, plus the
+owner's data. Weight useful matches by specificity and confidence; avoid
+counting synonymous/correlated tags or sheer metadata quantity as independent
+proof. SteamSpy median playtime is not a completion-time promise. Missing,
+stale, or low-confidence data means uncertainty, not dislike. Keep scoring
+monotonic for positive preference changes, with bounded correlated evidence and
+explicit overrides; don't silently discard a positive contribution because a
+cap was reached. Compare recent play with candidates where identities and
+metadata are available, but do not invent certainty for manual or unlinked
+games. Keep a recent-context signal separate from long-term taste so a recently
+finished genre neither permanently dominates nor implies fatigue.
+
+**Selection and variety.** Balanced presents both continuity with recent
+enjoyment and a compatible change of pace. Familiar leans toward continuity;
+Different explores outside familiar patterns without favoring negative affinity.
+Select a coherent set, penalizing redundancy between displayed games without
+inventing a negative judgment of any individual game. Only select alternatives
+that meet a minimum relevance and practical-fit floor. Prefer fewer roles to
+filling slots with poor matches; with a small pool, explain that alternatives
+are exhausted. Preserve the existing Handheld and compatibility qualification
+rules. An Out of the Box role must mean what its displayed rationale says, not
+conflate novelty of taste with ready-to-play compatibility. Near-equal qualified
+candidates may vary through stored, reproducible per-run rotation; do not use
+alphabetical ordering or randomize on reload. Exposure cooldown must still
+matter when the eligible pool is smaller than the display count.
+
+**Buy with backlog awareness.** Fit with taste and current play matters more
+than a discount. Compare wishlist games with genuinely usable, sufficiently
+similar owned alternatives, not merely games in the same genre; ignore hidden,
+unavailable, or already finished games unless replay is intended. Explicit
+wishlist desire can outweigh overlap. Evaluate DLC in the context of its owned
+base rather than as a substitute for a different game. A valid fresh offer
+and target price may create urgency but never justify poor fit; expired offers
+do not become current just because a run persists. Buy may show fewer picks or
+say there is no purchase worth recommending now. Distinguish 'fits, buy now',
+'fits, but consider an owned alternative first', and 'not enough evidence to
+advise a purchase'. Do not present a weak recommendation as a certain saving.
+
+**Tune and explanation.** Keep Tune tab-local and apply it only on explicit
+Update. Handheld-only is strict; known conflicting play modes remain excluded
+while unknown modes are identified as unverified. Duration ranges are strong
+but flexible preferences, with clearly identified outside-range options;
+source, genre, theme, era, and other More filters remain soft unless an existing
+safety rule says otherwise. Count actual eligible games separately from soft
+preference matches and unknown evidence. A neutral Tune, handheld-only Tune, or
+source-only Tune must not show 'Only 0 candidates match your tune'. Avoid
+candidate-count caveats on every card. A recommendation leads with one brief,
+natural reason tied to the decisive evidence, optionally one practical caveat,
+then an expandable factual explanation. Labels remain for practical facts like
+estimated duration, platform, and price. Never say 'you enjoyed this' based
+only on starting or finishing it, nor claim it is relaxing or easy without
+evidence. Attribute estimated duration and disclose uncertainty.
+
+**Feedback and state.** Use a split button with 'Show another option' as the
+permanent default action and 'Not for now' / 'Not interested in this
+recommendation' in its menu. All three replace the current slot from a
+qualified alternative in the same run when possible, or remove it with a clear
+empty explanation; don't regenerate the entire list. Show another affects only
+exposure and rotation: no taste penalty, automatic star calibration, or
+negative feedback. Not for now pauses that game for 15 days in Play Next or
+Buy independently. Not interested excludes it from that engine until the owner
+reverses it. Neither action silently penalizes related games or changes the
+catalog / wishlist field. Provide immediate Undo and a reachable management
+list to reverse a pause or exclusion, even after reload. Invalid, acquired,
+hidden, started, or otherwise ineligible games and expired offers must be
+revalidated on presentation and before replacement or action. Protect against
+repeat requests and cross-tab races. Keep the visible selection stable across
+reloads, while allowing explicit Update to re-evaluate both engines and
+rotate only among sufficiently good candidates. OS or other context changes
+invalidate only what no longer fits rather than arbitrarily replacing all
+qualified picks.
+
+**Setup, history, and controls.** Remove the ten-library-game and required
+Taste Setup gates: recommend from available data with honest low-confidence
+language and an optional 'Refine my recommendations' invitation. Taste Setup's
+'Played before' must not imply completion; ask 'Completed before' if writing
+`completedBefore`, or record a separate played-only signal without changing
+completion history. Keep current `COMPLETED` state distinct from previous
+completion: leaving the former retains the latter, replay may be in progress,
+and a past completion is not current backlog progress or proof of enjoyment.
+Offer a non-blocking prompt to use the existing personal 1-10 rating when a
+game is newly marked completed. Do not double-count current and prior
+completion or treat legacy ambiguous Taste Setup / dismissal events as certain
+new evidence. Do not rewrite uncertain personal history automatically; make
+corrections possible. Transition and version recommendation-derived records
+and export/restore contracts so old runs, ambiguous rejection calibration,
+and newly meaningful feedback cannot silently mix. Do not drop other personal
+catalog / wishlist data in this transition.
+
+Update recommendations rebuilds the derived profile and runs. 'Rebuild
+profile' is not another routine user action; if retained, move it to
+Diagnostics and state that it never refreshes displayed runs. 'Restart
+recommendations' is a destructive total reset of recommendation-owned runs,
+items, events (including Taste Setup answers), learned profiles, dismissals,
+preferences, presets, Tune state, pauses, and exclusions. Require a strong
+confirmation naming everything removed. Clear tab-local Tune and refresh the
+screen immediately; after reset, setup is still optional. Preserve the user's
+games, wishlist, offers, personal priority, ratings, play state, prior
+completion, and provider evidence. New recommendations can learn again from
+those retained personal fields: the reset does not promise to forget them.
+
+**Evidence before shipping.** Add logic tests with fixed inputs and time for
+ranking monotonicity, confidence and provenance, duplicated/correlated tags,
+recent-context versus stable taste, sparse or missing metadata, short pools,
+exposure and deterministic rotation, actual Tune counts, duration flexibility,
+compatibility gates, DLC rating scale, backlog-aware Buy, legacy-event
+transition, reversible time-bound feedback, cross-tab/idempotent actions,
+reset/restore, and truthful explanations. Compare old and new outputs on a
+small reviewed set of owned/wishlist scenarios plus reserved cases, assessing
+relevance, variety, repetition, and rationale honesty, not only formula
+consistency. Verify the split button, completion-rating prompt, reset warning,
+Undo, reloading, and stale results against the running app before deployment.
+
 ## 12. Today Dashboard
 
 The dashboard is the post-login front door and primarily a local composition
@@ -1034,12 +1174,11 @@ It displays:
 - Clickable coverage counts open accessible dialogs with up to ten affected
   game titles linking to their game details. The dialog can expand into a
   paginated list for additional games.
-- After Taste Setup is saved, the latest play-next run's stored roles (Best
-  Fit, You Might Also Enjoy, qualified Out of the Box, Change of Pace, and
-  Handheld when configured and qualified) and, only when wishlist entries
-  exist, the latest buy run's stored roles (fit and deal picks per the
-  documented deal-saturation rule); these remain the latest explicitly
-  generated runs.
+- The latest explicitly generated play-next run's qualified roles (Best Fit,
+  You Might Also Enjoy, Out of the Box, Change of Pace, and Handheld when
+  configured) and, only when wishlist entries exist, the latest buy run's
+  qualified fit and deal picks. Taste Setup is optional; unqualified roles are
+  omitted rather than filled with poor matches.
 - Up to five games recently played on Steam, showing last-played date and
   accumulated playtime. Recent activity may include games not yet imported into
   the catalog; those entries visibly suggest the existing manual library sync

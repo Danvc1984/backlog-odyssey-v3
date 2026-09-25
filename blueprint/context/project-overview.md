@@ -1,6 +1,6 @@
 # Backlog Odyssey - Project Overview
 
-<!-- blueprint:source-hash fa0b89245ebf38405bc054f4a06646ec1d14005df15266a407d35428d4bc3c9e -->
+<!-- blueprint:source-hash 60e2033e7f74329b2178ae8ad5d45a7bbb7caa2c17653434c95c7e8e9604d414 -->
 
 > A private, single-user gaming library and decision assistant for choosing what to play and buy across a configured PC and handheld setup, with selectable market and display-currency preferences.
 
@@ -39,9 +39,10 @@ Completed work establishes the authenticated app, catalog, Steam imports, wishli
 19. **36. Today taste setup and recommendation gating** - completed required Taste Setup with a ten-game library threshold, random independent prior-play, stronger-interest, and play-soon signals, recommendation gating, empty-wishlist Buy omission, preferred-environment removal, and Today tag/shelf styling.
 20. **37. Library and game-detail renewal** - completed detail-page reorganization and personal-data presentation, merged title/IGDB maintenance, section links and feedback cleanup, duplicate-review and platform-merge fixes, ProtonDB deep links, and completed-game backlog progress correction.
 21. **35. Mobile responsiveness pass** - completed pre-deployment mobile review and fixes for overflow, viewport-fitting titles, buttons, and sections, detail-page actions, collapsible Library and Wishlist health strips, grid-only narrow-screen Library and Wishlist browsing plus Collection detail grids, Today worthy-bargain game art, and mobile Wallhaven availability subject to visual preferences.
-22. **38. Deployment and CI readiness** - pending Vercel/Supabase review, protected daily cron, production checks, one reproducible Verify command, and optional automatic checks. This is the final planned step.
+22. **38. Contextual recommendation renewal** - pending pre-deployment work: balance taste, recent play, explicit intent, relevant variety and owned alternatives for Buy; optional Taste Setup, truthful Tune and explanations, reversible feedback, stable runs, safe legacy transition, and evaluated outcomes.
+23. **39. Deployment and CI readiness** - pending Vercel/Supabase review, protected daily cron, production checks, one reproducible Verify command, and optional automatic checks. This remains the last planned step.
 
-The active ad-hoc fix before feature 38 merges owned-game Interest and enum Priority into one Play priority; it is tracked in `current-feature.md`, not as another build-plan item. Checked items above record their original delivery.
+The ad-hoc Play priority fix preceding feature 38 is described in `build-plan.md`; it is not a numbered feature. Checked items above record original delivery, while feature 38 supersedes conflicting historical recommendation behavior.
 
 ## Data model
 
@@ -51,7 +52,7 @@ The shapes below describe the intended model, including the pending Play priorit
 
 - **User** - single authenticated owner; parent for personal data, settings, operations, and recommendation records.
 - **Game** - catalog-only entity with `id: string`, `name: string`, `type: BASE_GAME | DLC`, immutable origin, and nullable `baseGameId`. A DLC must reference a base game and has no `LibraryEntry` or play state.
-- **LibraryEntry** - one base-game profile with `gameId`, current `playState: NOT_STARTED | IN_PROGRESS | COMPLETED | ABANDONED`, `completedBefore: boolean`, `isMainGame`, `hidden`, `replay`, `playSoon`, nullable numeric `interest: 1..5` stored as **Play priority** (unset allowed), rating, game experience, handheld suitability, and play history. The separate enum `priority` will be dropped without backfill; the three development entries remain and keep their numeric values.
+- **LibraryEntry** - one base-game profile with `gameId`, current `playState: NOT_STARTED | IN_PROGRESS | COMPLETED | ABANDONED`, independent `completedBefore: boolean`, `isMainGame`, `hidden`, `replay`, `playSoon`, nullable numeric `interest: 1..5` as **Play priority**, personal rating (1-10), game experience, handheld suitability, and play history. The separate enum `priority` is dropped without backfill; existing numeric values remain. Feature 38 adds provenance and timestamp for new priority/rating signals without guessing historical origins.
 - **Availability** - many per game; built-in `STEAM | ROM` or `OTHER_PLATFORM` with an `alternativeSourceId`. Feature 31 removes the per-game display label.
 - **AlternativeSource** - reusable owner-defined source with canonical and normalized names, optional known-source key/icon metadata, and archive state. Definitions live only in Settings; archived assignments remain visible and removable but cannot be newly selected.
 - **ExternalGameId** - provider namespace, external ID, provenance, and game relation. Confirmed Steam App IDs key Steam, IGDB, compatibility, and price work.
@@ -60,7 +61,7 @@ The shapes below describe the intended model, including the pending Play priorit
 
 ### Wishlist, metadata, and offers
 
-- **WishlistEntry** - independent unowned base game or DLC with `id`, `name`, type, nullable `baseGameId` required for DLC, interest, game experience, handheld suitability, optional `targetPriceMxn`, and optional confirmed Steam identity/provenance. It never creates a provisional `Game`; notes are removed in feature 31.
+- **WishlistEntry** - independent unowned base game or DLC with `id`, `name`, type, nullable `baseGameId` required for DLC, Interest (feature 38 tracks known new-signal origin/date), game experience, handheld suitability, optional `targetPriceMxn`, and optional confirmed Steam identity/provenance. It never creates a provisional `Game`; notes are absent.
 - **IGDB metadata snapshot** - replaceable catalog or wishlist evidence containing fixed IGDB identity, summary, genres/themes/keywords, companies, release date, ESRB context, separate attributed ratings and counts, websites, alternative names, collection/franchise/structural relations, modes, cover/artwork/screenshots, palette, and fetched/updated provenance. DLC carries its own snapshot.
 - **PlaytimeEvidence** - replaceable attributed IGDB `game_time_to_beats` values; SteamSpy median is fallback only when IGDB has no row and a confirmed Steam App ID exists.
 - **PriceOffer** - wishlist relation, store/source, selected market country, exact ITAD source currency and amount, optional presentation-only converted display amount/rate, discount, seller URL, freshness, optional region-activation warning, and historical-low context. Up to 8-10 valid offers persist; the selected offer is the cheapest comparable regional offer and becomes stale after 48 hours.
@@ -77,12 +78,10 @@ The shapes below describe the intended model, including the pending Play priorit
 
 ### Recommendations and settings
 
-- **RecommendationRun** / **RecommendationItem** - `PLAY_NEXT | BUY` run context, visible roles, factors, caveats, retained per-role candidate batches, and 12-month retention. Feature 29 allows Best Fit, You Might Also Enjoy, Out of the Box, Change of Pace, and additive Handheld roles.
-- **RecommendationEvent** - append-only exposure, start, completion, abandonment, dismissal, and taste-setup evidence with kind-specific retention.
-- **RecommendationProfile** - rebuildable learned dimensions for genre/tag, experience, duration, publisher, era, series, and maturity with recency decay.
-- **RecommendationPreference** - semantic `PREFER | NEUTRAL | AVOID` override.
-- **RecommendationPreset** - persisted named Tune context; loading affects only the active tab-local Tune state.
-- **Dismissal feedback** - `Maybe some other time — show me another` records a dismissal and replaces from the same retained role batch. Three cumulative same-kind dismissals lower adjusted Play priority (Play Next) or Wishlist Interest (Buy) by one, floor zero.
+- **RecommendationRun** / **RecommendationItem** - `PLAY_NEXT | BUY` context, roles, factors, caveats, retained per-role batches, and 12-month retention. Feature 38 versions derived runs, stabilizes selection across reloads, validates current eligibility, and varies only qualified near-equal options.
+- **RecommendationEvent** / **RecommendationProfile** - retained events and rebuildable genre/tag, experience, duration, publisher, era, series, and maturity evidence. Feature 38 separates stable taste from recent context, avoids double counting, and does not treat legacy ambiguous dismissals or prior-play answers as certain taste/completion.
+- **RecommendationPreference** - semantic `PREFER | NEUTRAL | AVOID` override; **RecommendationPreset** - persisted named tab-local Tune shortcut.
+- **Feedback (feature 38)** - neutral Show another rotates/exposes without taste or star penalty; Not for now pauses per engine for 15 days; Not interested excludes per engine until reversed. Pauses and exclusions have immediate Undo and management. A confirmed total reset clears all recommendation-owned runs, events, feedback, preferences, presets, Tune, pauses, exclusions, and tab-local Tune, but not personal catalog/wishlist or provider data.
 - **AppSettings** - primary OS, optional handheld and valid Windows fallback, onboarding state, supported price country and display currency, duration profile, theme family/mode, reduced-motion/data choices, and provider-related settings.
 - **WallpaperState** - cached SFW Wallhaven candidate URLs and deterministic daily selection; reduced-data mode disables all image fetching.
 
@@ -93,7 +92,7 @@ The shapes below describe the intended model, including the pending Play priorit
 - Current state and prior completion are independent after feature 30. Leaving `COMPLETED` preserves `completedBefore`; starting that replay also clears `replay`. Current and prior completion count as one positive profile signal.
 - Active-backlog progress uses current state only. Previously completed may overlap In Progress or Backlog.
 - Source definitions are managed in Settings; game surfaces assign existing active sources and use canonical names.
-- Recommendations are deterministic and explain their factors. Compatibility is normally soft evidence; Linux without a Windows fallback may hard-exclude fallback-needing play candidates, subject to the Windows-handheld rescue.
+- Recommendations remain local, explainable, and reproducible. Feature 38 makes Taste Setup optional without a ten-game gate, lets explicit priority be outweighed by relevant context, mixes continuity with compatible contrast, and permits fewer roles instead of weak filler. Positive preferences must not reduce scores; missing evidence is uncertainty, not dislike. Compatibility is normally soft evidence; Linux without a Windows fallback may hard-exclude fallback-needing play candidates, subject to the Windows-handheld rescue. Buy weighs usable owned alternatives and purchase timing as well as affinity; discounts alone do not justify a pick.
 - Provider work is asynchronous, persistent, rate-limited, and must not destroy valid personal or prior provider data on failure.
 - A duplicate merge unions compatible platform assignments and deduplicates semantically identical records, including system-added and manually added Steam availability.
 
@@ -115,7 +114,7 @@ Not in the MVP. This is a private single-owner tool, not a public service or sto
 
 Dark-first Dawn and Sunset families use light/dark/system modes, defaulting to dark Sunset until the owner chooses otherwise, with Cinzel display type, Inter body type, semantic accents, accessible overlays, a desktop sidebar, and mobile bottom navigation. Reduced motion disables carousel automation; reduced data prevents remote artwork requests. Before deployment, a mobile pass eliminates clipped text and actions, constrains titles and controls, supplies scrolling where content needs it, keeps detail-page More actions reachable, allows dense Library and Wishlist health strips to collapse on mobile, uses their grid presentation at narrow widths and grid cards in Collection detail, gives the Today worthy-bargain panel a blurred offer-game-art background when available, and allows the existing decorative Wallhaven background on mobile when enabled and reduced data is off.
 
-- `/` - Today: current games, Taste Setup when eligible, and only after it is saved, recommendation spotlights; offers, activity, coverage, freshness, and operations remain available. Buy recommendations are omitted with an empty wishlist.
+- `/` - Today: current games, optional Taste Setup and explicitly updated recommendation spotlights even with sparse data; offers, activity, coverage, freshness, and operations. Empty wishlist omits Buy. Feature 38 adds a split Show another / Not for now / Not interested action, evidence-backed natural reasons and an optional completion-rating prompt; duration Tune is flexible while handheld-only stays strict.
 - `/library` - owned base-game grid/list, search, filters, pagination, card deletion, and catalog health.
 - `/games/[id]` - metadata, compact Journey/Preferences controls, availability, tags, DLC, and gated compatibility.
 - `/wishlist` - independent base/DLC wishes, search/sort, offers, targets, identity, and acquisition.
@@ -132,7 +131,7 @@ Dark-first Dawn and Sunset families use light/dark/system modes, defaulting to d
 - **Scheduled work:** Vercel Cron daily at 06:00 UTC-6, protected by `CRON_SECRET`, enqueues price refresh plus catalog/wishlist compatibility evidence older than 180 days. Claims and overlapping invocations must be idempotent; compatibility work is a no-op when inactive.
 - **Runtime:** server-side provider credentials; persistent PostgreSQL queue and retry history.
 - **Regional prices:** ITAD receives the configured supported country. Its returned amount and currency remain authoritative; a Frankfurter v2 value is optional display-only context, must remain labeled as an estimate, and cannot silently change offer selection or regional warning semantics.
-- **Still pending feature 38:** exact production environment-variable inventory beyond `CRON_SECRET`, health path, domain, production smoke-test contract, one reproducible Verify command, and final CI configuration.
+- **Still pending feature 39:** exact production environment-variable inventory beyond `CRON_SECRET`, health path, domain, production smoke-test contract, one reproducible Verify command, and final CI configuration.
 
 ## Open questions
 

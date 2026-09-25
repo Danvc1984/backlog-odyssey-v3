@@ -835,7 +835,22 @@ data; 28 completes the behavior renewal after 23e. Deployment remains last.
 > two-field language when implemented. Track its steps and review in
 > `blueprint/context/current-feature.md`, not as a numbered feature here.
 
-- [ ] 38. **Deployment and CI readiness** - Vercel/Supabase environment
+- [ ] 38. **Contextual recommendation renewal** - before deployment, renew
+  explainable Play Next and Buy ranking around stable taste, recent play,
+  explicit priority, and backlog-aware buying; distinguish signal provenance
+  and historical uncertainty, diversify relevant picks without repetition or
+  forced slots, and make Taste Setup optional without a ten-game gate. Give
+  Tune truthful counts and flexible duration, use natural evidence-backed
+  explanations, and separate neutral Show another from reversible 15-day
+  Not for now and persistent per-engine Not interested. Keep results stable
+  until explicit update or invalidation, add an optional completion-rating
+  invitation, simplify current versus prior completion presentation, and
+  replace ambiguous rebuild/reset controls with a clearly confirmed total
+  recommendation-data reset that preserves personal catalog and wishlist
+  fields. Transition legacy signals and export/restore safely, then verify
+  ranking properties, real UI flows, and comparison scenarios before shipping.
+
+- [ ] 39. **Deployment and CI readiness** - Vercel/Supabase environment
   review, Vercel Cron daily run at 06:00 UTC-6 with `CRON_SECRET` enqueueing
   the price refresh plus a compatibility freshness sweep for catalog and
   wishlist evidence older than the 180-day window, queue overlap protection,
